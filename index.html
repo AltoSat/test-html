@@ -3,152 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>手法A (スワイプガード) 単体実験</title>
+    <title>ナビゲーション誤動作防止 代替策実験室</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
+        html, body {
+            width: 100%; height: 100%; overflow-x: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f0f1a; color: #eee; padding: 16px;
-            display: flex; flex-direction: column; gap: 14px;
+            background: #0f0f1a; color: #eee;
             user-select: none; -webkit-user-select: none;
-            overflow-x: hidden;
-            min-height: 100vh;
+        }
+        body {
+            padding: 16px; display: flex; flex-direction: column; gap: 12px;
         }
         h1 { font-size: 1.1rem; color: #8ab4f8; }
-        .desc { font-size: 0.8rem; color: #aaa; line-height: 1.4; }
-        .status-box {
-            background: #1a1a2e; border: 1px solid #333; padding: 10px; border-radius: 8px;
-            font-size: 0.85rem; color: #fbbf24; word-break: break-all;
-        }
-        .card {
-            background: #1e1e30; border: 1px solid #333; border-radius: 8px; padding: 14px;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .card h2 { font-size: 0.95rem; color: #8ab4f8; }
+        .desc { font-size: 0.78rem; color: #aaa; line-height: 1.4; }
         
-        .program-item {
-            background: #2a2a3c; border: 1px solid #444; border-radius: 6px;
-            padding: 16px; text-align: center; font-size: 0.9rem; color: #fff;
-            touch-action: manipulation;
+        .status-card {
+            background: #1a1a2e; border: 1px solid #3b82f6; border-radius: 8px;
+            padding: 10px; font-size: 0.82rem; color: #fbbf24;
         }
-        .program-item:active { background: #3b82f6; }
 
-        .log-area {
-            background: #000; border: 1px solid #333; border-radius: 6px;
-            padding: 8px; font-family: monospace; font-size: 0.75rem; color: #4ade80;
-            height: 120px; overflow-y: auto;
+        .test-card {
+            background: #1e1e30; border: 1px solid #333; border-radius: 8px;
+            padding: 12px; display: flex; flex-direction: column; gap: 8px;
         }
-        
-        /* 画面右端のガードエリア（視覚化用） */
-        .edge-indicator {
-            position: fixed; top: 0; right: 0; width: 15vw; height: 100%;
-            background: rgba(239, 68, 68, 0.15); border-left: 1px dashed #ef4444;
-            pointer-events: none; z-index: 999;
-            display: flex; align-items: center; justify-content: center;
-            writing-mode: vertical-rl; font-size: 0.65rem; color: #fca5a5;
+        .test-card h2 { font-size: 0.9rem; color: #8ab4f8; display: flex; justify-content: space-between; }
+        .test-card p { font-size: 0.75rem; color: #bbb; line-height: 1.3; }
+
+        .btn-target {
+            background: #2a2a3c; border: 1px solid #4b5563; border-radius: 6px;
+            padding: 12px; text-align: center; font-size: 0.85rem; color: #fff;
+            font-weight: 600; cursor: pointer; touch-action: manipulation;
+        }
+        .btn-target:active { background: #3b82f6; }
+
+        .log-box {
+            background: #000; border: 1px solid #333; border-radius: 6px;
+            padding: 8px; font-family: monospace; font-size: 0.72rem; color: #4ade80;
+            height: 100px; overflow-y: auto; flex-shrink: 0;
+        }
+
+        /* アプローチ3用の透明右端バリア */
+        #edgeBarrier {
+            display: none;
+            position: fixed; top: 0; right: 0; width: 25px; height: 100vh;
+            z-index: 99999; background: rgba(239, 68, 68, 0.2); /* テスト用に半透明赤表示 */
+            touch-action: none; overscroll-behavior: contain;
         }
     </style>
 </head>
 <body>
 
-    <div class="edge-indicator">右端ガードエリア (15vw)</div>
+    <!-- アプローチ3用ダミーバリア -->
+    <div id="edgeBarrier"></div>
 
-    <h1>✦ 手法A: 右端スワイプガード実験</h1>
-    <p class="desc">長押しでGoogle検索へ移動後、Safariの「戻る」で復帰し、画面右端から左へスワイプした時に「進む」動作がブロックされるかテストします。</p>
+    <h1>✦ 代替策（5パターン）実験室</h1>
+    <p class="desc">Google検索へ移動後、「戻る」でここへ復帰し、画面右端から左スワイプした時に「進む」が発生しないかテストしてください。</p>
 
-    <div class="status-box" id="statusBox">状態: 準備完了</div>
+    <div class="status-card" id="statusCard">状態: 準備完了</div>
 
-    <div class="card">
-        <h2>番組タイトル長押しテスト</h2>
-        <div class="program-item" id="longpressTarget">ここを0.5秒長押し（Google検索へ）</div>
+    <!-- アプローチ 1 -->
+    <div class="test-card">
+        <h2>策 1: ReplaceState 履歴消去 <span>[推奨]</span></h2>
+        <p>遷移直前に現在の履歴スタックを同一URLで書き換え、「進む」履歴スタックを削除してから `location.href` で移動します。</p>
+        <div class="btn-target" id="btnApproach1">長押しでテスト 1 (ReplaceState)</div>
     </div>
 
-    <div style="font-size: 0.8rem; font-weight: bold; margin-top: 6px;">イベントログ:</div>
-    <div class="log-area" id="logArea"></div>
+    <!-- アプローチ 2 -->
+    <div class="test-card">
+        <h2>策 2: Popstate トラップ</h2>
+        <p>復帰時に `pushState` でダミー履歴を積み、「進む」スワイプが発生した瞬間に `popstate` で検知して元の画面に引き戻します。</p>
+        <div class="btn-target" id="btnApproach2">長押しでテスト 2 (Popstate)</div>
+    </div>
+
+    <!-- アプローチ 3 -->
+    <div class="test-card">
+        <h2>策 3: 画面右端 タッチバリア遮断</h2>
+        <p>右端25pxに `touch-action: none` を持つ透明要素を常時または復帰時のみ配置し、OSレベルのジェスチャー判定を無効化します。</p>
+        <div class="btn-target" id="btnApproach3">長押しでテスト 3 (バリアON)</div>
+    </div>
+
+    <!-- アプローチ 4 -->
+    <div class="test-card">
+        <h2>策 4: Safari外部ブラウザ起動強制</h2>
+        <p>PWA内部の履歴を一切汚さないよう、システム標準Safariで検索画面を強制的に別タブ/別窓起動させます。</p>
+        <a class="btn-target" id="btnApproach4" href="https://www.google.com/search?q=テスト4_Safari" target="_blank" rel="noopener" style="display:block; text-decoration:none;">タップ/長押しテスト 4 (External)</a>
+    </div>
+
+    <!-- アプローチ 5 -->
+    <div class="test-card">
+        <h2>策 5: Double PushState シフト</h2>
+        <p>遷移前に履歴を2回連続で進め、復帰時のブラウザのフォワードインデックス位置を強制的にズラします。</p>
+        <div class="btn-target" id="btnApproach5">長押しでテスト 5 (DoubleShift)</div>
+    </div>
+
+    <div style="font-size: 0.75rem; font-weight: bold; margin-top: 4px;">ログ:</div>
+    <div class="log-box" id="logBox"></div>
 
 <script>
-    const logArea = document.getElementById('logArea');
-    const statusBox = document.getElementById('statusBox');
+    const logBox = document.getElementById('logBox');
+    const statusCard = document.getElementById('statusCard');
 
-    function log(msg) {
-        const time = new Date().toLocaleTimeString();
-        logArea.innerHTML = `[${time}] ${msg}<br>` + logArea.innerHTML;
+    function addLog(msg) {
+        const t = new Date().toLocaleTimeString();
+        logBox.innerHTML = `[${t}] ${msg}<br>` + logBox.innerHTML;
     }
 
-    // ページ復帰検知
+    // 復帰検知（pageshow / popstate）
     window.addEventListener('pageshow', (e) => {
         if (e.persisted) {
-            log('キャッシュから復帰 (pageshow)');
-            statusBox.textContent = '状態: 検索から戻りました（進むブロック有効中）';
+            addLog('キャッシュ(bfcache)から復帰');
+            statusCard.textContent = '状態: 検索画面から復帰しました';
         } else {
-            log('通常読込 (pageshow)');
+            addLog('通常読み込み完了');
         }
     });
 
-    // --- 長押し検索処理（href使用） ---
-    const target = document.getElementById('longpressTarget');
-    let timer = null;
+    // 共通長押しリスナー生成関数
+    function bindLongPress(elementId, action) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        let timer = null;
 
-    target.addEventListener('touchstart', (e) => {
-        timer = setTimeout(() => {
-            log('長押し検知: Google検索へ移動します');
-            // location.href を使用して遷移（「戻る」を可能にする）
-            window.location.href = 'https://www.google.com/search?q=テスト番組名';
-        }, 500);
-    }, { passive: true });
+        el.addEventListener('touchstart', (e) => {
+            timer = setTimeout(() => {
+                action();
+            }, 500);
+        }, { passive: true });
 
-    const cancelTimer = () => {
-        if (timer) {
-            clearTimeout(timer);
-            timer = null;
-        }
-    };
+        const cancel = () => {
+            if (timer) { clearTimeout(timer); timer = null; }
+        };
+        el.addEventListener('touchmove', cancel, { passive: true });
+        el.addEventListener('touchend', cancel);
+        el.addEventListener('touchcancel', cancel);
+    }
 
-    target.addEventListener('touchmove', cancelTimer, { passive: true });
-    target.addEventListener('touchend', cancelTimer);
-    target.addEventListener('touchcancel', cancelTimer);
-
-
-    // --- 画面右端からの左スワイプ（進む動作）をキャッチしてブロック ---
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isRightEdgeTouch = false;
-
-    document.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        const screenWidth = window.innerWidth;
-
-        // 画面右端15%以内のタッチ開始かどうか判定
-        if (touchStartX > screenWidth * 0.85) {
-            isRightEdgeTouch = true;
-            log('右端ガードエリア内でタッチ開始');
-        } else {
-            isRightEdgeTouch = false;
-        }
-    }, { passive: true });
-
-    document.addEventListener('touchmove', (e) => {
-        if (!isRightEdgeTouch) return;
-
-        const currentX = e.touches[0].clientX;
-        const currentY = e.touches[0].clientY;
-        const diffX = touchStartX - currentX; // 右から左へ指を動かした距離
-        const diffY = Math.abs(currentY - touchStartY);
-
-        // 横方向へのスワイプ（右から左へ10px以上移動）かつ縦移動より優勢な場合
-        if (diffX > 10 && diffX > diffY) {
-            // ブラウザ標準の「進む（Forward）」ジェスチャーを阻止
-            if (e.cancelable) {
-                e.preventDefault();
-                log('右端からの「進むスワイプ」をブロックしました！');
-            }
-        }
-    }, { passive: false }); // preventDefault() を呼ぶため passive: false
-
-    document.addEventListener('touchend', () => {
-        isRightEdgeTouch = false;
+    // --- 策 1: ReplaceState ---
+    bindLongPress('btnApproach1', () => {
+        addLog('策1実行: history.replaceState を実行してから移動');
+        // 現在の履歴をダミーで置き換えて「進む」履歴をクリア
+        history.replaceState({ active: true }, '', location.href);
+        window.location.href = 'https://www.google.com/search?q=策1_ReplaceState';
     });
+
+
+    // --- 策 2: Popstate トラップ ---
+    bindLongPress('btnApproach2', () => {
+        addLog('策2実行: トラップ履歴を追加して移動');
+        history.pushState({ trap: true }, '', location.href);
+        window.location.href = 'https://www.google.com/search?q=策2_Popstate';
+    });
+
+    // トラップ感知処理
+    window.addEventListener('popstate', (e) => {
+        addLog('popstate発生 (進む/戻る操作を検知)');
+        if (e.state && e.state.trap) {
+            addLog('進むトラップ発動: 元のページに留まります');
+            history.forward(); // 強制的に引き戻す
+        }
+    });
+
+
+    // --- 策 3: 画面右端 タッチバリア遮断 ---
+    const barrier = document.getElementById('edgeBarrier');
+    bindLongPress('btnApproach3', () => {
+        addLog('策3実行: 右端バリアを可視化して移動');
+        barrier.style.display = 'block';
+        window.location.href = 'https://www.google.com/search?q=策3_Barrier';
+    });
+
+    // バリア要素自体でのタッチ無効化
+    barrier.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    barrier.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+
+    // --- 策 4: External Anchor (Safari連携) ---
+    // aタグの標準動作を利用
+
+
+    // --- 策 5: Double PushState シフト ---
+    bindLongPress('btnApproach5', () => {
+        addLog('策5実行: 二重履歴シフトを実行して移動');
+        history.pushState(null, '', location.href);
+        history.pushState(null, '', location.href);
+        window.location.href = 'https://www.google.com/search?q=策5_DoubleShift';
+    });
+
 </script>
 </body>
 </html>
