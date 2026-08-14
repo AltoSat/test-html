@@ -3,1556 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>✦AI番組表</title>
-    <link rel="manifest" href="data:application/manifest+json,{
-        \"name\": \"✦AI番組表\",
-        \"short_name\": \"AI番組表\",
-        \"start_url\": \".\",
-        \"display\": \"standalone\",
-        \"background_color\": \"#0f0f1a\",
-        \"theme_color\": \"#1a73e8\"
-    }">
+    <title>ナビゲーション＆スワイプ実験室</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            overflow: hidden;
-            overscroll-behavior: none;
-            -webkit-overscroll-behavior: none;
-        }
         body {
-            font-family: -apple-system, 'Segoe UI', 'Hiragino Sans', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
-            background: #0f0f1a;
-            color: #ddd;
-            overscroll-behavior-y: none;
-            -webkit-overscroll-behavior-y: none;
-            overscroll-behavior-x: none;
-            -webkit-overscroll-behavior-x: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a; color: #eee; padding: 16px;
+            display: flex; flex-direction: column; gap: 14px;
             user-select: none; -webkit-user-select: none;
-            display: flex; flex-direction: column;
+            overflow-x: hidden;
         }
-        body.menu-open { overflow: hidden; }
+        h1 { font-size: 1.1rem; color: #8ab4f8; }
+        .desc { font-size: 0.8rem; color: #aaa; line-height: 1.4; }
+        .status-box {
+            background: #1a1a2e; border: 1px solid #333; padding: 10px; border-radius: 8px;
+            font-size: 0.85rem; color: #fbbf24; word-break: break-all;
+        }
+        .card {
+            background: #1e1e30; border: 1px solid #333; border-radius: 8px; padding: 12px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .card h2 { font-size: 0.95rem; color: #8ab4f8; }
+        .card p { font-size: 0.8rem; color: #bbb; line-height: 1.3; }
+        
+        .touch-area {
+            background: #2a2a3c; border: 2px dashed #4b5563; border-radius: 6px;
+            padding: 14px; text-align: center; font-size: 0.85rem; color: #ddd;
+            touch-action: manipulation;
+        }
+        .touch-area:active { background: #3b82f6; color: white; }
 
-        #stickyHeader {
-            position: relative;
-            z-index: 100;
-            flex-shrink: 0;
-            touch-action: pan-x;
-            padding-top: env(safe-area-inset-top, 0px);
-            background: #1a1a2e;
-        }
-
-        #header {
-            background: #1a1a2e;
-            border-bottom: 1px solid #333; display: flex; justify-content: space-between;
-            align-items: center; padding: 4px 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-        }
-        #header h1 { font-size: 1.1em; font-weight: 700; color: #8ab4f8; margin: 0; }
-        #header-buttons { display: flex; align-items: center; gap: 8px; }
-        .header-btn {
-            background: none; border: none; font-size: 1.4em; cursor: pointer; padding: 2px 4px; line-height: 1;
-        }
-        .header-btn.active { color: #fbbf24; }
-        .header-btn.inactive { color: #666; }
-        #menuBtn { color: #ccc; }
-
-        #menuPanel {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: #1e1e30;
-            z-index: 200; flex-direction: column;
-            padding-top: env(safe-area-inset-top, 0px);
-        }
-        #menuPanel.open { display: flex; }
-
-        #menuHeader {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 14px; background: #2a2a3c; border-bottom: 1px solid #333; flex-shrink: 0;
-        }
-        #menuHeader span { font-weight: 600; color: #ccc; }
-        #menuCloseBtn {
-            background: none; border: none; color: #ccc; font-size: 1.5em;
-            cursor: pointer; line-height: 1; padding: 0 4px;
+        /* 実験法B用のCSS（CSSガード） */
+        .mode-css-guard {
+            overscroll-behavior-x: none !important;
         }
 
-        .menu-tabs {
-            display: flex; border-bottom: 1px solid #333; background: #2a2a3c;
-            flex-wrap: nowrap; overflow-x: auto; flex-shrink: 0;
+        .log-area {
+            background: #000; border: 1px solid #333; border-radius: 6px;
+            padding: 8px; font-family: monospace; font-size: 0.75rem; color: #4ade80;
+            height: 80px; overflow-y: auto;
         }
-        .menu-tab {
-            flex: 1 0 auto; padding: 12px 8px; font-size: 0.85em; font-weight: 600;
-            color: #aaa; cursor: pointer; border-bottom: 2px solid transparent;
-            transition: 0.2s; white-space: nowrap; text-align: center;
-        }
-        .menu-tab.active { color: #8ab4f8; border-bottom-color: #8ab4f8; background: #1e1e30; }
-
-        #menuContentWrapper {
-            flex: 1; overflow: hidden; display: flex; flex-direction: column;
-        }
-
-        .menu-content { display: none; flex-direction: column; height: 100%; }
-        .menu-content.active { display: flex; }
-
-        .menu-channel-tabs {
-            display: flex; background: #2a2a3c; border-bottom: 1px solid #333;
-            overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-        }
-        .menu-channel-tabs::-webkit-scrollbar { display: none; }
-        .menu-channel-tab {
-            flex: 1 1 auto; padding: 8px 10px; font-size: 0.8em; font-weight: 600;
-            color: #888; cursor: pointer; border-bottom: 3px solid transparent;
-            white-space: nowrap; text-align: center;
-        }
-        .menu-channel-tab.active { color: #8ab4f8; border-bottom-color: #8ab4f8; }
-
-        .menu-list-wrapper {
-            flex: 1; overflow: hidden; position: relative;
-        }
-        .menu-list-panels {
-            display: flex; height: 100%;
-        }
-        .menu-list-panel {
-            min-width: 100%; height: 100%;
-            overflow-y: auto; -webkit-overflow-scrolling: touch;
-            padding: 12px 12px 30px 12px;
-        }
-
-        .input-area {
-            padding: 8px 12px; background: #1e1e30; border-bottom: 1px solid #333;
-            flex-shrink: 0; display: flex; gap: 6px;
-        }
-
-        textarea, input[type="text"] {
-            width: 100%; border: 1px solid #444; border-radius: 6px; padding: 8px;
-            font-size: 0.9em; background: #2a2a3c; color: #ddd; resize: vertical;
-        }
-        .menu-btn {
-            background: #3b82f6; color: white; border: none; padding: 10px 16px;
-            border-radius: 6px; font-size: 0.9em; cursor: pointer; font-weight: 600; width: 100%;
-        }
-        .menu-btn.secondary { background: #555; color: #ccc; }
-        .list-item { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
-        .list-item input {
-            flex: 1; padding: 6px 8px; background: #2a2a3c; border: 1px solid #444;
-            border-radius: 4px; color: #ddd; font-size: 0.9em; white-space: normal; word-break: break-all;
-        }
-        .list-item button { background: none; border: none; color: #f87171; cursor: pointer; font-size: 1.2em; padding: 2px 4px; flex-shrink: 0; }
-        .small-btn {
-            background: #3b82f6; color: white; border: none; border-radius: 4px;
-            padding: 6px 12px; font-size: 0.85em; cursor: pointer;
-            white-space: nowrap;
-        }
-        .count-badge { background: #fbbf24; color: #000; font-size: 0.7em; border-radius: 10px; padding: 1px 6px; margin-left: 4px; font-weight: 600; }
-
-        #dateTabs {
-            background: #1a1a2e; border-bottom: 1px solid #333;
-            display: flex; flex-wrap: nowrap; align-items: center;
-            overflow: hidden; min-height: 44px;
-        }
-        .date-tab {
-            flex: 1 1 auto; padding: 6px 4px; font-size: 0.75em; font-weight: 600;
-            color: #888; cursor: pointer; border-bottom: 3px solid transparent;
-            transition: 0.2s; text-align: center; min-width: 0; flex-shrink: 1;
-        }
-        .date-tab.active { color: #8ab4f8; border-bottom-color: #8ab4f8; }
-        .date-tab.no-data { color: #000000; }
-        .date-tab.no-data.active { color: #8ab4f8; border-bottom-color: #8ab4f8; }
-
-        #channelTabs {
-            background: #1a1a2e; border-bottom: 1px solid #333;
-            display: flex; flex-wrap: nowrap; align-items: center;
-            overflow: hidden; min-height: 44px;
-        }
-        .channel-tab {
-            flex: 1 1 auto; padding: 6px 4px; font-size: 0.75em; font-weight: 600;
-            color: #888; cursor: pointer; border-bottom: 3px solid transparent;
-            transition: 0.2s; text-align: center; min-width: 0; flex-shrink: 1;
-        }
-        .channel-tab.active { color: #8ab4f8; border-bottom-color: #8ab4f8; }
-
-        .filter-title {
-            background: #1a1a2e; border-bottom: 1px solid #333;
-            padding: 10px 16px; font-weight: 700; color: #fbbf24;
-            min-height: 44px; display: none; align-items: center;
-        }
-
-        #content {
-            flex: 1; overflow: hidden; user-select: text; -webkit-user-select: text;
-        }
-
-        .swipe-channel-container {
-            height: 100%; overflow: hidden;
-            touch-action: pan-y;
-            overscroll-behavior-x: none;
-            -webkit-overscroll-behavior-x: none;
-        }
-        .swipe-channel-panels {
-            display: flex; height: 100%;
-        }
-        .channel-panel {
-            min-width: 100%; height: 100%;
-            overflow-y: auto; -webkit-overflow-scrolling: touch;
-            padding: 8px 16px 80px;
-            padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-            touch-action: pan-y;
-            overscroll-behavior-x: none;
-            -webkit-overscroll-behavior-x: none;
-        }
-
-        .program-group {
-            background: #1e1e30; border-radius: 10px; margin-bottom: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4); overflow: hidden;
-        }
-
-        .swipe-item-wrapper {
-            position: relative;
-            overflow: hidden;
-            background: #1e1e30;
-            border-bottom: 1px solid #333;
-        }
-        .swipe-item-wrapper:last-child { border-bottom: none; }
-
-        .swipe-action-left, .swipe-action-right {
-            position: absolute;
-            top: 0; bottom: 0; left: 0; right: 0;
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1em;
-            color: white;
-            z-index: 0;
-            opacity: 0;
-            transition: opacity 0.1s, font-size 0.2s;
-            overflow: hidden;
-        }
-        .swipe-action-left {
-            background: #4b5563;
-            justify-content: flex-end;
-            padding-right: 20px;
-        }
-        .swipe-action-right {
-            background: #ef4444;
-            justify-content: flex-start;
-            padding-left: 20px;
-        }
-        .swipe-action-left.active, .swipe-action-right.active {
-            font-size: 1.15em;
-        }
-
-        .program-item {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            padding: 10px 12px;
-            background: #1e1e30;
-            position: relative;
-            z-index: 1;
-            touch-action: pan-y;
-            transition: transform 0.2s, background-color 0.15s, border-color 0.15s;
-            will-change: transform;
-        }
-        .program-item.uninteresting { background: #000; }
-        .program-item.favorite {
-            border: 2px solid #fbbf24; background: #2a2a00;
-            border-radius: 10px; margin-bottom: -1px;
-        }
-        .program-item.reserved {
-            border: 2px solid #ef4444; background: #2a0000;
-            border-radius: 10px; margin-bottom: -1px;
-        }
-        .program-item.favorite.reserved {
-            border: 2px solid #fbbf24; background: #2a2a00;
-        }
-        .program-time { font-weight: 700; min-width: 50px; color: #8ab4f8; font-size: 0.95em; padding-top: 2px; }
-        .program-body { flex: 1; }
-        .program-title {
-            font-weight: 600; font-size: 1em; margin-bottom: 2px; line-height: 1.4;
-            -webkit-user-select: none; user-select: none;
-            -webkit-touch-callout: none;
-        }
-        .program-desc {
-            font-size: 0.85em; color: #aaa; line-height: 1.5; display: block;
-            -webkit-user-select: text; user-select: text;
-        }
-        .program-item.uninteresting .program-title { opacity: 0.5; }
-        .program-item.uninteresting .program-desc { display: none; }
-        .program-item.uninteresting .program-desc.show { display: block; }
-        mark { background: #fbbf24; color: #000; padding: 0 2px; border-radius: 2px; font-weight: 600; }
-        .empty-message { text-align: center; color: #888; padding: 40px 20px; font-size: 1em; }
-        .channel-small {
-            display: inline-block; font-size: 0.7em; color: #aaa; background: #2a2a3c;
-            padding: 1px 6px; border-radius: 4px; margin-top: 2px;
-        }
-        .file-input-label {
-            display: inline-block; background: #3b82f6; color: white; padding: 8px 14px;
-            border-radius: 6px; font-size: 0.9em; cursor: pointer; font-weight: 600; text-align: center; width: 100%;
-        }
-        .hidden-file-input { display: none; }
-        .empty-paste-area { padding: 20px; }
     </style>
 </head>
 <body>
 
-<div id="stickyHeader">
-    <div id="header">
-        <h1>✦AI番組表</h1>
-        <div id="header-buttons">
-            <button id="toggleUninterestingBtn" class="header-btn active" title="不要表示切替">▲</button>
-            <button id="favoritesViewBtn" class="header-btn inactive" title="お気に入り表示">★</button>
-            <button id="highlightedViewBtn" class="header-btn inactive" title="強調該当表示">■</button>
-            <button id="menuBtn" class="header-btn" title="メニュー">☰</button>
-        </div>
-    </div>
-    <div id="dateTabs"></div>
-    <div id="channelTabs"></div>
-    <div id="filterTitle" class="filter-title"></div>
-</div>
+    <h1>✦ ナビゲーション＆誤スワイプ防止 実験室</h1>
+    <p class="desc">長押しでのGoogle検索遷移、番組一覧への復帰、右端スワイプ時の「進む」誤作動防止の組み合わせテスト</p>
 
-<div id="menuPanel">
-    <div id="menuHeader">
-        <span>メニュー</span>
-        <button id="menuCloseBtn">✕</button>
-    </div>
-    <div class="menu-tabs">
-        <div class="menu-tab" data-tab="tab-reserved">予約</div>
-        <div class="menu-tab active" data-tab="tab-ignore">不要</div>
-        <div class="menu-tab" data-tab="tab-highlight">強調</div>
-        <div class="menu-tab" data-tab="tab-exclude">除外</div>
-        <div class="menu-tab" data-tab="tab-paste">取込</div>
-        <div class="menu-tab" data-tab="tab-backup">保存</div>
-    </div>
-    <div id="menuContentWrapper">
-        <div class="menu-content" id="tab-paste">
-            <div class="input-area">
-                <textarea id="pasteArea" placeholder="Gガイドの1日分をコピーして貼り付け"></textarea>
-                <button id="openGguideBtn" class="small-btn">Gガイド</button>
-            </div>
-            <div class="menu-list-panel"></div>
-        </div>
-        <div class="menu-content active" id="tab-ignore">
-            <div class="menu-channel-tabs" id="menuChannelTabsIgnore"></div>
-            <div class="input-area">
-                <input type="text" id="newUninteresting" placeholder="追加する番組名（先頭一致）">
-                <button id="addUninterestingBtn" class="small-btn">追加</button>
-            </div>
-            <div class="menu-list-wrapper" id="menuListWrapperIgnore">
-                <div class="menu-list-panels" id="menuListPanelsIgnore"></div>
-            </div>
-        </div>
-        <div class="menu-content" id="tab-reserved">
-            <div class="menu-channel-tabs" id="menuChannelTabsReserved"></div>
-            <div class="input-area">
-                <input type="text" id="newReserved" placeholder="追加する番組名（先頭一致）">
-                <button id="addReservedBtn" class="small-btn">追加</button>
-            </div>
-            <div class="menu-list-wrapper" id="menuListWrapperReserved">
-                <div class="menu-list-panels" id="menuListPanelsReserved"></div>
-            </div>
-        </div>
-        <div class="menu-content" id="tab-exclude">
-            <div class="input-area">
-                <input type="text" id="newExclude" placeholder="除外するキーワード（部分一致）">
-                <button id="addExcludeBtn" class="small-btn">追加</button>
-            </div>
-            <div id="excludeList" class="menu-list-panel"></div>
-        </div>
-        <div class="menu-content" id="tab-highlight">
-            <div class="input-area">
-                <input type="text" id="newHighlight" placeholder="強調するキーワード">
-                <button id="addHighlightBtn" class="small-btn">追加</button>
-            </div>
-            <div id="highlightList" class="menu-list-panel"></div>
-        </div>
-        <div class="menu-content" id="tab-backup">
-            <div class="menu-list-panel" style="padding-top:20px;">
-                <button id="exportBtn" class="menu-btn" style="margin-bottom:10px;">データをエクスポート</button>
-                <label for="importFile" class="file-input-label" style="margin-bottom:10px;">データをインポート</label>
-                <input type="file" id="importFile" class="hidden-file-input" accept=".json">
-                <button id="clearBtn" class="menu-btn secondary">全データ消去</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <div class="status-box" id="statusBox">現在の状態: 読込完了</div>
 
-<main id="content"></main>
+    <!-- アプローチ1 -->
+    <div class="card">
+        <h2>手法 A: href 遷移 + スワイプ開始位置ガード (JSのみ)</h2>
+        <p>画面の右端（幅の15%以内）から始まるスワイプ操作のみ `e.preventDefault()` でブラウザの「進むジェスチャー」をブロックします。履歴操作は行わないため画面復帰も確実です。</p>
+        <div class="touch-area" id="targetA">ここを0.5秒長押し (手法A)</div>
+    </div>
+
+    <!-- アプローチ2 -->
+    <div class="card">
+        <h2>手法 B: href 遷移 + overscroll-behavior-x (CSS制御)</h2>
+        <p>画面横方向のオーバーハング・ジェスチャー（進む・戻るスワイプ）のみをCSSで無効化します。スクロールや他のタッチ機能への副作用を最小限に抑えます。</p>
+        <div class="touch-area" id="targetB">ここを0.5秒长押し (手法B)</div>
+    </div>
+
+    <!-- アプローチ3 -->
+    <div class="card">
+        <h2>手法 C: href 遷移 + pagehide / pageshow で進む履歴ダミー置換</h2>
+        <p>ページを離れる直前（pagehide）にダミーの履歴を挿入し、戻ってきた際（pageshow）に進む先をアプリ自身へ書き換えます。</p>
+        <div class="touch-area" id="targetC">ここを0.5秒長押し (手法C)</div>
+    </div>
+
+    <!-- アプローチ4 -->
+    <div class="card">
+        <h2>手法 D: PWA内 モーダル iframe / オーバーレイ検索</h2>
+        <p>ページ遷移自体を行わず、画面内にGoogle検索のモーダル枠またはインフレームを表示します（戻る操作すら不要）。</p>
+        <div class="touch-area" id="targetD">ここを0.5秒長押し (手法D)</div>
+    </div>
+
+    <div style="font-size: 0.8rem; font-weight: bold; margin-top: 6px;">操作ログ:</div>
+    <div class="log-area" id="logArea"></div>
+
+    <!-- 手法D用のオーバーレイモック -->
+    <div id="searchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999; flex-direction:column; padding-top:env(safe-area-inset-top);">
+        <div style="padding:10px; background:#1a1a2e; display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:#fff; font-size:0.9rem;">Google検索プレビュー</span>
+            <button id="closeModalBtn" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-weight:bold;">閉じる</button>
+        </div>
+        <iframe id="modalIframe" style="flex:1; border:none; width:100%; height:100%; background:#fff;"></iframe>
+    </div>
 
 <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            const swCode = `const CACHE='tv-ai-v28';self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['.'])))});self.addEventListener('activate',e=>{e.waitUntil(clients.claim())});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`;
-            const blob = new Blob([swCode], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
-        });
+    const logArea = document.getElementById('logArea');
+    const statusBox = document.getElementById('statusBox');
+
+    function log(msg) {
+        const time = new Date().toLocaleTimeString();
+        logArea.innerHTML = `[${time}] ${msg}<br>` + logArea.innerHTML;
     }
 
-    function resetViewportScroll() {
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-    }
-
-    document.addEventListener('focusout', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            setTimeout(resetViewportScroll, 100);
-        }
-    });
-
-    // 画面端からの横スワイプによるブラウザ履歴移動を抑制する
-    function preventEdgeSwipeNavigation() {
-        let startX = null;
-        let startY = null;
-
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-            }
-        }, { passive: true });
-
-        document.addEventListener('touchmove', (e) => {
-            if (startX === null || e.touches.length !== 1) return;
-
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            const diffX = Math.abs(currentX - startX);
-            const diffY = Math.abs(currentY - startY);
-
-            // 横方向のスワイプが、画面の左右端（30px以内）から始まった場合のみ
-            const edgeLeft = startX <= 30;
-            const edgeRight = startX >= window.innerWidth - 30;
-
-            if ((edgeLeft || edgeRight) && diffX > diffY && diffX > 10) {
-                e.preventDefault();
-            }
-
-            // 指が離れたらリセット
-            if (e.cancelable) startX = null;
-        }, { passive: false });
-
-        document.addEventListener('touchend', () => {
-            startX = null;
-            startY = null;
-        }, { passive: true });
-
-        document.addEventListener('touchcancel', () => {
-            startX = null;
-            startY = null;
-        }, { passive: true });
-    }
-
-    preventEdgeSwipeNavigation();
-
-    const STORAGE_KEY = 'tvProgramsV28';
-    const SETTINGS_KEY = 'tvSettingsV28';
-    const CHANNEL_ORDER = ["HBC", "NHK-E", "NHK-G", "STV", "HTB", "TVh", "UHB"];
-    const CHANNEL_NAME_MIGRATION = { "NHK Eテレ": "NHK-E", "NHK総合": "NHK-G", "北海道文化放送": "UHB" };
-
-    let programs = [];
-    let uninterestingByChannel = {};
-    let reservedByChannel = {};
-    let globalExcludeWords = [];
-    let highlightWords = [];
-    let favorites = [];
-    let showUninteresting = true;
-    let showFavorites = false;
-    let showHighlighted = false;
-
-    let selectedDate = new Date();
-    selectedDate.setHours(0,0,0,0);
-    let selectedChannel = CHANNEL_ORDER[0];
-
-    const menuBtn = document.getElementById('menuBtn');
-    const menuPanel = document.getElementById('menuPanel');
-    const menuCloseBtn = document.getElementById('menuCloseBtn');
-    const pasteArea = document.getElementById('pasteArea');
-    const openGguideBtn = document.getElementById('openGguideBtn');
-    const dateTabsDiv = document.getElementById('dateTabs');
-    const channelTabsDiv = document.getElementById('channelTabs');
-    const filterTitleDiv = document.getElementById('filterTitle');
-    const contentDiv = document.getElementById('content');
-    const toggleUninterestingBtn = document.getElementById('toggleUninterestingBtn');
-    const favoritesViewBtn = document.getElementById('favoritesViewBtn');
-    const highlightedViewBtn = document.getElementById('highlightedViewBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const importFile = document.getElementById('importFile');
-    const clearBtn = document.getElementById('clearBtn');
-
-    let wordIdCounter = Date.now();
-    function generateWordId() { return 'word_' + (wordIdCounter++); }
-    function wordsToObjects(arr) { return arr.map(value => ({ id: generateWordId(), value })); }
-    function objectsToWords(objArr) { return objArr.map(o => o.value); }
-
-    function removeGarbageChars(str) {
-        if (!str) return '';
-        return str.replace(/🈓/g, '');
-    }
-
-    function migrateChannelNames(obj) {
-        if (typeof obj !== 'object' || obj === null) return obj;
-        if (Array.isArray(obj)) return obj.map(migrateChannelNames);
-        const newObj = {};
-        for (const [key, value] of Object.entries(obj)) {
-            const newKey = CHANNEL_NAME_MIGRATION[key] || key;
-            newObj[newKey] = migrateChannelNames(value);
-        }
-        return newObj;
-    }
-
-    function getDateStr(date) { return `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`; }
-    function getDisplayDateStr(date) {
-        const day = date.getDate();
-        const weekdays = ['日','月','火','水','木','金','土'];
-        return `${day}${weekdays[date.getDay()]}`;
-    }
-    function getDateList() {
-        const list = [];
-        const today = new Date(); today.setHours(0,0,0,0);
-        for (let i = 0; i < 8; i++) { const d = new Date(today); d.setDate(d.getDate() + i); list.push(d); }
-        return list;
-    }
-    function isWithinRange(date) {
-        const today = new Date(); today.setHours(0,0,0,0);
-        const end = new Date(today); end.setDate(end.getDate() + 7);
-        return date >= today && date <= end;
-    }
-    function getProgramId(p) { return `${p.rawStart.toISOString()}_${p.channel}_${p.title}`; }
-
-    function migrateOldData() {
-        const oldKeys = ['tvPrograms','tvProgramsV2','tvProgramsV3','tvProgramsV4','tvProgramsV5','tvProgramsV6','tvProgramsV7','tvProgramsV8','tvProgramsV9','tvProgramsV10','tvProgramsV11','tvProgramsV12','tvProgramsV13','tvProgramsV14','tvProgramsV15','tvProgramsV16','tvProgramsV17','tvProgramsV18','tvProgramsV19','tvProgramsV20','tvProgramsV21','tvProgramsV22','tvProgramsV23','tvProgramsV24','tvProgramsV25','tvProgramsV26','tvProgramsV27','tvProgramsFinal'];
-        for (const key of oldKeys) {
-            if (key === STORAGE_KEY) continue;
-            const raw = localStorage.getItem(key);
-            if (raw) { try { const d = JSON.parse(raw); if (Array.isArray(d) && d.length > 0) { localStorage.setItem(STORAGE_KEY, raw); localStorage.removeItem(key); break; } } catch(e) {} }
-        }
-        const oldSettingsKeys = ['tvSettings','tvSettingsV2','tvSettingsV3','tvSettingsV4','tvSettingsV5','tvSettingsV6','tvSettingsV7','tvSettingsV8','tvSettingsV9','tvSettingsV10','tvSettingsV11','tvSettingsV12','tvSettingsV13','tvSettingsV14','tvSettingsV15','tvSettingsV16','tvSettingsV17','tvSettingsV18','tvSettingsV19','tvSettingsV20','tvSettingsV21','tvSettingsV22','tvSettingsV23','tvSettingsV24','tvSettingsV25','tvSettingsV26','tvSettingsV27','tvSettingsFinal'];
-        for (const key of oldSettingsKeys) {
-            if (key === SETTINGS_KEY) continue;
-            const raw = localStorage.getItem(key);
-            if (raw) { try { const d = JSON.parse(raw); if (d && (d.uninterestingByChannel || d.reservedByChannel || d.highlight)) { localStorage.setItem(SETTINGS_KEY, raw); localStorage.removeItem(key); break; } } catch(e) {} }
-        }
-    }
-
-    function loadSettings() {
-        try {
-            const raw = localStorage.getItem(SETTINGS_KEY);
-            if (raw) {
-                const data = JSON.parse(raw);
-                uninterestingByChannel = data.uninterestingByChannel || {};
-                reservedByChannel = data.reservedByChannel || {};
-                globalExcludeWords = data.globalExcludeWords || [];
-                highlightWords = data.highlight || [];
-                favorites = data.favorites || [];
-                showUninteresting = data.showUninteresting !== false;
-            }
-        } catch(e) {}
-    }
-    function saveSettings() {
-        try {
-            const json = JSON.stringify({ uninterestingByChannel, reservedByChannel, globalExcludeWords, highlight: highlightWords, favorites, showUninteresting });
-            localStorage.setItem(SETTINGS_KEY, json);
-        } catch(e) {}
-    }
-
-    function loadPrograms() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return [];
-            const arr = JSON.parse(raw);
-            return arr.map(obj => ({
-                ...obj,
-                title: removeGarbageChars(obj.title),
-                description: removeGarbageChars(obj.description),
-                channel: CHANNEL_NAME_MIGRATION[obj.channel] || obj.channel,
-                displayDate: new Date(obj.displayDate),
-                rawStart: new Date(obj.rawStart),
-                rawEnd: new Date(obj.rawEnd)
-            }));
-        } catch(e) { return []; }
-    }
-    function savePrograms() {
-        programs = programs.filter(p => isWithinRange(p.displayDate));
-        try {
-            const data = programs.map(p => ({ channel: p.channel, title: p.title, description: p.description, displayDate: p.displayDate.toISOString(), rawStart: p.rawStart.toISOString(), rawEnd: p.rawEnd.toISOString() }));
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch(e) {}
-    }
-
-    function openExternal(url) { window.open(url, '_blank'); }
-    function openGguideForDate(date) { openExternal(`https://bangumi.org/epg/td?broad_cast_date=${getDateStr(date)}&ggm_group_id=1`); }
-    // 長押し時のGoogle検索は「戻る」で番組一覧へ戻れるよう location.href で遷移
-    function openSearch(query) {
-        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-    }
-
-    function getBaseTitle(fullTitle) {
-        fullTitle = removeGarbageChars(fullTitle);
-        const separators = "🈑🈓🈔🈕🈖🈗🈘🈩🈪🈫🈬🈭🈮🈯🈰🈱🈲🈳🈴🈵🈶🈷🈸🈹🈺🈻🈞【▽▼#（★第";
-        let firstIdx = -1;
-        for (const ch of separators) { const idx = fullTitle.indexOf(ch); if (idx !== -1 && (firstIdx === -1 || idx < firstIdx)) firstIdx = idx; }
-        if (firstIdx === -1) return fullTitle;
-        if (firstIdx > 0) return fullTitle.substring(0, firstIdx).trim();
-        let secondIdx = -1;
-        for (const ch of separators) { const idx = fullTitle.indexOf(ch, 1); if (idx !== -1 && (secondIdx === -1 || idx < secondIdx)) secondIdx = idx; }
-        if (secondIdx !== -1) return fullTitle.substring(0, secondIdx).trim();
-        return fullTitle;
-    }
-
-    function applyHighlight(text) {
-        return highlightWords.reduce((str, word) => {
-            const w = (word.value || word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return str.replace(new RegExp(`(${w})`, 'gi'), '<mark>$1</mark>');
-        }, text);
-    }
-    function descriptionContainsHighlight(desc) { return highlightWords.length > 0 && highlightWords.some(w => desc.includes(w.value || w)); }
-
-    function parseProgramsFromHTML(htmlString, targetDate) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlString, 'text/html');
-        const ulElements = doc.querySelectorAll('ul[id^="program_line_"]');
-        if (ulElements.length === 0) throw new Error('番組表のul要素が見つかりません。');
-        const channelAssign = [];
-        for (let i = 0; i < Math.min(ulElements.length, CHANNEL_ORDER.length); i++) channelAssign.push(CHANNEL_ORDER[i]);
-        for (let i = channelAssign.length; i < ulElements.length; i++) channelAssign.push(`Ch.${i+1}`);
-        const all = [];
-        for (let i = 0; i < ulElements.length; i++) {
-            const ul = ulElements[i]; const ch = channelAssign[i];
-            ul.querySelectorAll('li[class*="sc-"]').forEach(li => {
-                const s = li.getAttribute('s'), e = li.getAttribute('e');
-                if (!s || !e) return;
-                const titleEl = li.querySelector('.program_title'), detailEl = li.querySelector('.program_detail');
-                const title = removeGarbageChars(titleEl ? titleEl.textContent.trim() : '(タイトルなし)');
-                const desc = removeGarbageChars(detailEl ? detailEl.textContent.trim() : '');
-                const parseTime = str => new Date(+str.substring(0,4), +str.substring(4,6)-1, +str.substring(6,8), +str.substring(8,10), +str.substring(10,12));
-                all.push({ channel: ch, title, description: desc, rawStart: parseTime(s), rawEnd: parseTime(e) });
-            });
-        }
-        if (all.length === 0) return [];
-        all.forEach(p => p.displayDate = targetDate);
-        return all;
-    }
-
-    function renderMenuChannelTabs() {
-        ['menuChannelTabsReserved', 'menuChannelTabsIgnore'].forEach(id => {
-            const div = document.getElementById(id);
-            if (!div) return;
-            div.innerHTML = '';
-            CHANNEL_ORDER.forEach(ch => {
-                const tab = document.createElement('div');
-                tab.className = 'menu-channel-tab' + (ch === selectedChannel ? ' active' : '');
-                tab.textContent = ch;
-                tab.addEventListener('click', () => { selectedChannel = ch; renderAll(); });
-                div.appendChild(tab);
-            });
-        });
-    }
-
-    function renderAll() {
-        try {
-            if (!isWithinRange(selectedDate)) { selectedDate = new Date(); selectedDate.setHours(0,0,0,0); }
-            renderDateTabs();
-            renderMenuChannelTabs();
-
-            if (showFavorites || showHighlighted) {
-                channelTabsDiv.style.display = 'none';
-                filterTitleDiv.style.display = 'flex';
-                filterTitleDiv.textContent = showFavorites ? '★ お気に入り番組' : '■ 強調ワード番組';
-            } else {
-                channelTabsDiv.style.display = 'flex';
-                filterTitleDiv.style.display = 'none';
-                filterTitleDiv.textContent = '';
-            }
-
-            if (showFavorites) { renderFavoritesForDate(); return; }
-            if (showHighlighted) { renderHighlightedForDate(); return; }
-
-            const todayPrograms = programs.filter(p => p.displayDate.getTime() === selectedDate.getTime());
-            if (todayPrograms.length === 0) {
-                contentDiv.innerHTML = `<div class="empty-paste-area"><p style="margin-bottom:12px;">この日付の番組データがありません。</p><textarea id="emptyPasteArea" placeholder="ここに番組表を貼り付け" style="width:100%; height:100px; background:#2a2a3c; color:#ddd; border:1px solid #444; border-radius:6px; padding:8px;"></textarea><button id="emptyGguideBtn" class="menu-btn" style="margin-top:8px;">Gガイドで番組表を開く</button></div>`;
-                openGguideForDate(selectedDate);
-                document.getElementById('emptyGguideBtn')?.addEventListener('click', () => openGguideForDate(selectedDate));
-                document.getElementById('emptyPasteArea')?.addEventListener('paste', (e) => {
-                    e.preventDefault(); const cb = e.clipboardData || window.clipboardData;
-                    if (!cb) return; const htmlData = cb.getData('text/html'); const plainText = cb.getData('text/plain');
-                    if (e.target) e.target.value = plainText || '';
-                    if (!htmlData) { alert('HTML形式のデータが取得できませんでした。'); return; }
-                    handlePaste(htmlData, selectedDate);
-                });
-            } else {
-                renderChannelTabs(todayPrograms);
-                renderProgramsForDateAndChannel(todayPrograms);
-            }
-            updateHeaderButtons();
-            if (menuPanel.classList.contains('open')) {
-                const activeTab = document.querySelector('.menu-content.active');
-                if (activeTab) {
-                    if (activeTab.id === 'tab-ignore') renderUninterestingList();
-                    else if (activeTab.id === 'tab-reserved') renderReservedList();
-                }
-            }
-        } catch (e) { console.error('renderAll error:', e); }
-    }
-
-    function renderProgramsForDateAndChannelOnly() {
-        if (showFavorites || showHighlighted) return;
-        const todayPrograms = programs.filter(p => p.displayDate.getTime() === selectedDate.getTime());
-        if (todayPrograms.length > 0) { renderChannelTabs(todayPrograms); renderProgramsForDateAndChannel(todayPrograms); }
-    }
-
-    function renderDateTabs() {
-        const dates = getDateList();
-        dateTabsDiv.innerHTML = '';
-        dates.forEach(date => {
-            const hasData = programs.some(p => p.displayDate.getTime() === date.getTime());
-            const tab = document.createElement('div');
-            let classes = 'date-tab';
-            if (date.getTime() === selectedDate.getTime()) classes += ' active';
-            if (!hasData) classes += ' no-data';
-            tab.className = classes;
-            tab.textContent = getDisplayDateStr(date);
-            tab.addEventListener('click', () => { selectedDate = new Date(date); renderAll(); });
-            dateTabsDiv.appendChild(tab);
-        });
-    }
-
-    function renderChannelTabs(todayPrograms) {
-        const available = [...new Set(todayPrograms.map(p => p.channel))];
-        const ordered = CHANNEL_ORDER.filter(ch => available.includes(ch));
-        channelTabsDiv.innerHTML = '';
-        ordered.forEach(ch => {
-            const tab = document.createElement('div');
-            tab.className = 'channel-tab' + (ch === selectedChannel ? ' active' : '');
-            tab.textContent = ch;
-            tab.addEventListener('click', () => { selectedChannel = ch; renderAll(); });
-            channelTabsDiv.appendChild(tab);
-        });
-        if (!ordered.includes(selectedChannel)) { selectedChannel = ordered[0] || CHANNEL_ORDER[0]; renderAll(); }
-    }
-
-    function renderProgramsForDateAndChannel(todayPrograms) {
-        const currentIndex = CHANNEL_ORDER.indexOf(selectedChannel);
-        const prevIndex = currentIndex > 0 ? currentIndex - 1 : CHANNEL_ORDER.length - 1;
-        const nextIndex = currentIndex < CHANNEL_ORDER.length - 1 ? currentIndex + 1 : 0;
-        const prevChannel = CHANNEL_ORDER[prevIndex];
-        const nextChannel = CHANNEL_ORDER[nextIndex];
-
-        const buildChannelHTML = (ch) => {
-            const uninterestingList = (uninterestingByChannel[ch] || []).map(w => w.value || w);
-            const reservedList = (reservedByChannel[ch] || []).map(w => w.value || w);
-            let chPrograms = todayPrograms.filter(p => p.channel === ch).sort((a,b) => a.rawStart - b.rawStart);
-            if (!showUninteresting) {
-                chPrograms = chPrograms.filter(p => {
-                    const base = getBaseTitle(p.title);
-                    const isUser = uninterestingList.some(w => base.startsWith(w));
-                    const dur = (p.rawEnd - p.rawStart)/60000;
-                    const globalMatch = globalExcludeWords.some(w => p.title.includes(w.value || w));
-                    const isUninteresting = isUser || globalMatch || (dur <= 5 && dur >= 0);
-                    if (isUninteresting) {
-                        const isReserved = reservedList.some(w => base.startsWith(w));
-                        const hasHighlight = descriptionContainsHighlight(p.title) || descriptionContainsHighlight(p.description);
-                        return isReserved || hasHighlight;
-                    }
-                    return true;
-                });
-            }
-            if (chPrograms.length === 0) return '<div class="empty-message">このチャンネルに番組はありません</div>';
-            let html = '<div class="program-group">';
-            chPrograms.forEach(p => {
-                const startStr = `${String(p.rawStart.getHours()).padStart(2,'0')}:${String(p.rawStart.getMinutes()).padStart(2,'0')}`;
-                const baseTitle = getBaseTitle(p.title);
-                const isUserUninteresting = uninterestingList.some(w => baseTitle.startsWith(w));
-                const dur = (p.rawEnd - p.rawStart)/60000;
-                const globalMatch = globalExcludeWords.some(w => p.title.includes(w.value || w));
-                const isUninteresting = isUserUninteresting || globalMatch || (dur <= 5 && dur >= 0);
-                const isReserved = reservedList.some(w => baseTitle.startsWith(w));
-                const isFav = favorites.includes(getProgramId(p));
-                let itemClass = 'program-item';
-                if (isUninteresting && showUninteresting) itemClass += ' uninteresting';
-                if (isFav) itemClass += ' favorite';
-                else if (isReserved) itemClass += ' reserved';
-                let titlePrefix = '';
-                if (isFav) titlePrefix += '⭐ ';
-                if (isReserved) titlePrefix += '📌 ';
-                const highlightedTitle = applyHighlight(escapeHTML(p.title));
-                const descText = p.description || '';
-                const highlightedDesc = applyHighlight(escapeHTML(descText));
-                let showDesc = (isUninteresting && descriptionContainsHighlight(descText)) || !isUninteresting;
-                const descDisplay = showDesc ? `<div class="program-desc${isUninteresting ? ' show' : ''}">${highlightedDesc}</div>` : `<div class="program-desc">${highlightedDesc}</div>`;
-
-                html += `<div class="swipe-item-wrapper" data-program-id="${getProgramId(p)}" data-title="${escapeHTML(baseTitle)}" data-channel="${escapeHTML(ch)}">
-                            <div class="swipe-action-left">🗑 不要</div>
-                            <div class="swipe-action-right">📌 予約</div>
-                            <div class="${itemClass}">
-                                <div class="program-time">${startStr}</div>
-                                <div class="program-body">
-                                    <div class="program-title">${titlePrefix}${highlightedTitle}</div>
-                                    ${descDisplay}
-                                </div>
-                            </div>
-                        </div>`;
-            });
-            html += '</div>';
-            return html;
-        };
-
-        contentDiv.innerHTML = `
-            <div class="swipe-channel-container" id="swipeContainer">
-                <div class="swipe-channel-panels" id="swipePanels">
-                    <div class="channel-panel" data-channel="${prevChannel}">${buildChannelHTML(prevChannel)}</div>
-                    <div class="channel-panel" data-channel="${selectedChannel}">${buildChannelHTML(selectedChannel)}</div>
-                    <div class="channel-panel" data-channel="${nextChannel}">${buildChannelHTML(nextChannel)}</div>
-                </div>
-            </div>
-        `;
-
-        const container = document.getElementById('swipeContainer');
-        const panels = document.getElementById('swipePanels');
-        panels.style.transform = 'translateX(-100%)';
-
-        let startX = 0, startY = 0, swiping = false, isHorizontalSwipe = false;
-        container.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.program-item, .swipe-item-wrapper')) return;
-            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-            isHorizontalSwipe = false; swiping = true;
-        }, {passive: true});
-        container.addEventListener('touchmove', (e) => {
-            if (!swiping) return;
-            const currentX = e.touches[0].clientX, currentY = e.touches[0].clientY;
-            const diffX = Math.abs(currentX - startX), diffY = Math.abs(currentY - startY);
-
-            if (diffY > 5 && diffY > diffX) {
-                swiping = false;
-                if (isHorizontalSwipe) {
-                    isHorizontalSwipe = false;
-                    panels.style.transition = 'transform 0.2s ease-out';
-                    panels.style.transform = 'translateX(-100%)';
-                }
-                return;
-            }
-
-            if (!isHorizontalSwipe && diffX > 10 && diffX > diffY) {
-                const screenWidth = window.innerWidth;
-                if (startX < screenWidth * 0.15 || startX > screenWidth * 0.85) isHorizontalSwipe = true;
-            }
-            if (isHorizontalSwipe) {
-                e.preventDefault();
-                const screenWidth = window.innerWidth;
-                const diff = currentX - startX;
-                panels.style.transition = 'none';
-                panels.style.transform = `translateX(${-100 + (diff / screenWidth * 100)}%)`;
-            }
-        }, {passive: false});
-        container.addEventListener('touchend', (e) => {
-            if (!swiping) return;
-            swiping = false;
-            if (!isHorizontalSwipe) return;
-            const screenWidth = window.innerWidth;
-            const diff = e.changedTouches[0].clientX - startX;
-            const threshold = screenWidth * 0.3;
-            panels.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
-            if (diff > threshold) {
-                panels.style.transform = 'translateX(0%)';
-                selectedChannel = prevChannel;
-                renderChannelTabs(programs.filter(p => p.displayDate.getTime() === selectedDate.getTime()));
-                setTimeout(() => renderAll(), 350);
-            } else if (diff < -threshold) {
-                panels.style.transform = 'translateX(-200%)';
-                selectedChannel = nextChannel;
-                renderChannelTabs(programs.filter(p => p.displayDate.getTime() === selectedDate.getTime()));
-                setTimeout(() => renderAll(), 350);
-            } else {
-                panels.style.transform = 'translateX(-100%)';
-            }
-        });
-
-        attachDoubleTapEvents();
-        attachSwipeEvents();
-        attachLongPressToTitles();
-    }
-
-    function renderFavoritesForDate() {
-        channelTabsDiv.innerHTML = '';
-        const allFavs = programs.filter(p => favorites.includes(getProgramId(p)) && p.displayDate.getTime() === selectedDate.getTime()).sort((a,b) => a.rawStart - b.rawStart);
-        if (allFavs.length === 0) { contentDiv.innerHTML = '<div class="channel-panel"><div class="empty-message">この日のお気に入りはありません</div></div>'; return; }
-        let html = '<div class="channel-panel"><div class="program-group">';
-        allFavs.forEach(p => {
-            const timeStr = `${String(p.rawStart.getHours()).padStart(2,'0')}:${String(p.rawStart.getMinutes()).padStart(2,'0')}`;
-            const isReserved = (reservedByChannel[p.channel] || []).some(w => getBaseTitle(p.title).startsWith(w.value || w));
-            let itemClass = 'program-item favorite';
-            if (isReserved) itemClass += ' reserved';
-            let titlePrefix = '⭐ ';
-            if (isReserved) titlePrefix += '📌 ';
-            const highlightedTitle = applyHighlight(escapeHTML(p.title));
-            const highlightedDesc = p.description ? applyHighlight(escapeHTML(p.description)) : '';
-            html += `<div class="swipe-item-wrapper" data-program-id="${getProgramId(p)}" data-title="${escapeHTML(getBaseTitle(p.title))}" data-channel="${escapeHTML(p.channel)}">
-                        <div class="swipe-action-left">🗑 不要</div>
-                        <div class="swipe-action-right">📌 予約</div>
-                        <div class="${itemClass}">
-                            <div class="program-time">${timeStr}<br><span class="channel-small">${p.channel}</span></div>
-                            <div class="program-body">
-                                <div class="program-title">${titlePrefix}${highlightedTitle}</div>
-                                ${highlightedDesc ? `<div class="program-desc">${highlightedDesc}</div>` : ''}
-                            </div>
-                        </div>
-                    </div>`;
-        });
-        html += '</div></div>';
-        contentDiv.innerHTML = html;
-        attachDoubleTapEvents();
-        attachSwipeEvents();
-        attachLongPressToTitles();
-    }
-
-    function renderHighlightedForDate() {
-        channelTabsDiv.innerHTML = '';
-        const allFiltered = programs.filter(p => {
-            if (p.displayDate.getTime() !== selectedDate.getTime()) return false;
-            const titleHas = highlightWords.some(w => p.title.includes(w.value || w));
-            const descHas = p.description && highlightWords.some(w => p.description.includes(w.value || w));
-            return titleHas || descHas;
-        }).sort((a,b) => a.rawStart - b.rawStart);
-        if (allFiltered.length === 0) { contentDiv.innerHTML = '<div class="channel-panel"><div class="empty-message">該当する番組はありません</div></div>'; return; }
-        let html = '<div class="channel-panel"><div class="program-group">';
-        allFiltered.forEach(p => {
-            const timeStr = `${String(p.rawStart.getHours()).padStart(2,'0')}:${String(p.rawStart.getMinutes()).padStart(2,'0')}`;
-            const isFav = favorites.includes(getProgramId(p));
-            const isReserved = (reservedByChannel[p.channel] || []).some(w => getBaseTitle(p.title).startsWith(w.value || w));
-            let itemClass = 'program-item';
-            if (isFav) itemClass += ' favorite';
-            else if (isReserved) itemClass += ' reserved';
-            let titlePrefix = '';
-            if (isFav) titlePrefix += '⭐ ';
-            if (isReserved) titlePrefix += '📌 ';
-            const highlightedTitle = applyHighlight(escapeHTML(p.title));
-            const highlightedDesc = p.description ? applyHighlight(escapeHTML(p.description)) : '';
-            html += `<div class="swipe-item-wrapper" data-program-id="${getProgramId(p)}" data-title="${escapeHTML(getBaseTitle(p.title))}" data-channel="${escapeHTML(p.channel)}">
-                        <div class="swipe-action-left">🗑 不要</div>
-                        <div class="swipe-action-right">📌 予約</div>
-                        <div class="${itemClass}">
-                            <div class="program-time">${timeStr}<br><span class="channel-small">${p.channel}</span></div>
-                            <div class="program-body">
-                                <div class="program-title">${titlePrefix}${highlightedTitle}</div>
-                                ${highlightedDesc ? `<div class="program-desc">${highlightedDesc}</div>` : ''}
-                            </div>
-                        </div>
-                    </div>`;
-        });
-        html += '</div></div>';
-        contentDiv.innerHTML = html;
-        attachDoubleTapEvents();
-        attachSwipeEvents();
-        attachLongPressToTitles();
-    }
-
-    function attachLongPressToTitles() {
-        document.querySelectorAll('.program-title').forEach(title => {
-            let pressTimer = null;
-            let isLongPress = false;
-            let startX = 0, startY = 0;
-
-            const longPressHandler = (e) => {
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                isLongPress = false;
-
-                pressTimer = setTimeout(() => {
-                    isLongPress = true;
-                    const wrapper = title.closest('.swipe-item-wrapper');
-                    const query = wrapper ? wrapper.dataset.title : '';
-                    if (query) {
-                        openSearch(query);
-                    }
-                    pressTimer = null;
-                }, 500);
-            };
-
-            const moveHandler = (e) => {
-                if (!pressTimer) return;
-                const dx = Math.abs(e.touches[0].clientX - startX);
-                const dy = Math.abs(e.touches[0].clientY - startY);
-
-                if (dx > 20 || dy > 20) {
-                    clearTimeout(pressTimer);
-                    pressTimer = null;
-                } else {
-                    e.preventDefault();
-                }
-            };
-
-            const endHandler = (e) => {
-                if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    pressTimer = null;
-                }
-                if (isLongPress) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    isLongPress = false;
-                }
-            };
-
-            title.addEventListener('touchstart', longPressHandler, { passive: false });
-            title.addEventListener('touchmove', moveHandler, { passive: false });
-            title.addEventListener('touchend', endHandler);
-            title.addEventListener('touchcancel', endHandler);
-
-            title.addEventListener('click', (e) => {
-                if (isLongPress) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    isLongPress = false;
-                }
-            });
-        });
-    }
-
-    function attachDoubleTapEvents() {
-        document.querySelectorAll('.program-item').forEach(item => {
-            let tapCount = 0, timer = null;
-            item.addEventListener('click', (e) => {
-                tapCount++;
-                if (tapCount === 1) {
-                    timer = setTimeout(() => { tapCount = 0; }, 300);
-                } else if (tapCount === 2) {
-                    clearTimeout(timer); tapCount = 0;
-                    const wrapper = item.closest('.swipe-item-wrapper');
-                    const id = wrapper ? wrapper.dataset.programId : null;
-                    if (!id) return;
-                    const ch = wrapper.dataset.channel;
-
-                    if (reservedByChannel[ch]) {
-                        const base = wrapper.dataset.title;
-                        const rList = reservedByChannel[ch];
-                        const rIdx = rList.findIndex(it => (it.value || it) === base);
-                        if (rIdx !== -1) rList.splice(rIdx, 1);
-                        item.classList.remove('reserved');
-                    }
-
-                    const idx = favorites.indexOf(id);
-                    if (idx === -1) {
-                        favorites.push(id);
-                        item.classList.add('favorite');
-                        const titleEl = item.querySelector('.program-title');
-                        if (titleEl) {
-                            let text = titleEl.textContent.replace(/^📌 /, '');
-                            if (!text.startsWith('⭐ ')) text = '⭐ ' + text;
-                            titleEl.textContent = text;
-                        }
-                    } else {
-                        favorites.splice(idx, 1);
-                        item.classList.remove('favorite');
-                        const titleEl = item.querySelector('.program-title');
-                        if (titleEl) {
-                            titleEl.textContent = titleEl.textContent.replace(/^⭐ /, '');
-                        }
-                    }
-                    saveSettings();
-                }
-            });
-        });
-    }
-
-    function attachSwipeEvents() {
-        document.querySelectorAll('.swipe-item-wrapper').forEach(wrapper => {
-            const item = wrapper.querySelector('.program-item');
-            if (!item) return;
-            let startX = 0, startY = 0;
-            let currentTranslate = 0;
-            let swiping = false;
-            let direction = null;
-            let thresholdReached = false;
-
-            const resetSwipe = () => {
-                item.style.transition = 'transform 0.2s';
-                item.style.transform = 'translateX(0)';
-                currentTranslate = 0;
-                direction = null;
-                thresholdReached = false;
-                const leftAction = wrapper.querySelector('.swipe-action-left');
-                const rightAction = wrapper.querySelector('.swipe-action-right');
-                if (leftAction) { leftAction.style.opacity = '0'; leftAction.classList.remove('active'); }
-                if (rightAction) { rightAction.style.opacity = '0'; rightAction.classList.remove('active'); }
-            };
-
-            wrapper.addEventListener('touchstart', (e) => {
-                if (window.getSelection().toString().length > 0) return;
-                const tx = e.touches[0].clientX;
-                const screenWidth = window.innerWidth;
-                if (tx < screenWidth * 0.15 || tx > screenWidth * 0.85) return;
-                startX = tx;
-                startY = e.touches[0].clientY;
-                swiping = true;
-                item.style.transition = 'none';
-            }, {passive: true});
-
-            wrapper.addEventListener('touchmove', (e) => {
-                if (!swiping) return;
-                const dx = e.touches[0].clientX - startX;
-                const dy = e.touches[0].clientY - startY;
-                if (Math.abs(dy) > Math.abs(dx)) {
-                    swiping = false;
-                    resetSwipe();
-                    return;
-                }
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    e.preventDefault();
-                    currentTranslate = dx;
-                    item.style.transform = `translateX(${dx}px)`;
-
-                    const threshold = window.innerWidth * 0.3;
-                    const leftAction = wrapper.querySelector('.swipe-action-left');
-                    const rightAction = wrapper.querySelector('.swipe-action-right');
-                    const absDx = Math.abs(dx);
-                    const justReached = absDx > threshold && !thresholdReached;
-                    const insideThreshold = absDx <= threshold && thresholdReached;
-
-                    if (dx < 0) {
-                        direction = 'left';
-                        if (leftAction) leftAction.style.opacity = Math.min(absDx / 100, 1);
-                        if (rightAction) rightAction.style.opacity = '0';
-                        if (rightAction) rightAction.classList.remove('active');
-                        if (justReached) {
-                            thresholdReached = true;
-                            if (leftAction) leftAction.classList.add('active');
-                        } else if (insideThreshold) {
-                            thresholdReached = false;
-                            if (leftAction) leftAction.classList.remove('active');
-                        }
-                    } else if (dx > 0) {
-                        direction = 'right';
-                        if (rightAction) rightAction.style.opacity = Math.min(dx / 100, 1);
-                        if (leftAction) leftAction.style.opacity = '0';
-                        if (leftAction) leftAction.classList.remove('active');
-                        if (justReached) {
-                            thresholdReached = true;
-                            if (rightAction) rightAction.classList.add('active');
-                        } else if (insideThreshold) {
-                            thresholdReached = false;
-                            if (rightAction) rightAction.classList.remove('active');
-                        }
-                    } else {
-                        direction = null;
-                        if (leftAction) leftAction.style.opacity = '0';
-                        if (rightAction) rightAction.style.opacity = '0';
-                        if (leftAction) leftAction.classList.remove('active');
-                        if (rightAction) rightAction.classList.remove('active');
-                    }
-                }
-            }, {passive: false});
-
-            wrapper.addEventListener('touchend', (e) => {
-                if (!swiping) return;
-                swiping = false;
-                const threshold = window.innerWidth * 0.3;
-                const base = wrapper.dataset.title;
-                const ch = wrapper.dataset.channel;
-                const id = wrapper.dataset.programId;
-                if (!base || !ch) {
-                    resetSwipe();
-                    return;
-                }
-
-                if (Math.abs(currentTranslate) > threshold) {
-                    if (direction === 'left') {
-                        if (!uninterestingByChannel[ch]) uninterestingByChannel[ch] = [];
-                        const list = uninterestingByChannel[ch];
-                        const idx = list.findIndex(it => (it.value || it) === base);
-                        if (idx === -1) {
-                            list.push({ id: generateWordId(), value: base });
-                            if (showUninteresting) item.classList.add('uninteresting');
-                            else item.style.display = 'none';
-                        } else {
-                            list.splice(idx, 1);
-                            item.classList.remove('uninteresting');
-                            item.style.display = '';
-                        }
-                    } else if (direction === 'right') {
-                        if (!reservedByChannel[ch]) reservedByChannel[ch] = [];
-                        const list = reservedByChannel[ch];
-                        const idx = list.findIndex(it => (it.value || it) === base);
-                        const titleEl = item.querySelector('.program-title');
-                        if (idx === -1) {
-                            const favIdx = favorites.indexOf(id);
-                            if (favIdx !== -1) {
-                                favorites.splice(favIdx, 1);
-                                item.classList.remove('favorite');
-                            }
-                            list.push({ id: generateWordId(), value: base });
-                            item.classList.add('reserved');
-                            if (titleEl) {
-                                let text = titleEl.textContent.replace(/^⭐ /, '');
-                                if (!text.startsWith('📌 ')) text = '📌 ' + text;
-                                titleEl.textContent = text;
-                            }
-                        } else {
-                            list.splice(idx, 1);
-                            item.classList.remove('reserved');
-                            if (titleEl) titleEl.textContent = titleEl.textContent.replace(/^📌 /, '');
-                        }
-                    }
-                    saveSettings();
-                }
-                resetSwipe();
-            });
-        });
-    }
-
-    function attachMenuSwipeEvents() {
-        const types = [
-            { wrapperId: 'menuListWrapperIgnore', panelsId: 'menuListPanelsIgnore', type: 'uninteresting' },
-            { wrapperId: 'menuListWrapperReserved', panelsId: 'menuListPanelsReserved', type: 'reserved' }
-        ];
-        types.forEach(({wrapperId, panelsId, type}) => {
-            const wrapper = document.getElementById(wrapperId);
-            const panels = document.getElementById(panelsId);
-            if (!wrapper || !panels) return;
-
-            wrapper.removeEventListener('touchstart', menuTouchStart);
-            wrapper.removeEventListener('touchmove', menuTouchMove);
-            wrapper.removeEventListener('touchend', menuTouchEnd);
-
-            let startX = 0, startY = 0, swiping = false, isHorizontalSwipe = false;
-
-            function menuTouchStart(e) {
-                const activeTag = document.activeElement ? document.activeElement.tagName : '';
-                if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
-                    swiping = false;
-                    return;
-                }
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                isHorizontalSwipe = false;
-                swiping = true;
-                panels.style.transition = 'none';
-            }
-            function menuTouchMove(e) {
-                if (!swiping) return;
-                const activeTag = document.activeElement ? document.activeElement.tagName : '';
-                if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
-                    swiping = false;
-                    return;
-                }
-                const currentX = e.touches[0].clientX, currentY = e.touches[0].clientY;
-                const diffX = Math.abs(currentX - startX), diffY = Math.abs(currentY - startY);
-                if (diffY > diffX) { swiping = false; return; }
-                if (!isHorizontalSwipe && diffX > 10 && diffX > diffY) isHorizontalSwipe = true;
-                if (!isHorizontalSwipe) return;
-                e.preventDefault();
-                const diff = currentX - startX;
-                const panelWidth = wrapper.clientWidth;
-                const offset = -100 + (diff / panelWidth * 100);
-                panels.style.transform = `translateX(${offset}%)`;
-            }
-            function menuTouchEnd(e) {
-                if (!swiping) return;
-                swiping = false;
-                if (!isHorizontalSwipe) return;
-                const diff = e.changedTouches[0].clientX - startX;
-                const threshold = 80;
-                const currentIndex = CHANNEL_ORDER.indexOf(selectedChannel);
-                let newChannel = selectedChannel;
-
-                panels.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
-
-                if (diff > threshold) {
-                    panels.style.transform = 'translateX(0%)';
-                    newChannel = CHANNEL_ORDER[(currentIndex - 1 + CHANNEL_ORDER.length) % CHANNEL_ORDER.length];
-                } else if (diff < -threshold) {
-                    panels.style.transform = 'translateX(-200%)';
-                    newChannel = CHANNEL_ORDER[(currentIndex + 1) % CHANNEL_ORDER.length];
-                } else {
-                    panels.style.transform = 'translateX(-100%)';
-                    return;
-                }
-
-                selectedChannel = newChannel;
-                setTimeout(() => {
-                    renderMenuChannelTabs();
-                    if (type === 'uninteresting') renderUninterestingList();
-                    else renderReservedList();
-                    renderProgramsForDateAndChannelOnly();
-                    panels.style.transition = 'none';
-                    panels.style.transform = 'translateX(-100%)';
-                }, 350);
-            }
-
-            wrapper.addEventListener('touchstart', menuTouchStart, {passive: true});
-            wrapper.addEventListener('touchmove', menuTouchMove, {passive: false});
-            wrapper.addEventListener('touchend', menuTouchEnd);
-        });
-    }
-
-    function escapeHTML(str) {
-        const div = document.createElement('div');
-        div.textContent = removeGarbageChars(str);
-        return div.innerHTML;
-    }
-
-    const collator = new Intl.Collator('ja');
-
-    function renderWordList(containerId, words, type, panelsId) {
-        const sorted = words.map(w => ({ ...w })).sort((a, b) => collator.compare(a.value, b.value));
-        const panels = panelsId ? document.getElementById(panelsId) : null;
-        const targetEl = panels || document.getElementById(containerId);
-        if (!targetEl) return;
-
-        const buildListHTML = (chWords) => {
-            const sortedCh = chWords.map(w => ({ ...w })).sort((a, b) => collator.compare(a.value, b.value));
-            return sortedCh.map(item => {
-                let count = 0;
-                if (type === 'uninteresting') count = programs.filter(p => p.channel === selectedChannel && getBaseTitle(p.title).startsWith(item.value)).length;
-                else if (type === 'reserved') count = programs.filter(p => p.channel === selectedChannel && getBaseTitle(p.title).startsWith(item.value)).length;
-                else if (type === 'exclude') count = programs.filter(p => p.displayDate.getTime() === selectedDate.getTime() && p.title.includes(item.value)).length;
-                else if (type === 'highlight') count = programs.filter(p => p.title.includes(item.value) || (p.description && p.description.includes(item.value))).length;
-                return `<div class="list-item"><input type="text" value="${escapeHTML(item.value)}" data-id="${item.id}" data-type="${type}" class="edit-word">${count > 0 ? `<span class="count-badge">${count}件</span>` : ''}<button data-action="removeWord" data-id="${item.id}" data-type="${type}">✕</button></div>`;
-            }).join('');
-        };
-
-        if (panels && (type === 'uninteresting' || type === 'reserved')) {
-            const currentIndex = CHANNEL_ORDER.indexOf(selectedChannel);
-            const prevIndex = (currentIndex - 1 + CHANNEL_ORDER.length) % CHANNEL_ORDER.length;
-            const nextIndex = (currentIndex + 1) % CHANNEL_ORDER.length;
-            const prevChannel = CHANNEL_ORDER[prevIndex];
-            const nextChannel = CHANNEL_ORDER[nextIndex];
-
-            const prevWords = type === 'uninteresting' ? (uninterestingByChannel[prevChannel] || []) : (reservedByChannel[prevChannel] || []);
-            const currWords = words;
-            const nextWords = type === 'uninteresting' ? (uninterestingByChannel[nextChannel] || []) : (reservedByChannel[nextChannel] || []);
-
-            panels.innerHTML = `
-                <div class="menu-list-panel">${buildListHTML(prevWords)}</div>
-                <div class="menu-list-panel">${buildListHTML(currWords)}</div>
-                <div class="menu-list-panel">${buildListHTML(nextWords)}</div>
-            `;
-            panels.style.transform = 'translateX(-100%)';
-        } else if (panels) {
-            panels.innerHTML = `<div class="menu-list-panel">${buildListHTML(words)}</div>`;
-            panels.style.transform = 'translateX(0)';
+    // ページ復帰時のイベント検知
+    window.addEventListener('pageshow', (e) => {
+        if (e.persisted) {
+            log('キャッシュから復帰 (pageshow persisted)');
+            statusBox.textContent = '状態: 履歴から復帰しました';
         } else {
-            targetEl.innerHTML = buildListHTML(words);
-        }
-    }
-
-    function getWordListByType(type) {
-        if (type === 'uninteresting') return uninterestingByChannel[selectedChannel] || [];
-        if (type === 'reserved') return reservedByChannel[selectedChannel] || [];
-        if (type === 'exclude') return globalExcludeWords;
-        if (type === 'highlight') return highlightWords;
-        return [];
-    }
-    function setWordListByType(type, list) {
-        if (type === 'uninteresting') uninterestingByChannel[selectedChannel] = list;
-        else if (type === 'reserved') reservedByChannel[selectedChannel] = list;
-        else if (type === 'exclude') globalExcludeWords = list;
-        else if (type === 'highlight') highlightWords = list;
-    }
-
-    menuPanel.addEventListener('click', (e) => {
-        if (e.target.dataset.action === 'removeWord') {
-            e.stopPropagation();
-            const id = e.target.dataset.id, type = e.target.dataset.type;
-            let list = getWordListByType(type).filter(item => item.id !== id);
-            setWordListByType(type, list);
-            saveSettings();
-            if (type === 'uninteresting') renderWordList('uninterestingList', list, 'uninteresting', 'menuListPanelsIgnore');
-            else if (type === 'reserved') renderWordList('reservedList', list, 'reserved', 'menuListPanelsReserved');
-            else if (type === 'exclude') renderWordList('excludeList', list, 'exclude');
-            else if (type === 'highlight') renderWordList('highlightList', list, 'highlight');
-            renderProgramsForDateAndChannelOnly();
+            log('通常読み込み (pageshow)');
         }
     });
 
-    document.addEventListener('input', (e) => {
-        if (e.target.classList.contains('edit-word')) {
-            const id = e.target.dataset.id, type = e.target.dataset.type;
-            let list = getWordListByType(type);
-            const item = list.find(it => it.id === id);
-            if (item) item.value = removeGarbageChars(e.target.value.trim());
-        }
-    });
+    // 汎用長押し処理
+    function setupLongPress(elementId, onLongPress) {
+        const el = document.getElementById(elementId);
+        let timer = null;
 
-    let blurTimer = null;
-    document.addEventListener('blur', (e) => {
-        if (e.target.classList.contains('edit-word')) {
-            if (blurTimer) clearTimeout(blurTimer);
-            blurTimer = setTimeout(() => {
-                if (document.activeElement?.classList.contains('edit-word')) return;
-                saveSettings(); renderProgramsForDateAndChannelOnly();
-                const type = e.target.dataset.type;
-                if (type === 'uninteresting') renderWordList('uninterestingList', uninterestingByChannel[selectedChannel] || [], 'uninteresting', 'menuListPanelsIgnore');
-                else if (type === 'reserved') renderWordList('reservedList', reservedByChannel[selectedChannel] || [], 'reserved', 'menuListPanelsReserved');
-                else if (type === 'exclude') renderWordList('excludeList', globalExcludeWords, 'exclude');
-                else if (type === 'highlight') renderWordList('highlightList', highlightWords, 'highlight');
-                blurTimer = null;
-            }, 100);
-        }
-    }, true);
+        el.addEventListener('touchstart', (e) => {
+            timer = setTimeout(() => {
+                onLongPress();
+            }, 500);
+        }, { passive: true });
 
-    ['addUninterestingBtn','addReservedBtn','addExcludeBtn','addHighlightBtn'].forEach((btnId, i) => {
-        const types = ['uninteresting','reserved','exclude','highlight'];
-        const inputs = ['newUninteresting','newReserved','newExclude','newHighlight'];
-        document.getElementById(btnId).addEventListener('click', () => {
-            const input = document.getElementById(inputs[i]);
-            const val = removeGarbageChars(input.value.trim());
-            if (!val) return;
-            let list = getWordListByType(types[i]);
-            if (!list.some(item => item.value === val)) {
-                list.push({ id: generateWordId(), value: val });
-                setWordListByType(types[i], list);
-                saveSettings();
-                renderWordList(['uninterestingList','reservedList','excludeList','highlightList'][i], list, types[i], i < 2 ? ['menuListPanelsIgnore','menuListPanelsReserved'][i] : null);
-                renderProgramsForDateAndChannelOnly();
-                input.value = '';
+        const cancel = () => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
             }
-        });
-        document.getElementById(inputs[i]).addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById(btnId).click(); });
-    });
-
-    function migrateWordLists() {
-        for (const ch of Object.keys(uninterestingByChannel)) { if (uninterestingByChannel[ch].length > 0 && typeof uninterestingByChannel[ch][0] === 'string') uninterestingByChannel[ch] = wordsToObjects(uninterestingByChannel[ch]); }
-        for (const ch of Object.keys(reservedByChannel)) { if (reservedByChannel[ch].length > 0 && typeof reservedByChannel[ch][0] === 'string') reservedByChannel[ch] = wordsToObjects(reservedByChannel[ch]); }
-        if (globalExcludeWords.length > 0 && typeof globalExcludeWords[0] === 'string') globalExcludeWords = wordsToObjects(globalExcludeWords);
-        if (highlightWords.length > 0 && typeof highlightWords[0] === 'string') highlightWords = wordsToObjects(highlightWords);
-    }
-
-    function renderUninterestingList() { renderWordList('uninterestingList', uninterestingByChannel[selectedChannel] || [], 'uninteresting', 'menuListPanelsIgnore'); }
-    function renderReservedList() { renderWordList('reservedList', reservedByChannel[selectedChannel] || [], 'reserved', 'menuListPanelsReserved'); }
-    function renderExcludeList() { renderWordList('excludeList', globalExcludeWords, 'exclude'); }
-    function renderHighlightList() { renderWordList('highlightList', highlightWords, 'highlight'); }
-
-    function updateHeaderButtons() {
-        toggleUninterestingBtn.className = 'header-btn ' + (showUninteresting ? 'active' : 'inactive');
-        favoritesViewBtn.className = 'header-btn ' + (showFavorites ? 'active' : 'inactive');
-        highlightedViewBtn.className = 'header-btn ' + (showHighlighted ? 'active' : 'inactive');
-    }
-
-    toggleUninterestingBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showUninteresting = !showUninteresting;
-        saveSettings(); updateHeaderButtons(); renderAll();
-    });
-    favoritesViewBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showFavorites = !showFavorites;
-        if (showFavorites) showHighlighted = false;
-        saveSettings(); updateHeaderButtons(); renderAll();
-    });
-    highlightedViewBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showHighlighted = !showHighlighted;
-        if (showHighlighted) showFavorites = false;
-        saveSettings(); updateHeaderButtons(); renderAll();
-    });
-
-    function handlePaste(htmlData, targetDate) {
-        try {
-            const parsed = parseProgramsFromHTML(htmlData, targetDate);
-            if (parsed.length === 0) { alert('番組データを抽出できませんでした。'); return; }
-            const unique = []; const seen = new Set();
-            for (const p of parsed) { const id = getProgramId(p); if (!seen.has(id)) { seen.add(id); unique.push(p); } }
-            programs = programs.filter(p => p.displayDate.getTime() !== targetDate.getTime());
-            programs.push(...unique);
-            savePrograms(); selectedDate = new Date(targetDate); selectedChannel = CHANNEL_ORDER[0];
-            showFavorites = false; showHighlighted = false; renderAll(); pasteArea.value = ''; menuPanel.classList.remove('open');
-            document.body.classList.remove('menu-open');
-            resetViewportScroll();
-        } catch (err) { alert('解析エラー: ' + err.message); }
-    }
-
-    document.addEventListener('paste', (e) => {
-        if (e.target !== pasteArea) return;
-        e.preventDefault(); const cb = e.clipboardData || window.clipboardData;
-        if (!cb) return; const htmlData = cb.getData('text/html'); pasteArea.value = cb.getData('text/plain') || '';
-        if (!htmlData) { alert('HTML形式のデータが取得できませんでした。'); return; }
-        handlePaste(htmlData, selectedDate);
-    });
-
-    openGguideBtn.addEventListener('click', () => openGguideForDate(selectedDate));
-
-    exportBtn.addEventListener('click', () => {
-        const data = { programs, settings: { uninterestingByChannel: Object.fromEntries(Object.entries(uninterestingByChannel).map(([k,v]) => [k, objectsToWords(v)])), reservedByChannel: Object.fromEntries(Object.entries(reservedByChannel).map(([k,v]) => [k, objectsToWords(v)])), globalExcludeWords: objectsToWords(globalExcludeWords), highlightWords: objectsToWords(highlightWords), favorites, showUninteresting } };
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `tv-ai-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
-    });
-    importFile.addEventListener('change', (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result);
-                if (data.programs && data.settings) {
-                    programs = data.programs.map(p => ({
-                        ...p,
-                        title: removeGarbageChars(p.title),
-                        description: removeGarbageChars(p.description),
-                        channel: CHANNEL_NAME_MIGRATION[p.channel] || p.channel
-                    }));
-                    uninterestingByChannel = {}; for (const [k,v] of Object.entries(data.settings.uninterestingByChannel || {})) uninterestingByChannel[k] = wordsToObjects(v);
-                    reservedByChannel = {}; for (const [k,v] of Object.entries(data.settings.reservedByChannel || {})) reservedByChannel[k] = wordsToObjects(v);
-                    globalExcludeWords = wordsToObjects(data.settings.globalExcludeWords || []);
-                    highlightWords = wordsToObjects(data.settings.highlightWords || []);
-                    favorites = data.settings.favorites || [];
-                    showUninteresting = data.settings.showUninteresting !== false;
-                    savePrograms(); saveSettings(); renderAll(); menuPanel.classList.remove('open');
-                    document.body.classList.remove('menu-open');
-                    resetViewportScroll();
-                    alert('インポート完了');
-                } else alert('形式エラー');
-            } catch(e) { alert('インポート失敗'); }
         };
-        reader.readAsText(file); importFile.value = '';
-    });
-    clearBtn.addEventListener('click', () => {
-        if (confirm('全データを消去しますか？')) {
-            localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(SETTINGS_KEY);
-            programs = []; uninterestingByChannel = {}; reservedByChannel = {}; globalExcludeWords = []; highlightWords = []; favorites = [];
-            showUninteresting = true; showFavorites = false; showHighlighted = false;
-            selectedDate = new Date(); selectedDate.setHours(0,0,0,0); selectedChannel = CHANNEL_ORDER[0];
-            renderAll(); menuPanel.classList.remove('open'); document.body.classList.remove('menu-open');
-            resetViewportScroll();
-        }
+
+        el.addEventListener('touchmove', cancel, { passive: true });
+        el.addEventListener('touchend', cancel);
+        el.addEventListener('touchcancel', cancel);
+    }
+
+    // --- 手法 A: 右端スワイプのJSイベント抑止 ---
+    setupLongPress('targetA', () => {
+        log('手法A: window.location.href で遷移');
+        window.location.href = 'https://www.google.com/search?q=手法A_テスト';
     });
 
-    menuBtn.addEventListener('click', () => {
-        menuPanel.classList.add('open'); document.body.classList.add('menu-open');
-        renderMenuChannelTabs(); renderUninterestingList(); renderReservedList(); renderExcludeList(); renderHighlightList();
-    });
-    menuCloseBtn.addEventListener('click', () => {
-        menuPanel.classList.remove('open'); document.body.classList.remove('menu-open');
-        resetViewportScroll();
-    });
-    document.querySelectorAll('.menu-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            document.querySelectorAll('.menu-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(tab.dataset.tab).classList.add('active');
-            if (tab.dataset.tab === 'tab-ignore') renderUninterestingList();
-            if (tab.dataset.tab === 'tab-reserved') renderReservedList();
-            if (tab.dataset.tab === 'tab-exclude') renderExcludeList();
-            if (tab.dataset.tab === 'tab-highlight') renderHighlightList();
-        });
+    // 画面右端15%領域でのタッチ移動を監視し、進むスワイプを防止
+    document.addEventListener('touchstart', (e) => {
+        const startX = e.touches[0].clientX;
+        const screenWidth = window.innerWidth;
+        // 画面右端付近のタッチ開始
+        if (startX > screenWidth * 0.85) {
+            const handleTouchMove = (moveEv) => {
+                const currentX = moveEv.touches[0].clientX;
+                // 右から左へのスワイプ動作
+                if (startX - currentX > 10) {
+                    moveEv.preventDefault(); // ブラウザの「進む」動作をブロック
+                    log('右端からの左スワイプ（進むジェスチャー）をブロックしました');
+                }
+            };
+            const handleTouchEnd = () => {
+                document.removeEventListener('touchmove', handleTouchMove);
+                document.removeEventListener('touchend', handleTouchEnd);
+            };
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+    }, { passive: true });
+
+
+    // --- 手法 B: overscroll-behavior-x によるCSS制御 ---
+    setupLongPress('targetB', () => {
+        document.body.classList.add('mode-css-guard');
+        log('手法B: CSSガード付与 + location.href で遷移');
+        window.location.href = 'https://www.google.com/search?q=手法B_テスト';
     });
 
-    window.addEventListener('load', () => {
-        migrateOldData(); loadSettings(); migrateWordLists();
-        programs = loadPrograms();
-        programs = programs.map(p => ({
-            ...p,
-            title: removeGarbageChars(p.title),
-            description: removeGarbageChars(p.description),
-            channel: CHANNEL_NAME_MIGRATION[p.channel] || p.channel
-        }));
-        if (programs.length > 0) {
-            const today = new Date(); today.setHours(0,0,0,0);
-            selectedDate = programs.find(p => p.displayDate.getTime() === today.getTime()) ? today : programs[0].displayDate;
-        }
-        selectedChannel = CHANNEL_ORDER[0];
-        saveSettings(); updateHeaderButtons();
-        attachMenuSwipeEvents();
-        renderAll();
+
+    // --- 手法 C: pagehide 時のダミー履歴書き換え ---
+    setupLongPress('targetC', () => {
+        log('手法C: 履歴調整 + location.href で遷移');
+        window.location.href = 'https://www.google.com/search?q=手法C_テスト';
     });
+
+    window.addEventListener('pagehide', () => {
+        // ページを離れる瞬間に自ページのアンカーで履歴を上書き
+        history.pushState(null, '', location.href);
+    });
+
+
+    // --- 手法 D: モーダル枠表示 (画面遷移なし) ---
+    const modal = document.getElementById('searchModal');
+    const iframe = document.getElementById('modalIframe');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    setupLongPress('targetD', () => {
+        log('手法D: モーダル表示 (遷移なし)');
+        iframe.src = 'https://www.google.com/search?q=手法D_テスト';
+        modal.style.display = 'flex';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        iframe.src = 'about:blank';
+        log('モーダルを閉じました');
+    });
+
 </script>
 </body>
 </html>
+
