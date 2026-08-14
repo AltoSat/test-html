@@ -1,1 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pop-up Bypass Experiment</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #121212; color: #fff; padding: 20px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        h1 { font-size: 1.2rem; color: #8ab4f8; margin-bottom: 8px; }
+        .card {
+            background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 14px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .card h2 { font-size: 0.95rem; color: #fbbf24; }
+        .card p { font-size: 0.8rem; color: #aaa; line-height: 1.4; }
+        .btn {
+            background: #3b82f6; color: white; border: none; padding: 10px;
+            border-radius: 6px; font-weight: bold; font-size: 0.9rem;
+            text-align: center; cursor: pointer; text-decoration: none;
+            display: block; width: 100%; touch-action: manipulation;
+        }
+        .btn:active { background: #1d4ed8; }
+        .area {
+            background: #2a2a3c; border: 2px dashed #555; padding: 16px;
+            border-radius: 6px; text-align: center; font-size: 0.85em; color: #ccc;
+        }
+    </style>
+</head>
+<body>
 
+    <h1>✦ ポップアップブロック回避 実験室</h1>
+    <p style="font-size: 0.8em; color: #888;">長押しまたはタップ操作時の Safari ポップアップブロック回避テスト</p>
+
+    <!-- パターン1 -->
+    <div class="card">
+        <h2>パターン 1: 直接開く (window.location.href)</h2>
+        <p>※同タブ遷移。非同期処理を挟まない最も確実な方法。</p>
+        <button class="btn" onclick="location.href='https://www.google.com/search?q=テスト1'">実行 (同タブ)</button>
+    </div>
+
+    <!-- パターン2 -->
+    <div class="card">
+        <h2>パターン 2: 同期処理 window.open</h2>
+        <p>※クリックイベント直後に別タブで開く（タイマーなし）。</p>
+        <button class="btn" onclick="window.open('https://www.google.com/search?q=テスト2', '_blank')">実行 (別タブ)</button>
+    </div>
+
+    <!-- パターン3 -->
+    <div class="card">
+        <h2>パターン 3: 予備ウィンドウ事前確保 (Pre-opened window)</h2>
+        <p>※タイマー実行前に一旦空のウィンドウを開き、長押し完了後にURLを変更する手法。</p>
+        <div class="area" id="target3">ここを 0.5秒 長押し</div>
+    </div>
+
+    <!-- パターン4 -->
+    <div class="card">
+        <h2>パターン 4: 動的 <a> タグ生成 + click()</h2>
+        <p>※非同期タイマー内でaタグを生成し直ちにクリックをエミュレート。</p>
+        <div class="area" id="target4">ここを 0.5秒 長押し</div>
+    </div>
+
+    <!-- パターン5 -->
+    <div class="card">
+        <h2>パターン 5: 不可視 <a> タグの属性動的書き換え</h2>
+        <p>※あらかじめHTML内に用意したaタグのhref属性を長押し完了時に書き換えてクリック。</p>
+        <a id="hiddenAnchor" href="#" target="_blank" style="display:none;"></a>
+        <div class="area" id="target5">ここを 0.5秒 長押し</div>
+    </div>
+
+    <!-- パターン6 -->
+    <div class="card">
+        <h2>パターン 6: touchstart時のウィンドウ事前確保</h2>
+        <p>※画面に指が触れた瞬間(touchstart)にウィンドウを確保し、離した(touchend)時に遷移。</p>
+        <div class="area" id="target6">ここをタップ（触れた瞬間に準備）</div>
+    </div>
+
+    <!-- パターン7 -->
+    <div class="card">
+        <h2>パターン 7: バイブレーション排除 + 同期処理</h2>
+        <p>※バイブレーション(`navigator.vibrate`)やタイマーなどの遅延を一切排除した長押し処理。</p>
+        <div class="area" id="target7">ここを 0.5秒 長押し</div>
+    </div>
+
+<script>
+    // パターン 3: 予備ウィンドウ事前確保
+    (function() {
+        const el = document.getElementById('target3');
+        let timer = null;
+        let winRef = null;
+
+        el.addEventListener('touchstart', (e) => {
+            // タッチした瞬間に（空の）ウィンドウを開くことでユーザーコンテキストを維持
+            winRef = window.open('about:blank', '_blank');
+            timer = setTimeout(() => {
+                if (winRef) {
+                    winRef.location.href = 'https://www.google.com/search?q=パターン3成功';
+                }
+            }, 500);
+        }, {passive: true});
+
+        const cancel = () => {
+            clearTimeout(timer);
+            if (winRef && winRef.location.href === 'about:blank') {
+                winRef.close(); // 長押し不成立なら閉じる
+            }
+        };
+        el.addEventListener('touchmove', cancel, {passive: true});
+        el.addEventListener('touchend', cancel);
+    })();
+
+    // パターン 4: 動的 <a> タグ生成 + click()
+    (function() {
+        const el = document.getElementById('target4');
+        let timer = null;
+
+        el.addEventListener('touchstart', () => {
+            timer = setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = 'https://www.google.com/search?q=パターン4成功';
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }, 500);
+        }, {passive: true});
+
+        const cancel = () => clearTimeout(timer);
+        el.addEventListener('touchmove', cancel, {passive: true});
+        el.addEventListener('touchend', cancel);
+    })();
+
+    // パターン 5: 不可視 <a> タグ書き換え
+    (function() {
+        const el = document.getElementById('target5');
+        const anchor = document.getElementById('hiddenAnchor');
+        let timer = null;
+
+        el.addEventListener('touchstart', () => {
+            timer = setTimeout(() => {
+                anchor.href = 'https://www.google.com/search?q=パターン5成功';
+                anchor.click();
+            }, 500);
+        }, {passive: true});
+
+        const cancel = () => clearTimeout(timer);
+        el.addEventListener('touchmove', cancel, {passive: true});
+        el.addEventListener('touchend', cancel);
+    })();
+
+    // パターン 6: touchstart時のウィンドウ事前確保
+    (function() {
+        const el = document.getElementById('target6');
+        let winRef = null;
+
+        el.addEventListener('touchstart', () => {
+            winRef = window.open('about:blank', '_blank');
+        }, {passive: true});
+
+        el.addEventListener('touchend', () => {
+            if (winRef) {
+                winRef.location.href = 'https://www.google.com/search?q=パターン6成功';
+            }
+        });
+    })();
+
+    // パターン 7: バイブレーションなし・同タブ即時書き換え
+    (function() {
+        const el = document.getElementById('target7');
+        let timer = null;
+
+        el.addEventListener('touchstart', () => {
+            timer = setTimeout(() => {
+                // バイブレーションを一切行わず同タブで即時開く
+                window.location.href = 'https://www.google.com/search?q=パターン7成功';
+            }, 500);
+        }, {passive: true});
+
+        const cancel = () => clearTimeout(timer);
+        el.addEventListener('touchmove', cancel, {passive: true});
+        el.addEventListener('touchend', cancel);
+    })();
+</script>
+</body>
+</html>
