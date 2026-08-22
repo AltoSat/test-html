@@ -463,7 +463,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   gap: 10px;
 }
 .keyboard-nav {
-  order: 2;
+  order: 3;
   height: 32px;
   display: grid;
   grid-template-columns: 32px 1fr 32px;
@@ -492,7 +492,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   touch-action: manipulation;
 }
 .control-deck {
-  order: 3;
+  order: 2;
   flex: none;
   display: grid;
   grid-template-columns: minmax(84px, 1fr) 142px minmax(84px, 1fr);
@@ -571,7 +571,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   flex: none;
   z-index: 60;
   height: 56px;
-  margin: 0 10px calc(8px + env(safe-area-inset-bottom));
+  margin: 8px 10px env(safe-area-inset-bottom);
   padding: 4px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -979,7 +979,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let currentScale = 1;
   let renderScoreRAF = null;
   let randomPhraseLength = 12;
-  let keyboardGesture = { pointerId: null, lastMidi: null, holdTimer: 0, holdInterval: 0, eventId: null, startX: 0, startScroll: 0, scrolling: false, voice: null, audioReady: false };
+  let keyboardGesture = { pointerId: null, lastMidi: null, holdTimer: 0, holdInterval: 0, eventId: null, previousSelectedId: null, startX: 0, startScroll: 0, scrolling: false, voice: null, audioReady: false };
   let activeZoom = null;
   let audioUnlockPromise = null;
   let playbackStarting = false;
@@ -1193,6 +1193,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return events.findIndex(ev => ev.id === selectedId);
   }
 
+  function findAdjacentNote(fromIndex, direction) {
+    for (let i = fromIndex + direction; i >= 0 && i < events.length; i += direction) {
+      if (events[i].type === 'note') return i;
+    }
+    return -1;
+  }
+
   function showToast(message) {
     clearTimeout(toastTimer);
     els.toast.textContent = message;
@@ -1225,8 +1232,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const hasSelection = idx >= 0;
     const selected = hasSelection ? events[idx] : null;
     const noteSelected = Boolean(selected && selected.type === 'note');
-    els.extendBtn.disabled = !hasSelection || isPlaying;
-    els.shortenBtn.disabled = !hasSelection || selected.duration <= 1 || isPlaying;
+    els.extendBtn.disabled = !noteSelected || isPlaying;
+    els.shortenBtn.disabled = !noteSelected || isPlaying;
     els.deleteBtn.disabled = (!hasSelection && events.length === 0) || isPlaying;
     els.restBtn.disabled = isPlaying;
     els.pitchDownBtn.disabled = !noteSelected || selected.midi <= FIRST_MIDI || isPlaying;
@@ -2215,6 +2222,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.pointerId = null;
     keyboardGesture.lastMidi = null;
     keyboardGesture.eventId = null;
+    keyboardGesture.previousSelectedId = null;
     keyboardGesture.scrolling = false;
     keyboardGesture.audioReady = false;
     keyboardGesture.startX = 0;
@@ -2499,6 +2507,21 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   }
 
+  function cancelGestureNote() {
+    if (keyboardGesture.eventId == null) return;
+    const idx = events.findIndex(ev => ev.id === keyboardGesture.eventId);
+    if (idx >= 0) {
+      events.splice(idx, 1);
+      selectedId = (keyboardGesture.previousSelectedId != null && events.some(ev => ev.id === keyboardGesture.previousSelectedId))
+        ? keyboardGesture.previousSelectedId
+        : (events.length ? events[events.length - 1].id : null);
+      renderScore();
+      saveState();
+    }
+    keyboardGesture.eventId = null;
+    keyboardGesture.previousSelectedId = null;
+  }
+
   function armHold(eventId) {
     cancelHold();
     keyboardGesture.holdTimer = setTimeout(() => {
@@ -2519,6 +2542,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       keyboardGesture.eventId = null;
       return;
     }
+    keyboardGesture.previousSelectedId = selectedId;
     const id = addNote(midi, { audition: false, skipStop: true });
     keyboardGesture.eventId = id;
     armHold(id);
@@ -2548,6 +2572,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.keyboardViewport.addEventListener('pointermove', e => {
     if (keyboardGesture.pointerId !== e.pointerId) return;
     e.preventDefault();
+    const midi = keyAtPoint(e.clientX, e.clientY);
+
+    if (midi == null && recordMode && keyboardGesture.eventId != null) {
+      cancelHold();
+      stopGestureVoice();
+      setKeyState(null);
+      cancelGestureNote();
+      keyboardGesture.lastMidi = null;
+      keyboardGesture.scrolling = false;
+    }
+
     const dx = e.clientX - keyboardGesture.startX;
     if (pianoSwipeMode === 'scroll') {
       if (Math.abs(dx) > 7) keyboardGesture.scrolling = true;
@@ -2559,7 +2594,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       }
       return;
     }
-    const midi = keyAtPoint(e.clientX, e.clientY);
     if (midi != null) {
       enterKeyboardKey(midi);
       try {
@@ -2576,6 +2610,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.keyboardViewport.addEventListener('pointercancel', e => endKeyboardGesture(e.pointerId));
   els.keyboardViewport.addEventListener('pointerleave', e => {
     if (keyboardGesture.pointerId === e.pointerId) {
+      if (recordMode && keyboardGesture.eventId != null) {
+        cancelHold();
+        stopGestureVoice();
+        setKeyState(null);
+        cancelGestureNote();
+        keyboardGesture.lastMidi = null;
+      }
       endKeyboardGesture(e.pointerId);
     }
   });
@@ -2585,6 +2626,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }, { capture: true, passive: true, signal: __docSignal });
 
   els.recordBtn.addEventListener('click', () => {
+    playButtonSound('record');
     recordMode = !recordMode;
     updateControls();
     saveState();
@@ -2641,7 +2683,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   bindPress(els.playBtn,
-    () => { playButtonSound('play'); startPlayback(false); },
+    () => { startPlayback(false); },
     () => {
       if (playing) {
         stopPlayback(false);
@@ -2661,6 +2703,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   bindPress(els.centerBtn,
     () => { playButtonSound('center'); centerSelectedEvent(); },
     () => {
+      playButtonSound('center');
       if (!events.length) { showToast('音符がありません'); return; }
       selectedId = events[events.length - 1].id;
       renderScore({ preserve: false });
@@ -2668,7 +2711,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       centerOnEvent(selectedId, true);
     }, 500);
 
-  function bindDpadPress(button, onAction, delay = 480, interval = 120, soundType = 'default') {
+  function bindDpadAction(button, onAction, delay = 480, interval = 120) {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2684,12 +2727,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longFired = false;
       try { button.setPointerCapture(e.pointerId); } catch (_) {}
       ensureAudioSync();
-      playButtonSound(soundType);
 
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
-
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
             onAction();
@@ -2718,10 +2759,83 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
-  bindDpadPress(els.extendBtn, () => changeDuration(1, selectedId, false, true), 480, 120, 'down');
-  bindDpadPress(els.shortenBtn, () => changeDuration(-1, selectedId, false, true), 480, 120, 'up');
-  bindDpadPress(els.pitchDownBtn, () => changePitch(-1), 480, 120, 'left');
-  bindDpadPress(els.pitchUpBtn, () => changePitch(1), 480, 120, 'right');
+  function bindDpadNoteNav(button, direction) {
+    let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
+
+    const clearTimers = () => {
+      clearTimeout(longTimer);
+      clearInterval(repeatTimer);
+      longTimer = 0;
+      repeatTimer = 0;
+    };
+
+    const performLongAction = () => {
+      const ev = events.find(item => item.id === selectedId);
+      if (ev && ev.type === 'note') {
+        changeDuration(direction, ev.id, true, false);
+        playPreview(ev.midi);
+      }
+    };
+
+    const performTapNavigation = () => {
+      const idx = selectedIndex();
+      if (idx < 0 || events[idx].type !== 'note') return;
+      const targetIdx = findAdjacentNote(idx, direction);
+      if (targetIdx < 0) {
+        showToast(direction < 0 ? 'これより上の音符はありません' : 'これより下の音符はありません');
+        return;
+      }
+      const target = events[targetIdx];
+      selectedId = target.id;
+      renderScore({ preserve: false });
+      saveState();
+      playPreview(target.midi);
+      requestAnimationFrame(() => centerOnEvent(target.id, true));
+    };
+
+    button.addEventListener('pointerdown', e => {
+      if (button.disabled || pointerId !== null) return;
+      pointerId = e.pointerId;
+      longFired = false;
+      try { button.setPointerCapture(e.pointerId); } catch (_) {}
+      ensureAudioSync();
+
+      longTimer = setTimeout(() => {
+        longFired = true;
+        if (navigator.vibrate) navigator.vibrate(18);
+        performLongAction();
+        repeatTimer = setInterval(() => {
+          if (!button.disabled) {
+            performLongAction();
+          } else {
+            clearInterval(repeatTimer);
+            repeatTimer = 0;
+          }
+        }, 330);
+      }, 470);
+    });
+
+    const finishTap = e => {
+      if (pointerId !== e.pointerId) return;
+      clearTimers();
+      if (!longFired && !button.disabled) performTapNavigation();
+      pointerId = null;
+    };
+
+    const cancelNoTap = e => {
+      if (pointerId !== e.pointerId) return;
+      clearTimers();
+      pointerId = null;
+    };
+
+    button.addEventListener('pointerup', finishTap);
+    button.addEventListener('pointercancel', cancelNoTap);
+  }
+
+  bindDpadAction(els.pitchDownBtn, () => changePitch(-1));
+  bindDpadAction(els.pitchUpBtn, () => changePitch(1));
+  bindDpadNoteNav(els.shortenBtn, -1);
+  bindDpadNoteNav(els.extendBtn, 1);
 
   (function setupRestHold() {
     let active = false;
