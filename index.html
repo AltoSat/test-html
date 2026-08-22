@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
-<title>かんたん作曲 v8</title>
+<title>かんたん作曲</title>
 <style>
 :root {
   --bg: #090d14;
@@ -131,7 +131,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   background-size: 100% var(--row-h);
   background-position: 0 0;
   isolation: isolate;
-  transform-origin: 0 0; /* ズーム計算の基準点 */
+  transform-origin: 0 0;
 }
 .score-content::before {
   content: "";
@@ -296,6 +296,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+@keyframes controlShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.control.is-shaking { animation: controlShake .38s ease; }
+
 .keyboard-viewport {
   order: 1;
   height: var(--white-key-h);
@@ -303,7 +312,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   position: relative;
   touch-action: none;
   background: #080b10;
-  /* cursor: grab; ← この行を削除 */
   display: flex;
   align-items: flex-end;
 }
@@ -320,7 +328,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   padding: 0;
   border: 0;
   border-radius: 0 0 7px 7px;
-  /* touch-action: none; ← この行を削除 */
   overflow: hidden;
 }
 .white-key {
@@ -755,7 +762,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .keyboard-viewport.playback-lock { overflow: hidden !important; touch-action: none !important; pointer-events: none !important; }
 .tab-btn:disabled { opacity: .4; pointer-events: none; }
 
-/* ズーム中はスクロールを無効化し、transformのみで制御する */
 .score-viewport.is-zooming, .keyboard-viewport.is-zooming {
   overflow: hidden !important;
   touch-action: none !important;
@@ -780,7 +786,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         <button id="keyLeft" class="octave-shift" type="button" aria-label="低い音域へ">◀</button>
         <div class="range-wrap">
           <span class="range-label">音域</span>
-          <input id="keyboardRange" type="range" min="0" max="100" value="28" aria-label="鍵盤の表示音域">
+          <input id="keyboardRange" type="range" min="0" max="100" value="28" aria-label="盤の表示音域">
         </div>
         <button id="keyRight" class="octave-shift" type="button" aria-label="高い音域へ">▶</button>
       </div>
@@ -833,7 +839,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
             <input id="swipeScroll" type="radio" name="swipeMode" value="scroll">
             <label for="swipeScroll">音域を移動</label>
           </div>
-          <div class="setting-help">「音域を移動」でも、最初に触れた鍵盤は鳴ります。そのまま指を離さず左右へ動かすと、楽譜とピアノをスクロールします。</div>
+          <div class="setting-help">「音域を移動」でも、最初に触れた鍵盤は鳴ります。そのまま指を離さず左右へ動かすと、楽譜とピアノをスクロールします</div>
         </div>
         <div class="setting-block">
           <label class="setting-label" for="noteLengthRange">1音あたりの長さ</label>
@@ -881,8 +887,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   </div>
 </div>
 <script>
+
 (() => {
   'use strict';
+
+  if (window.__kantanDocAbort) {
+    try { window.__kantanDocAbort.abort(); } catch (_) {}
+  }
+  window.__kantanDocAbort = new AbortController();
+  const __docSignal = window.__kantanDocAbort.signal;
 
   const PITCH_COUNT = 48;
   const FIRST_MIDI = 48;
@@ -954,7 +967,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let playing = null;
   let keyGeometry = new Map();
   let pianoWidth = 0;
-  let syncingHorizontal = false;
   let songs = [];
   let currentSongId = null;
   let currentSongName = '';
@@ -971,13 +983,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let activeZoom = null;
   let audioUnlockPromise = null;
   let playbackStarting = false;
+  let playbackToken = 0;
+  let prePlaybackScroll = { left: 0, top: 0 };
 
   let smoothScrollEndTimer = 0;
   let suppressScrollSync = false;
   let smoothScrollAnimId = 0;
 
+  const rootStyle = getComputedStyle(document.documentElement);
   function cssNumber(name) {
-    return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+    return parseFloat(rootStyle.getPropertyValue(name));
   }
   function rowH() { return cssNumber('--row-h'); }
   function rulerH() { return cssNumber('--ruler-h'); }
@@ -1264,32 +1279,33 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return Math.max(0, Math.min(maxTop, top));
   }
 
-  // 追加: 座標からMIDIノート番号を求める（黒鍵を優先）
   function keyAtPoint(clientX, clientY) {
     const rect = els.keyboardViewport.getBoundingClientRect();
     const x = clientX - rect.left + els.keyboardViewport.scrollLeft;
     const y = clientY - rect.top;
     if (y < 0 || y > rect.height) {
-        showToast('keyAtPoint: y範囲外 y=' + Math.round(y) + ' h=' + Math.round(rect.height));
         return null;
     }
-    for (let midi = FIRST_MIDI + PITCH_COUNT - 1; midi >= FIRST_MIDI; midi--) {
-        const geom = keyGeometry.get(midi);
-        if (!geom || !geom.isBlack) continue;
-        if (x >= geom.left && x < geom.left + geom.width) {
-            showToast('keyAtPoint: black midi=' + midi);
-            return midi;
+
+    const blackKeyHeight = cssNumber('--black-key-h');
+
+    if (y <= blackKeyHeight) {
+        for (let midi = FIRST_MIDI + PITCH_COUNT - 1; midi >= FIRST_MIDI; midi--) {
+            const geom = keyGeometry.get(midi);
+            if (!geom || !geom.isBlack) continue;
+            if (x >= geom.left && x < geom.left + geom.width) {
+                return midi;
+            }
         }
     }
+
     for (let midi = FIRST_MIDI; midi < FIRST_MIDI + PITCH_COUNT; midi++) {
         const geom = keyGeometry.get(midi);
         if (!geom || geom.isBlack) continue;
         if (x >= geom.left && x < geom.left + geom.width) {
-            showToast('keyAtPoint: white midi=' + midi);
             return midi;
         }
     }
-    showToast('keyAtPoint: 該当なし x=' + Math.round(x));
     return null;
   }
 
@@ -1320,12 +1336,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const scoreMax = Math.max(0, pianoWidth - els.scoreViewport.clientWidth);
     const keyMax = Math.max(0, pianoWidth - els.keyboardViewport.clientWidth);
     const next = Math.max(0, Math.min(Math.min(scoreMax, keyMax), left));
-    syncingHorizontal = true;
     if (source !== 'score') els.scoreViewport.scrollLeft = next;
     if (source !== 'keyboard') els.keyboardViewport.scrollLeft = next;
     const max = Math.max(1, Math.min(scoreMax, keyMax));
     els.keyboardRange.value = String(Math.round(next / max * 100));
-    requestAnimationFrame(() => { syncingHorizontal = false; });
   }
 
   function cancelRenderScoreRAF() {
@@ -1423,16 +1437,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     updateControls();
     requestAnimationFrame(updateEdgeIndicators);
 
+    if (options.preserve !== false) {
+      setLinkedScroll(preserveLeft);
+      els.scoreViewport.scrollTop = preserveTop;
+    }
+
     if (options.focusId) {
       renderScoreRAF = requestAnimationFrame(() => {
         renderScoreRAF = null;
         focusEvent(options.focusId, options.smooth !== false);
-      });
-    } else if (options.preserve !== false) {
-      renderScoreRAF = requestAnimationFrame(() => {
-        renderScoreRAF = null;
-        setLinkedScroll(preserveLeft);
-        els.scoreViewport.scrollTop = preserveTop;
       });
     }
   }
@@ -1542,10 +1555,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     selectedId = events.length ? events[events.length - 1].id : null;
     currentSongId = null;
     currentSongName = '';
-    renderScore({ preserve: false });
+    renderScore();
     saveState();
     showToast('新しいフレーズを生成しました');
-    requestAnimationFrame(() => startPlayback(true));
+    void startPlayback(true);
   }
 
   function updateEdgeIndicators() {
@@ -1603,6 +1616,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.scoreViewport.scrollTop = 0;
     els.keyboardViewport.scrollLeft = 0;
     els.keyboardViewport.style.height = `${st.targetKeyboardHeight}px`;
+    overviewState.currentTx = st.targetTx;
+    overviewState.currentTy = st.targetTy;
+    overviewState.currentKeyTx = 0;
     setContentTransitions(true);
     suppressScrollSync = false;
     activeZoom = null;
@@ -1618,8 +1634,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.keyboardInner.style.transform = '';
     viewport.classList.remove('is-zooming');
     els.keyboardViewport.classList.remove('is-zooming');
-    viewport.scrollLeft = clampScrollLeft(st.targetScrollLeft || 0);
-    viewport.scrollTop = clampScrollTop(st.targetScrollTop || 0);
+    viewport.scrollLeft = clampScrollLeft(st.targetScrollLeft != null ? st.targetScrollLeft : (st.left || 0));
+    viewport.scrollTop = clampScrollTop(st.targetScrollTop != null ? st.targetScrollTop : (st.top || 0));
     els.keyboardViewport.scrollLeft = viewport.scrollLeft;
     els.keyboardViewport.style.height = '';
     setContentTransitions(true);
@@ -1655,10 +1671,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
     const normalKeyboardHeight = kViewport.getBoundingClientRect().height;
     const targetKeyboardHeight = Math.max(0, els.keyboardInner.offsetHeight * keyScale);
-    
-    // 目標位置: startYが画面中央に来るように
-    const targetTx = 0; // 横は左寄せ (全体が見えるため)
+
+    const targetTx = 0;
     const targetTy = viewport.clientHeight / 2 - startY * scoreScale;
+
+    const startTx = -startLeft;
+    const startTy = -startTop;
+
+    const startKeyScrollLeft = kViewport.scrollLeft;
+    const startKeyTx = -startKeyScrollLeft;
+    const targetKeyTx = 0;
 
     overviewState = {
       left: startLeft,
@@ -1670,20 +1692,27 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       targetKeyboardHeight,
       targetTx,
       targetTy,
-      targetScrollLeft: 0,
-      targetScrollTop: 0
+      targetScrollLeft: startLeft,
+      targetScrollTop: startTop,
+      currentTx: startTx,
+      currentTy: startTy,
+      currentKeyTx: startKeyTx
     };
 
     viewport.classList.add('is-zooming', 'overview-mode', 'playback-fit');
     kViewport.classList.add('is-zooming', 'playback-fit');
-    
-    // スクロールをリセットしてtransformで制御
-    viewport.scrollLeft = 0;
-    viewport.scrollTop = 0;
-    kViewport.scrollLeft = 0;
 
     setContentTransitions(false);
     suppressScrollSync = true;
+
+    els.scoreContent.style.transformOrigin = '0 0';
+    els.keyboardInner.style.transformOrigin = '0 100%';
+    els.scoreContent.style.transform = `translate(${startTx}px, ${startTy}px) scale(1)`;
+    els.keyboardInner.style.transform = `translate(${startKeyTx}px, 0) scale(1)`;
+
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+    kViewport.scrollLeft = 0;
 
     const duration = 520;
     const startTime = performance.now();
@@ -1691,23 +1720,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
     activeZoom = { raf: 0, phase: 'enter' };
 
-    const startTx = -startLeft;
-    const startTy = -startTop;
-    const startKTx = 0;
-
     const frame = (now) => {
       if (!activeZoom || activeZoom.phase !== 'enter') return;
       let t = Math.min(1, (now - startTime) / duration);
       const e = ease(t);
       const scale = 1 + (scoreScale - 1) * e;
       const kScale = 1 + (keyScale - 1) * e;
+
       const tx = startTx + (targetTx - startTx) * e;
       const ty = startTy + (targetTy - startTy) * e;
-      const height = normalKeyboardHeight + (targetKeyboardHeight - normalKeyboardHeight) * e;
+      const currentKeyTx = startKeyTx + (targetKeyTx - startKeyTx) * e;
+      const currentHeight = normalKeyboardHeight + (targetKeyboardHeight - normalKeyboardHeight) * e;
 
       els.scoreContent.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-      els.keyboardInner.style.transform = `translate(0, 0) scale(${kScale})`;
-      kViewport.style.height = `${height}px`;
+      els.keyboardInner.style.transform = `translate(${currentKeyTx}px, 0) scale(${kScale})`;
+      kViewport.style.height = `${currentHeight}px`;
+      overviewState.currentKeyTx = currentKeyTx;
 
       if (t < 1) {
         activeZoom.raf = requestAnimationFrame(frame);
@@ -1734,48 +1762,53 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const startHeight = kViewport.getBoundingClientRect().height;
     const targetHeight = overviewState.normalKeyboardHeight || cssNumber('--white-key-h');
 
-    let targetX = 0, targetY = 0;
+    let finalScrollLeft, finalScrollTop;
 
     if (targetEventId) {
       const ev = events.find(item => item.id === targetEventId);
       if (ev) {
         const { map } = layoutEvents();
         const pos = map.get(targetEventId);
-        targetY = (pos.start + pos.end) / 2 * rowH();
+        const targetY = ((pos.start + pos.end) / 2) * rowH();
+        let targetX;
         if (ev.type === 'note') {
           const geom = geometryFor(ev.midi);
           targetX = geom.left + geom.width / 2;
         } else {
           targetX = pianoWidth / 2;
         }
+        finalScrollLeft = clampScrollLeft(targetX - viewport.clientWidth / 2);
+        finalScrollTop = clampScrollTop(targetY - viewport.clientHeight / 2);
+      } else {
+        finalScrollLeft = clampScrollLeft(overviewState.left || 0);
+        finalScrollTop = clampScrollTop(overviewState.top || 0);
       }
+    } else {
+      finalScrollLeft = clampScrollLeft(overviewState.left || 0);
+      finalScrollTop = clampScrollTop(overviewState.top || 0);
     }
 
-    if (targetX === 0 && targetY === 0) {
-       targetX = overviewState.focusX || pianoWidth / 2;
-       targetY = overviewState.focusY || 0;
-    }
+    const startTx = overviewState.currentTx !== undefined ? overviewState.currentTx : (overviewState.targetTx || 0);
+    const startTy = overviewState.currentTy !== undefined ? overviewState.currentTy : (overviewState.targetTy || 0);
+    const finalTx = -finalScrollLeft;
+    const finalTy = -finalScrollTop;
 
-    const targetScrollLeft = clampScrollLeft(targetX - viewport.clientWidth / 2);
-    const targetScrollTop = clampScrollTop(targetY - viewport.clientHeight / 2);
+    const startKeyTx = overviewState.currentKeyTx !== undefined ? overviewState.currentKeyTx : 0;
+    const finalKeyTx = -finalScrollLeft;
 
     setContentTransitions(false);
     suppressScrollSync = true;
+
+    els.scoreContent.style.transformOrigin = '0 0';
+    els.keyboardInner.style.transformOrigin = '0 100%';
 
     const duration = 520;
     const startTime = performance.now();
     const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
     activeZoom = { raf: 0, phase: 'leave' };
-    overviewState.targetScrollLeft = targetScrollLeft;
-    overviewState.targetScrollTop = targetScrollTop;
-
-    const startTx = overviewState.currentTx || 0;
-    const startTy = overviewState.currentTy || 0;
-
-    // 最終的なtransform値 (scale=1のとき、targetX,Yが画面中心に来るためのtranslate)
-    const finalTx = viewport.clientWidth / 2 - targetX;
-    const finalTy = viewport.clientHeight / 2 - targetY;
+    overviewState.targetScrollLeft = finalScrollLeft;
+    overviewState.targetScrollTop = finalScrollTop;
 
     const frame = (now) => {
       if (!activeZoom || activeZoom.phase !== 'leave') return;
@@ -1783,44 +1816,43 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       const e = ease(t);
       const scale = startScale + (1 - startScale) * e;
       const kScale = startKeyScale + (1 - startKeyScale) * e;
-      const height = startHeight + (targetHeight - startHeight) * e;
 
-      // ズームイン中は、ターゲットの座標が常に画面中心に来るように補間
-      const currentTx = viewport.clientWidth / 2 - targetX * scale;
-      const currentTy = viewport.clientHeight / 2 - targetY * scale;
-      
-      // 記録 (次のフレームやtick用)
+      const currentTx = startTx + (finalTx - startTx) * e;
+      const currentTy = startTy + (finalTy - startTy) * e;
+      const currentKeyTx = startKeyTx + (finalKeyTx - startKeyTx) * e;
+      const currentHeight = startHeight + (targetHeight - startHeight) * e;
+
       overviewState.currentTx = currentTx;
       overviewState.currentTy = currentTy;
+      overviewState.currentKeyTx = currentKeyTx;
 
       els.scoreContent.style.transform = `translate(${currentTx}px, ${currentTy}px) scale(${scale})`;
-      els.keyboardInner.style.transform = `translate(0, 0) scale(${kScale})`;
-      kViewport.style.height = `${height}px`;
+      els.keyboardInner.style.transform = `translate(${currentKeyTx}px, 0) scale(${kScale})`;
+      kViewport.style.height = `${currentHeight}px`;
 
       if (t < 1) {
         activeZoom.raf = requestAnimationFrame(frame);
       } else {
-        // アニメーション終了: transformを消去し、スクロールで位置を再現
         els.scoreContent.style.transform = '';
         els.keyboardInner.style.transform = '';
-        
+
         viewport.classList.remove('is-zooming', 'overview-mode', 'playback-fit');
         kViewport.classList.remove('is-zooming', 'playback-fit');
         els.scoreViewport.classList.remove('playback-lock');
         kViewport.classList.remove('playback-lock');
 
-        viewport.scrollLeft = targetScrollLeft;
-        viewport.scrollTop = targetScrollTop;
-        kViewport.scrollLeft = targetScrollLeft;
+        viewport.scrollLeft = finalScrollLeft;
+        viewport.scrollTop = finalScrollTop;
+        kViewport.scrollLeft = finalScrollLeft;
         kViewport.style.height = '';
-        
+
         setContentTransitions(true);
         suppressScrollSync = false;
         overviewState = null;
         currentScale = 1;
         activeZoom = null;
-        
-        syncKeyboardRange(targetScrollLeft);
+
+        syncKeyboardRange(finalScrollLeft);
         updateEdgeIndicators();
       }
     };
@@ -1840,21 +1872,20 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!ev) return;
     const { map } = layoutEvents();
     const pos = map.get(id);
-    const viewport = els.scoreViewport;
     const top = pos.start * rowH();
     const bottom = pos.end * rowH();
-    const safeTop = viewport.scrollTop + 18;
-    const safeBottom = viewport.scrollTop + viewport.clientHeight - 24;
-    if (top < safeTop) viewport.scrollTop = Math.max(0, top - 18);
-    else if (bottom > safeBottom) viewport.scrollTop = Math.max(0, bottom - viewport.clientHeight + 36);
+    const safeTop = els.scoreViewport.scrollTop + 18;
+    const safeBottom = els.scoreViewport.scrollTop + els.scoreViewport.clientHeight - 24;
+    if (top < safeTop) els.scoreViewport.scrollTop = Math.max(0, top - 18);
+    else if (bottom > safeBottom) els.scoreViewport.scrollTop = Math.max(0, bottom - els.scoreViewport.clientHeight + 36);
 
     if (ev.type === 'note' && !recordMode) {
       const geom = geometryFor(ev.midi);
       const x = geom.left;
-      const safeLeft = viewport.scrollLeft + 25;
-      const safeRight = viewport.scrollLeft + viewport.clientWidth - geom.width - 25;
-      if (x < safeLeft) setLinkedScroll(Math.max(0, x - viewport.clientWidth * .3));
-      else if (x > safeRight) setLinkedScroll(Math.max(0, x - viewport.clientWidth * .7));
+      const safeLeft = els.scoreViewport.scrollLeft + 25;
+      const safeRight = els.scoreViewport.scrollLeft + els.scoreViewport.clientWidth - geom.width - 25;
+      if (x < safeLeft) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .3));
+      else if (x > safeRight) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .7));
     }
   }
 
@@ -1952,33 +1983,44 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return { ctx, master, liveSources: new Set() };
   }
 
+  function ensureAudioSync() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    try {
+      if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
+        audio = createAudioGraph(new AudioCtx());
+      }
+      if (audio.ctx.state === 'suspended' || audio.ctx.state === 'interrupted') {
+        const resume = audio.ctx.resume();
+        if (resume && typeof resume.catch === 'function') resume.catch(() => {});
+      }
+      if (!audio._primed) {
+        audio._primed = true;
+        try {
+          const buf = audio.ctx.createBuffer(1, 1, audio.ctx.sampleRate || 22050);
+          const src = audio.ctx.createBufferSource();
+          src.buffer = buf;
+          src.connect(audio.ctx.destination);
+          src.start(0);
+        } catch (_) {}
+      }
+      return audio;
+    } catch (_) {
+      return null;
+    }
+  }
+
   async function unlockAudio() {
     if (audioUnlockPromise) return audioUnlockPromise;
     audioUnlockPromise = (async () => {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) {
+      const graph = ensureAudioSync();
+      if (!graph) {
         showToast('このブラウザはWeb Audioに対応していません');
         throw new Error('Web Audio unsupported');
       }
-      let ctx = null;
-      if (audio && audio.ctx && audio.ctx.state !== 'closed') {
-        ctx = audio.ctx;
-      } else {
-        ctx = new AudioCtx();
-        audio = createAudioGraph(ctx);
-      }
-      if (ctx.state === 'closed') {
-        ctx = new AudioCtx();
-        audio = createAudioGraph(ctx);
-      }
+      const ctx = graph.ctx;
       if (ctx.state !== 'running') {
         try { await ctx.resume(); } catch (_) {}
-        if (ctx.state !== 'running') {
-          await Promise.race([
-            ctx.resume().catch(() => {}),
-            new Promise(resolve => setTimeout(resolve, 650))
-          ]);
-        }
       }
       if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
         throw new Error('AudioContext closed');
@@ -2099,8 +2141,71 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   function playPreview(midi) {
+    ensureAudioSync();
     unlockAudio().then(() => {
+      if (!audio || !audio.ctx) return;
       pianoVoice(midi, audio.ctx.currentTime + .008, .28, .72);
+    }).catch(() => {});
+  }
+
+  function playButtonSound(type = 'default') {
+    ensureAudioSync();
+    unlockAudio().then(() => {
+      if (!audio || !audio.ctx) return;
+      const now = audio.ctx.currentTime;
+      const osc = audio.ctx.createOscillator();
+      const gain = audio.ctx.createGain();
+
+      switch(type) {
+        case 'up':
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.08);
+          break;
+        case 'down':
+          osc.frequency.setValueAtTime(659.25, now);
+          osc.frequency.exponentialRampToValueAtTime(523.25, now + 0.08);
+          break;
+        case 'left':
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.exponentialRampToValueAtTime(493.88, now + 0.08);
+          break;
+        case 'right':
+          osc.frequency.setValueAtTime(493.88, now);
+          osc.frequency.exponentialRampToValueAtTime(587.33, now + 0.08);
+          break;
+        case 'center':
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+          break;
+        case 'rest':
+          osc.frequency.setValueAtTime(329.63, now);
+          break;
+        case 'delete':
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+          break;
+        case 'record':
+          osc.frequency.setValueAtTime(880, now);
+          break;
+        case 'play':
+          osc.frequency.setValueAtTime(698.46, now);
+          osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.1);
+          break;
+        case 'random':
+          osc.frequency.setValueAtTime(392, now);
+          osc.frequency.exponentialRampToValueAtTime(784, now + 0.12);
+          break;
+        default:
+          osc.frequency.setValueAtTime(440, now);
+      }
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(audio.master);
+      osc.start(now);
+      osc.stop(now + 0.15);
     }).catch(() => {});
   }
 
@@ -2117,6 +2222,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   function stopPlayback(showMessage = false, focusEventId = null) {
+    playbackToken += 1;
+    playbackStarting = false;
     const wasPlaying = Boolean(playing);
     const currentPlaying = playing;
     const targetId = focusEventId || (currentPlaying ? currentPlaying.currentId : null);
@@ -2159,48 +2266,64 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return idx;
   }
 
-  function startPlayback(forceBeginning = false) {
-    showToast('startPlayback: playing=' + !!playing + ' starting=' + playbackStarting + ' events=' + events.length);
-    if (playbackStarting) {
-      playbackStarting = false;
-    }
+  async function startPlayback(forceBeginning = false) {
     if (playing) {
       const focusId = playing.currentId || null;
       stopPlayback(true, focusId);
       return;
     }
-    if (playbackStarting) return;
+    if (playbackStarting) {
+      stopPlayback(true, null);
+      return;
+    }
     stopLibraryPlayback(false);
     if (!events.length) {
       showToast('鍵盤から音符を入力してください');
+      els.playBtn.classList.remove('is-shaking');
+      void els.playBtn.offsetWidth;
+      els.playBtn.classList.add('is-shaking');
+      setTimeout(() => els.playBtn.classList.remove('is-shaking'), 400);
       return;
     }
+
+    ensureAudioSync();
+
+    const token = ++playbackToken;
     playbackStarting = true;
+
+    prePlaybackScroll.left = els.scoreViewport.scrollLeft;
+    prePlaybackScroll.top = els.scoreViewport.scrollTop;
+
+    const { map, total } = layoutEvents();
+    const startIndex = playbackStartIndex(forceBeginning);
+    const startUnit = map.get(events[startIndex].id).start;
+    const playUnits = Math.max(0, total - startUnit);
+
+    setPlaybackUI(true);
+    enterOverview(startUnit);
+    els.playBtn.textContent = '■ 停止';
+    els.playBtn.classList.add('is-playing');
+    const playhead = document.getElementById('playhead');
+    if (playhead) playhead.style.display = 'block';
+
     try {
-      // 同期的に AudioContext を初期化・resume
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) {
-        showToast('このブラウザはWeb Audioに対応していません');
+      await unlockAudio();
+      if (token !== playbackToken) return;
+      if (!audio || !audio.ctx) throw new Error('AudioContext is not available');
+      if (audio.ctx.state !== 'running') {
+        try { await audio.ctx.resume(); } catch (_) {}
+      }
+      if (token !== playbackToken) return;
+      if (audio.ctx.state !== 'running') {
+        showToast('再生できませんでした。もう一度▶を押してください');
+        stopPlayback(false);
         return;
       }
-      if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
-        const ctx = new AudioCtx();
-        audio = createAudioGraph(ctx);
-      }
-      if (audio.ctx.state === 'suspended') {
-        audio.ctx.resume();
-      }
-      if (!audio || !audio.ctx || audio.ctx.state !== 'running') {
-        showToast('再生エラー: AudioContext not running');
+      if (!events.length) {
+        stopPlayback(false);
         return;
       }
 
-      if (playing || !events.length) return;
-
-      const { map, total } = layoutEvents();
-      const startIndex = playbackStartIndex(forceBeginning);
-      const startUnit = map.get(events[startIndex].id).start;
-      const playUnits = Math.max(0, total - startUnit);
       const startAt = audio.ctx.currentTime + .075;
 
       for (let i = startIndex; i < events.length; i++) {
@@ -2212,12 +2335,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       }
 
       playing = { startAt, total, map, startUnit, playUnits, lastId: null, currentId: null, raf: 0 };
-      setPlaybackUI(true);
-      enterOverview(startUnit);
-      els.playBtn.textContent = '■ 停止';
-      els.playBtn.classList.add('is-playing');
-      const playhead = document.getElementById('playhead');
-      if (playhead) playhead.style.display = 'block';
 
       const tick = () => {
         if (!playing || !audio) return;
@@ -2246,39 +2363,31 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
           setPlayingKey(current.type === 'note' ? current.midi : null);
           playing.lastId = current.id;
         }
-        
-        // ズーム中はtransformでスクロール
-        if (overviewState && els.scoreViewport.classList.contains('is-zooming')) {
-           const scale = currentScale;
-           const ty = els.scoreViewport.clientHeight / 2 - y * scale;
-           els.scoreContent.style.transform = `translate(0px, ${ty}px) scale(${scale})`;
+
+        if (activeZoom && activeZoom.phase === 'enter') {
+          // enterOverviewアニメーション中はtransformを上書きしない
+        } else if (overviewState && els.scoreViewport.classList.contains('is-zooming')) {
+          const scale = currentScale || overviewState.scoreScale || 1;
+          const ty = els.scoreViewport.clientHeight / 2 - y * scale;
+          const tx = overviewState.targetTx || 0;
+          els.scoreContent.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+          overviewState.currentTx = tx;
+          overviewState.currentTy = ty;
         } else {
-           // ズーム外 (通常時) はscrollTopでスクロール
-           const viewport = els.scoreViewport;
-           const focusY = overviewState && overviewState.focusY != null ? overviewState.focusY : 0;
-           const targetTop = focusY + (y - focusY) * currentScale - viewport.clientHeight / 2;
-           const maxTop = Math.max(0, els.scoreContent.scrollHeight - viewport.clientHeight);
-           viewport.scrollTop = Math.max(0, Math.min(targetTop, maxTop));
+          const viewport = els.scoreViewport;
+          const focusY = overviewState && overviewState.focusY != null ? overviewState.focusY : 0;
+          const targetTop = focusY + (y - focusY) * currentScale - viewport.clientHeight / 2;
+          const maxTop = Math.max(0, els.scoreContent.scrollHeight - viewport.clientHeight);
+          viewport.scrollTop = Math.max(0, Math.min(targetTop, maxTop));
         }
         playing.raf = requestAnimationFrame(tick);
       };
       playing.raf = requestAnimationFrame(tick);
     } catch (err) {
       showToast('再生エラー: ' + (err && err.message ? err.message : '不明'));
-      if (playing) {
-        cancelAnimationFrame(playing.raf);
-        stopAllLiveSources();
-        playing = null;
-      }
-      setPlaybackUI(false);
-      resetKeyboardGesture();
-      els.playBtn.textContent = '▶ 再生';
-      els.playBtn.classList.remove('is-playing');
-      const ph = document.getElementById('playhead');
-      if (ph) ph.style.display = 'none';
-      document.querySelectorAll('.note-block.is-playing, .rest-block.is-playing').forEach(n => n.classList.remove('is-playing'));
+      stopPlayback(false);
     } finally {
-      playbackStarting = false;
+      if (token === playbackToken) playbackStarting = false;
     }
   }
 
@@ -2302,6 +2411,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     stopPlayback(false);
     stopLibraryPlayback(false);
     if (!song.events.length) return;
+    ensureAudioSync();
     try { await unlockAudio(); } catch (_) { return; }
     const unitSeconds = Math.max(.12, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
     let cursor = 0;
@@ -2367,7 +2477,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.keyboardRange.value = max ? String(Math.round(clamped / max * 100)) : '0';
   }
 
-  // 鍵盤のプレス状態を管理
   function setKeyState(midi) {
     els.keyboardInner.querySelectorAll('.is-pressed').forEach(k => k.classList.remove('is-pressed'));
     if (midi != null) {
@@ -2432,27 +2541,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.scrolling = false;
     keyboardGesture.audioReady = true;
 
-    // 即座に視覚フィードバックと記録処理を実行
+    ensureAudioSync();
     enterKeyboardKey(midi);
-
-    // 同期的に AudioContext を初期化・resume（iOS Safari 対応）
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-
-      if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
-        const ctx = new AudioCtx();
-        audio = createAudioGraph(ctx);
-      }
-      if (audio.ctx.state === 'suspended') {
-        audio.ctx.resume(); // 同期的に呼ぶ（await しない）
-      }
-      // 即座に音を鳴らす
-      if (keyboardGesture.voice) keyboardGesture.voice.stop();
-      keyboardGesture.voice = startSustainedVoice(midi);
-    } catch (err) {
-      // エラー無視
-    }
   }, { passive: false });
 
   els.keyboardViewport.addEventListener('pointermove', e => {
@@ -2472,7 +2562,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const midi = keyAtPoint(e.clientX, e.clientY);
     if (midi != null) {
       enterKeyboardKey(midi);
-      // 音も即座に更新
       try {
         if (audio && audio.ctx && audio.ctx.state === 'running') {
           if (keyboardGesture.voice) keyboardGesture.voice.stop();
@@ -2491,11 +2580,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   });
 
-  document.addEventListener('touchstart', () => {
-    if (!audio || (audio.ctx && audio.ctx.state !== 'running')) {
-      unlockAudio().catch(() => {});
-    }
-  }, { passive: true });
+  document.addEventListener('pointerdown', () => {
+    ensureAudioSync();
+  }, { capture: true, passive: true, signal: __docSignal });
 
   els.recordBtn.addEventListener('click', () => {
     recordMode = !recordMode;
@@ -2518,6 +2605,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       if (button.disabled || pointerId !== null) return;
       pointerId = e.pointerId;
       longFired = false;
+      try { button.setPointerCapture(e.pointerId); } catch (_) {}
+      ensureAudioSync();
       timer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
@@ -2540,14 +2629,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     };
     button.addEventListener('pointerup', finish);
     button.addEventListener('pointercancel', cancel);
-    button.addEventListener('pointerleave', e => {
-      if (pointerId === e.pointerId) {
-        clearTimeout(timer);
-        timer = 0;
-        pointerId = null;
-      }
-    });
-    // click ハンドラは削除（pointerup で全て処理）
   }
 
   function syncSettingsUI() {
@@ -2560,7 +2641,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   bindPress(els.playBtn,
-    () => { startPlayback(false); },
+    () => { playButtonSound('play'); startPlayback(false); },
     () => {
       if (playing) {
         stopPlayback(false);
@@ -2571,14 +2652,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }, 650);
 
   bindPress(els.deleteBtn,
-    () => deleteSelected(),
+    () => { playButtonSound('delete'); deleteSelected(); },
     () => openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition));
   bindPress(els.randomBtn,
-    () => showToast('長押しでランダムフレーズを生成します'),
+    () => { playButtonSound('random'); showToast('長押しでランダムフレーズを生成します'); },
     () => { generateRandomPhrase(); }, 700);
 
   bindPress(els.centerBtn,
-    () => centerSelectedEvent(),
+    () => { playButtonSound('center'); centerSelectedEvent(); },
     () => {
       if (!events.length) { showToast('音符がありません'); return; }
       selectedId = events[events.length - 1].id;
@@ -2587,7 +2668,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       centerOnEvent(selectedId, true);
     }, 500);
 
-  function bindDpadPress(button, onAction, delay = 480, interval = 120) {
+  function bindDpadPress(button, onAction, delay = 480, interval = 120, soundType = 'default') {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2601,6 +2682,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       if (button.disabled || pointerId !== null) return;
       pointerId = e.pointerId;
       longFired = false;
+      try { button.setPointerCapture(e.pointerId); } catch (_) {}
+      ensureAudioSync();
+      playButtonSound(soundType);
 
       longTimer = setTimeout(() => {
         longFired = true;
@@ -2632,23 +2716,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
     button.addEventListener('pointerup', finishTap);
     button.addEventListener('pointercancel', cancelNoTap);
-    button.addEventListener('pointerleave', e => {
-      if (pointerId === e.pointerId) {
-        clearTimers();
-        pointerId = null;
-      }
-    });
-    button.addEventListener('click', e => {
-      e.preventDefault();
-      pointerId = null;
-      if (!button.disabled && !longFired) onAction();
-    });
   }
 
-  bindDpadPress(els.extendBtn, () => changeDuration(1, selectedId, false, true));
-  bindDpadPress(els.shortenBtn, () => changeDuration(-1, selectedId, false, true));
-  bindDpadPress(els.pitchDownBtn, () => changePitch(-1));
-  bindDpadPress(els.pitchUpBtn, () => changePitch(1));
+  bindDpadPress(els.extendBtn, () => changeDuration(1, selectedId, false, true), 480, 120, 'down');
+  bindDpadPress(els.shortenBtn, () => changeDuration(-1, selectedId, false, true), 480, 120, 'up');
+  bindDpadPress(els.pitchDownBtn, () => changePitch(-1), 480, 120, 'left');
+  bindDpadPress(els.pitchUpBtn, () => changePitch(1), 480, 120, 'right');
 
   (function setupRestHold() {
     let active = false;
@@ -2662,6 +2735,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       active = true;
       activePointerId = e.pointerId;
       duration = 1;
+
+      playButtonSound('rest');
+
       activeEventId = addRest(1, true);
       timer = setTimeout(() => {
         interval = setInterval(() => {
@@ -2791,33 +2867,42 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.keyRight.addEventListener('click', () => {
     setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7);
   });
-  els.keyboardViewport.addEventListener('scroll', () => {
-    const left = els.keyboardViewport.scrollLeft;
-    if (!suppressScrollSync && Math.abs(els.scoreViewport.scrollLeft - left) > 0.5) els.scoreViewport.scrollLeft = left;
-    syncKeyboardRange();
-    updateEdgeIndicators();
-  }, { passive: true });
-  els.scoreViewport.addEventListener('scroll', () => {
-    const left = els.scoreViewport.scrollLeft;
-    if (!suppressScrollSync && Math.abs(els.keyboardViewport.scrollLeft - left) > 0.5) els.keyboardViewport.scrollLeft = left;
-    syncKeyboardRange();
-    updateEdgeIndicators();
-  }, { passive: true });
+  let scrollSyncRaf = 0;
+  let pendingScrollSource = null;
+  function scheduleScrollSync(source) {
+    pendingScrollSource = source;
+    if (scrollSyncRaf) return;
+    scrollSyncRaf = requestAnimationFrame(() => {
+      scrollSyncRaf = 0;
+      if (pendingScrollSource === 'keyboard') {
+        const left = els.keyboardViewport.scrollLeft;
+        if (!suppressScrollSync && Math.abs(els.scoreViewport.scrollLeft - left) > 0.5) els.scoreViewport.scrollLeft = left;
+      } else if (pendingScrollSource === 'score') {
+        const left = els.scoreViewport.scrollLeft;
+        if (!suppressScrollSync && Math.abs(els.keyboardViewport.scrollLeft - left) > 0.5) els.keyboardViewport.scrollLeft = left;
+      }
+      pendingScrollSource = null;
+      syncKeyboardRange();
+      updateEdgeIndicators();
+    });
+  }
+  els.keyboardViewport.addEventListener('scroll', () => scheduleScrollSync('keyboard'), { passive: true });
+  els.scoreViewport.addEventListener('scroll', () => scheduleScrollSync('score'), { passive: true });
 
   const preventDefault = e => e.preventDefault();
-  document.addEventListener('gesturestart', preventDefault, { passive: false });
-  document.addEventListener('gesturechange', preventDefault, { passive: false });
-  document.addEventListener('gestureend', preventDefault, { passive: false });
-  document.addEventListener('selectstart', preventDefault, { passive: false });
-  document.addEventListener('dragstart', preventDefault, { passive: false });
-  document.addEventListener('contextmenu', preventDefault, { passive: false });
+  document.addEventListener('gesturestart', preventDefault, { passive: false, signal: __docSignal });
+  document.addEventListener('gesturechange', preventDefault, { passive: false, signal: __docSignal });
+  document.addEventListener('gestureend', preventDefault, { passive: false, signal: __docSignal });
+  document.addEventListener('selectstart', preventDefault, { passive: false, signal: __docSignal });
+  document.addEventListener('dragstart', preventDefault, { passive: false, signal: __docSignal });
+  document.addEventListener('contextmenu', preventDefault, { passive: false, signal: __docSignal });
   document.addEventListener('touchmove', e => {
     if (e.touches && e.touches.length > 1) e.preventDefault();
-  }, { passive: false });
+  }, { passive: false, signal: __docSignal });
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) stopPlayback(false);
-  });
+  }, { signal: __docSignal });
 
   function doResize() {
     const currentLeft = els.scoreViewport.scrollLeft;
@@ -2835,7 +2920,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     } else {
       doResize();
     }
-  });
+  }, { signal: __docSignal });
 
   loadState();
   loadSongs();
