@@ -571,7 +571,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   flex: none;
   z-index: 60;
   min-height: 56px;
-  margin: 8px 16px max(8px, env(safe-area-inset-bottom));
+  margin: 8px 16px clamp(8px, env(safe-area-inset-bottom), 20px);
   padding: 4px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
