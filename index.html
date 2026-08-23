@@ -6,38 +6,33 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
-<title>PWA セーフエリア実験 v5 - メルカリ風フッター</title>
+<title>PWA セーフエリア実験 v6</title>
 <style>
   :root {
     --bg: #090d14;
-    --surface: #111824;
-    --surface-2: #172131;
     --accent: #53d7ff;
     --danger: #ff5573;
     --warn: #f6c45b;
     --panel: rgba(17,24,36,.95);
     --safe-top: env(safe-area-inset-top);
     --safe-bottom: env(safe-area-inset-bottom);
-    --safe-left: env(safe-area-inset-left);
-    --safe-right: env(safe-area-inset-right);
-    --tab-h: 56px;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  /* 基盤 */
+  /* =====================================================
+     基盤: 全パターン共通の背景統一
+     ===================================================== */
   html, body {
+    margin: 0; padding: 0;
     width: 100%; height: 100%;
     background: var(--bg);
     color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-    overflow: hidden;
   }
 
   /* =====================================================
-     パターン: 全画面 + メルカリ風フッター
+     パターン A: body flex + #app flex + タブmargin
      ===================================================== */
-
-  /* A: 基本 - body flex, #app flex:1, フッター固定 */
   .pattern-a body {
     display: flex; flex-direction: column;
     min-height: 100dvh;
@@ -50,13 +45,60 @@
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
   }
+  .pattern-a .bottom-tabs {
+    flex: none;
+    margin: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
 
-  /* B: #appに下部paddingでセーフエリア確保 */
-  .pattern-b body {
+  /* =====================================================
+     パターン B: #app fixed inset:0 + タブfixed bottom
+     ===================================================== */
+  .pattern-b #app {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+  .pattern-b .main-area {
+    margin-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  .pattern-b .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 60;
+  }
+
+  /* =====================================================
+     パターン C: #app fixed + タブfixed bottom:0 + padding
+     ===================================================== */
+  .pattern-c #app {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+  .pattern-c .main-area {
+    margin-bottom: 72px;
+  }
+  .pattern-c .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 60;
+  }
+
+  /* =====================================================
+     パターン D: body flex + #app padding-bottom
+     ===================================================== */
+  .pattern-d body {
     display: flex; flex-direction: column;
     min-height: 100dvh;
   }
-  .pattern-b #app {
+  .pattern-d #app {
     flex: 1 1 auto;
     display: flex; flex-direction: column;
     min-height: 0;
@@ -65,201 +107,26 @@
       var(--bg);
     padding-bottom: env(safe-area-inset-bottom);
   }
-
-  /* C: フッターを#appの外に（bodyの子として固定） */
-  .pattern-c body {
-    display: flex; flex-direction: column;
-    min-height: 100dvh;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-c #app {
-    flex: 1 1 auto;
-    display: flex; flex-direction: column;
-    min-height: 0;
+  .pattern-d .bottom-tabs {
+    flex: none;
+    margin: 8px 10px 8px;
   }
 
-  /* D: フッターfixed + #appにmargin-bottom */
-  .pattern-d #app {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-    margin-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px);
-  }
-
-  /* E: フッターfixed + #appにpadding-bottom */
+  /* =====================================================
+     パターン E: #app fixed + タブ inside #app
+     ===================================================== */
   .pattern-e #app {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
-    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px);
-  }
-
-  /* F: body flex + フッターflex-none + safe-bottom */
-  .pattern-f body {
-    display: flex; flex-direction: column;
-    min-height: 100dvh;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-f #app {
-    flex: 1 1 auto;
-    display: flex; flex-direction: column;
-    min-height: 0;
-  }
-
-  /* G: メルカリ風 - フッターがセーフエリアを含む */
-  .pattern-g body {
-    display: flex; flex-direction: column;
-    min-height: 100dvh;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-g #app {
-    flex: 1 1 auto;
-    display: flex; flex-direction: column;
-    min-height: 0;
-  }
-
-  /* H: フッターfixed bottom:0 + 本体margin */
-  .pattern-h body {
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-h #app {
-    position: fixed; top:0; left:0; right:0;
-    bottom: calc(env(safe-area-inset-bottom) + 80px);
-    display: flex; flex-direction: column;
-  }
-
-  /* I: JS補助版 */
-  .pattern-i body {
-    display: flex; flex-direction: column;
-    min-height: 100dvh;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-i #app {
-    flex: 1 1 auto;
-    display: flex; flex-direction: column;
-    min-height: 0;
-    padding-bottom: var(--js-footer-h, env(safe-area-inset-bottom));
-  }
-
-  /* =====================================================
-     メルカリ風フッタータブ
-     ===================================================== */
-  .mercari-tab-bar {
-    flex: none;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    align-items: center;
-    background: rgba(22,28,38,.92);
-    -webkit-backdrop-filter: blur(22px);
-    backdrop-filter: blur(22px);
-    border: 1px solid rgba(255,255,255,.10);
-    border-radius: 22px;
-    margin: 0 10px;
-    min-height: 64px;
-    position: relative;
-    z-index: 60;
-  }
-
-  /* フッター位置パターン */
-  .footer-pattern-0 {
-    /* #app内、margin-bottomなし */
-    margin-bottom: 8px;
-  }
-  .footer-pattern-1 {
-    /* #app内、safe-bottom margin */
-    margin-bottom: calc(8px + env(safe-area-inset-bottom));
-  }
-  .footer-pattern-2 {
-    /* #app内、maxマージン */
-    margin-bottom: calc(8px + max(0px, env(safe-area-inset-bottom)));
-  }
-  .footer-pattern-3 {
-    /* fixed bottom: safe-bottom + 8px */
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: calc(8px + env(safe-area-inset-bottom));
-    margin: 0;
-    z-index: 60;
-  }
-  .footer-pattern-4 {
-    /* fixed bottom: safe-bottomのみ */
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    margin: 0;
-    z-index: 60;
-  }
-  .footer-pattern-5 {
-    /* fixed bottom: 0（セーフエリア内にフッター全体） */
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: 0;
-    margin: 0 10px 0;
-    border-radius: 22px 22px 0 0;
-    border-bottom: none;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 60;
-  }
-  .footer-pattern-6 {
-    /* body flexの子として、safe-bottom padding */
-    margin: 0 10px 0;
-    border-radius: 22px 22px 0 0;
-    border-bottom: none;
     padding-bottom: env(safe-area-inset-bottom);
   }
-
-  .mercari-tab-btn {
-    border: 0; background: transparent;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 3px;
-    color: #8b95a8;
-    font-size: 10px; font-weight: 700;
-    padding: 6px 0;
-    min-height: 48px;
-  }
-  .mercari-tab-btn .tab-icon {
-    font-size: 22px; line-height: 1;
-  }
-  .mercari-tab-btn.active {
-    color: #fff;
-    background: rgba(255,255,255,.12);
-    border-radius: 16px;
-    margin: 4px;
-  }
-
-  /* 旧タブバー（比較用） */
-  .old-tab-bar {
+  .pattern-e .bottom-tabs {
     flex: none;
-    display: grid; grid-template-columns: repeat(3,1fr); gap: 6px;
-    padding: 4px;
-    margin: 8px 10px;
-    background: rgba(15,23,34,.78);
-    border: 1px solid rgba(255,255,255,.10);
-    border-radius: 18px;
-    min-height: var(--tab-h);
+    margin: 8px 10px 8px;
   }
-  .old-tab-btn {
-    border: 0; border-radius: 14px; background: transparent;
-    color: #8fa0b5; font-size: 10px; font-weight: 700;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    min-height: 48px;
-  }
-  .old-tab-btn.active { background: linear-gradient(145deg, #aaf2ff, #53d7ff); color: #04141a; }
 
   /* =====================================================
      メインコンテンツ
@@ -272,7 +139,7 @@
     min-height: 0;
   }
   .dummy-score {
-    padding: 14px 12px 120px;
+    padding: 14px 12px 40px;
   }
   .dummy-note {
     height: 44px; margin: 8px 0; border-radius: 10px;
@@ -283,12 +150,78 @@
   }
 
   /* =====================================================
-     可視化レイヤー
+     タブバー（元の3項目）
      ===================================================== */
+  .bottom-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 4px;
+    background: rgba(15,23,34,.78);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 18px;
+    min-height: 56px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.05);
+  }
+  .tab-btn {
+    min-width: 0;
+    border: 0;
+    border-radius: 14px;
+    color: #8fa0b5;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    touch-action: manipulation;
+    transition: transform .18s ease, background .2s ease, color .2s ease;
+    padding: 4px 0;
+  }
+  .tab-btn:active { transform: scale(.93); }
+  .tab-btn.is-active {
+    color: #04141a;
+    background: linear-gradient(145deg, #aaf2ff, #53d7ff 55%, #3bbde0);
+    box-shadow: 0 6px 18px rgba(83,215,255,.38), inset 0 1px rgba(255,255,255,.55);
+  }
+  .tab-ico { font-size: 20px; line-height: 1; }
+  .tab-label { font-size: 10px; letter-spacing: .03em; }
+
+  /* =====================================================
+     境界線検出（黒帯の原因特定用）
+     ===================================================== */
+  .boundary-body {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: 3px; background: #0f0; z-index: 9996;
+    pointer-events: none;
+    opacity: 0; transition: opacity .2s;
+  }
+  .show-boundary .boundary-body { opacity: 1; }
+
+  .boundary-app {
+    position: fixed; left: 0; right: 0; z-index: 9995;
+    height: 3px; background: #f00;
+    pointer-events: none;
+    opacity: 0; transition: opacity .2s;
+  }
+  .show-boundary .boundary-app { opacity: 1; }
+
+  .boundary-safe {
+    position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom);
+    height: 2px; background: #53d7ff; z-index: 9997;
+    pointer-events: none;
+    opacity: 0; transition: opacity .2s;
+  }
+  .show-boundary .boundary-safe { opacity: 1; }
+
   .edge-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-top);
-    background: rgba(255,85,115,.55);
+    background: rgba(255,85,115,.45);
     border-bottom: 2px dashed var(--danger);
     pointer-events: none;
     display: flex; align-items: flex-end; justify-content: center;
@@ -301,7 +234,7 @@
   .edge-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-bottom);
-    background: rgba(83,215,255,.45);
+    background: rgba(83,215,255,.35);
     border-top: 2px dashed var(--accent);
     pointer-events: none;
     display: flex; align-items: flex-start; justify-content: center;
@@ -311,119 +244,81 @@
   }
   .show-overlay .edge-bottom { opacity: 1; }
 
-  .edge-left, .edge-right {
-    position: fixed; top: 0; bottom: 0; z-index: 9998;
-    width: env(safe-area-inset-left);
-    background: rgba(246,196,91,.35);
-    pointer-events: none;
-    opacity: 0; transition: opacity .2s;
-  }
-  .show-overlay .edge-left, .show-overlay .edge-right { opacity: 1; }
-  .edge-left { left: 0; border-right: 2px dashed var(--warn); }
-  .edge-right { right: 0; width: env(safe-area-inset-right); border-left: 2px dashed var(--warn); }
-
-  .black-detector {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9997;
-    height: 30px;
-    background: repeating-linear-gradient(
-      45deg,
-      rgba(255,0,0,.4),
-      rgba(255,0,0,.4) 5px,
-      rgba(255,255,0,.4) 5px,
-      rgba(255,255,0,.4) 10px
-    );
-    pointer-events: none;
-    opacity: 0; transition: opacity .2s;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 800; color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,.9);
-  }
-  .show-black-detect .black-detector { opacity: 1; }
-
-  /* メルカリ風参考線 */
-  .mercari-guide {
-    position: fixed; left: 10px; right: 10px; z-index: 9995;
-    height: 2px;
-    background: rgba(0,255,120,.6);
-    pointer-events: none;
-    opacity: 0; transition: opacity .2s;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 9px; font-weight: 800; color: #00ff78;
-    text-shadow: 0 1px 2px rgba(0,0,0,.9);
-  }
-  .show-mercari-guide .mercari-guide { opacity: 1; }
-  .mercari-guide-top {
-    bottom: calc(8px + env(safe-area-inset-bottom) + 64px);
-  }
-  .mercari-guide-bottom {
-    bottom: calc(4px + env(safe-area-inset-bottom));
-  }
-
   /* =====================================================
      コントロールパネル
      ===================================================== */
   .control-panel {
-    position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 9000;
+    position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 9000;
     background: var(--panel);
     border: 1px solid rgba(255,255,255,.12);
     border-radius: 16px;
-    padding: 10px 12px 14px;
+    padding: 12px 14px 16px;
     box-shadow: 0 12px 40px rgba(0,0,0,.55);
     backdrop-filter: blur(16px) saturate(1.2);
-    max-height: 65vh;
+    max-height: 70vh;
     overflow-y: auto;
     transition: transform .35s ease;
   }
-  .control-panel.collapsed { transform: translateY(calc(100% + 14px)); }
+  .control-panel.collapsed { transform: translateY(calc(100% + 20px)); }
 
   .panel-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
-  .panel-title { font-size: 13px; font-weight: 800; letter-spacing: .02em; }
+  .panel-title { font-size: 14px; font-weight: 800; }
   .toggle-btn {
-    width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,.15);
-    background: rgba(255,255,255,.08); color: #fff; font-size: 16px;
-    display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.08); color: #fff;
+    font-size: 16px; display: grid; place-items: center;
   }
 
-  .section { margin-top: 10px; }
-  .section-title { font-size: 11px; color: #8fa0b5; font-weight: 700; margin-bottom: 6px; }
-
-  .chips {
-    display: flex; flex-wrap: wrap; gap: 6px;
+  .section { margin-top: 12px; }
+  .section-title {
+    font-size: 11px; color: #8fa0b5; font-weight: 700;
+    margin-bottom: 8px;
   }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     border: 1px solid rgba(255,255,255,.14);
     background: rgba(255,255,255,.06);
-    color: #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700;
+    color: #e2e8f0; border-radius: 8px;
+    padding: 7px 11px; font-size: 12px; font-weight: 700;
     cursor: pointer; user-select: none;
   }
-  .chip.active { border-color: var(--accent); background: rgba(83,215,255,.18); color: #fff; }
+  .chip.active {
+    border-color: var(--accent);
+    background: rgba(83,215,255,.18); color: #fff;
+  }
 
   .info-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    margin-top: 10px;
   }
   .info-cell {
-    background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.08);
     border-radius: 8px; padding: 8px; font-size: 11px;
   }
   .info-label { color: #8fa0b5; font-size: 10px; }
-  .info-value { font-weight: 800; font-size: 12px; margin-top: 2px; word-break: break-all; }
+  .info-value { font-weight: 800; font-size: 12px; margin-top: 2px; }
 
   .hint {
-    margin-top: 10px; padding: 8px; border-radius: 8px;
-    background: rgba(83,215,255,.10); border: 1px solid rgba(83,215,255,.25);
-    font-size: 11px; line-height: 1.6; color: #c9e8f5;
+    margin-top: 12px; padding: 10px; border-radius: 8px;
+    background: rgba(83,215,255,.10);
+    border: 1px solid rgba(83,215,255,.25);
+    font-size: 11px; line-height: 1.7; color: #c9e8f5;
   }
 
   .fab {
     position: fixed; right: 12px;
-    bottom: calc(90px + env(safe-area-inset-bottom));
+    bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 9500;
-    width: 46px; height: 46px; border-radius: 50%;
-    border: 0; background: linear-gradient(180deg, #85e8ff, var(--accent));
-    color: #06151b; font-size: 20px; font-weight: 900;
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 0;
+    background: linear-gradient(180deg, #85e8ff, var(--accent));
+    color: #06151b; font-size: 22px; font-weight: 900;
     box-shadow: 0 6px 18px rgba(0,0,0,.35);
     display: grid; place-items: center;
   }
@@ -431,30 +326,39 @@
 
   .collapsed-hint {
     position: fixed; left: 50%;
-    bottom: calc(86px + env(safe-area-inset-bottom));
+    bottom: calc(10px + env(safe-area-inset-bottom));
     transform: translateX(-50%); z-index: 8999;
-    background: rgba(15,23,34,.85); border: 1px solid rgba(255,255,255,.12);
+    background: rgba(15,23,34,.9);
+    border: 1px solid rgba(255,255,255,.12);
     color: #8fa0b5; font-size: 10px; font-weight: 700;
-    padding: 5px 10px; border-radius: 999px; pointer-events: none;
+    padding: 6px 12px; border-radius: 999px;
+    pointer-events: none;
     opacity: 0; transition: opacity .25s;
   }
   .collapsed-hint.show { opacity: 1; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 8px; font-size: 10px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-color {
+    width: 12px; height: 12px; border-radius: 2px;
+  }
 </style>
 </head>
-<body class="pattern-g show-overlay show-black-detect show-mercari-guide">
+<body class="pattern-a show-overlay show-boundary">
 
 <!-- 可視化レイヤー -->
-<div class="edge-top" id="edgeTop">safe-area-inset-top</div>
-<div class="edge-bottom" id="edgeBottom">safe-area-inset-bottom</div>
-<div class="edge-left" id="edgeLeft"></div>
-<div class="edge-right" id="edgeRight"></div>
-<div class="black-detector" id="blackDetector">黒帯検出</div>
-<div class="mercari-guide mercari-guide-top">メルカリ風タブ上端理想位置</div>
-<div class="mercari-guide mercari-guide-bottom">メルカリ風タブ下端理想位置</div>
+<div class="edge-top">safe-area-inset-top</div>
+<div class="edge-bottom">safe-area-inset-bottom</div>
+<div class="boundary-body" id="boundaryBody">body下端（緑）</div>
+<div class="boundary-app" id="boundaryApp">#app下端（赤）</div>
+<div class="boundary-safe">safe-area下端（水色）</div>
 
 <div id="app">
   <main class="main-area">
-    <div class="dummy-score" id="dummyScore">
+    <div class="dummy-score">
       <div class="dummy-note">🎹 ド</div>
       <div class="dummy-note">🎹 レ</div>
       <div class="dummy-note">🎹 ミ</div>
@@ -463,32 +367,20 @@
       <div class="dummy-note">🎹 ラ</div>
       <div class="dummy-note">🎹 シ</div>
       <div class="dummy-note">🎹 ド</div>
-      <div class="dummy-note" style="opacity:.7">（スクロールテスト用）</div>
-      <div class="dummy-note" style="opacity:.5">（最下部までスクロールして確認）</div>
+      <div class="dummy-note" style="opacity:.7">（最下部までスクロールして確認）</div>
+      <div class="dummy-note" style="opacity:.5">（タブと被らないか確認）</div>
     </div>
   </main>
 
-  <!-- メルカリ風フッター -->
-  <nav class="mercari-tab-bar footer-pattern-5" id="mercariTabBar" aria-label="画面切り替え">
-    <button class="mercari-tab-btn active" type="button">
-      <span class="tab-icon">🏠</span>
-      <span>ホーム</span>
+  <nav class="bottom-tabs" aria-label="画面切り替え">
+    <button class="tab-btn is-active" type="button" data-tab="composition">
+      <span class="tab-ico">🎹</span><span class="tab-label">作曲</span>
     </button>
-    <button class="mercari-tab-btn" type="button">
-      <span class="tab-icon">♡</span>
-      <span>いいね！</span>
+    <button class="tab-btn" type="button" data-tab="songs">
+      <span class="tab-ico">🎵</span><span class="tab-label">楽曲</span>
     </button>
-    <button class="mercari-tab-btn" type="button">
-      <span class="tab-icon">📷</span>
-      <span>出品</span>
-    </button>
-    <button class="mercari-tab-btn" type="button">
-      <span class="tab-icon">🔨</span>
-      <span>オークション</span>
-    </button>
-    <button class="mercari-tab-btn" type="button">
-      <span class="tab-icon">👛</span>
-      <span>おさいふ</span>
+    <button class="tab-btn" type="button" data-tab="settings">
+      <span class="tab-ico">⚙️</span><span class="tab-label">設定</span>
     </button>
   </nav>
 </div>
@@ -498,51 +390,45 @@
 
 <div class="control-panel collapsed" id="panel">
   <div class="panel-header">
-    <div class="panel-title">📐 PWA セーフエリア実験 v5</div>
+    <div class="panel-title">📐 PWA セーフエリア実験 v6</div>
     <button class="toggle-btn" id="closePanel">✕</button>
   </div>
 
   <div>
-    <div class="section-title">1. レイアウトパターン</div>
+    <div class="section-title">レイアウトパターン</div>
     <div class="chips" id="layoutChips">
-      <div class="chip" data-set="body" data-val="pattern-a">A: body flex基本</div>
-      <div class="chip" data-set="body" data-val="pattern-b">B: +#app padding-bottom</div>
-      <div class="chip" data-set="body" data-val="pattern-c">C: フッターbody外</div>
-      <div class="chip" data-set="body" data-val="pattern-d">D: フッーfixed + margin</div>
-      <div class="chip" data-set="body" data-val="pattern-e">E: フッターfixed + padding</div>
-      <div class="chip active" data-set="body" data-val="pattern-g">G: メルカリ風 ⭐</div>
-      <div class="chip" data-set="body" data-val="pattern-f">F: body flex + safe-bottom</div>
-      <div class="chip" data-set="body" data-val="pattern-h">H: fixed bottom計算</div>
-      <div class="chip" data-set="body" data-val="pattern-i">I: JS補助版</div>
+      <div class="chip active" data-set="body" data-val="pattern-a">A: body flex + タブmargin</div>
+      <div class="chip" data-set="body" data-val="pattern-b">B: #app fixed + タブfixed bottom</div>
+      <div class="chip" data-set="body" data-val="pattern-c">C: #app fixed + タブbottom:0+padding</div>
+      <div class="chip" data-set="body" data-val="pattern-d">D: body flex + #app padding-bottom</div>
+      <div class="chip" data-set="body" data-val="pattern-e">E: #app fixed + padding-bottom</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">2. フッター位置パターン</div>
-    <div class="chips" id="footerChips">
-      <div class="chip" data-set="footer" data-val="footer-pattern-0">0: #app内 margin 8px</div>
-      <div class="chip" data-set="footer" data-val="footer-pattern-1">1: #app内 +safe-bottom</div>
-      <div class="chip" data-set="footer" data-val="footer-pattern-2">2: #app内 max</div>
-      <div class="chip" data-set="footer" data-val="footer-pattern-3">3: fixed bottom:safe+8px</div>
-      <div class="chip" data-set="footer" data-val="footer-pattern-4">4: fixed bottom:safeのみ</div>
-      <div class="chip active" data-set="footer" data-val="footer-pattern-5">5: fixed bottom:0 + padding ⭐</div>
-      <div class="chip" data-set="footer" data-val="footer-pattern-6">6: body flex + padding</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">3. 表示切替</div>
+    <div class="section-title">表示切替</div>
     <div class="chips" id="overlayChips">
       <div class="chip active" data-set="overlay" data-val="show">セーフエリア可視化 ON</div>
       <div class="chip" data-set="overlay" data-val="hide">OFF</div>
     </div>
     <div class="chips" style="margin-top:6px;">
-      <div class="chip active" data-set="black" data-val="show">黒帯検出 ON</div>
-      <div class="chip" data-set="black" data-val="hide">OFF</div>
+      <div class="chip active" data-set="boundary" data-val="show">境界線検出 ON</div>
+      <div class="chip" data-set="boundary" data-val="hide">OFF</div>
     </div>
-    <div class="chips" style="margin-top:6px;">
-      <div class="chip active" data-set="mercari" data-val="show">メルカリ参考線 ON</div>
-      <div class="chip" data-set="mercari" data-val="hide">OFF</div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background:#0f0;"></div>
+      <span>body下端（背景#090d14が届くか）</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background:#f00;"></div>
+      <span>#app下端</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background:#53d7ff;"></div>
+      <span>safe-area下端</span>
     </div>
   </div>
 
@@ -560,42 +446,41 @@
       <div class="info-value" id="valHeight">-</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">100dvh チェック</div>
+      <div class="info-label">100dvh ピクセル</div>
       <div class="info-value" id="valDvh">-</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-label">body 高さ</div>
+      <div class="info-value" id="valBodyH">-</div>
     </div>
     <div class="info-cell">
       <div class="info-label">#app 高さ</div>
       <div class="info-value" id="valAppH">-</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">フッター高さ</div>
-      <div class="info-value" id="valFooterH">-</div>
+      <div class="info-label">現在のパターン</div>
+      <div class="info-value" id="valPattern">A</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">現在のレイアウト</div>
-      <div class="info-value" id="valLayout">G</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">現在のフッター位置</div>
-      <div class="info-value" id="valFooter">5</div>
-    </div>
-    <div class="info-cell" style="grid-column:1/-1;">
-      <div class="info-label">JS検出セーフエリア</div>
-      <div class="info-value" id="valJSSafe">-</div>
+      <div class="info-label">#app下端位置</div>
+      <div class="info-value" id="valAppBottom">-</div>
     </div>
   </div>
 
   <div class="hint" id="hintBox">
-    💡 <strong>v5 の変更点:</strong><br>
-    1. メルカリ風フッタータブ（5項目、アイコン+ラベル）を追加<br>
-    2. フッター位置パターンを7種類に拡充<br>
-    3. パターン5: fixed bottom:0 + padding-bottom:safe-bottom（推奨）<br>
-    4. メルカリ風参考線（緑）で理想位置を可視化<br>
+    💡 <strong>v6 のポイント:</strong><br>
+    ・タブは元の「作曲 / 楽曲 / 設定」に戻しました<br>
+    ・境界線検出で「黒帯」の原因を特定:<br>
+    — 緑線が画面最下端にない → body背景が届いていない<br>
+    — 赤線が緑線より上 → #app が画面端まで届いていない<br>
+    — 水色線の下に黒が見える → safe-area外に背景がない<br>
     <br>
-    <strong>理想の確認ポイント:</strong><br>
-    - フッターがホームインジケーターの上に適切に配置されているか<br>
-    - フッターの高さがメルカリと同じ感覚か<br>
-    - コンテンツの最下部がフッターに隠れていないか
+    <strong>各パターンの特徴:</strong><br>
+    A: body flex + タブmargin-bottomでsafe-area確保<br>
+    B: #app fixed + タブfixed bottom:safe-bottom<br>
+    C: #app fixed + タブfixed bottom:0 + padding-bottom:safe<br>
+    D: body flex + #appにpadding-bottom:safe<br>
+    E: #app fixed inset:0 + padding-bottom:safe
   </div>
 </div>
 
@@ -608,6 +493,7 @@
   const fab = document.getElementById('fab');
   const closePanel = document.getElementById('closePanel');
   const collapsedHint = document.getElementById('collapsedHint');
+  const boundaryApp = document.getElementById('boundaryApp');
 
   function openPanel() {
     panel.classList.remove('collapsed');
@@ -624,7 +510,9 @@
   setTimeout(() => { if (panel.classList.contains('collapsed')) collapsedHint.classList.add('show'); }, 800);
 
   function activateChip(group, val) {
-    document.querySelectorAll('.chip[data-set="' + group + '"]').forEach(c => c.classList.toggle('active', c.dataset.val === val));
+    document.querySelectorAll('.chip[data-set="' + group + '"]').forEach(c => {
+      c.classList.toggle('active', c.dataset.val === val);
+    });
   }
 
   document.querySelectorAll('.chip').forEach(chip => {
@@ -635,28 +523,14 @@
 
       if (set === 'body') {
         body.className = body.className.replace(/pattern-\w+/g, '') + ' ' + val;
-        document.getElementById('valLayout').textContent = val.replace('pattern-','').toUpperCase();
-        updateHint();
-        detectSafeAreaJS();
-        setTimeout(readMetrics, 100);
-      }
-      if (set === 'footer') {
-        const footer = document.getElementById('mercariTabBar');
-        footer.className = footer.className.replace(/footer-pattern-[\w-]+/g, '') + ' ' + val;
-        document.getElementById('valFooter').textContent = val.replace('footer-pattern-','');
-        setTimeout(readMetrics, 100);
+        document.getElementById('valPattern').textContent = val.replace('pattern-','').toUpperCase();
+        setTimeout(readMetrics, 150);
       }
       if (set === 'overlay') {
-        if (val === 'show') body.classList.add('show-overlay');
-        else body.classList.remove('show-overlay');
+        body.classList.toggle('show-overlay', val === 'show');
       }
-      if (set === 'black') {
-        if (val === 'show') body.classList.add('show-black-detect');
-        else body.classList.remove('show-black-detect');
-      }
-      if (set === 'mercari') {
-        if (val === 'show') body.classList.add('show-mercari-guide');
-        else body.classList.remove('show-mercari-guide');
+      if (set === 'boundary') {
+        body.classList.toggle('show-boundary', val === 'show');
       }
     });
   });
@@ -675,69 +549,34 @@
     document.getElementById('valDvh').textContent = testDvh.offsetHeight + 'px';
     document.body.removeChild(testDvh);
 
+    document.getElementById('valBodyH').textContent = document.body.offsetHeight + 'px';
+
     const app = document.getElementById('app');
-    document.getElementById('valAppH').textContent = app ? (app.offsetHeight + 'px') : 'N/A';
+    if (app) {
+      const rect = app.getBoundingClientRect();
+      document.getElementById('valAppH').textContent = rect.height + 'px';
+      document.getElementById('valAppBottom').textContent = rect.bottom + 'px';
 
-    const footer = document.getElementById('mercariTabBar');
-    document.getElementById('valFooterH').textContent = footer ? (footer.offsetHeight + 'px') : 'N/A';
-  }
-
-  function detectSafeAreaJS() {
-    let safeTop = 0, safeBottom = 0, safeLeft = 0, safeRight = 0;
-    try {
-      const sv = window.visualViewport;
-      if (sv) {
-        safeTop = sv.offsetTop;
-        safeLeft = sv.offsetLeft;
-        safeBottom = Math.max(0, window.innerHeight - sv.height - sv.offsetTop);
-        safeRight = Math.max(0, window.innerWidth - sv.width - sv.offsetLeft);
-      }
-    } catch(e) {}
-    document.getElementById('valJSSafe').textContent = 
-      'T:' + Math.round(safeTop) + ' B:' + Math.round(safeBottom) + 
-      ' L:' + Math.round(safeLeft) + ' R:' + Math.round(safeRight) + 'px';
-    document.documentElement.style.setProperty('--js-safe-top', safeTop + 'px');
-    document.documentElement.style.setProperty('--js-safe-bottom', safeBottom + 'px');
-
-    const footerH = 64 + Math.round(safeBottom);
-    document.documentElement.style.setProperty('--js-footer-h', footerH + 'px');
+      // #app下端境界線の位置を更
+      boundaryApp.style.top = rect.bottom + 'px';
+      boundaryApp.style.bottom = 'auto';
+    }
   }
 
   readMetrics();
-  detectSafeAreaJS();
-  window.addEventListener('resize', () => { readMetrics(); detectSafeAreaJS(); });
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { readMetrics(); detectSafeAreaJS(); });
+  window.addEventListener('resize', readMetrics);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', readMetrics);
 
-  function updateHint() {
-    const layout = document.getElementById('valLayout').textContent;
-    const footer = document.getElementById('valFooter').textContent;
-    const box = document.getElementById('hintBox');
-    const map = {
-      'A': 'body flex基本。シンプル',
-      'B': '#appにpadding-bottom',
-      'C': 'フッターをbodyの子として配置',
-      'D': 'fixed + margin計算',
-      'E': 'fixed + padding計算',
-      'F': 'body flex + safe-bottom',
-      'G': 'メルカリ風推奨: body flex + フッターfixed bottom:0 + padding',
-      'H': 'fixed bottom計算版',
-      'I': 'JS補助版'
-    };
-    const fmap = {
-      '0': '#app内 margin 8px',
-      '1': '#app内 +safe-bottom',
-      '2': '#app内 max',
-      '3': 'fixed bottom:safe+8px',
-      '4': 'fixed bottom:safeのみ',
-      '5': 'fixed bottom:0 + padding ⭐',
-      '6': 'body flex + padding'
-    };
-    box.innerHTML = '💡 パターン <strong>' + layout + '</strong>: ' + (map[layout] || '') +
-      '<br>フッター <strong>' + footer + '</strong>: ' + (fmap[footer] || '');
-  }
-  updateHint();
+  // タブ切り替え（見た目のみ）
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
 
-  body.classList.add('show-overlay', 'show-black-detect', 'show-mercari-guide');
+  body.classList.add('show-overlay', 'show-boundary');
+  setTimeout(readMetrics, 300);
 })();
 </script>
 </body>
