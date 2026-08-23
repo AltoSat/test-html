@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
-<title>PWA セーフエリア実験</title>
+<title>PWA セーフエリア実験 v2</title>
 <style>
   :root {
     --bg: #090d14;
@@ -20,66 +20,163 @@
     --safe-right: env(safe-area-inset-right);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  /* === 重要: htmlとbodyの背景を統一 === */
   html, body {
     margin: 0; padding: 0;
     width: 100%; height: 100%;
-    background: #000;
+    background: var(--bg);  /* #000 から変更 */
     color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
     overflow: hidden;
   }
 
-  /* パターン切り替え用クラス */
+  /* =====================================================
+     パターン群: 上部全画面 + 下部黒帯対策
+     ===================================================== */
+
+  /* A: 基本 inset:0（元のコードに近い） */
   .pattern-a #app {
-    /* デフォルト: 何も考えず inset:0 */
     position: fixed; inset: 0;
     background: var(--bg);
     display: flex; flex-direction: column;
   }
+
+  /* B: inset:0 + 100dvh */
   .pattern-b #app {
-    /* viewport-fit=cover + セーフエリア考慮 */
-    position: fixed;
-    top: env(safe-area-inset-top);
-    bottom: env(safe-area-inset-bottom);
-    left: env(safe-area-inset-left);
-    right: env(safe-area-inset-right);
+    position: fixed; inset: 0;
+    height: 100dvh;
     background: var(--bg);
     display: flex; flex-direction: column;
   }
+
+  /* C: inset:0 + padding-bottom でセーフエリア */
   .pattern-c #app {
-    /* フル拡張 + paddingでセーフエリア確保 */
-    position: fixed; inset: 0;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    background: var(--bg);
-    display: flex; flex-direction: column;
-  }
-  .pattern-d #app {
-    /* フル拡張 + marginでセーフエリア確保 */
-    position: fixed; inset: 0;
-    margin-top: env(safe-area-inset-top);
-    margin-bottom: env(safe-area-inset-bottom);
-    background: var(--bg);
-    display: flex; flex-direction: column;
-  }
-  .pattern-e #app {
-    /* 100dvh + 背景をhtml/bodyまで広げ */
-    position: relative;
-    width: 100%; min-height: 100dvh;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-    display: flex; flex-direction: column;
-  }
-  .pattern-f #app {
-    /* body背景を#090d14に統一 + inset:0 + 下部だけpadding */
     position: fixed; inset: 0;
     background: var(--bg);
     display: flex; flex-direction: column;
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* 上部エッジインジケータ */
+  /* D: inset:0 + margin-bottom でセーフエリア */
+  .pattern-d #app {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* E: 100dvh + padding-bottom */
+  .pattern-e #app {
+    position: fixed; inset: 0;
+    height: 100dvh;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* F: 100dvh + margin-bottom */
+  .pattern-f #app {
+    position: fixed; inset: 0;
+    height: 100dvh;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* G: html/body背景統一 + inset:0 + 下部padding */
+  .pattern-g #app {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* H: html/body背景統一 + 100dvh + 下部padding */
+  .pattern-h #app {
+    position: fixed; inset: 0;
+    height: 100dvh;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* I: JS補助: セーフエリアをCSS変数に書き込むパターン */
+  .pattern-i #app {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: var(--js-safe-bottom, env(safe-area-inset-bottom));
+  }
+
+  /* J: 極力シンプル: bodyに直接flex + min-height 100dvh */
+  .pattern-j #app {
+    position: relative;
+    min-height: 100dvh;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* K: 背景グラデーションもbodyに直接 */
+  .pattern-k #app {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* L: 背景グラデーション + 100dvh */
+  .pattern-l #app {
+    position: fixed; inset: 0;
+    height: 100dvh;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* M: bodyに背景を持たせて #appはtransparent */
+  .pattern-m body {
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+  .pattern-m #app {
+    position: fixed; inset: 0;
+    background: transparent;
+    display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* N: 極端なパターン - 全部paddingで対応 */
+  .pattern-n #app {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* O: 極端なパターン - 全部marginで対応 */
+  .pattern-o #app {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    margin-top: env(safe-area-inset-top);
+    margin-bottom: env(safe-area-inset-bottom);
+    margin-left: env(safe-area-inset-left);
+    margin-right: env(safe-area-inset-right);
+  }
+
+  /* =====================================================
+     可視化レイヤー
+     ===================================================== */
   .edge-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-top);
@@ -93,7 +190,6 @@
   }
   .show-overlay .edge-top { opacity: 1; }
 
-  /* 下部エッジインジケータ */
   .edge-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-bottom);
@@ -107,7 +203,6 @@
   }
   .show-overlay .edge-bottom { opacity: 1; }
 
-  /* 左右セーフエリアインジケータ */
   .edge-left, .edge-right {
     position: fixed; top: 0; bottom: 0; z-index: 9998;
     width: env(safe-area-inset-left);
@@ -119,32 +214,68 @@
   .edge-left { left: 0; border-right: 2px dashed var(--warn); }
   .edge-right { right: 0; width: env(safe-area-inset-right); border-left: 2px dashed var(--warn); }
 
-  /* 実験対象: メインコンテンツ */
+  /* 黒帯検出用: bodyの下に見える黒を可視化 */
+  .black-detector {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9997;
+    height: 60px;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255,0,0,.3),
+      rgba(255,0,0,.3) 5px,
+      rgba(255,255,0,.3) 5px,
+      rgba(255,255,0,.3) 10px
+    );
+    pointer-events: none;
+    opacity: 0; transition: opacity .2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.9);
+  }
+  .show-black-detect .black-detector { opacity: 1; }
+
+  /* =====================================================
+     メインコンテンツ
+     ===================================================== */
   .main-area {
     flex: 1 1 auto;
     position: relative;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .pattern-e .main-area { min-height: 100dvh; }
 
-  /* 実験対象: 下部タブ */
+  .dummy-score {
+    padding: 14px 12px 200px;
+  }
+  .dummy-note {
+    height: 44px; margin: 8px 0; border-radius: 10px;
+    background: linear-gradient(90deg, rgba(83,215,255,.25), rgba(83,215,255,.08));
+    border: 1px solid rgba(83,215,255,.35);
+    display: flex; align-items: center; padding: 0 12px;
+    font-size: 12px; font-weight: 800; color: #b3e8ff;
+  }
+
+  /* =====================================================
+     タブバー
+     ===================================================== */
   .tab-bar {
     flex: none;
     display: grid; grid-template-columns: repeat(3,1fr); gap: 6px;
     padding: 4px;
-    margin: 8px 10px 0;
+    margin: 8px 10px;
     background: rgba(15,23,34,.78);
     border: 1px solid rgba(255,255,255,.10);
     border-radius: 18px;
     min-height: 56px;
   }
-  /* タブの余白パターン */
+
+  /* タブ余白パターン */
   .tab-pattern-0 { margin-bottom: 0; }
   .tab-pattern-1 { margin-bottom: env(safe-area-inset-bottom); }
   .tab-pattern-2 { margin-bottom: max(8px, env(safe-area-inset-bottom)); }
   .tab-pattern-3 { padding-bottom: calc(4px + env(safe-area-inset-bottom)); margin-bottom: max(8px, env(safe-area-inset-bottom)); }
   .tab-pattern-4 { margin-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .tab-pattern-5 { margin-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .tab-pattern-6 { margin-bottom: env(safe-area-inset-bottom); padding-bottom: 8px; }
 
   .tab-btn {
     border: 0; border-radius: 14px; background: transparent;
@@ -153,7 +284,9 @@
   }
   .tab-btn.active { background: linear-gradient(145deg, #aaf2ff, #53d7ff); color: #04141a; }
 
-  /* コントロールパネル（オーバーレイ固定） */
+  /* =====================================================
+     コントロールパネル
+     ===================================================== */
   .control-panel {
     position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 9000;
     background: var(--panel);
@@ -162,7 +295,7 @@
     padding: 10px 12px 14px;
     box-shadow: 0 12px 40px rgba(0,0,0,.55);
     backdrop-filter: blur(16px) saturate(1.2);
-    max-height: 42vh;
+    max-height: 55vh;
     overflow-y: auto;
     transition: transform .35s ease;
   }
@@ -188,7 +321,7 @@
   .chip {
     border: 1px solid rgba(255,255,255,.14);
     background: rgba(255,255,255,.06);
-    color: #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700;
+    color: #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700;
     cursor: pointer; user-select: none;
   }
   .chip.active { border-color: var(--accent); background: rgba(83,215,255,.18); color: #fff; }
@@ -201,24 +334,12 @@
     border-radius: 8px; padding: 8px; font-size: 11px;
   }
   .info-label { color: #8fa0b5; font-size: 10px; }
-  .info-value { font-weight: 800; font-size: 13px; margin-top: 2px; }
+  .info-value { font-weight: 800; font-size: 13px; margin-top: 2px; word-break: break-all; }
 
   .hint {
     margin-top: 10px; padding: 8px; border-radius: 8px;
     background: rgba(83,215,255,.10); border: 1px solid rgba(83,215,255,.25);
     font-size: 11px; line-height: 1.6; color: #c9e8f5;
-  }
-
-  /* 実験コンテンツ: ダミー楽譜エリア */
-  .dummy-score {
-    padding: 14px 12px 180px;
-  }
-  .dummy-note {
-    height: 44px; margin: 8px 0; border-radius: 10px;
-    background: linear-gradient(90deg, rgba(83,215,255,.25), rgba(83,215,255,.08));
-    border: 1px solid rgba(83,215,255,.35);
-    display: flex; align-items: center; padding: 0 12px;
-    font-size: 12px; font-weight: 800; color: #b3e8ff;
   }
 
   .fab {
@@ -242,13 +363,14 @@
   .collapsed-hint.show { opacity: 1; }
 </style>
 </head>
-<body class="pattern-c show-overlay">
+<body class="pattern-k show-overlay show-black-detect">
 
-<!-- セーフエリア可視化レイヤー -->
+<!-- 可視化レイヤー -->
 <div class="edge-top" id="edgeTop">safe-area-inset-top</div>
 <div class="edge-bottom" id="edgeBottom">safe-area-inset-bottom</div>
 <div class="edge-left" id="edgeLeft"></div>
 <div class="edge-right" id="edgeRight"></div>
+<div class="black-detector" id="blackDetector">黒帯検出エリア（赤黄ストライプ）</div>
 
 <div id="app">
   <main class="main-area">
@@ -261,12 +383,11 @@
       <div class="dummy-note">🎹 ラ</div>
       <div class="dummy-note">🎹 シ</div>
       <div class="dummy-note">🎹 ド</div>
-      <div class="dummy-note" style="opacity:.7">（スクロールテスト用のダミー音符）</div>
-      <div class="dummy-note" style="opacity:.5">（最下部までスクロールしてタブと被らないか確認）</div>
+      <div class="dummy-note" style="opacity:.7">（スクロールテスト用）</div>
+      <div class="dummy-note" style="opacity:.5">（最下部までスクロールして確認）</div>
     </div>
   </main>
 
-  <!-- 実対象タブバー -->
   <nav class="tab-bar tab-pattern-3" id="tabBar" aria-label="画面切り替え">
     <button class="tab-btn active" type="button">🎹<span>作曲</span></button>
     <button class="tab-btn" type="button">🎵<span>楽曲</span></button>
@@ -277,41 +398,55 @@
 <button class="fab" id="fab">＋</button>
 <div class="collapsed-hint" id="collapsedHint">＋ をタップしてパネルを開く</div>
 
-<!-- コントロールパネル -->
 <div class="control-panel collapsed" id="panel">
   <div class="panel-header">
-    <div class="panel-title">📐 PWA セーフエリア実験パネル</div>
+    <div class="panel-title">📐 PWA セーフエリア実験 v2</div>
     <button class="toggle-btn" id="closePanel">✕</button>
   </div>
 
   <div>
-    <div class="section-title">1. 全画面（上部黒帯）パターン</div>
+    <div class="section-title">1. 全画面パターン（上部黒帯対策）</div>
     <div class="chips" id="layoutChips">
-      <div class="chip" data-set="body" data-val="pattern-a">A: inset:0 だけ</div>
-      <div class="chip" data-set="body" data-val="pattern-b">B: inset + margin でセーフエリア</div>
-      <div class="chip" data-set="body" data-val="pattern-c">C: inset + padding でセーフエリア</div>
-      <div class="chip" data-set="body" data-val="pattern-d">D: inset + margin（別実装）</div>
-      <div class="chip" data-set="body" data-val="pattern-e">E: 100dvh + 背景継承</div>
-      <div class="chip active" data-set="body" data-val="pattern-f">F: inset:0 + 下部paddingのみ</div>
+      <div class="chip" data-set="body" data-val="pattern-a">A: inset:0</div>
+      <div class="chip" data-set="body" data-val="pattern-b">B: +100dvh</div>
+      <div class="chip" data-set="body" data-val="pattern-c">C: +padding-bottom</div>
+      <div class="chip" data-set="body" data-val="pattern-d">D: +margin-bottom</div>
+      <div class="chip" data-set="body" data-val="pattern-e">E: 100dvh+padding</div>
+      <div class="chip" data-set="body" data-val="pattern-f">F: 100dvh+margin</div>
+      <div class="chip" data-set="body" data-val="pattern-g">G: 背景統一+padding</div>
+      <div class="chip" data-set="body" data-val="pattern-h">H: 背景統一+100dvh</div>
+      <div class="chip" data-set="body" data-val="pattern-i">I: JS補助版</div>
+      <div class="chip" data-set="body" data-val="pattern-j">J: body flex+dvh</div>
+      <div class="chip active" data-set="body" data-val="pattern-k">K: グラデ背景+padding</div>
+      <div class="chip" data-set="body" data-val="pattern-l">L: グラデ+100dvh</div>
+      <div class="chip" data-set="body" data-val="pattern-m">M: body背景+transparent</div>
+      <div class="chip" data-set="body" data-val="pattern-n">N: 全方向padding</div>
+      <div class="chip" data-set="body" data-val="pattern-o">O: 全方向margin</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">2. 下部タブ余白ターン</div>
+    <div class="section-title">2. タブ余白パターン</div>
     <div class="chips" id="tabChips">
-      <div class="chip" data-set="tab" data-val="tab-pattern-0">0: 余白なし</div>
-      <div class="chip" data-set="tab" data-val="tab-pattern-1">1: margin-bottom = safe-bottom</div>
-      <div class="chip" data-set="tab" data-val="tab-pattern-2">2: max(8px, safe-bottom)</div>
-      <div class="chip active" data-set="tab" data-val="tab-pattern-3">3: padding + margin 両方</div>
-      <div class="chip" data-set="tab" data-val="tab-pattern-4">4: 8px + safe-bottom</div>
+      <div class="chip" data-set="tab" data-val="tab-pattern-0">0: なし</div>
+      <div class="chip" data-set="tab" data-val="tab-pattern-1">1: safe-bottom</div>
+      <div class="chip" data-set="tab" data-val="tab-pattern-2">2: max(8px)</div>
+      <div class="chip active" data-set="tab" data-val="tab-pattern-3">3: padding+margin</div>
+      <div class="chip" data-set="tab" data-val="tab-pattern-4">4: 8px+safe</div>
+      <div class="chip" data-set="tab" data-val="tab-pattern-5">5: max(12px)</div>
+      <div class="chip" data-set="tab" data-val="tab-pattern-6">6: safe+8px pad</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">3. オーバーレイ表示</div>
+    <div class="section-title">3. 表示切替</div>
     <div class="chips" id="overlayChips">
       <div class="chip active" data-set="overlay" data-val="show">セーフエリア可視化 ON</div>
       <div class="chip" data-set="overlay" data-val="hide">OFF</div>
+    </div>
+    <div class="chips" style="margin-top:6px;">
+      <div class="chip active" data-set="black" data-val="show">黒帯検出 ON</div>
+      <div class="chip" data-set="black" data-val="hide">OFF</div>
     </div>
   </div>
 
@@ -329,23 +464,37 @@
       <div class="info-value" id="valHeight">-</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">visualViewport.height</div>
+      <div class="info-label">window.innerWidth</div>
+      <div class="info-value" id="valWidth">-</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-label">visualViewport.h</div>
       <div class="info-value" id="valVV">-</div>
     </div>
     <div class="info-cell">
+      <div class="info-label">document.docElem.h</div>
+      <div class="info-value" id="valDocH">-</div>
+    </div>
+    <div class="info-cell">
       <div class="info-label">現在のレイアウト</div>
-      <div class="info-value" id="valLayout">F</div>
+      <div class="info-value" id="valLayout">K</div>
     </div>
     <div class="info-cell">
       <div class="info-label">現在のタブ余白</div>
       <div class="info-value" id="valTab">3</div>
     </div>
+    <div class="info-cell" style="grid-column:1/-1;">
+      <div class="info-label">JS検出セーフエリア（下部）</div>
+      <div class="info-value" id="valJSSafe">-</div>
+    </div>
   </div>
 
   <div class="hint" id="hintBox">
-    💡 <strong>推奨パターン（暫定）</strong><br>
-    上部黒帯対策: <code>viewport-fit=cover</code> + body/<code>#app</code> を <code>inset:0</code> で真正面フルスクリーン<br>
-    下部誤タップ対策: タブに <code>margin-bottom: max(8px, env(safe-area-inset-bottom))</code> + <code>padding-bottom</code>
+    💡 黒帯が出る場合のチェックポイント:<br>
+    1. html/body の background が #090d14 になっているか<br>
+    2. #app の height が 100dvh または inset:0 で本当の画面端まで届いているか<br>
+    3. env(safe-area-inset-bottom) が正しく取得できているか<br>
+    4. 背景グラデーションが #app ではなく body に設定されているか
   </div>
 </div>
 
@@ -360,7 +509,6 @@
   const closePanel = document.getElementById('closePanel');
   const collapsedHint = document.getElementById('collapsedHint');
 
-  // パネル開閉
   function openPanel() {
     panel.classList.remove('collapsed');
     fab.classList.add('active');
@@ -375,7 +523,6 @@
   closePanel.addEventListener('click', closeFn);
   setTimeout(() => { if (panel.classList.contains('collapsed')) collapsedHint.classList.add('show'); }, 800);
 
-  // チップ切り替え
   function activateChip(group, val) {
     document.querySelectorAll('.chip[data-set="' + group + '"]').forEach(c => c.classList.toggle('active', c.dataset.val === val));
   }
@@ -390,6 +537,7 @@
         body.className = body.className.replace(/pattern-\w+/g, '') + ' ' + val;
         document.getElementById('valLayout').textContent = val.replace('pattern-','').toUpperCase();
         updateHint();
+        detectSafeAreaJS();
       }
       if (set === 'tab') {
         tabBar.className = tabBar.className.replace(/tab-pattern-\d+/g, '') + ' ' + val;
@@ -399,10 +547,14 @@
         if (val === 'show') body.classList.add('show-overlay');
         else body.classList.remove('show-overlay');
       }
+      if (set === 'black') {
+        if (val === 'show') body.classList.add('show-black-detect');
+        else body.classList.remove('show-black-detect');
+      }
     });
   });
 
-  // セーフエリア数値の読み取り（computed style経由）
+  // CSS env() 読み取り
   function readSafeArea() {
     const st = getComputedStyle(document.documentElement);
     const top = st.getPropertyValue('--safe-top') || '0px';
@@ -410,33 +562,63 @@
     document.getElementById('valTop').textContent = top;
     document.getElementById('valBottom').textContent = bottom;
     document.getElementById('valHeight').textContent = window.innerHeight + 'px';
+    document.getElementById('valWidth').textContent = window.innerWidth + 'px';
     document.getElementById('valVV').textContent = (window.visualViewport ? Math.round(window.visualViewport.height) + 'px' : '未対応');
+    document.getElementById('valDocH').textContent = document.documentElement.clientHeight + 'px';
   }
-  readSafeArea();
-  window.addEventListener('resize', readSafeArea);
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', readSafeArea);
 
-  // ヒント更新
+  // JavaScript でセーフエリアを計算（iOS対応）
+  function detectSafeAreaJS() {
+    let safeTop = 0, safeBottom = 0, safeLeft = 0, safeRight = 0;
+    try {
+      const sv = window.visualViewport;
+      if (sv) {
+        safeTop = sv.offsetTop;
+        safeLeft = sv.offsetLeft;
+        safeBottom = Math.max(0, window.innerHeight - sv.height - sv.offsetTop);
+        safeRight = Math.max(0, window.innerWidth - sv.width - sv.offsetLeft);
+      }
+    } catch(e) {}
+    document.getElementById('valJSSafe').textContent = 
+      'T:' + Math.round(safeTop) + ' B:' + Math.round(safeBottom) + 
+      ' L:' + Math.round(safeLeft) + ' R:' + Math.round(safeRight) + 'px';
+
+    // パターンI用: JS検出値をCSS変数に書き込む
+    document.documentElement.style.setProperty('--js-safe-bottom', safeBottom + 'px');
+  }
+
+  readSafeArea();
+  detectSafeAreaJS();
+  window.addEventListener('resize', () => { readSafeArea(); detectSafeAreaJS(); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { readSafeArea(); detectSafeAreaJS(); });
+
   function updateHint() {
     const layout = document.getElementById('valLayout').textContent;
     const tab = document.getElementById('valTab').textContent;
     const box = document.getElementById('hintBox');
     const map = {
-      'A': 'inset:0 のみ。上部黒帯が残る可能性あり',
-      'B': 'margin でセーフエリア確保。背景が端まで広がらない場合あり',
-      'C': 'padding でセーフエリア確保。コンテンツ領域が狭まる',
-      'D': 'margin 版。Bと似た挙動',
-      'E': '100dvh。スクロールやキーボード表示時に挙動が変わりやすい',
-      'F': 'inset:0 + 下部paddingのみ。上部はブラウザに委ねつつ全画面に近づける'
+      'A': 'inset:0 のみ。背景が黒のままだと黒帯が目立つ',
+      'B': '100dvh。inset:0より正確な高さを取得',
+      'C': 'padding-bottom。コンテンツ領域が狭まる',
+      'D': 'margin-bottom。#app自体が縮む',
+      'E': '100dvh + padding。高さ確定+下部確保',
+      'F': '100dvh + marginEのmargin版',
+      'G': 'html/body背景統一 + padding。黒帯対策の基本',
+      'H': '背景統一 + 100dvh。より確実な高さ',
+      'I': 'JS補助。visualViewportから計算',
+      'J': 'body flex + 100dvh。シンプル構成',
+      'K': 'グラデ背景 + padding。元のデザインに近い',
+      'L': 'グラデ + 100dvh。Kの強化版',
+      'M': 'bodyに背景を持たせる。黒帯を背景で隠す',
+      'N': '全方向padding。極端だが確実',
+      'O': '全方向margin。Nmargin版'
     };
-    box.innerHTML = '💡 現在のパターン <strong>' + layout + '</strong>: ' + (map[layout] || '') +
-      '<br>タブ余白 <strong>' + tab + '</strong>: ' +
-      ['余白なし','safe-bottomのみ','max(8px, safe-bottom)','padding+margin両方','8px+safe-bottom'][parseInt(tab)];
+    box.innerHTML = '💡 パターン <strong>' + layout + '</strong>: ' + (map[layout] || '') +
+      '<br>タブ余白 <strong>' + tab + '</strong>';
   }
   updateHint();
 
-  // 初期クラス整合性
-  body.classList.add('show-overlay');
+  body.classList.add('show-overlay', 'show-black-detect');
 })();
 </script>
 </body>
