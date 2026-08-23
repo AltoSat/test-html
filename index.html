@@ -23,7 +23,7 @@
   --record-soft: rgba(255, 85, 115, .18);
   --rest: #f6c45b;
   --row-h: 36px;
-  --ruler-h: 0px;
+  --ruler-h: 12px;
   --shadow: 0 12px 30px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.22);
   --white-key-w: 44px;
   --white-key-h: 146px;
@@ -570,9 +570,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .bottom-tabs {
   flex: none;
   z-index: 60;
-  height: 56px;
-  margin: 8px 10px env(safe-area-inset-bottom);
-  padding: 4px;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  margin: 8px 10px 0;
+  padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
@@ -999,6 +999,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function whiteKeyW() { return cssNumber('--white-key-w'); }
   function blackKeyW() { return cssNumber('--black-key-w'); }
 
+  function measureSafeTop() {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;padding-top:env(safe-area-inset-top,0px);pointer-events:none;';
+    document.body.appendChild(div);
+    const top = parseFloat(getComputedStyle(div).paddingTop) || 0;
+    div.remove();
+    return top;
+  }
+  function setupRuler() {
+    const safeTop = measureSafeTop();
+    document.documentElement.style.setProperty('--ruler-h', `${Math.max(12, safeTop + 12)}px`);
+  }
+
   function noteInfo(midi) {
     const pc = ((midi % 12) + 12) % 12;
     const octave = Math.floor(midi / 12) - 1;
@@ -1232,8 +1245,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const hasSelection = idx >= 0;
     const selected = hasSelection ? events[idx] : null;
     const noteSelected = Boolean(selected && selected.type === 'note');
-    els.extendBtn.disabled = !noteSelected || isPlaying;
-    els.shortenBtn.disabled = !noteSelected || isPlaying;
+    const canResize = Boolean(selected);
+    els.extendBtn.disabled = !canResize || isPlaying;
+    els.shortenBtn.disabled = !canResize || isPlaying;
     els.deleteBtn.disabled = (!hasSelection && events.length === 0) || isPlaying;
     els.restBtn.disabled = isPlaying;
     els.pitchDownBtn.disabled = !noteSelected || selected.midi <= FIRST_MIDI || isPlaying;
@@ -1380,6 +1394,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       lane.className = 'pitch-lane' + (geom.isBlack ? ' is-black' : '');
       lane.style.left = `${geom.left}px`;
       lane.style.width = `${geom.width}px`;
+      lane.style.top = `${rulerH()}px`;
       els.scoreContent.appendChild(lane);
     }
 
@@ -1387,14 +1402,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     for (let t = 0; t <= labelLimit; t += 4) {
       const marker = document.createElement('div');
       marker.className = 'time-label';
-      marker.style.top = `${t * rowH() + 3}px`;
+      marker.style.top = `${rulerH() + t * rowH() + 3}px`;
       marker.textContent = `${Math.floor(t / 4) + 1}`;
       els.scoreContent.appendChild(marker);
     }
 
     for (const ev of events) {
       const pos = map.get(ev.id);
-      const top = pos.start * rowH() + 2;
+      const top = rulerH() + pos.start * rowH() + 2;
       const height = Math.max(12, ev.duration * rowH() - 4);
       const block = document.createElement('div');
       block.dataset.eventId = String(ev.id);
@@ -1511,6 +1526,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     renderScore(focusAfter ? { focusId: ev.id } : {});
     saveState();
     if (!quiet) showToast(delta > 0 ? `長さ ${next}` : `長さ ${next}`);
+    if (!focusAfter) requestAnimationFrame(() => ensureEventVisible(ev.id));
   }
 
   function changePitch(delta, focusAfter = true) {
@@ -1589,8 +1605,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     let hiddenUp = false, hiddenDown = false;
     for (const ev of events) {
       const pos = map.get(ev.id);
-      const y1 = pos.start * rowH();
-      const y2 = pos.end * rowH();
+      const y1 = rulerH() + pos.start * rowH();
+      const y2 = rulerH() + pos.end * rowH();
       hiddenUp ||= y2 < top + 2;
       hiddenDown ||= y1 > bottom - 2;
     }
@@ -1670,7 +1686,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const kViewport = els.keyboardViewport;
     const startTop = viewport.scrollTop;
     const startLeft = viewport.scrollLeft;
-    const startY = startUnit * rowH();
+    const startY = rulerH() + startUnit * rowH();
 
     const scoreScale = viewport.clientWidth / Math.max(1, pianoWidth);
     const keyScale = kViewport.clientWidth / Math.max(1, pianoWidth);
@@ -1776,7 +1792,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       if (ev) {
         const { map } = layoutEvents();
         const pos = map.get(targetEventId);
-        const targetY = ((pos.start + pos.end) / 2) * rowH();
+        const targetY = rulerH() + ((pos.start + pos.end) / 2) * rowH();
         let targetX;
         if (ev.type === 'note') {
           const geom = geometryFor(ev.midi);
@@ -1879,8 +1895,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!ev) return;
     const { map } = layoutEvents();
     const pos = map.get(id);
-    const top = pos.start * rowH();
-    const bottom = pos.end * rowH();
+    const top = rulerH() + pos.start * rowH();
+    const bottom = rulerH() + pos.end * rowH();
     const safeTop = els.scoreViewport.scrollTop + 18;
     const safeBottom = els.scoreViewport.scrollTop + els.scoreViewport.clientHeight - 24;
     if (top < safeTop) els.scoreViewport.scrollTop = Math.max(0, top - 18);
@@ -1904,8 +1920,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const { map } = layoutEvents();
     const pos = map.get(id);
     const viewport = els.scoreViewport;
-    const blockTop = pos.start * rowH();
-    const blockBottom = pos.end * rowH();
+    const blockTop = rulerH() + pos.start * rowH();
+    const blockBottom = rulerH() + pos.end * rowH();
 
     const targetY = (blockTop + blockBottom) / 2;
     const maxTop = Math.max(0, els.scoreContent.scrollHeight - viewport.clientHeight);
@@ -2355,7 +2371,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
           return;
         }
         const absoluteUnit = playing.startUnit + elapsedUnits;
-        const y = Math.min(playing.total, absoluteUnit) * rowH();
+        const y = rulerH() + Math.min(playing.total, absoluteUnit) * rowH();
         const ph = document.getElementById('playhead');
         if (ph) ph.style.top = `${y}px`;
         let current = events[events.length - 1];
@@ -2623,6 +2639,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   document.addEventListener('pointerdown', () => {
     ensureAudioSync();
+    unlockAudio().catch(() => {});
   }, { capture: true, passive: true, signal: __docSignal });
 
   els.recordBtn.addEventListener('click', () => {
@@ -2771,21 +2788,23 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
     const performLongAction = () => {
       const ev = events.find(item => item.id === selectedId);
-      if (ev && ev.type === 'note') {
-        changeDuration(direction, ev.id, true, false);
-        playPreview(ev.midi);
-      }
+      if (!ev) return;
+      changeDuration(direction, ev.id, true, false);
+      if (ev.type === 'note') playPreview(ev.midi);
     };
 
     const performTapNavigation = () => {
       const idx = selectedIndex();
-      if (idx < 0 || events[idx].type !== 'note') return;
+      if (idx < 0) return;
       const targetIdx = findAdjacentNote(idx, direction);
+      let target;
       if (targetIdx < 0) {
-        showToast(direction < 0 ? 'これより上の音符はありません' : 'これより下の音符はありません');
-        return;
+        const noteIndices = events.map((e, i) => e.type === 'note' ? i : -1).filter(i => i >= 0);
+        if (!noteIndices.length) { showToast('音符がありません'); return; }
+        target = events[direction < 0 ? noteIndices[noteIndices.length - 1] : noteIndices[0]];
+      } else {
+        target = events[targetIdx];
       }
-      const target = events[targetIdx];
       selectedId = target.id;
       renderScore({ preserve: false });
       saveState();
@@ -2884,6 +2903,32 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     });
   })();
 
+  function shiftAllNotes(offset) {
+    const targetNotes = events.filter(ev => ev.type === 'note');
+    if (!targetNotes.length) { showToast('音符がありません'); return; }
+    const canShift = targetNotes.every(ev => {
+      const next = ev.midi + offset * 12;
+      return next >= FIRST_MIDI && next < FIRST_MIDI + PITCH_COUNT;
+    });
+    if (!canShift) {
+      showToast('これ以上オクターブを変更できません');
+      return;
+    }
+    targetNotes.forEach(ev => { ev.midi += offset * 12; });
+    renderScore({ preserve: false });
+    saveState();
+    showToast(offset > 0 ? '1オクターブ上げました' : '1オクターブ下げました');
+  }
+
+  bindPress(els.keyLeft,
+    () => { setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7); },
+    () => { shiftAllNotes(-1); },
+    480);
+  bindPress(els.keyRight,
+    () => { setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7); },
+    () => { shiftAllNotes(1); },
+    480);
+
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   els.swipePlay.addEventListener('change', () => {
     if (!els.swipePlay.checked) return;
@@ -2912,10 +2957,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       current: { name: currentSongName, events: serializeEvents(), unitSeconds: currentUnitSeconds },
       songs
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const json = '\uFEFF' + JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'かんたん作曲_楽曲バックアップ.json';
+    a.href = url; a.download = 'kantan_sakkyoku_backup.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     showToast('エクスポートしました');
@@ -2931,7 +2977,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const data = JSON.parse(reader.result);
+        const rawText = reader.result;
+        const jsonText = rawText.replace(/^\uFEFF/, '');
+        const data = JSON.parse(jsonText);
         if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
         const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
           id: s.id || `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
@@ -2963,7 +3011,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         showToast('インポートできませんでした');
       }
     };
-    reader.readAsText(file);
+    reader.readAsText(file, 'utf-8');
   }
 
   els.modalCancel.addEventListener('click', closeConfirm);
@@ -2975,12 +3023,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.confirmModal.addEventListener('pointerdown', e => { if (e.target === els.confirmModal) closeConfirm(); });
 
   els.keyboardRange.addEventListener('input', () => setKeyboardScroll(Number(els.keyboardRange.value)));
-  els.keyLeft.addEventListener('click', () => {
-    setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7);
-  });
-  els.keyRight.addEventListener('click', () => {
-    setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7);
-  });
+
   let scrollSyncRaf = 0;
   let pendingScrollSource = null;
   function scheduleScrollSync(source) {
@@ -3015,10 +3058,21 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }, { passive: false, signal: __docSignal });
 
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopPlayback(false);
+    if (document.hidden) {
+      stopPlayback(false);
+    } else {
+      ensureAudioSync();
+      if (audio && audio.ctx) {
+        const ctx = audio.ctx;
+        if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
+          ctx.resume().catch(() => {});
+        }
+      }
+    }
   }, { signal: __docSignal });
 
   function doResize() {
+    setupRuler();
     const currentLeft = els.scoreViewport.scrollLeft;
     renderKeyboard();
     renderScore({ preserve: false });
@@ -3038,6 +3092,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   loadState();
   loadSongs();
+  setupRuler();
   els.songNameInput.value = currentSongName;
   syncSettingsUI();
   renderKeyboard();
