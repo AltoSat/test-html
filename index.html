@@ -15,6 +15,9 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
 
+  /* ============================================================
+     基盤: body背景を#090d14に統一（黒帯を背景色で隠す）
+     ============================================================ */
   html, body {
     width: 100%; height: 100%;
     background: var(--bg);
@@ -23,30 +26,161 @@
     overflow: hidden;
   }
 
-  /* ===== 共通: #app ===== */
-  #app {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
+  /* ============================================================
+     パターンA: #appにpadding-bottomでsafe-area分を追加
+     （100dvh + safe-bottom で画面最下端まで到達）
+     ============================================================ */
+  .pattern-a #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    /* safe-bottom分をpaddingで追加 → 背景が下端まで届く */
+    padding-bottom: env(safe-area-inset-bottom);
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
   }
-
-  .main-area {
+  .pattern-a .main-area {
     flex: 1 1 auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
+    /* フッター高さ + 余裕 */
+    padding-bottom: calc(var(--tab-h) + 20px);
+  }
+  .pattern-a .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 60;
   }
 
-  /* ===== タブバー（元の3項目） ===== */
-  .bottom-tabs {
+  /* ============================================================
+     パターンB: body背景統一 + #app padding-bottom
+     ============================================================ */
+  .pattern-b body {
+    background: var(--bg);
+  }
+  .pattern-b #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+  .pattern-b .main-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding-bottom: calc(var(--tab-h) + 20px);
+  }
+  .pattern-b .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 60;
+  }
+
+  /* ============================================================
+     パターンC: height: calc(100dvh + safe-bottom)
+     ============================================================ */
+  .pattern-c #app {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: calc(100dvh + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+  .pattern-c .main-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
+  }
+  .pattern-c .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 60;
+  }
+
+  /* ============================================================
+     パターンD: 元のコード（比較用）
+     ============================================================ */
+  .pattern-d #app {
+    position: fixed;
+    inset: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+  .pattern-d .main-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding-bottom: calc(var(--tab-h) + 20px);
+  }
+  .pattern-d .bottom-tabs {
     flex: none;
+    margin: 8px 10px 0;
+  }
+
+  /* ============================================================
+     パターンE: #app::afterで背景をsafe-bottom下まで広げる
+     ============================================================ */
+  .pattern-e #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+  }
+  .pattern-e #app::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    bottom: calc(0px - env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+    z-index: -1;
+  }
+  .pattern-e .main-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding-bottom: calc(var(--tab-h) + 20px);
+  }
+  .pattern-e .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 60;
+  }
+
+  /* ============================================================
+     タブバー（元の3項目）
+     ============================================================ */
+  .bottom-tabs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     padding: 4px;
-    margin: 0 10px;
     background: rgba(15,23,34,.78);
     -webkit-backdrop-filter: blur(22px);
     backdrop-filter: blur(22px);
@@ -74,8 +208,10 @@
   .tab-ico { font-size: 20px; line-height: 1; }
   .tab-label { font-size: 10px; letter-spacing: .03em; }
 
-  /* ===== ダミーコンテンツ ===== */
-  .dummy-score { padding: 14px 12px 120px; }
+  /* ============================================================
+     ダミーコンテンツ
+     ============================================================ */
+  .dummy-score { padding: 14px 12px 40px; }
   .dummy-note {
     height: 44px; margin: 8px 0; border-radius: 10px;
     background: linear-gradient(90deg, rgba(83,215,255,.25), rgba(83,215,255,.08));
@@ -85,85 +221,12 @@
   }
 
   /* ============================================================
-     パターン別: タブバーの位置と余白
-     ============================================================ */
-
-  /* --- パターンA: タブバー bottom:0 + padding-bottom safe-area --- */
-  .pattern-a .main-area {
-    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-a .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: 0;
-    margin: 0;
-    /* セーフエリア分をタブバー内部に確保 */
-    padding-bottom: calc(4px + env(safe-area-inset-bottom));
-    border-radius: 18px 18px 0 0;
-  }
-
-  /* --- パターンB: タブバー bottom:safe-area上 --- */
-  .pattern-b .main-area {
-    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-b .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    margin: 0;
-  }
-
-  /* --- パターンC: #app高さを100dvh+safe-areaに --- */
-  .pattern-c #app {
-    height: calc(100dvh + env(safe-area-inset-bottom));
-  }
-  .pattern-c .main-area {
-    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-c .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    margin: 0;
-  }
-
-  /* --- パターンD: body flex + タブmargin-bottom --- */
-  .pattern-d body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100dvh;
-  }
-  .pattern-d #app {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-  .pattern-d .main-area {
-    padding-bottom: calc(var(--tab-h) + 20px);
-  }
-  .pattern-d .bottom-tabs {
-    flex: none;
-    margin: 8px 10px calc(8px + env(safe-area-inset-bottom));
-  }
-
-  /* --- パターンE: JS補助版 --- */
-  .pattern-e .main-area {
-    padding-bottom: calc(var(--tab-h) + 20px + var(--js-safe-bottom, 0px));
-  }
-  .pattern-e .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: var(--js-safe-bottom, 0px);
-    margin: 0;
-  }
-
-  /* ============================================================
      可視化レイヤー
      ============================================================ */
   .safe-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-top);
-    background: rgba(255,85,115,.45);
+    background: rgba(255,85,115,.35);
     border-bottom: 2px dashed #ff5573;
     pointer-events: none;
     display: flex; align-items: flex-end; justify-content: center;
@@ -175,7 +238,7 @@
   .safe-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-bottom);
-    background: rgba(83,215,255,.35);
+    background: rgba(83,215,255,.25);
     border-top: 2px dashed #53d7ff;
     pointer-events: none;
     display: flex; align-items: flex-start; justify-content: center;
@@ -184,30 +247,30 @@
   }
   .show-layers .safe-bottom { opacity: 1; }
 
-  /* 黒帯検出: #appの外に黒が見えるか */
+  /* 黒帯検出: #appの背景が届いていないと赤黄ストライプが見える */
   .black-detector {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
-    height: 25px;
+    height: env(safe-area-inset-bottom);
     background: repeating-linear-gradient(
       45deg,
-      rgba(255,0,0,.5), rgba(255,0,0,.5) 5px,
-      rgba(255,255,0,.5) 5px, rgba(255,255,0,.5) 10px
+      rgba(255,0,0,.4), rgba(255,0,0,.4) 5px,
+      rgba(255,255,0,.4) 5px, rgba(255,255,0,.4) 10px
     );
     pointer-events: none;
     opacity: 0; transition: opacity .2s;
     display: flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 800; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.9);
   }
   .show-layers .black-detector { opacity: 1; }
 
   /* ============================================================
-     コントロールパネル（タブバーと重ならない位置）
+     コントロールパネル
      ============================================================ */
   .control-panel {
     position: fixed;
     left: 8px; right: 8px;
-    top: env(safe-area-inset-top, 0px);
-    margin-top: 8px;
+    top: calc(env(safe-area-inset-top) + 8px);
     z-index: 9000;
     background: rgba(17,24,36,.95);
     border: 1px solid rgba(255,255,255,.12);
@@ -215,7 +278,7 @@
     padding: 12px 14px;
     box-shadow: 0 12px 40px rgba(0,0,0,.55);
     backdrop-filter: blur(16px) saturate(1.2);
-    max-height: 45vh;
+    max-height: 50vh;
     overflow-y: auto;
     transition: transform .35s ease, opacity .35s ease;
   }
@@ -240,7 +303,7 @@
   .section { margin-top: 10px; }
   .section-title {
     font-size: 11px; color: #8fa0b5; font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -277,7 +340,8 @@
 
   .fab {
     position: fixed;
-    right: 12px; top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    top: calc(12px + env(safe-area-inset-top));
     z-index: 9500;
     width: 48px; height: 48px; border-radius: 50%;
     border: 0;
@@ -295,7 +359,7 @@
 <!-- 可視化レイヤー -->
 <div class="safe-top">safe-area-inset-top</div>
 <div class="safe-bottom">safe-area-inset-bottom</div>
-<div class="black-detector">黒帯検出（見たらNG）</div>
+<div class="black-detector">黒帯検出（見えたらNG）</div>
 
 <div id="app">
   <main class="main-area">
@@ -338,19 +402,19 @@
     <div class="section-title">レイアウトパターン（タップで切替）</div>
     <div class="chips" id="layoutChips">
       <div class="chip active" data-val="pattern-a">
-        A: タブ bottom:0 + padding-bottom safe-area
+        A: #appにpadding-bottom:safe-bottom ⭐
       </div>
       <div class="chip" data-val="pattern-b">
-        B: タブ bottom:safe-area上
+        B: body背景統一 + padding-bottom
       </div>
       <div class="chip" data-val="pattern-c">
-        C: 100dvh + safe-area高さ補正
+        C: height: calc(100dvh + safe-bottom)
       </div>
       <div class="chip" data-val="pattern-d">
-        D: body flex + タブmargin-bottom
+        D: 元のコード（比較用）
       </div>
       <div class="chip" data-val="pattern-e">
-        E: JS補助版
+        E: #app::afterで背景広げ
       </div>
     </div>
   </div>
@@ -381,25 +445,34 @@
       <div class="info-value" id="valDvh">-</div>
     </div>
     <div class="info-cell">
+      <div class="info-label">#app 高さ</div>
+      <div class="info-value" id="valAppH">-</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-label">#app下端位置</div>
+      <div class="info-value" id="valAppBottom">-</div>
+    </div>
+    <div class="info-cell">
       <div class="info-label">現在のパターン</div>
       <div class="info-value" id="valPattern">A</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">JS検出safe-bottom</div>
-      <div class="info-value" id="valJSSafe">-</div>
+      <div class="info-label">画面最下端</div>
+      <div class="info-value" id="valScreenBottom">-</div>
     </div>
   </div>
 
   <div class="hint" id="hintBox">
-    💡 <strong>各パターンの説明:</strong><br><br>
-    <strong>A:</strong> タブバーを画面最下端(bottom:0)に固定し、タブバー内部にセーフエリア分のpadding-bottomを追加。タブバーの背景がセーフエリアまで広がるため、黒帯が消える可能性が高いです。<br><br>
-    <strong>B:</strong> タブバーをセーフエリアの上(bottom:env(safe-area-inset-bottom))に配置。タブバーの下に隙間ができる可能性があります。<br><br>
-    <strong>C:</strong> #appの高さを100dvh+safe-areaに補正。WebKitのバグ対策です。<br><br>
-    <strong>D:</strong> bodyをflexにし、タブバーにmargin-bottomでセーフエリアを確保。<br><br>
-    <strong>E:</strong> JavaScriptでvisualViewportからセーフエリアを計算して適用。<br><br>
+    💡 <strong>画像から判明した事実:</strong><br><br>
+    safe-area-top = 62px, safe-area-bottom = 34px<br>
+    window.innerHeight = 100dvh = 812px<br><br>
+    つまり <strong>100dvhはsafe-areaを含まない</strong>ため、<br>
+    #appをinset:0（100dvh）にするとsafe-bottomの下に黒帯が出ます。<br><br>
+    <strong>解決策:</strong><br>
+    #appに <code>padding-bottom: env(safe-area-inset-bottom)</code> を追加し、<br>
+    背景がsafe-bottomの下端まで届くようにします。<br><br>
     <strong>確認方法:</strong><br>
-    ・赤黄ストライプが見えない → 黒帯なし（OK）<br>
-    タブバーがホームインジケーターの上に適切に配置されているか確認
+    赤黄ストライプが見えない → 黒帯なし（OK）
   </div>
 </div>
 
@@ -414,13 +487,10 @@
 
   // FABでパネル開閉
   fab.addEventListener('click', () => {
-    const isCollapsed = panel.classList.contains('collapsed');
-    panel.classList.toggle('collapsed', !isCollapsed);
-    fab.style.opacity = isCollapsed ? '0.3' : '1';
+    panel.classList.toggle('collapsed');
   });
   closePanel.addEventListener('click', () => {
     panel.classList.add('collapsed');
-    fab.style.opacity = '1';
   });
 
   // パターンチップ切り替え
@@ -434,7 +504,7 @@
     chip.addEventListener('click', () => {
       const val = chip.dataset.val;
       activateChip(document.getElementById('layoutChips'), val);
-      body.className = body.className.replace(/pattern-\w+/g, '') + ' ' + val + (body.classList.contains('show-layers') ? ' show-layers' : '');
+      body.className = val + (body.classList.contains('show-layers') ? ' show-layers' : '');
       document.getElementById('valPattern').textContent = val.replace('pattern-','').toUpperCase();
       setTimeout(readMetrics, 150);
     });
@@ -450,7 +520,6 @@
 
   // メトリクス読み取り
   function readMetrics() {
-    // env()値を取得
     function getEnv(name) {
       const div = document.createElement('div');
       div.style.paddingBottom = 'env(' + name + ')';
@@ -463,6 +532,7 @@
     document.getElementById('valTop').textContent = getEnv('safe-area-inset-top');
     document.getElementById('valBottom').textContent = getEnv('safe-area-inset-bottom');
     document.getElementById('valHeight').textContent = window.innerHeight + 'px';
+    document.getElementById('valScreenBottom').textContent = window.innerHeight + 'px';
 
     const testDvh = document.createElement('div');
     testDvh.style.height = '100dvh';
@@ -472,16 +542,12 @@
     document.getElementById('valDvh').textContent = testDvh.offsetHeight + 'px';
     document.body.removeChild(testDvh);
 
-    // JSでセーフエリア計算
-    let safeBottom = 0;
-    try {
-      const vv = window.visualViewport;
-      if (vv) {
-        safeBottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      }
-    } catch(e) {}
-    document.getElementById('valJSSafe').textContent = safeBottom + 'px';
-    document.documentElement.style.setProperty('--js-safe-bottom', safeBottom + 'px');
+    const app = document.getElementById('app');
+    if (app) {
+      const rect = app.getBoundingClientRect();
+      document.getElementById('valAppH').textContent = rect.height + 'px';
+      document.getElementById('valAppBottom').textContent = rect.bottom + 'px';
+    }
   }
 
   readMetrics();
