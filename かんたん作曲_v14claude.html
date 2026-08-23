@@ -29,10 +29,6 @@
   --white-key-h: 146px;
   --black-key-w: 27px;
   --black-key-h: 92px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
   color-scheme: dark;
 }
 * {
@@ -574,47 +570,47 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .bottom-tabs {
   flex: none;
   z-index: 60;
-  height: 52px;
-  margin: 8px calc(16px + var(--safe-right)) calc(8px + var(--safe-bottom)) calc(16px + var(--safe-left));
-  padding: 5px;
+  min-height: 56px;
+  margin: 8px 16px max(8px, env(safe-area-inset-bottom));
+  padding: 4px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  background: rgba(24,32,46,.55);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  backdrop-filter: blur(30px) saturate(180%);
-  border: .5px solid rgba(255,255,255,.14);
-  border-radius: 22px;
-  box-shadow: 0 8px 26px rgba(0,0,0,.32), 0 1px 1px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.07);
+  gap: 6px;
+  background: rgba(15,23,34,.78);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 26px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.05);
 }
 .tab-btn {
   min-width: 0;
   border: 0;
-  border-radius: 16px;
-  color: #93a3b8;
+  border-radius: 20px;
+  color: #8fa0b5;
   background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   touch-action: manipulation;
   transition: transform .18s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
 }
 .tab-btn:active { transform: scale(.93); }
 .tab-btn.is-active {
-  color: #eafcff;
-  background: linear-gradient(155deg, rgba(120,225,255,.30), rgba(83,215,255,.14));
-  box-shadow: 0 4px 14px rgba(83,215,255,.22), inset 0 1px rgba(255,255,255,.4), inset 0 0 0 .5px rgba(255,255,255,.18);
+  color: #04141a;
+  background: linear-gradient(145deg, #aaf2ff, #53d7ff 55%, #3bbde0);
+  box-shadow: 0 6px 18px rgba(83,215,255,.38), inset 0 1px rgba(255,255,255,.55);
 }
-.tab-ico { font-size: 19px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.1)); }
-.tab-label { font-size: 10px; letter-spacing: .02em; }
+.tab-ico { font-size: 20px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.1)); }
+.tab-label { font-size: 10px; letter-spacing: .03em; }
 .content-screen {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  padding: calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(22px + var(--safe-bottom)) calc(14px + var(--safe-left));
+  padding: 14px 14px 22px;
   background:
     radial-gradient(circle at 85% 0, rgba(83,215,255,.12), transparent 30%),
     var(--bg);
