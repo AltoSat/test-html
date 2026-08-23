@@ -6,8 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
-<title>PWA セーフエリア実験 v2</title>
+<title>かんたん作曲 - レイアウト試作品</title>
 <style>
+  /* ============================================================
+     CSS変数（元のアプリと同じ）
+     ============================================================ */
   :root {
     --bg: #090d14;
     --surface: #111824;
@@ -16,6 +19,7 @@
     --muted: #98a8bd;
     --accent: #53d7ff;
     --danger: #ff5573;
+    --row-h: 44px;
     --tab-h: 56px;
     --safe-top: env(safe-area-inset-top);
     --safe-bottom: env(safe-area-inset-bottom);
@@ -23,7 +27,7 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
 
   /* ============================================================
-     共通: body背景（safe-area下まで覆う）
+     html/body（safe-area下まで背景を覆う）
      ============================================================ */
   html, body {
     width: 100%; height: 100%;
@@ -34,7 +38,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* bodyの疑似要素で背景をsafe-area下まで描画 */
+  /* body::before で safe-area 下まで背景を描画 */
   body::before {
     content: '';
     position: fixed;
@@ -49,72 +53,29 @@
   }
 
   /* ============================================================
-     パターン切り替え
+     #app（黒帯対策: absolute + min-height）
      ============================================================ */
-
-  /* ---- パターンA: body::before背景 + #app透明（推奨） ---- */
-  .pattern-a #app {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
-    background: transparent;
-    z-index: 1;
-  }
-
-  /* ---- パターンB: #app::before背景 + #app透明 ---- */
-  .pattern-b #app {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
-    background: transparent;
-    z-index: 1;
-  }
-  .pattern-b #app::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: calc(100dvh + env(safe-area-inset-bottom));
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-    z-index: -1;
-    pointer-events: none;
-  }
-
-  /* ---- パターンC: #app absolute + min-height ---- */
-  .pattern-c #app {
+  #app {
     position: absolute;
     top: 0; left: 0; right: 0;
     min-height: calc(100dvh + env(safe-area-inset-bottom));
-    display: flex; flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-    z-index: 1;
-  }
-
-  /* ---- パターンD: #app fixed + height明示 ---- */
-  .pattern-d #app {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: calc(100dvh + env(safe-area-inset-bottom));
-    display: flex; flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     z-index: 1;
   }
 
   /* ============================================================
-     iOS風ナビゲーションバー
+     ヘッダー（ステータスバー下から開始）
      ============================================================ */
-  .ios-nav {
+  .app-header {
     flex: none;
     padding-top: env(safe-area-inset-top);
     padding-left: 16px; padding-right: 16px;
     height: calc(44px + env(safe-area-inset-top));
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     background: rgba(9,13,20,.72);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
@@ -122,12 +83,13 @@
     position: relative;
     z-index: 50;
   }
-  .ios-nav-title {
+  .app-header-title {
     font-size: 17px; font-weight: 700;
     letter-spacing: .01em;
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
   }
-  .ios-nav-back {
-    position: absolute; left: 8px;
+  .header-btn {
     width: 32px; height: 32px;
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,.15);
@@ -138,64 +100,96 @@
   }
 
   /* ============================================================
-     iOS風メインコンテンツ
+     楽譜エリア
      ============================================================ */
-  .main-area {
+  .score-area {
     flex: 1 1 auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
-    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .ios-list {
-    padding: 20px 16px 40px;
-  }
-  .ios-section-title {
-    font-size: 13px; font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    margin: 20px 16px 8px;
-  }
-  .ios-row {
-    display: flex; align-items: center;
-    justify-content: space-between;
     padding: 12px 16px;
+  }
+  .score-container {
     background: var(--surface);
-    border-bottom: 1px solid rgba(187,207,235,.10);
-    font-size: 16px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    padding: 16px;
+    min-height: 200px;
   }
-  .ios-row:first-child {
-    border-radius: 12px 12px 0 0;
+  .staff-row {
+    height: var(--row-h);
+    border-bottom: 1px solid rgba(255,255,255,.10);
+    display: flex; align-items: center;
+    padding: 0 8px;
+    font-size: 13px; color: var(--muted);
   }
-  .ios-row:last-child {
-    border-radius: 0 0 12px 12px;
-    border-bottom: none;
+  .staff-row:last-child { border-bottom: none; }
+  .note {
+    display: inline-block;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent);
+    margin-right: 4px;
+    box-shadow: 0 0 8px rgba(83,215,255,.4);
   }
-  .ios-row-label { font-weight: 600; }
-  .ios-row-value {
-    color: var(--muted); font-size: 15px;
-    font-variant-numeric: tabular-nums;
+  .rest {
+    display: inline-block;
+    width: 12px; height: 4px; border-radius: 2px;
+    background: var(--muted);
+    margin-right: 4px;
   }
 
   /* ============================================================
-     タブバー（元の3項目・元のスタイル）
+     キーボードエリア
+     ============================================================ */
+  .keyboard-area {
+    flex: none;
+    padding: 8px 12px;
+    background: rgba(9,13,20,.60);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(187,207,235,.10);
+  }
+  .keyboard-row {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .key {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    color: var(--ink);
+    font-size: 11px; font-weight: 700;
+    display: grid; place-items: center;
+    touch-action: manipulation;
+    transition: transform .1s, background .1s;
+  }
+  .key:active {
+    transform: scale(.92);
+    background: linear-gradient(180deg, var(--accent), #3bbde0);
+    color: #04141a;
+  }
+
+  /* ============================================================
+     タブバー（元の3項目・元のスタイル + safe-bottom対応）
      ============================================================ */
   .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
+    flex: none;
     z-index: 60;
+    min-height: var(--tab-h);
+    /* 元: margin: 8px 10px 0; */
+    margin: 8px 10px env(safe-area-inset-bottom);
+    padding: 4px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
-    padding: 4px;
     background: rgba(15,23,34,.78);
     -webkit-backdrop-filter: blur(22px);
     backdrop-filter: blur(22px);
     border: 1px solid rgba(255,255,255,.10);
     border-radius: 18px;
-    min-height: var(--tab-h);
     box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.05);
   }
   .tab-btn {
@@ -218,7 +212,7 @@
   .tab-label { font-size: 10px; letter-spacing: .03em; }
 
   /* ============================================================
-     可視化レイヤー
+     可視化レイヤー（確認用）
      ============================================================ */
   .layer-safe-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
@@ -230,8 +224,6 @@
     font-size: 10px; font-weight: 800; color: #fff;
     opacity: 0; transition: opacity .2s;
   }
-  .show-layers .layer-safe-top { opacity: 1; }
-
   .layer-safe-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-bottom);
@@ -242,8 +234,6 @@
     font-size: 10px; font-weight: 800; color: #fff;
     opacity: 0; transition: opacity .2s;
   }
-  .show-layers .layer-safe-bottom { opacity: 1; }
-
   .layer-black-detector {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
     height: env(safe-area-inset-bottom);
@@ -258,79 +248,14 @@
     font-size: 10px; font-weight: 800; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,.9);
   }
+  .show-layers .layer-safe-top,
+  .show-layers .layer-safe-bottom,
   .show-layers .layer-black-detector { opacity: 1; }
 
   /* ============================================================
-     コントロールパネル
+     デバッグパネル
      ============================================================ */
-  .panel {
-    position: fixed;
-    left: 10px; right: 10px;
-    top: calc(env(safe-area-inset-top) + 52px);
-    z-index: 9000;
-    background: rgba(17,24,36,.96);
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 16px;
-    padding: 14px;
-    box-shadow: 0 20px 50px rgba(0,0,0,.6);
-    backdrop-filter: blur(20px) saturate(1.2);
-    max-height: 52vh;
-    overflow-y: auto;
-    transition: transform .35s ease, opacity .35s ease;
-  }
-  .panel.collapsed {
-    transform: translateY(-120%);
-    opacity: 0;
-    pointer-events: none;
-  }
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .panel-title { font-size: 15px; font-weight: 800; }
-  .panel-close {
-    width: 28px; height: 28px; border-radius: 8px;
-    border: 1px solid rgba(255,255,255,.15);
-    background: rgba(255,255,255,.08); color: var(--ink);
-    font-size: 14px; display: grid; place-items: center;
-  }
-  .section-title {
-    font-size: 11px; color: var(--muted); font-weight: 700;
-    margin: 12px 0 8px;
-    text-transform: uppercase; letter-spacing: .06em;
-  }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    border: 1px solid rgba(255,255,255,.14);
-    background: rgba(255,255,255,.06);
-    color: #e2e8f0; border-radius: 10px;
-    padding: 8px 12px; font-size: 12px; font-weight: 700;
-    cursor: pointer; user-select: none;
-    transition: all .15s ease;
-  }
-  .chip:active { transform: scale(.95); }
-  .chip.active {
-    border-color: var(--accent);
-    background: rgba(83,215,255,.18); color: #fff;
-    box-shadow: 0 0 12px rgba(83,215,255,.15);
-  }
-  .hint {
-    margin-top: 12px; padding: 10px 12px; border-radius: 10px;
-    background: rgba(83,215,255,.08);
-    border: 1px solid rgba(83,215,255,.20);
-    font-size: 12px; line-height: 1.7; color: #c9e8f5;
-  }
-  .hint strong { color: var(--accent); }
-  .hint code {
-    background: rgba(0,0,0,.4);
-    padding: 1px 5px; border-radius: 4px;
-    font-size: 11px;
-  }
-
-  /* ============================================================
-     FAB
-     ============================================================ */
-  .fab {
+  .debug-btn {
     position: fixed;
     right: 14px;
     top: calc(14px + env(safe-area-inset-top));
@@ -341,72 +266,114 @@
     color: #06151b; font-size: 20px; font-weight: 900;
     box-shadow: 0 6px 18px rgba(0,0,0,.35);
     display: grid; place-items: center;
-    transition: transform .2s, opacity .2s;
+    transition: transform .2s;
   }
-  .fab:active { transform: scale(.9); }
-  .fab.hidden { opacity: 0; pointer-events: none; }
+  .debug-btn:active { transform: scale(.9); }
+
+  .debug-panel {
+    position: fixed;
+    left: 10px; right: 10px;
+    top: calc(env(safe-area-inset-top) + 60px);
+    z-index: 9000;
+    background: rgba(17,24,36,.96);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    backdrop-filter: blur(20px) saturate(1.2);
+    max-height: 40vh;
+    overflow-y: auto;
+    transition: transform .35s ease, opacity .35s ease;
+    transform: translateY(-120%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .debug-panel.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .debug-title { font-size: 14px; font-weight: 800; margin-bottom: 10px; }
+  .debug-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0; font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .debug-row:last-child { border-bottom: none; }
+  .debug-label { color: var(--muted); }
+  .debug-value { font-variant-numeric: tabular-nums; }
+  .debug-close {
+    position: absolute; right: 10px; top: 10px;
+    width: 28px; height: 28px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.08); color: var(--ink);
+    font-size: 14px; display: grid; place-items: center;
+  }
+  .debug-toggle {
+    margin-top: 10px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color: #e2e8f0; border-radius: 10px;
+    padding: 8px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; width: 100%;
+  }
 </style>
 </head>
-<body class="pattern-a show-layers">
+<body class="show-layers">
 
 <!-- 可視化レイヤー -->
-<div class="layer-safe-top">safe-area-inset-top</div>
-<div class="layer-safe-bottom">safe-area-inset-bottom</div>
+<div class="layer-safe-top">safe-top</div>
+<div class="layer-safe-bottom">safe-bottom</div>
 <div class="layer-black-detector">黒帯検出（見えたらNG）</div>
 
 <div id="app">
-  <header class="ios-nav">
-    <button class="ios-nav-back" type="button">&#x276E;</button>
-    <div class="ios-nav-title">PWA セーフエリア実験 v2</div>
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <button class="header-btn" type="button">&#x276E;</button>
+    <div class="app-header-title">かんたん作曲</div>
+    <button class="header-btn" type="button">&#x22EE;</button>
   </header>
 
-  <main class="main-area">
-    <div class="ios-list">
-      <div class="ios-section-title">デバイス情報</div>
-      <div class="ios-row">
-        <span class="ios-row-label">safe-area-top</span>
-        <span class="ios-row-value" id="dispTop">-</span>
-      </div>
-      <div class="ios-row">
-        <span class="ios-row-label">safe-area-bottom</span>
-        <span class="ios-row-value" id="dispBottom">-</span>
-      </div>
-      <div class="ios-row">
-        <span class="ios-row-label">window.innerHeight</span>
-        <span class="ios-row-value" id="dispHeight">-</span>
-      </div>
-      <div class="ios-row">
-        <span class="ios-row-label">100dvh ピクセル</span>
-        <span class="ios-row-value" id="dispDvh">-</span>
-      </div>
-      <div class="ios-row">
-        <span class="ios-row-label">#app 下端位置</span>
-        <span class="ios-row-value" id="dispAppBottom">-</span>
-      </div>
-      <div class="ios-row">
-        <span class="ios-row-label">画面最下端</span>
-        <span class="ios-row-value" id="dispScreenBottom">-</span>
-      </div>
-      <div class="ios-row">
-        <span class="ios-row-label">body::before 高さ</span>
-        <span class="ios-row-value" id="dispBeforeHeight">-</span>
-      </div>
-
-      <div class="ios-section-title">現在のパターン</div>
-      <div class="ios-row">
-        <span class="ios-row-label">パターン</span>
-        <span class="ios-row-value" id="dispPattern">A</span>
-      </div>
-
-      <div class="ios-section-title">確認方法</div>
-      <div class="ios-row" style="border-radius:12px;">
-        <span class="ios-row-label" style="font-size:13px; line-height:1.5; white-space:pre-wrap;">
-赤黄ストライプが見えない = 黒帯なし（OK）
-赤黄ストライプが見える = 帯あり（NG）</span>
-      </div>
+  <!-- 楽譜エリア -->
+  <section class="score-area" id="scoreArea">
+    <div class="score-container" id="scoreContainer">
+      <!-- ダミー楽譜行 -->
+      <div class="staff-row">小節 1: <span class="note"></span><span class="note"></span><span class="rest"></span><span class="note"></span></div>
+      <div class="staff-row">小節 2: <span class="rest"></span><span class="note"></span><span class="note"></span><span class="rest"></span></div>
+      <div class="staff-row">小節 3: <span class="note"></span><span class="note"></span><span class="note"></span><span class="rest"></span></div>
+      <div class="staff-row">小節 4: <span class="rest"></span><span class="rest"></span><span class="note"></span><span class="note"></span></div>
+      <div class="staff-row">小節 5: <span class="note"></span><span class="rest"></span><span class="note"></span><span class="note"></span></div>
+      <div class="staff-row">小節 6: <span class="note"></span><span class="note"></span><span class="rest"></span><span class="rest"></span></div>
+      <div class="staff-row">小節 7: <span class="rest"></span><span class="note"></span><span class="note"></span><span class="note"></span></div>
+      <div class="staff-row">小節 8: <span class="note"></span><span class="rest"></span><span class="rest"></span><span class="note"></span></div>
     </div>
-  </main>
+  </section>
 
+  <!-- キーボードエリア -->
+  <section class="keyboard-area">
+    <div class="keyboard-row">
+      <button class="key">C</button>
+      <button class="key">D</button>
+      <button class="key">E</button>
+      <button class="key">F</button>
+      <button class="key">G</button>
+      <button class="key">A</button>
+      <button class="key">B</button>
+      <button class="key">C</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key">#</button>
+      <button class="key">b</button>
+      <button class="key">&#x266A;</button>
+      <button class="key">&#x2669;</button>
+      <button class="key">&#x1F50A;</button>
+      <button class="key">&#x23EE;</button>
+      <button class="key">&#x23EF;</button>
+      <button class="key">&#x23ED;</button>
+    </div>
+  </section>
+
+  <!-- タブバー -->
   <nav class="bottom-tabs" aria-label="画面切り替え">
     <button class="tab-btn is-active" type="button">
       <span class="tab-ico">&#x1F3B9;</span>
@@ -423,88 +390,35 @@
   </nav>
 </div>
 
-<button class="fab" id="fab">&#x2699;&#xFE0F;</button>
-
-<div class="panel collapsed" id="panel">
-  <div class="panel-header">
-    <div class="panel-title">&#x1F4D0; レイアウトパターン切替</div>
-    <button class="panel-close" id="panelClose">&#x2715;</button>
-  </div>
-
-  <div class="section-title">パターン（タップで切替）</div>
-  <div class="chips" id="patternChips">
-    <div class="chip active" data-val="pattern-a">
-      A: body::before背景（推奨）
-    </div>
-    <div class="chip" data-val="pattern-b">
-      B: #app::before背景
-    </div>
-    <div class="chip" data-val="pattern-c">
-      C: #app absolute + min-height
-    </div>
-    <div class="chip" data-val="pattern-d">
-      D: #app fixed + height明示
-    </div>
-  </div>
-
-  <div class="section-title">可視化レイヤー</div>
-  <div class="chips" id="layerChips">
-    <div class="chip active" data-val="show">ON</div>
-    <div class="chip" data-val="hide">OFF</div>
-  </div>
-
-  <div class="hint">
-    <strong>パターンの説明:</strong><br><br>
-    <strong>A（推奨）:</strong> body::beforeに背景を設定。fixed要素の描画制限を回避。<br><br>
-    <strong>B:</strong> #app::beforeに背景を設定。<br><br>
-    <strong>C:</strong> #appをabsoluteに変更し、min-heightでsafe-area下まで確保。<br><br>
-    <strong>D:</strong> #appをfixedのまま、heightをcalc(100dvh + safe-bottom)に明示設定。<br><br>
-    <strong>確認:</strong> 赤黄ストライプが見えなければ黒帯なし（OK）
-  </div>
+<!-- デバッグ -->
+<button class="debug-btn" id="debugBtn">&#x2699;&#xFE0F;</button>
+<div class="debug-panel" id="debugPanel">
+  <button class="debug-close" id="debugClose">&#x2715;</button>
+  <div class="debug-title">レイアウト情報</div>
+  <div class="debug-row"><span class="debug-label">safe-area-top</span><span class="debug-value" id="dTop">-</span></div>
+  <div class="debug-row"><span class="debug-label">safe-area-bottom</span><span class="debug-value" id="dBottom">-</span></div>
+  <div class="debug-row"><span class="debug-label">window.innerHeight</span><span class="debug-value" id="dHeight">-</span></div>
+  <div class="debug-row"><span class="debug-label">100dvh</span><span class="debug-value" id="dDvh">-</span></div>
+  <div class="debug-row"><span class="debug-label">#app bottom</span><span class="debug-value" id="dAppBottom">-</span></div>
+  <div class="debug-row"><span class="debug-label">screen bottom</span><span class="debug-value" id="dScreen">-</span></div>
+  <button class="debug-toggle" id="toggleLayers">可視化レイヤー ON/OFF</button>
 </div>
 
 <script>
 (function() {
   'use strict';
 
-  const body = document.body;
-  const panel = document.getElementById('panel');
-  const fab = document.getElementById('fab');
-  const panelClose = document.getElementById('panelClose');
+  // デバッグパネル
+  const debugBtn = document.getElementById('debugBtn');
+  const debugPanel = document.getElementById('debugPanel');
+  const debugClose = document.getElementById('debugClose');
+  const toggleLayers = document.getElementById('toggleLayers');
 
-  fab.addEventListener('click', () => {
-    panel.classList.toggle('collapsed');
-    fab.classList.toggle('hidden', !panel.classList.contains('collapsed'));
-  });
-  panelClose.addEventListener('click', () => {
-    panel.classList.add('collapsed');
-    fab.classList.remove('hidden');
-  });
+  debugBtn.addEventListener('click', () => debugPanel.classList.add('open'));
+  debugClose.addEventListener('click', () => debugPanel.classList.remove('open'));
+  toggleLayers.addEventListener('click', () => document.body.classList.toggle('show-layers'));
 
-  function activateChip(container, val) {
-    container.querySelectorAll('.chip').forEach(c => {
-      c.classList.toggle('active', c.dataset.val === val);
-    });
-  }
-
-  document.querySelectorAll('#patternChips .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.val;
-      activateChip(document.getElementById('patternChips'), val);
-      body.className = val + (body.classList.contains('show-layers') ? ' show-layers' : '');
-      document.getElementById('dispPattern').textContent = val.replace('pattern-','').toUpperCase();
-      setTimeout(readMetrics, 150);
-    });
-  });
-
-  document.querySelectorAll('#layerChips .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.val;
-      activateChip(document.getElementById('layerChips'), val);
-      body.classList.toggle('show-layers', val === 'show');
-    });
-  });
-
+  // タブ切り替え（見た目のみ）
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
@@ -512,6 +426,20 @@
     });
   });
 
+  // キーボードタップで音符追加（ダミー機能）
+  document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('click', () => {
+      const container = document.getElementById('scoreContainer');
+      const lastRow = container.querySelector('.staff-row:last-child');
+      if (lastRow) {
+        const note = document.createElement('span');
+        note.className = 'note';
+        lastRow.appendChild(note);
+      }
+    });
+  });
+
+  // メトリクス読み取り
   function readMetrics() {
     function getEnv(name) {
       const div = document.createElement('div');
@@ -521,33 +449,25 @@
       document.body.removeChild(div);
       return val;
     }
-
-    document.getElementById('dispTop').textContent = getEnv('safe-area-inset-top');
-    document.getElementById('dispBottom').textContent = getEnv('safe-area-inset-bottom');
-    document.getElementById('dispHeight').textContent = window.innerHeight + 'px';
-    document.getElementById('dispScreenBottom').textContent = window.innerHeight + 'px';
+    document.getElementById('dTop').textContent = getEnv('safe-area-inset-top');
+    document.getElementById('dBottom').textContent = getEnv('safe-area-inset-bottom');
+    document.getElementById('dHeight').textContent = window.innerHeight + 'px';
+    document.getElementById('dScreen').textContent = window.innerHeight + 'px';
 
     const testDvh = document.createElement('div');
     testDvh.style.height = '100dvh';
     testDvh.style.position = 'absolute';
     testDvh.style.visibility = 'hidden';
     document.body.appendChild(testDvh);
-    document.getElementById('dispDvh').textContent = testDvh.offsetHeight + 'px';
+    document.getElementById('dDvh').textContent = testDvh.offsetHeight + 'px';
     document.body.removeChild(testDvh);
 
     const app = document.getElementById('app');
     if (app) {
       const rect = app.getBoundingClientRect();
-      document.getElementById('dispAppBottom').textContent = Math.round(rect.bottom) + 'px';
+      document.getElementById('dAppBottom').textContent = Math.round(rect.bottom) + 'px';
     }
-
-    const before = document.querySelector('body::before');
-    // ::beforeの高さはJSから直接取得できないので、計算値を表示
-    const safeBottom = parseFloat(getEnv('safe-area-inset-bottom')) || 0;
-    const dvh = testDvh ? testDvh.offsetHeight : window.innerHeight;
-    document.getElementById('dispBeforeHeight').textContent = (dvh + safeBottom) + 'px';
   }
-
   readMetrics();
   window.addEventListener('resize', readMetrics);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', readMetrics);
