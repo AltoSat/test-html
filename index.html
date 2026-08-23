@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
-<title>PWA セーフエリア実験</title>
+<title>PWA セーフエリア実験 v2</title>
 <style>
   :root {
     --bg: #090d14;
@@ -22,6 +22,9 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
 
+  /* ============================================================
+     共通: body背景（safe-area下まで覆う）
+     ============================================================ */
   html, body {
     width: 100%; height: 100%;
     background: var(--bg);
@@ -31,56 +34,74 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* bodyの疑似要素で背景をsafe-area下まで描画 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: calc(100dvh + env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+    z-index: 0;
+    pointer-events: none;
+  }
+
   /* ============================================================
      パターン切り替え
      ============================================================ */
 
-  /* ---- パターンA: 元のコード（inset:0 のみ） ---- */
+  /* ---- パターンA: body::before背景 + #app透明（推奨） ---- */
   .pattern-a #app {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
+    background: transparent;
+    z-index: 1;
   }
 
-  /* ---- パターンB: #appをsafe-area下まで引き伸ばす ---- */
+  /* ---- パターンB: #app::before背景 + #app透明 ---- */
   .pattern-b #app {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    bottom: calc(0px - env(safe-area-inset-bottom));
-    display: flex; flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-
-  /* ---- パターンC: html/body背景統一 + inset:0 ---- */
-  .pattern-c html,
-  .pattern-c body {
-    background: var(--bg);
-  }
-  .pattern-c #app {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
+    background: transparent;
+    z-index: 1;
+  }
+  .pattern-b #app::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: calc(100dvh + env(safe-area-inset-bottom));
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
+    z-index: -1;
+    pointer-events: none;
   }
 
-  /* ---- パターンD: B + C の組み合わせ ---- */
-  .pattern-d html,
-  .pattern-d body {
-    background: var(--bg);
+  /* ---- パターンC: #app absolute + min-height ---- */
+  .pattern-c #app {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    min-height: calc(100dvh + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+    z-index: 1;
   }
+
+  /* ---- パターンD: #app fixed + height明示 ---- */
   .pattern-d #app {
     position: fixed;
     top: 0; left: 0; right: 0;
-    bottom: calc(0px - env(safe-area-inset-bottom));
+    height: calc(100dvh + env(safe-area-inset-bottom));
     display: flex; flex-direction: column;
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
+    z-index: 1;
   }
 
   /* ============================================================
@@ -156,9 +177,6 @@
     color: var(--muted); font-size: 15px;
     font-variant-numeric: tabular-nums;
   }
-  .ios-row-arrow {
-    color: var(--muted); font-size: 18px; margin-left: 8px;
-  }
 
   /* ============================================================
      タブバー（元の3項目・元のスタイル）
@@ -226,7 +244,6 @@
   }
   .show-layers .layer-safe-bottom { opacity: 1; }
 
-  /* 黒帯検出: #appの外に背景が見えると赤黄ストライプが見える */
   .layer-black-detector {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
     height: env(safe-area-inset-bottom);
@@ -244,7 +261,7 @@
   .show-layers .layer-black-detector { opacity: 1; }
 
   /* ============================================================
-     コントロールパネル（上部固定）
+     コントロールパネル
      ============================================================ */
   .panel {
     position: fixed;
@@ -330,7 +347,7 @@
   .fab.hidden { opacity: 0; pointer-events: none; }
 </style>
 </head>
-<body class="pattern-d show-layers">
+<body class="pattern-a show-layers">
 
 <!-- 可視化レイヤー -->
 <div class="layer-safe-top">safe-area-inset-top</div>
@@ -340,7 +357,7 @@
 <div id="app">
   <header class="ios-nav">
     <button class="ios-nav-back" type="button">&#x276E;</button>
-    <div class="ios-nav-title">PWA セーフエリア実験</div>
+    <div class="ios-nav-title">PWA セーフエリア実験 v2</div>
   </header>
 
   <main class="main-area">
@@ -370,18 +387,22 @@
         <span class="ios-row-label">画面最下端</span>
         <span class="ios-row-value" id="dispScreenBottom">-</span>
       </div>
+      <div class="ios-row">
+        <span class="ios-row-label">body::before 高さ</span>
+        <span class="ios-row-value" id="dispBeforeHeight">-</span>
+      </div>
 
       <div class="ios-section-title">現在のパターン</div>
       <div class="ios-row">
         <span class="ios-row-label">パターン</span>
-        <span class="ios-row-value" id="dispPattern">D</span>
+        <span class="ios-row-value" id="dispPattern">A</span>
       </div>
 
       <div class="ios-section-title">確認方法</div>
       <div class="ios-row" style="border-radius:12px;">
         <span class="ios-row-label" style="font-size:13px; line-height:1.5; white-space:pre-wrap;">
 赤黄ストライプが見えない = 黒帯なし（OK）
-赤黄ストライプが見える = 黒帯あり（NG）</span>
+赤黄ストライプが見える = 帯あり（NG）</span>
       </div>
     </div>
   </main>
@@ -412,17 +433,17 @@
 
   <div class="section-title">パターン（タップで切替）</div>
   <div class="chips" id="patternChips">
-    <div class="chip" data-val="pattern-a">
-      A: inset:0 のみ（元のコード）
+    <div class="chip active" data-val="pattern-a">
+      A: body::before背景（推奨）
     </div>
     <div class="chip" data-val="pattern-b">
-      B: #appをsafe-area下まで引き伸ばす
+      B: #app::before背景
     </div>
     <div class="chip" data-val="pattern-c">
-      C: html/body背景統一
+      C: #app absolute + min-height
     </div>
-    <div class="chip active" data-val="pattern-d">
-      D: B + C（推奨）
+    <div class="chip" data-val="pattern-d">
+      D: #app fixed + height明示
     </div>
   </div>
 
@@ -434,10 +455,10 @@
 
   <div class="hint">
     <strong>パターンの説明:</strong><br><br>
-    <strong>A:</strong> 元のコード。100dvh = 812px で止まり、safe-bottom（34px）の下が黒帯になります。<br><br>
-    <strong>B:</strong> <code>bottom: calc(0px - env(safe-area-inset-bottom))</code> で #app を safe-area の下まで引き伸ばします。<br><br>
-    <strong>C:</strong> html と body の背景を <code>#090d14</code> に統一。仮に #app が届かなくても背景色で隠れます。<br><br>
-    <strong>D:</strong> B と C を組み合わせた最も確実なパターン。<br><br>
+    <strong>A（推奨）:</strong> body::beforeに背景を設定。fixed要素の描画制限を回避。<br><br>
+    <strong>B:</strong> #app::beforeに背景を設定。<br><br>
+    <strong>C:</strong> #appをabsoluteに変更し、min-heightでsafe-area下まで確保。<br><br>
+    <strong>D:</strong> #appをfixedのまま、heightをcalc(100dvh + safe-bottom)に明示設定。<br><br>
     <strong>確認:</strong> 赤黄ストライプが見えなければ黒帯なし（OK）
   </div>
 </div>
@@ -451,7 +472,6 @@
   const fab = document.getElementById('fab');
   const panelClose = document.getElementById('panelClose');
 
-  // FABでパネル開閉
   fab.addEventListener('click', () => {
     panel.classList.toggle('collapsed');
     fab.classList.toggle('hidden', !panel.classList.contains('collapsed'));
@@ -461,7 +481,6 @@
     fab.classList.remove('hidden');
   });
 
-  // パターンチップ切り替え
   function activateChip(container, val) {
     container.querySelectorAll('.chip').forEach(c => {
       c.classList.toggle('active', c.dataset.val === val);
@@ -486,7 +505,6 @@
     });
   });
 
-  // タブ切り替え（見た目のみ）
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
@@ -494,7 +512,6 @@
     });
   });
 
-  // メトリクス読み取り
   function readMetrics() {
     function getEnv(name) {
       const div = document.createElement('div');
@@ -523,6 +540,12 @@
       const rect = app.getBoundingClientRect();
       document.getElementById('dispAppBottom').textContent = Math.round(rect.bottom) + 'px';
     }
+
+    const before = document.querySelector('body::before');
+    // ::beforeの高さはJSから直接取得できないので、計算値を表示
+    const safeBottom = parseFloat(getEnv('safe-area-inset-bottom')) || 0;
+    const dvh = testDvh ? testDvh.offsetHeight : window.innerHeight;
+    document.getElementById('dispBeforeHeight').textContent = (dvh + safeBottom) + 'px';
   }
 
   readMetrics();
