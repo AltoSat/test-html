@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
@@ -59,6 +59,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-top: 0;
+  padding-top: env(safe-area-inset-top, 0px);
   background:
     radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
     var(--bg);
@@ -277,6 +279,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   z-index: 40;
   left: 50%;
   top: 12px;
+  top: calc(12px + env(safe-area-inset-top, 0px));
   max-width: calc(100% - 24px);
   transform: translate(-50%, -12px);
   padding: 8px 12px;
@@ -571,7 +574,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   flex: none;
   z-index: 60;
   min-height: 56px;
-  margin: 8px 10px 0;
+  margin: 8px 10px 8px;
+  margin-bottom: max(8px, env(safe-area-inset-bottom, 0px));
   padding: 4px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
