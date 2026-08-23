@@ -10,173 +10,164 @@
 <style>
   :root {
     --bg: #090d14;
+    --surface: #111824;
+    --surface-2: #172131;
+    --ink: #f5f8ff;
+    --muted: #98a8bd;
     --accent: #53d7ff;
+    --danger: #ff5573;
     --tab-h: 56px;
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
 
-  /* ============================================================
-     基盤: body背景を#090d14に統一（黒帯を背景色で隠す）
-     ============================================================ */
   html, body {
     width: 100%; height: 100%;
     background: var(--bg);
-    color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ============================================================
-     パターンA: #appにpadding-bottomでsafe-area分を追加
-     （100dvh + safe-bottom で画面最下端まで到達）
+     パターン切り替え
      ============================================================ */
+
+  /* ---- パターンA: 元のコード（inset:0 のみ） ---- */
   .pattern-a #app {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    /* safe-bottom分をpaddingで追加 → 背景が下端まで届く */
-    padding-bottom: env(safe-area-inset-bottom);
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
   }
-  .pattern-a .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    /* フッター高さ + 余裕 */
-    padding-bottom: calc(var(--tab-h) + 20px);
-  }
-  .pattern-a .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    z-index: 60;
-  }
 
-  /* ============================================================
-     パターンB: body背景統一 + #app padding-bottom
-     ============================================================ */
-  .pattern-b body {
-    background: var(--bg);
-  }
+  /* ---- パターンB: #appをsafe-area下まで引き伸ばす ---- */
   .pattern-b #app {
     position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: env(safe-area-inset-bottom);
+    top: 0; left: 0; right: 0;
+    bottom: calc(0px - env(safe-area-inset-bottom));
+    display: flex; flex-direction: column;
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
   }
-  .pattern-b .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--tab-h) + 20px);
+
+  /* ---- パターンC: html/body背景統一 + inset:0 ---- */
+  .pattern-c html,
+  .pattern-c body {
+    background: var(--bg);
   }
-  .pattern-b .bottom-tabs {
+  .pattern-c #app {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
+  }
+
+  /* ---- パターンD: B + C の組み合わせ ---- */
+  .pattern-d html,
+  .pattern-d body {
+    background: var(--bg);
+  }
+  .pattern-d #app {
     position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    z-index: 60;
+    top: 0; left: 0; right: 0;
+    bottom: calc(0px - env(safe-area-inset-bottom));
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
+      var(--bg);
   }
 
   /* ============================================================
-     パターンC: height: calc(100dvh + safe-bottom)
+     iOS風ナビゲーションバー
      ============================================================ */
-  .pattern-c #app {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: calc(100dvh + env(safe-area-inset-bottom));
+  .ios-nav {
+    flex: none;
+    padding-top: env(safe-area-inset-top);
+    padding-left: 16px; padding-right: 16px;
+    height: calc(44px + env(safe-area-inset-top));
     display: flex;
-    flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
+    align-items: center;
+    justify-content: center;
+    background: rgba(9,13,20,.72);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(187,207,235,.12);
+    position: relative;
+    z-index: 50;
   }
-  .pattern-c .main-area {
+  .ios-nav-title {
+    font-size: 17px; font-weight: 700;
+    letter-spacing: .01em;
+  }
+  .ios-nav-back {
+    position: absolute; left: 8px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.08);
+    color: var(--accent);
+    font-size: 18px;
+    display: grid; place-items: center;
+  }
+
+  /* ============================================================
+     iOS風メインコンテンツ
+     ============================================================ */
+  .main-area {
     flex: 1 1 auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
     padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
   }
-  .pattern-c .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    z-index: 60;
+  .ios-list {
+    padding: 20px 16px 40px;
+  }
+  .ios-section-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin: 20px 16px 8px;
+  }
+  .ios-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid rgba(187,207,235,.10);
+    font-size: 16px;
+  }
+  .ios-row:first-child {
+    border-radius: 12px 12px 0 0;
+  }
+  .ios-row:last-child {
+    border-radius: 0 0 12px 12px;
+    border-bottom: none;
+  }
+  .ios-row-label { font-weight: 600; }
+  .ios-row-value {
+    color: var(--muted); font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ios-row-arrow {
+    color: var(--muted); font-size: 18px; margin-left: 8px;
   }
 
   /* ============================================================
-     パターンD: 元のコード（比較用）
-     ============================================================ */
-  .pattern-d #app {
-    position: fixed;
-    inset: 0;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-d .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--tab-h) + 20px);
-  }
-  .pattern-d .bottom-tabs {
-    flex: none;
-    margin: 8px 10px 0;
-  }
-
-  /* ============================================================
-     パターンE: #app::afterで背景をsafe-bottom下まで広げる
-     ============================================================ */
-  .pattern-e #app {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    background: transparent;
-  }
-  .pattern-e #app::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    bottom: calc(0px - env(safe-area-inset-bottom));
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-    z-index: -1;
-  }
-  .pattern-e .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--tab-h) + 20px);
-  }
-  .pattern-e .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    z-index: 60;
-  }
-
-  /* ============================================================
-     タブバー（元の3項目）
+     タブバー（元の3項目・元のスタイル）
      ============================================================ */
   .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 60;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
@@ -209,52 +200,40 @@
   .tab-label { font-size: 10px; letter-spacing: .03em; }
 
   /* ============================================================
-     ダミーコンテンツ
-     ============================================================ */
-  .dummy-score { padding: 14px 12px 40px; }
-  .dummy-note {
-    height: 44px; margin: 8px 0; border-radius: 10px;
-    background: linear-gradient(90deg, rgba(83,215,255,.25), rgba(83,215,255,.08));
-    border: 1px solid rgba(83,215,255,.35);
-    display: flex; align-items: center; padding: 0 12px;
-    font-size: 12px; font-weight: 800; color: #b3e8ff;
-  }
-
-  /* ============================================================
      可視化レイヤー
      ============================================================ */
-  .safe-top {
+  .layer-safe-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-top);
     background: rgba(255,85,115,.35);
-    border-bottom: 2px dashed #ff5573;
+    border-bottom: 2px dashed var(--danger);
     pointer-events: none;
     display: flex; align-items: flex-end; justify-content: center;
     font-size: 10px; font-weight: 800; color: #fff;
     opacity: 0; transition: opacity .2s;
   }
-  .show-layers .safe-top { opacity: 1; }
+  .show-layers .layer-safe-top { opacity: 1; }
 
-  .safe-bottom {
+  .layer-safe-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-bottom);
     background: rgba(83,215,255,.25);
-    border-top: 2px dashed #53d7ff;
+    border-top: 2px dashed var(--accent);
     pointer-events: none;
     display: flex; align-items: flex-start; justify-content: center;
     font-size: 10px; font-weight: 800; color: #fff;
     opacity: 0; transition: opacity .2s;
   }
-  .show-layers .safe-bottom { opacity: 1; }
+  .show-layers .layer-safe-bottom { opacity: 1; }
 
-  /* 黒帯検出: #appの背景が届いていないと赤黄ストライプが見える */
-  .black-detector {
+  /* 黒帯検出: #appの外に背景が見えると赤黄ストライプが見える */
+  .layer-black-detector {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
     height: env(safe-area-inset-bottom);
     background: repeating-linear-gradient(
       45deg,
-      rgba(255,0,0,.4), rgba(255,0,0,.4) 5px,
-      rgba(255,255,0,.4) 5px, rgba(255,255,0,.4) 10px
+      rgba(255,0,0,.45), rgba(255,0,0,.45) 5px,
+      rgba(255,255,0,.45) 5px, rgba(255,255,0,.45) 10px
     );
     pointer-events: none;
     opacity: 0; transition: opacity .2s;
@@ -262,217 +241,204 @@
     font-size: 10px; font-weight: 800; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,.9);
   }
-  .show-layers .black-detector { opacity: 1; }
+  .show-layers .layer-black-detector { opacity: 1; }
 
   /* ============================================================
-     コントロールパネル
+     コントロールパネル（上部固定）
      ============================================================ */
-  .control-panel {
+  .panel {
     position: fixed;
-    left: 8px; right: 8px;
-    top: calc(env(safe-area-inset-top) + 8px);
+    left: 10px; right: 10px;
+    top: calc(env(safe-area-inset-top) + 52px);
     z-index: 9000;
-    background: rgba(17,24,36,.95);
+    background: rgba(17,24,36,.96);
     border: 1px solid rgba(255,255,255,.12);
     border-radius: 16px;
-    padding: 12px 14px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.55);
-    backdrop-filter: blur(16px) saturate(1.2);
-    max-height: 50vh;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    backdrop-filter: blur(20px) saturate(1.2);
+    max-height: 52vh;
     overflow-y: auto;
     transition: transform .35s ease, opacity .35s ease;
   }
-  .control-panel.collapsed {
+  .panel.collapsed {
     transform: translateY(-120%);
     opacity: 0;
     pointer-events: none;
   }
-
   .panel-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
-  .panel-title { font-size: 14px; font-weight: 800; }
-  .toggle-btn {
-    width: 32px; height: 32px; border-radius: 8px;
+  .panel-title { font-size: 15px; font-weight: 800; }
+  .panel-close {
+    width: 28px; height: 28px; border-radius: 8px;
     border: 1px solid rgba(255,255,255,.15);
-    background: rgba(255,255,255,.08); color: #fff;
-    font-size: 16px; display: grid; place-items: center;
+    background: rgba(255,255,255,.08); color: var(--ink);
+    font-size: 14px; display: grid; place-items: center;
   }
-
-  .section { margin-top: 10px; }
   .section-title {
-    font-size: 11px; color: #8fa0b5; font-weight: 700;
-    margin-bottom: 8px;
+    font-size: 11px; color: var(--muted); font-weight: 700;
+    margin: 12px 0 8px;
+    text-transform: uppercase; letter-spacing: .06em;
   }
-
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     border: 1px solid rgba(255,255,255,.14);
     background: rgba(255,255,255,.06);
-    color: #e2e8f0; border-radius: 8px;
-    padding: 7px 11px; font-size: 12px; font-weight: 700;
+    color: #e2e8f0; border-radius: 10px;
+    padding: 8px 12px; font-size: 12px; font-weight: 700;
     cursor: pointer; user-select: none;
+    transition: all .15s ease;
   }
+  .chip:active { transform: scale(.95); }
   .chip.active {
     border-color: var(--accent);
     background: rgba(83,215,255,.18); color: #fff;
+    box-shadow: 0 0 12px rgba(83,215,255,.15);
   }
-
-  .info-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-    margin-top: 10px;
-  }
-  .info-cell {
-    background: rgba(0,0,0,.35);
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 8px; padding: 8px; font-size: 11px;
-  }
-  .info-label { color: #8fa0b5; font-size: 10px; }
-  .info-value { font-weight: 800; font-size: 12px; margin-top: 2px; }
-
   .hint {
-    margin-top: 10px; padding: 10px; border-radius: 8px;
-    background: rgba(83,215,255,.10);
-    border: 1px solid rgba(83,215,255,.25);
-    font-size: 11px; line-height: 1.7; color: #c9e8f5;
+    margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+    background: rgba(83,215,255,.08);
+    border: 1px solid rgba(83,215,255,.20);
+    font-size: 12px; line-height: 1.7; color: #c9e8f5;
+  }
+  .hint strong { color: var(--accent); }
+  .hint code {
+    background: rgba(0,0,0,.4);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: 11px;
   }
 
+  /* ============================================================
+     FAB
+     ============================================================ */
   .fab {
     position: fixed;
-    right: 12px;
-    top: calc(12px + env(safe-area-inset-top));
+    right: 14px;
+    top: calc(14px + env(safe-area-inset-top));
     z-index: 9500;
-    width: 48px; height: 48px; border-radius: 50%;
+    width: 44px; height: 44px; border-radius: 50%;
     border: 0;
     background: linear-gradient(180deg, #85e8ff, var(--accent));
-    color: #06151b; font-size: 22px; font-weight: 900;
+    color: #06151b; font-size: 20px; font-weight: 900;
     box-shadow: 0 6px 18px rgba(0,0,0,.35);
     display: grid; place-items: center;
-    transition: transform .2s;
+    transition: transform .2s, opacity .2s;
   }
-  .fab:active { transform: scale(.92); }
+  .fab:active { transform: scale(.9); }
+  .fab.hidden { opacity: 0; pointer-events: none; }
 </style>
 </head>
-<body class="pattern-a show-layers">
+<body class="pattern-d show-layers">
 
 <!-- 可視化レイヤー -->
-<div class="safe-top">safe-area-inset-top</div>
-<div class="safe-bottom">safe-area-inset-bottom</div>
-<div class="black-detector">黒帯検出（見えたらNG）</div>
+<div class="layer-safe-top">safe-area-inset-top</div>
+<div class="layer-safe-bottom">safe-area-inset-bottom</div>
+<div class="layer-black-detector">黒帯検出（見えたらNG）</div>
 
 <div id="app">
+  <header class="ios-nav">
+    <button class="ios-nav-back" type="button">&#x276E;</button>
+    <div class="ios-nav-title">PWA セーフエリア実験</div>
+  </header>
+
   <main class="main-area">
-    <div class="dummy-score">
-      <div class="dummy-note">🎹 ド</div>
-      <div class="dummy-note">🎹 レ</div>
-      <div class="dummy-note">🎹 ミ</div>
-      <div class="dummy-note">🎹 ファ</div>
-      <div class="dummy-note">🎹 ソ</div>
-      <div class="dummy-note">🎹 ラ</div>
-      <div class="dummy-note">🎹 シ</div>
-      <div class="dummy-note">🎹 ド</div>
-      <div class="dummy-note" style="opacity:.7">（最下部までスクロールして確認）</div>
-      <div class="dummy-note" style="opacity:.5">（タブと被らないか確認）</div>
+    <div class="ios-list">
+      <div class="ios-section-title">デバイス情報</div>
+      <div class="ios-row">
+        <span class="ios-row-label">safe-area-top</span>
+        <span class="ios-row-value" id="dispTop">-</span>
+      </div>
+      <div class="ios-row">
+        <span class="ios-row-label">safe-area-bottom</span>
+        <span class="ios-row-value" id="dispBottom">-</span>
+      </div>
+      <div class="ios-row">
+        <span class="ios-row-label">window.innerHeight</span>
+        <span class="ios-row-value" id="dispHeight">-</span>
+      </div>
+      <div class="ios-row">
+        <span class="ios-row-label">100dvh ピクセル</span>
+        <span class="ios-row-value" id="dispDvh">-</span>
+      </div>
+      <div class="ios-row">
+        <span class="ios-row-label">#app 下端位置</span>
+        <span class="ios-row-value" id="dispAppBottom">-</span>
+      </div>
+      <div class="ios-row">
+        <span class="ios-row-label">画面最下端</span>
+        <span class="ios-row-value" id="dispScreenBottom">-</span>
+      </div>
+
+      <div class="ios-section-title">現在のパターン</div>
+      <div class="ios-row">
+        <span class="ios-row-label">パターン</span>
+        <span class="ios-row-value" id="dispPattern">D</span>
+      </div>
+
+      <div class="ios-section-title">確認方法</div>
+      <div class="ios-row" style="border-radius:12px;">
+        <span class="ios-row-label" style="font-size:13px; line-height:1.5; white-space:pre-wrap;">
+赤黄ストライプが見えない = 黒帯なし（OK）
+赤黄ストライプが見える = 黒帯あり（NG）</span>
+      </div>
     </div>
   </main>
 
   <nav class="bottom-tabs" aria-label="画面切り替え">
     <button class="tab-btn is-active" type="button">
-      <span class="tab-ico">🎹</span><span class="tab-label">作曲</span>
+      <span class="tab-ico">&#x1F3B9;</span>
+      <span class="tab-label">作曲</span>
     </button>
     <button class="tab-btn" type="button">
-      <span class="tab-ico">🎵</span><span class="tab-label">楽曲</span>
+      <span class="tab-ico">&#x1F3B5;</span>
+      <span class="tab-label">楽曲</span>
     </button>
     <button class="tab-btn" type="button">
-      <span class="tab-ico">⚙️</span><span class="tab-label">設定</span>
+      <span class="tab-ico">&#x2699;&#xFE0F;</span>
+      <span class="tab-label">設定</span>
     </button>
   </nav>
 </div>
 
-<button class="fab" id="fab">⚙️</button>
+<button class="fab" id="fab">&#x2699;&#xFE0F;</button>
 
-<div class="control-panel collapsed" id="panel">
+<div class="panel collapsed" id="panel">
   <div class="panel-header">
-    <div class="panel-title">📐 PWA セーフエリア実験</div>
-    <button class="toggle-btn" id="closePanel">✕</button>
+    <div class="panel-title">&#x1F4D0; レイアウトパターン切替</div>
+    <button class="panel-close" id="panelClose">&#x2715;</button>
   </div>
 
-  <div>
-    <div class="section-title">レイアウトパターン（タップで切替）</div>
-    <div class="chips" id="layoutChips">
-      <div class="chip active" data-val="pattern-a">
-        A: #appにpadding-bottom:safe-bottom ⭐
-      </div>
-      <div class="chip" data-val="pattern-b">
-        B: body背景統一 + padding-bottom
-      </div>
-      <div class="chip" data-val="pattern-c">
-        C: height: calc(100dvh + safe-bottom)
-      </div>
-      <div class="chip" data-val="pattern-d">
-        D: 元のコード（比較用）
-      </div>
-      <div class="chip" data-val="pattern-e">
-        E: #app::afterで背景広げ
-      </div>
+  <div class="section-title">パターン（タップで切替）</div>
+  <div class="chips" id="patternChips">
+    <div class="chip" data-val="pattern-a">
+      A: inset:0 のみ（元のコード）
+    </div>
+    <div class="chip" data-val="pattern-b">
+      B: #appをsafe-area下まで引き伸ばす
+    </div>
+    <div class="chip" data-val="pattern-c">
+      C: html/body背景統一
+    </div>
+    <div class="chip active" data-val="pattern-d">
+      D: B + C（推奨）
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">表示切替</div>
-    <div class="chips" id="layerChips">
-      <div class="chip active" data-val="show">セーフエリア/黒帯検出 ON</div>
-      <div class="chip" data-val="hide">OFF</div>
-    </div>
+  <div class="section-title">可視化レイヤー</div>
+  <div class="chips" id="layerChips">
+    <div class="chip active" data-val="show">ON</div>
+    <div class="chip" data-val="hide">OFF</div>
   </div>
 
-  <div class="info-grid">
-    <div class="info-cell">
-      <div class="info-label">safe-area-top</div>
-      <div class="info-value" id="valTop">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">safe-area-bottom</div>
-      <div class="info-value" id="valBottom">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">window.innerHeight</div>
-      <div class="info-value" id="valHeight">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">100dvh ピクセル</div>
-      <div class="info-value" id="valDvh">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">#app 高さ</div>
-      <div class="info-value" id="valAppH">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">#app下端位置</div>
-      <div class="info-value" id="valAppBottom">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">現在のパターン</div>
-      <div class="info-value" id="valPattern">A</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">画面最下端</div>
-      <div class="info-value" id="valScreenBottom">-</div>
-    </div>
-  </div>
-
-  <div class="hint" id="hintBox">
-    💡 <strong>画像から判明した事実:</strong><br><br>
-    safe-area-top = 62px, safe-area-bottom = 34px<br>
-    window.innerHeight = 100dvh = 812px<br><br>
-    つまり <strong>100dvhはsafe-areaを含まない</strong>ため、<br>
-    #appをinset:0（100dvh）にするとsafe-bottomの下に黒帯が出ます。<br><br>
-    <strong>解決策:</strong><br>
-    #appに <code>padding-bottom: env(safe-area-inset-bottom)</code> を追加し、<br>
-    背景がsafe-bottomの下端まで届くようにします。<br><br>
-    <strong>確認方法:</strong><br>
-    赤黄ストライプが見えない → 黒帯なし（OK）
+  <div class="hint">
+    <strong>パターンの説明:</strong><br><br>
+    <strong>A:</strong> 元のコード。100dvh = 812px で止まり、safe-bottom（34px）の下が黒帯になります。<br><br>
+    <strong>B:</strong> <code>bottom: calc(0px - env(safe-area-inset-bottom))</code> で #app を safe-area の下まで引き伸ばします。<br><br>
+    <strong>C:</strong> html と body の背景を <code>#090d14</code> に統一。仮に #app が届かなくても背景色で隠れます。<br><br>
+    <strong>D:</strong> B と C を組み合わせた最も確実なパターン。<br><br>
+    <strong>確認:</strong> 赤黄ストライプが見えなければ黒帯なし（OK）
   </div>
 </div>
 
@@ -483,14 +449,16 @@
   const body = document.body;
   const panel = document.getElementById('panel');
   const fab = document.getElementById('fab');
-  const closePanel = document.getElementById('closePanel');
+  const panelClose = document.getElementById('panelClose');
 
   // FABでパネル開閉
   fab.addEventListener('click', () => {
     panel.classList.toggle('collapsed');
+    fab.classList.toggle('hidden', !panel.classList.contains('collapsed'));
   });
-  closePanel.addEventListener('click', () => {
+  panelClose.addEventListener('click', () => {
     panel.classList.add('collapsed');
+    fab.classList.remove('hidden');
   });
 
   // パターンチップ切り替え
@@ -500,12 +468,12 @@
     });
   }
 
-  document.querySelectorAll('#layoutChips .chip').forEach(chip => {
+  document.querySelectorAll('#patternChips .chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const val = chip.dataset.val;
-      activateChip(document.getElementById('layoutChips'), val);
+      activateChip(document.getElementById('patternChips'), val);
       body.className = val + (body.classList.contains('show-layers') ? ' show-layers' : '');
-      document.getElementById('valPattern').textContent = val.replace('pattern-','').toUpperCase();
+      document.getElementById('dispPattern').textContent = val.replace('pattern-','').toUpperCase();
       setTimeout(readMetrics, 150);
     });
   });
@@ -515,6 +483,14 @@
       const val = chip.dataset.val;
       activateChip(document.getElementById('layerChips'), val);
       body.classList.toggle('show-layers', val === 'show');
+    });
+  });
+
+  // タブ切り替え（見た目のみ）
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
     });
   });
 
@@ -529,38 +505,29 @@
       return val;
     }
 
-    document.getElementById('valTop').textContent = getEnv('safe-area-inset-top');
-    document.getElementById('valBottom').textContent = getEnv('safe-area-inset-bottom');
-    document.getElementById('valHeight').textContent = window.innerHeight + 'px';
-    document.getElementById('valScreenBottom').textContent = window.innerHeight + 'px';
+    document.getElementById('dispTop').textContent = getEnv('safe-area-inset-top');
+    document.getElementById('dispBottom').textContent = getEnv('safe-area-inset-bottom');
+    document.getElementById('dispHeight').textContent = window.innerHeight + 'px';
+    document.getElementById('dispScreenBottom').textContent = window.innerHeight + 'px';
 
     const testDvh = document.createElement('div');
     testDvh.style.height = '100dvh';
     testDvh.style.position = 'absolute';
     testDvh.style.visibility = 'hidden';
     document.body.appendChild(testDvh);
-    document.getElementById('valDvh').textContent = testDvh.offsetHeight + 'px';
+    document.getElementById('dispDvh').textContent = testDvh.offsetHeight + 'px';
     document.body.removeChild(testDvh);
 
     const app = document.getElementById('app');
     if (app) {
       const rect = app.getBoundingClientRect();
-      document.getElementById('valAppH').textContent = rect.height + 'px';
-      document.getElementById('valAppBottom').textContent = rect.bottom + 'px';
+      document.getElementById('dispAppBottom').textContent = Math.round(rect.bottom) + 'px';
     }
   }
 
   readMetrics();
   window.addEventListener('resize', readMetrics);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', readMetrics);
-
-  // タブ切り替え（見た目のみ）
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-    });
-  });
 })();
 </script>
 </body>
