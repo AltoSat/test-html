@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
@@ -276,7 +276,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   position: fixed;
   z-index: 40;
   left: 50%;
-  top: calc(12px + env(safe-area-inset-top));
+  top: 12px;
   max-width: calc(100% - 24px);
   transform: translate(-50%, -12px);
   padding: 8px 12px;
@@ -375,14 +375,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
 @media (max-height: 700px) {
   :root { --white-key-h: 118px; --black-key-h: 75px; --row-h: 32px; }
-  .control-deck { padding-top: max(3px, env(safe-area-inset-top)); }
+  .control-deck { padding-top: 3px; }
   .control-deck .control { min-height: 26px; height: 26px; }
   .control-deck .control.play { height: 28px; }
   .keyboard-nav { height: 28px; }
 }
 @media (min-width: 700px) {
   :root { --row-h: 39px; --white-key-w: 52px; --black-key-w: 31px; --white-key-h: 168px; --black-key-h: 106px; }
-  .control-deck { grid-template-columns: minmax(120px, 1fr) 128px minmax(120px, 1fr); padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  .control-deck { grid-template-columns: minmax(120px, 1fr) 128px minmax(120px, 1fr); padding-left: 14px; padding-right: 14px; }
   .dpad { width: 128px; }
   .control-deck .control { font-size: 12px; }
 }
@@ -498,7 +498,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   grid-template-columns: minmax(84px, 1fr) 142px minmax(84px, 1fr);
   align-items: center;
   gap: 8px;
-  padding: 8px max(8px, env(safe-area-inset-left)) 7px max(8px, env(safe-area-inset-right));
+  padding: 8px 8px 7px;
   background: rgba(9, 13, 20, .96);
   border-top: 1px solid var(--line);
   border-bottom: 0;
@@ -572,7 +572,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   z-index: 60;
   min-height: 56px;
   margin: 8px 10px 0;
-  padding: 4px 4px env(safe-area-inset-bottom, 0px);
+  padding: 4px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
@@ -610,7 +610,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .content-screen {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  padding: max(14px, env(safe-area-inset-top)) 14px 22px;
+  padding: 14px 14px 22px;
   background:
     radial-gradient(circle at 85% 0, rgba(83,215,255,.12), transparent 30%),
     var(--bg);
@@ -999,17 +999,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function whiteKeyW() { return cssNumber('--white-key-w'); }
   function blackKeyW() { return cssNumber('--black-key-w'); }
 
-  function measureSafeTop() {
-    const div = document.createElement('div');
-    div.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;padding-top:env(safe-area-inset-top,0px);pointer-events:none;';
-    document.body.appendChild(div);
-    const top = parseFloat(getComputedStyle(div).paddingTop) || 0;
-    div.remove();
-    return top;
-  }
   function setupRuler() {
-    const safeTop = measureSafeTop();
-    document.documentElement.style.setProperty('--ruler-h', `${Math.max(12, safeTop + 12)}px`);
+    document.documentElement.style.setProperty('--ruler-h', '12px');
   }
 
   function noteInfo(midi) {
