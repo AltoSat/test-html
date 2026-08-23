@@ -38,7 +38,7 @@
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
 }
-html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--bg); }
+html, body { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; background: var(--bg); }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
   color: var(--ink);
@@ -54,8 +54,12 @@ button { -webkit-appearance: none; appearance: none; }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #app {
   position: fixed;
-  inset: 0;
-  height: auto;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -767,6 +771,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   touch-action: none !important;
 }
 </style>
+<script>
+(function () {
+  function setAppHeight() {
+    var vv = window.visualViewport;
+    var h = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+    window.visualViewport.addEventListener('scroll', setAppHeight);
+  } else {
+    window.addEventListener('resize', setAppHeight);
+  }
+})();
+</script>
 </head>
 <body>
 <div id="app">
@@ -3071,7 +3091,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     updateEdgeIndicators();
   }
 
-  window.addEventListener('resize', () => {
+  const handleViewportChange = () => {
     if (playing || activeZoom || overviewState) {
       setTimeout(() => {
         if (!playing && !activeZoom && !overviewState) doResize();
@@ -3079,7 +3099,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     } else {
       doResize();
     }
-  }, { signal: __docSignal });
+  };
+  window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  }
 
   loadState();
   loadSongs();
