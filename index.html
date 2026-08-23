@@ -570,10 +570,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .bottom-tabs {
   flex: none;
   z-index: 60;
-  height: auto;
-  min-height: calc(56px + env(safe-area-inset-bottom, 0px));
+  min-height: 56px;
   margin: 8px 10px 0;
-  padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+  padding: 4px 4px env(safe-area-inset-bottom, 0px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
