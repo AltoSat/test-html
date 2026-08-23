@@ -6,20 +6,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
-<title>PWA セーフエリア実験 v7</title>
+<title>PWA セーフエリア実験</title>
 <style>
   :root {
     --bg: #090d14;
     --accent: #53d7ff;
-    --danger: #ff5573;
-    --panel: rgba(17,24,36,.95);
-    --footer-h: 56px;
+    --tab-h: 56px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
 
-  /* =====================================================
-     基盤: html/body は景のみ
-     ===================================================== */
   html, body {
     width: 100%; height: 100%;
     background: var(--bg);
@@ -28,188 +23,44 @@
     overflow: hidden;
   }
 
-  /* =====================================================
-     パターンA: 推奨 - #app高さを100dvh+safe-bottomに
-     （WebKitバグ対策: iOS PWAで100dvhはsafe-areaを含まない）
-     ===================================================== */
-  .pattern-a #app {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    /* 100dvh + safe-area-inset-bottom で画面最下端まで到達 */
-    height: calc(100dvh + env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column;
+  /* ===== 共通: #app ===== */
+  #app {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
     background:
       radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
       var(--bg);
   }
-  .pattern-a .main-area {
+
+  .main-area {
     flex: 1 1 auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
-    /* フッター高さ + safe-bottom + 余裕 */
-    padding-bottom: calc(var(--footer-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-a .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    /* safe-areaの上に配置 */
-    bottom: env(safe-area-inset-bottom);
-    z-index: 60;
   }
 
-  /* =====================================================
-     パターンB: フッターbottom:0 + padding-bottomでsafe-area確保
-     ===================================================== */
-  .pattern-b #app {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: calc(100dvh + env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-b .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--footer-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-b .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: 0;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 60;
-  }
-
-  /* =====================================================
-     パターンC: body flex版（比較用）
-     ===================================================== */
-  .pattern-c body {
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100dvh + env(safe-area-inset-bottom));
-  }
-  .pattern-c #app {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-c .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--footer-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-c .bottom-tabs {
-    flex: none;
-    margin: 0 10px calc(env(safe-area-inset-bottom) + 8px);
-  }
-
-  /* =====================================================
-     パターンD: 100dvhのみ（黒帯が出る比較用）
-     ===================================================== */
-  .pattern-d #app {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-d .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--footer-h) + 20px);
-  }
-  .pattern-d .bottom-tabs {
-    flex: none;
-    margin: 0 10px 8px;
-  }
-
-  /* =====================================================
-     パターンE: 100svh + safe-bottom（比較用）
-     ===================================================== */
-  .pattern-e #app {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: calc(100svh + env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column;
-    background:
-      radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-      var(--bg);
-  }
-  .pattern-e .main-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    padding-bottom: calc(var(--footer-h) + 20px + env(safe-area-inset-bottom));
-  }
-  .pattern-e .bottom-tabs {
-    position: fixed;
-    left: 10px; right: 10px;
-    bottom: env(safe-area-inset-bottom);
-    z-index: 60;
-  }
-
-  /* =====================================================
-     メインコンテンツ
-     ===================================================== */
-  .dummy-score {
-    padding: 14px 12px;
-  }
-  .dummy-note {
-    height: 44px; margin: 8px 0; border-radius: 10px;
-    background: linear-gradient(90deg, rgba(83,215,255,.25), rgba(83,215,255,.08));
-    border: 1px solid rgba(83,215,255,.35);
-    display: flex; align-items: center; padding: 0 12px;
-    font-size: 12px; font-weight: 800; color: #b3e8ff;
-  }
-
-  /* =====================================================
-     タブバー（元の3項目・元のスタイル）
-     ===================================================== */
+  /* ===== タブバー（元の3項目） ===== */
   .bottom-tabs {
+    flex: none;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     padding: 4px;
+    margin: 0 10px;
     background: rgba(15,23,34,.78);
     -webkit-backdrop-filter: blur(22px);
     backdrop-filter: blur(22px);
     border: 1px solid rgba(255,255,255,.10);
     border-radius: 18px;
-    min-height: var(--footer-h);
+    min-height: var(--tab-h);
     box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.05);
   }
   .tab-btn {
-    min-width: 0;
-    border: 0;
-    border-radius: 14px;
-    color: #8fa0b5;
-    background: transparent;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    font-size: 10px;
-    font-weight: 700;
+    min-width: 0; border: 0; border-radius: 14px;
+    background: transparent; color: #8fa0b5;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px; font-size: 10px; font-weight: 700;
     touch-action: manipulation;
     transition: transform .18s ease, background .2s ease, color .2s ease;
     padding: 4px 0;
@@ -223,83 +74,156 @@
   .tab-ico { font-size: 20px; line-height: 1; }
   .tab-label { font-size: 10px; letter-spacing: .03em; }
 
-  /* =====================================================
+  /* ===== ダミーコンテンツ ===== */
+  .dummy-score { padding: 14px 12px 120px; }
+  .dummy-note {
+    height: 44px; margin: 8px 0; border-radius: 10px;
+    background: linear-gradient(90deg, rgba(83,215,255,.25), rgba(83,215,255,.08));
+    border: 1px solid rgba(83,215,255,.35);
+    display: flex; align-items: center; padding: 0 12px;
+    font-size: 12px; font-weight: 800; color: #b3e8ff;
+  }
+
+  /* ============================================================
+     パターン別: タブバーの位置と余白
+     ============================================================ */
+
+  /* --- パターンA: タブバー bottom:0 + padding-bottom safe-area --- */
+  .pattern-a .main-area {
+    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
+  }
+  .pattern-a .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: 0;
+    margin: 0;
+    /* セーフエリア分をタブバー内部に確保 */
+    padding-bottom: calc(4px + env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
+  }
+
+  /* --- パターンB: タブバー bottom:safe-area上 --- */
+  .pattern-b .main-area {
+    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
+  }
+  .pattern-b .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    margin: 0;
+  }
+
+  /* --- パターンC: #app高さを100dvh+safe-areaに --- */
+  .pattern-c #app {
+    height: calc(100dvh + env(safe-area-inset-bottom));
+  }
+  .pattern-c .main-area {
+    padding-bottom: calc(var(--tab-h) + 20px + env(safe-area-inset-bottom));
+  }
+  .pattern-c .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: env(safe-area-inset-bottom);
+    margin: 0;
+  }
+
+  /* --- パターンD: body flex + タブmargin-bottom --- */
+  .pattern-d body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+  .pattern-d #app {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .pattern-d .main-area {
+    padding-bottom: calc(var(--tab-h) + 20px);
+  }
+  .pattern-d .bottom-tabs {
+    flex: none;
+    margin: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  /* --- パターンE: JS補助版 --- */
+  .pattern-e .main-area {
+    padding-bottom: calc(var(--tab-h) + 20px + var(--js-safe-bottom, 0px));
+  }
+  .pattern-e .bottom-tabs {
+    position: fixed;
+    left: 10px; right: 10px;
+    bottom: var(--js-safe-bottom, 0px);
+    margin: 0;
+  }
+
+  /* ============================================================
      可視化レイヤー
-     ===================================================== */
-  .edge-top {
+     ============================================================ */
+  .safe-top {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-top);
     background: rgba(255,85,115,.45);
-    border-bottom: 2px dashed var(--danger);
+    border-bottom: 2px dashed #ff5573;
     pointer-events: none;
     display: flex; align-items: flex-end; justify-content: center;
     font-size: 10px; font-weight: 800; color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,.8);
     opacity: 0; transition: opacity .2s;
   }
-  .show-overlay .edge-top { opacity: 1; }
+  .show-layers .safe-top { opacity: 1; }
 
-  .edge-bottom {
+  .safe-bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
     height: env(safe-area-inset-bottom);
     background: rgba(83,215,255,.35);
-    border-top: 2px dashed var(--accent);
+    border-top: 2px dashed #53d7ff;
     pointer-events: none;
     display: flex; align-items: flex-start; justify-content: center;
     font-size: 10px; font-weight: 800; color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,.8);
     opacity: 0; transition: opacity .2s;
   }
-  .show-overlay .edge-bottom { opacity: 1; }
+  .show-layers .safe-bottom { opacity: 1; }
 
-  /* 黒帯検出: #appの下端が画面下端に届いているか */
-  .gap-detector {
+  /* 黒帯検出: #appの外に黒が見えるか */
+  .black-detector {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
-    height: 30px;
+    height: 25px;
     background: repeating-linear-gradient(
       45deg,
-      rgba(255,0,0,.5),
-      rgba(255,0,0,.5) 5px,
-      rgba(255,255,0,.5) 5px,
-      rgba(255,255,0,.5) 10px
+      rgba(255,0,0,.5), rgba(255,0,0,.5) 5px,
+      rgba(255,255,0,.5) 5px, rgba(255,255,0,.5) 10px
     );
     pointer-events: none;
     opacity: 0; transition: opacity .2s;
     display: flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 800; color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,.9);
   }
-  .show-gap .gap-detector { opacity: 1; }
+  .show-layers .black-detector { opacity: 1; }
 
-  /* #app下端可視化 */
-  .app-bottom-line {
-    position: fixed; left: 0; right: 0; z-index: 9997;
-    height: 2px;
-    background: #0f0;
-    pointer-events: none;
-    opacity: 0; transition: opacity .2s;
-  }
-  .show-app-line .app-bottom-line { opacity: 1; }
-
-  /* =====================================================
-     コントロールパネル
-     ===================================================== */
+  /* ============================================================
+     コントロールパネル（タブバーと重ならない位置）
+     ============================================================ */
   .control-panel {
     position: fixed;
-    left: 10px; right: 10px;
-    bottom: calc(10px + env(safe-area-inset-bottom) + 64px);
+    left: 8px; right: 8px;
+    top: env(safe-area-inset-top, 0px);
+    margin-top: 8px;
     z-index: 9000;
-    background: var(--panel);
+    background: rgba(17,24,36,.95);
     border: 1px solid rgba(255,255,255,.12);
     border-radius: 16px;
-    padding: 12px 14px 16px;
+    padding: 12px 14px;
     box-shadow: 0 12px 40px rgba(0,0,0,.55);
     backdrop-filter: blur(16px) saturate(1.2);
-    max-height: 55vh;
+    max-height: 45vh;
     overflow-y: auto;
-    transition: transform .35s ease;
+    transition: transform .35s ease, opacity .35s ease;
   }
-  .control-panel.collapsed { transform: translateY(calc(100% + 20px)); }
+  .control-panel.collapsed {
+    transform: translateY(-120%);
+    opacity: 0;
+    pointer-events: none;
+  }
 
   .panel-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -313,10 +237,10 @@
     font-size: 16px; display: grid; place-items: center;
   }
 
-  .section { margin-top: 12px; }
+  .section { margin-top: 10px; }
   .section-title {
     font-size: 11px; color: #8fa0b5; font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -345,7 +269,7 @@
   .info-value { font-weight: 800; font-size: 12px; margin-top: 2px; }
 
   .hint {
-    margin-top: 12px; padding: 10px; border-radius: 8px;
+    margin-top: 10px; padding: 10px; border-radius: 8px;
     background: rgba(83,215,255,.10);
     border: 1px solid rgba(83,215,255,.25);
     font-size: 11px; line-height: 1.7; color: #c9e8f5;
@@ -353,8 +277,7 @@
 
   .fab {
     position: fixed;
-    right: 12px;
-    bottom: calc(12px + env(safe-area-inset-bottom) + 64px);
+    right: 12px; top: calc(12px + env(safe-area-inset-top, 0px));
     z-index: 9500;
     width: 48px; height: 48px; border-radius: 50%;
     border: 0;
@@ -362,31 +285,17 @@
     color: #06151b; font-size: 22px; font-weight: 900;
     box-shadow: 0 6px 18px rgba(0,0,0,.35);
     display: grid; place-items: center;
+    transition: transform .2s;
   }
-  .fab.active { transform: rotate(45deg); }
-
-  .collapsed-hint {
-    position: fixed;
-    left: 50%;
-    bottom: calc(10px + env(safe-area-inset-bottom) + 64px);
-    transform: translateX(-50%); z-index: 8999;
-    background: rgba(15,23,34,.9);
-    border: 1px solid rgba(255,255,255,.12);
-    color: #8fa0b5; font-size: 10px; font-weight: 700;
-    padding: 6px 12px; border-radius: 999px;
-    pointer-events: none;
-    opacity: 0; transition: opacity .25s;
-  }
-  .collapsed-hint.show { opacity: 1; }
+  .fab:active { transform: scale(.92); }
 </style>
 </head>
-<body class="pattern-a show-overlay show-gap show-app-line">
+<body class="pattern-a show-layers">
 
 <!-- 可視化レイヤー -->
-<div class="edge-top">safe-area-inset-top</div>
-<div class="edge-bottom">safe-area-inset-bottom</div>
-<div class="gap-detector">黒帯検出（見えたらNG）</div>
-<div class="app-bottom-line" id="appBottomLine">#app下端（緑）</div>
+<div class="safe-top">safe-area-inset-top</div>
+<div class="safe-bottom">safe-area-inset-bottom</div>
+<div class="black-detector">黒帯検出（見たらNG）</div>
 
 <div id="app">
   <main class="main-area">
@@ -405,61 +314,62 @@
   </main>
 
   <nav class="bottom-tabs" aria-label="画面切り替え">
-    <button class="tab-btn is-active" type="button" data-tab="composition">
+    <button class="tab-btn is-active" type="button">
       <span class="tab-ico">🎹</span><span class="tab-label">作曲</span>
     </button>
-    <button class="tab-btn" type="button" data-tab="songs">
+    <button class="tab-btn" type="button">
       <span class="tab-ico">🎵</span><span class="tab-label">楽曲</span>
     </button>
-    <button class="tab-btn" type="button" data-tab="settings">
+    <button class="tab-btn" type="button">
       <span class="tab-ico">⚙️</span><span class="tab-label">設定</span>
     </button>
   </nav>
 </div>
 
-<button class="fab" id="fab">＋</button>
-<div class="collapsed-hint" id="collapsedHint">＋ をタップしてパネルを開く</div>
+<button class="fab" id="fab">⚙️</button>
 
 <div class="control-panel collapsed" id="panel">
   <div class="panel-header">
-    <div class="panel-title">📐 PWA セーフエリア実験 v7</div>
+    <div class="panel-title">📐 PWA セーフエリア実験</div>
     <button class="toggle-btn" id="closePanel">✕</button>
   </div>
 
   <div>
-    <div class="section-title">レイアウトパターン</div>
+    <div class="section-title">レイアウトパターン（タップで切替）</div>
     <div class="chips" id="layoutChips">
-      <div class="chip active" data-set="body" data-val="pattern-a">A: 100dvh+safe-bottom ⭐</div>
-      <div class="chip" data-set="body" data-val="pattern-b">B: +フッターpadding版</div>
-      <div class="chip" data-set="body" data-val="pattern-c">C: body flex版</div>
-      <div class="chip" data-set="body" data-val="pattern-d">D: 100dvhのみ（黒帯比較）</div>
-      <div class="chip" data-set="body" data-val="pattern-e">E: 100svh+safe-bottom</div>
+      <div class="chip active" data-val="pattern-a">
+        A: タブ bottom:0 + padding-bottom safe-area
+      </div>
+      <div class="chip" data-val="pattern-b">
+        B: タブ bottom:safe-area上
+      </div>
+      <div class="chip" data-val="pattern-c">
+        C: 100dvh + safe-area高さ補正
+      </div>
+      <div class="chip" data-val="pattern-d">
+        D: body flex + タブmargin-bottom
+      </div>
+      <div class="chip" data-val="pattern-e">
+        E: JS補助版
+      </div>
     </div>
   </div>
 
   <div class="section">
     <div class="section-title">表示切替</div>
-    <div class="chips" id="overlayChips">
-      <div class="chip active" data-set="overlay" data-val="show">セーフエリ可視化 ON</div>
-      <div class="chip" data-set="overlay" data-val="hide">OFF</div>
-    </div>
-    <div class="chips" style="margin-top:6px;">
-      <div class="chip active" data-set="gap" data-val="show">黒帯検出 ON</div>
-      <div class="chip" data-set="gap" data-val="hide">OFF</div>
-    </div>
-    <div class="chips" style="margin-top:6px;">
-      <div class="chip active" data-set="appLine" data-val="show">#app下端線 ON</div>
-      <div class="chip" data-set="appLine" data-val="hide">OFF</div>
+    <div class="chips" id="layerChips">
+      <div class="chip active" data-val="show">セーフエリア/黒帯検出 ON</div>
+      <div class="chip" data-val="hide">OFF</div>
     </div>
   </div>
 
   <div class="info-grid">
     <div class="info-cell">
-      <div class="info-label">safe-area-inset-top</div>
+      <div class="info-label">safe-area-top</div>
       <div class="info-value" id="valTop">-</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">safe-area-inset-bottom</div>
+      <div class="info-label">safe-area-bottom</div>
       <div class="info-value" id="valBottom">-</div>
     </div>
     <div class="info-cell">
@@ -471,34 +381,25 @@
       <div class="info-value" id="valDvh">-</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">#app 高さ</div>
-      <div class="info-value" id="valAppH">-</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-label">#app下端位置</div>
-      <div class="info-value" id="valAppBottom">-</div>
-    </div>
-    <div class="info-cell">
       <div class="info-label">現在のパターン</div>
       <div class="info-value" id="valPattern">A</div>
     </div>
     <div class="info-cell">
-      <div class="info-label">画面最下端</div>
-      <div class="info-value" id="valScreenBottom">-</div>
+      <div class="info-label">JS検出safe-bottom</div>
+      <div class="info-value" id="valJSSafe">-</div>
     </div>
   </div>
 
   <div class="hint" id="hintBox">
-    💡 <strong>iOS PWA 黒帯の根本原因:</strong><br><br>
-    WebKitの既知のバグにより、iOSのPWA（ホーム画面に追加）では
-    <code>100dvh</code> がセーフエリアを含まない高さとして解決されます。<br><br>
-    <strong>解決策:</strong><br>
-    <code>#app { height: calc(100dvh + env(safe-area-inset-bottom)); }</code><br><br>
-    これで#appが画面最下端まで到達し、黒帯が消えます。<br><br>
+    💡 <strong>各パターンの説明:</strong><br><br>
+    <strong>A:</strong> タブバーを画面最下端(bottom:0)に固定し、タブバー内部にセーフエリア分のpadding-bottomを追加。タブバーの背景がセーフエリアまで広がるため、黒帯が消える可能性が高いです。<br><br>
+    <strong>B:</strong> タブバーをセーフエリアの上(bottom:env(safe-area-inset-bottom))に配置。タブバーの下に隙間ができる可能性があります。<br><br>
+    <strong>C:</strong> #appの高さを100dvh+safe-areaに補正。WebKitのバグ対策です。<br><br>
+    <strong>D:</strong> bodyをflexにし、タブバーにmargin-bottomでセーフエリアを確保。<br><br>
+    <strong>E:</strong> JavaScriptでvisualViewportからセーフエリアを計算して適用。<br><br>
     <strong>確認方法:</strong><br>
     ・赤黄ストライプが見えない → 黒帯なし（OK）<br>
-    ・緑線が画面最下端に到達 → #appが全画面（OK）<br>
-    ・パターンD（100dvhのみ）で黒帯が出ることを確認 → 原因確認
+    タブバーがホームインジケーターの上に適切に配置されているか確認
   </div>
 </div>
 
@@ -510,58 +411,58 @@
   const panel = document.getElementById('panel');
   const fab = document.getElementById('fab');
   const closePanel = document.getElementById('closePanel');
-  const collapsedHint = document.getElementById('collapsedHint');
-  const appBottomLine = document.getElementById('appBottomLine');
 
-  function openPanel() {
-    panel.classList.remove('collapsed');
-    fab.classList.add('active');
-    collapsedHint.classList.remove('show');
-  }
-  function closeFn() {
+  // FABでパネル開閉
+  fab.addEventListener('click', () => {
+    const isCollapsed = panel.classList.contains('collapsed');
+    panel.classList.toggle('collapsed', !isCollapsed);
+    fab.style.opacity = isCollapsed ? '0.3' : '1';
+  });
+  closePanel.addEventListener('click', () => {
     panel.classList.add('collapsed');
-    fab.classList.remove('active');
-    collapsedHint.classList.add('show');
-  }
-  fab.addEventListener('click', () => panel.classList.contains('collapsed') ? openPanel() : closeFn());
-  closePanel.addEventListener('click', closeFn);
-  setTimeout(() => { if (panel.classList.contains('collapsed')) collapsedHint.classList.add('show'); }, 800);
+    fab.style.opacity = '1';
+  });
 
-  function activateChip(group, val) {
-    document.querySelectorAll('.chip[data-set="' + group + '"]').forEach(c => {
+  // パターンチップ切り替え
+  function activateChip(container, val) {
+    container.querySelectorAll('.chip').forEach(c => {
       c.classList.toggle('active', c.dataset.val === val);
     });
   }
 
-  document.querySelectorAll('.chip').forEach(chip => {
+  document.querySelectorAll('#layoutChips .chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      const set = chip.dataset.set;
       const val = chip.dataset.val;
-      activateChip(set, val);
-
-      if (set === 'body') {
-        body.className = body.className.replace(/pattern-\w+/g, '') + ' ' + val;
-        document.getElementById('valPattern').textContent = val.replace('pattern-','').toUpperCase();
-        setTimeout(readMetrics, 150);
-      }
-      if (set === 'overlay') {
-        body.classList.toggle('show-overlay', val === 'show');
-      }
-      if (set === 'gap') {
-        body.classList.toggle('show-gap', val === 'show');
-      }
-      if (set === 'appLine') {
-        body.classList.toggle('show-app-line', val === 'show');
-      }
+      activateChip(document.getElementById('layoutChips'), val);
+      body.className = body.className.replace(/pattern-\w+/g, '') + ' ' + val + (body.classList.contains('show-layers') ? ' show-layers' : '');
+      document.getElementById('valPattern').textContent = val.replace('pattern-','').toUpperCase();
+      setTimeout(readMetrics, 150);
     });
   });
 
+  document.querySelectorAll('#layerChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const val = chip.dataset.val;
+      activateChip(document.getElementById('layerChips'), val);
+      body.classList.toggle('show-layers', val === 'show');
+    });
+  });
+
+  // メトリクス読み取り
   function readMetrics() {
-    const st = getComputedStyle(document.documentElement);
-    document.getElementById('valTop').textContent = st.getPropertyValue('--safe-top') || getEnvValue('safe-area-inset-top');
-    document.getElementById('valBottom').textContent = st.getPropertyValue('--safe-bottom') || getEnvValue('safe-area-inset-bottom');
+    // env()値を取得
+    function getEnv(name) {
+      const div = document.createElement('div');
+      div.style.paddingBottom = 'env(' + name + ')';
+      document.body.appendChild(div);
+      const val = getComputedStyle(div).paddingBottom;
+      document.body.removeChild(div);
+      return val;
+    }
+
+    document.getElementById('valTop').textContent = getEnv('safe-area-inset-top');
+    document.getElementById('valBottom').textContent = getEnv('safe-area-inset-bottom');
     document.getElementById('valHeight').textContent = window.innerHeight + 'px';
-    document.getElementById('valScreenBottom').textContent = window.innerHeight + 'px';
 
     const testDvh = document.createElement('div');
     testDvh.style.height = '100dvh';
@@ -571,37 +472,29 @@
     document.getElementById('valDvh').textContent = testDvh.offsetHeight + 'px';
     document.body.removeChild(testDvh);
 
-    const app = document.getElementById('app');
-    if (app) {
-      const rect = app.getBoundingClientRect();
-      document.getElementById('valAppH').textContent = rect.height + 'px';
-      document.getElementById('valAppBottom').textContent = rect.bottom + 'px';
-      appBottomLine.style.top = rect.bottom + 'px';
-    }
-  }
-
-  function getEnvValue(name) {
-    const div = document.createElement('div');
-    div.style.paddingBottom = 'env(' + name + ')';
-    document.body.appendChild(div);
-    const val = getComputedStyle(div).paddingBottom;
-    document.body.removeChild(div);
-    return val;
+    // JSでセーフエリア計算
+    let safeBottom = 0;
+    try {
+      const vv = window.visualViewport;
+      if (vv) {
+        safeBottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      }
+    } catch(e) {}
+    document.getElementById('valJSSafe').textContent = safeBottom + 'px';
+    document.documentElement.style.setProperty('--js-safe-bottom', safeBottom + 'px');
   }
 
   readMetrics();
   window.addEventListener('resize', readMetrics);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', readMetrics);
 
+  // タブ切り替え（見た目のみ）
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
       btn.classList.add('is-active');
     });
   });
-
-  body.classList.add('show-overlay', 'show-gap', 'show-app-line');
-  setTimeout(readMetrics, 300);
 })();
 </script>
 </body>
