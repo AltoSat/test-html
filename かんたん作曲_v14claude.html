@@ -29,6 +29,11 @@
   --white-key-h: 146px;
   --black-key-w: 27px;
   --black-key-h: 92px;
+  --glass-bg: rgba(28,38,54,.5);
+  --glass-bg-strong: rgba(18,26,38,.66);
+  --glass-border: rgba(255,255,255,.16);
+  --glass-highlight: inset 0 1px rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.04);
+  --glass-blur: blur(26px) saturate(180%);
   color-scheme: dark;
 }
 * {
@@ -69,12 +74,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 }
 .control {
   min-height: 38px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
   padding: 0 10px;
   color: var(--ink);
-  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
-  box-shadow: inset 0 1px rgba(255,255,255,.05), 0 3px 9px rgba(0,0,0,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.015)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-highlight), 0 3px 9px rgba(0,0,0,.22);
   font-weight: 750;
   font-size: 12px;
   white-space: nowrap;
@@ -133,7 +140,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   background-color: #0d141e;
   background-image: linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
   background-size: 100% var(--row-h);
-  background-position: 0 0;
+  background-position: 0 var(--ruler-h);
   isolation: isolate;
   transform-origin: 0 0;
 }
@@ -280,15 +287,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   position: fixed;
   z-index: 40;
   left: 50%;
-  top: 12px;
+  bottom: var(--toast-bottom, 14px);
   max-width: calc(100% - 24px);
-  transform: translate(-50%, -12px);
+  transform: translate(-50%, 16px);
   padding: 8px 12px;
-  border: 1px solid rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.18);
   border-radius: 999px;
   color: #fff;
-  background: rgba(27,38,53,.94);
-  box-shadow: 0 10px 28px rgba(0,0,0,.38);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(27,38,53,.78);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 10px 28px rgba(0,0,0,.42);
   opacity: 0;
   pointer-events: none;
   white-space: nowrap;
@@ -394,9 +403,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .setting-stack { display: grid; gap: 12px; margin-bottom: 13px; }
 .setting-block {
   padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(17,25,37,.88);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .setting-label { display: block; margin-bottom: 8px; color: #e9f1fc; font-size: 13px; font-weight: 850; }
 .setting-help { margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.6; }
@@ -406,10 +417,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 13px;
   color: #b9c7d9;
-  background: #202d40;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), rgba(28,38,54,.4);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   font-size: 12px;
   font-weight: 800;
   touch-action: manipulation;
@@ -421,15 +434,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   box-shadow: 0 3px 14px rgba(83,215,255,.25);
 }
 .length-row { display: grid; grid-template-columns: 1fr 62px; align-items: center; gap: 10px; }
-#noteLengthRange { width: 100%; height: 32px; margin: 0; accent-color: var(--accent); }
 .length-value {
   min-height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
   color: var(--accent);
-  background: #0d141e;
+  background: rgba(13,20,30,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   font-size: 12px;
   font-weight: 850;
 }
@@ -460,8 +474,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   flex: none;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #111926, #080c12);
-  border-top: 1px solid rgba(204,223,250,.24);
+  background: linear-gradient(180deg, rgba(24,34,50,.6), rgba(8,12,18,.72));
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
   box-shadow: 0 -10px 28px rgba(0,0,0,.34);
   padding-bottom: 0;
   gap: 10px;
@@ -480,10 +496,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   width: 32px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 11px;
   color: #c9d5e5;
-  background: #1b2636;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(28,38,54,.4);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   touch-action: manipulation;
 }
 .range-wrap { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; }
@@ -503,8 +521,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   align-items: center;
   gap: 8px;
   padding: 8px 8px 7px;
-  background: rgba(9, 13, 20, .96);
-  border-top: 1px solid var(--line);
+  background: rgba(9, 13, 20, .55);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
   border-bottom: 0;
   box-shadow: 0 -7px 18px rgba(0,0,0,.22);
 }
@@ -519,13 +539,23 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 43px;
   height: 43px;
   padding: 0 5px;
-  border-radius: 12px;
+  border-radius: 15px;
   font-size: 13px;
   font-weight: 800;
 }
 .control-deck .control:active { transform: scale(.97); }
 .control-deck .control.rest-action { color: var(--rest); }
 .control-deck .control.delete-action { color: #ff9aa6; }
+.bpm-action {
+  display: flex; align-items: center; justify-content: center; gap: 1px;
+  color: #06151b; background: linear-gradient(180deg, #8aeaff, var(--accent));
+  border-color: #8eeaff; cursor: grab; touch-action: none;
+  position: relative;
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.bpm-action:active { cursor: grabbing; transform: scale(.97); }
+.bpm-action .bpm-note { font-size: 12px; opacity: .85; margin-right: 1px; }
+.bpm-action #bpmValue { font-size: 15px; font-weight: 900; }
 .dpad {
   width: 142px;
   height: 142px;
@@ -541,7 +571,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   height: 44px !important;
   min-height: 44px !important;
   padding: 0 !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   font-size: 19px !important;
   line-height: 1;
 }
@@ -554,9 +584,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   height: 44px;
   min-height: 44px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: radial-gradient(circle, rgba(83,215,255,.16), rgba(255,255,255,.025));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(83,215,255,.22), rgba(255,255,255,.03));
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
   color: var(--ink);
   font-size: 19px;
   display: flex;
@@ -580,12 +612,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  background: rgba(15,23,34,.78);
-  -webkit-backdrop-filter: blur(22px);
-  backdrop-filter: blur(22px);
-  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), rgba(15,23,34,.6);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 26px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.05);
+  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.08);
 }
 .tab-btn {
   min-width: 0;
@@ -614,7 +646,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .content-screen {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 14px 22px;
+  padding: calc(14px + env(safe-area-inset-top)) 14px 22px;
   background:
     radial-gradient(circle at 85% 0, rgba(83,215,255,.12), transparent 30%),
     var(--bg);
@@ -623,9 +655,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .screen-title { margin: 0 0 14px; font-size: 22px; letter-spacing: -.04em; }
 .panel-card {
   padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 15px;
-  background: linear-gradient(180deg, rgba(31,44,62,.94), rgba(18,26,38,.96));
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow);
 }
 .save-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
@@ -633,10 +667,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-width: 0;
   height: 45px;
   border: 1px solid rgba(187,207,235,.25);
-  border-radius: 11px;
+  border-radius: 14px;
   padding: 0 12px;
   color: var(--ink);
-  background: #0d141e;
+  background: rgba(13,20,30,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   user-select: text;
   -webkit-user-select: text;
   -webkit-touch-callout: default;
@@ -646,32 +682,76 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-width: 78px;
   height: 45px;
   border: 1px solid #8eeaff;
-  border-radius: 11px;
+  border-radius: 14px;
   color: #06151b;
   background: linear-gradient(180deg, #8aeaff, var(--accent));
   font-weight: 850;
 }
 .library-list { display: grid; gap: 9px; margin-top: 13px; }
-.song-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 9px;
-  align-items: center;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(22,32,47,.92);
+.song-row {
+  position: relative;
+  border-radius: 16px;
 }
-.song-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 850; }
+.song-swipe-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: transparent;
+  transition: background .12s ease;
+}
+.song-swipe-bg.reveal-edit { background: linear-gradient(90deg, rgba(83,215,255,.95), rgba(83,215,255,.55)); }
+.song-swipe-bg.reveal-delete { background: linear-gradient(270deg, rgba(255,85,115,.95), rgba(255,85,115,.55)); }
+.song-swipe-bg .hint {
+  position: absolute; top: 0; bottom: 0;
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 850;
+  opacity: 0;
+  transform: translateY(-50%) scale(.7);
+  top: 50%;
+  transition: opacity .1s linear, transform .1s linear;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.song-swipe-bg .hint .hint-icon { font-size: 18px; }
+.song-swipe-bg .hint .hint-label { margin-left: 2px; }
+.song-swipe-bg .hint.edit { left: 20px; color: #06151b; }
+.song-swipe-bg .hint.delete { right: 20px; color: #fff; }
+.song-swipe-bg.reveal-edit .hint.edit,
+.song-swipe-bg.reveal-delete .hint.delete {
+  opacity: var(--reveal, 1);
+  transform: translateY(-50%) scale(calc(.7 + .3 * var(--reveal, 1)));
+}
+.song-item {
+  position: relative;
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: pan-y;
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.song-item:active { transform: scale(.99); }
+.song-item.is-playing {
+  border-color: #8eeaff;
+  box-shadow: 0 0 0 2px rgba(83,215,255,.4), 0 8px 22px rgba(83,215,255,.18);
+}
+.song-name { font-weight: 850; white-space: normal; word-break: break-all; line-height: 1.3; }
 .song-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
-.song-actions { display: flex; gap: 5px; }
 .mini-btn {
   min-height: 37px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
   padding: 0 9px;
   color: var(--ink);
-  background: #243247;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(28,38,54,.45);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   font-size: 11px;
   font-weight: 800;
 }
@@ -693,15 +773,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .modal-card {
   width: min(360px, 100%);
   padding: 18px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 17px;
-  background: #172131;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(23,33,49,.72);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
   box-shadow: 0 25px 70px rgba(0,0,0,.5);
 }
 .modal-title { margin: 0; font-size: 18px; }
 .modal-message { margin: 9px 0 17px; color: #bdcadd; font-size: 13px; line-height: 1.65; }
 .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.modal-btn { min-height: 45px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); background: #26354b; font-weight: 800; }
+.modal-btn { min-height: 45px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--ink); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(38,53,75,.55); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); font-weight: 800; }
 .modal-btn.danger { color: #fff; background: #b62e49; border-color: #ff738d; }
 
 .score-viewport.overview-mode { background-color: #080d14; }
@@ -773,15 +855,24 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 </style>
 <script>
 (function () {
-  function setAppHeight() {
+  var raf = 0;
+  function applyHeight() {
+    raf = 0;
     var vv = window.visualViewport;
     var h = vv ? vv.height : window.innerHeight;
     document.documentElement.style.setProperty('--app-height', h + 'px');
   }
-  setAppHeight();
+  function setAppHeight() {
+    if (raf) return;
+    raf = requestAnimationFrame(applyHeight);
+  }
+  applyHeight();
   if (window.visualViewport) {
+    // Only listen for actual size changes. iOS Safari fires many
+    // 'scroll' events on visualViewport while the address bar animates
+    // on launch; reacting to those too caused the layout to jitter
+    // up and down right after opening the app.
     window.visualViewport.addEventListener('resize', setAppHeight);
-    window.visualViewport.addEventListener('scroll', setAppHeight);
   } else {
     window.addEventListener('resize', setAppHeight);
   }
@@ -815,6 +906,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       </div>
       <div class="control-deck" aria-label="作曲コントロール">
         <div class="deck-side">
+          <div id="bpmBtn" class="control bpm-action" role="button" aria-label="BPMの変更は左右にスライドしてください" title="左右にスライドしてBPMを変更">
+            <span class="bpm-note">&#9833;=</span><span id="bpmValue">110</span>
+          </div>
           <button id="restBtn" class="control rest-action" type="button">休符</button>
           <button id="deleteBtn" class="control delete-action" type="button">削除</button>
         </div>
@@ -862,12 +956,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
           <div class="setting-help">「音域を移動」でも、最初に触れた鍵盤は鳴ります。そのまま指を離さず左右へ動かすと、楽譜とピアノをスクロールします</div>
         </div>
         <div class="setting-block">
-          <label class="setting-label" for="noteLengthRange">1音あたりの長さ</label>
+          <label class="setting-label" for="volumeRange">音量</label>
           <div class="length-row">
-            <input id="noteLengthRange" type="range" min="0.12" max="1.00" step="0.02" value="0.28">
-            <output id="noteLengthValue" class="length-value" for="noteLengthRange">0.28秒</output>
+            <input id="volumeRange" type="range" min="0" max="100" step="1" value="72">
+            <output id="volumeValue" class="length-value" for="volumeRange">72%</output>
           </div>
-          <div class="setting-help">再生テンポを変更します。この値は楽曲ごとに保存されます。</div>
+          <div class="setting-help">再生や鍵盤の音量を変更します。</div>
         </div>
         <div class="setting-block">
           <label class="setting-label" for="randomLengthRange">ランダム生成の長さ</label>
@@ -919,8 +1013,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   const PITCH_COUNT = 48;
   const FIRST_MIDI = 48;
-  const BPM = 108;
-  const DEFAULT_UNIT_SECONDS = 60 / BPM / 2;
+  const BPM = 110;
+  const DEFAULT_UNIT_SECONDS = 60 / BPM / 4;
   const STORAGE_KEY = 'kantan-sakkyoku-v4';
   const SONGS_KEY = 'kantan-sakkyoku-songs-v1';
   const NOTE_NAMES_JA = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
@@ -972,8 +1066,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     edgeDown: document.getElementById('edgeDown'),
     swipePlay: document.getElementById('swipePlay'),
     swipeScroll: document.getElementById('swipeScroll'),
-    noteLengthRange: document.getElementById('noteLengthRange'),
-    noteLengthValue: document.getElementById('noteLengthValue'),
+    bpmBtn: document.getElementById('bpmBtn'),
+    bpmValue: document.getElementById('bpmValue'),
+    volumeRange: document.getElementById('volumeRange'),
+    volumeValue: document.getElementById('volumeValue'),
     randomLengthRange: document.getElementById('randomLengthRange'),
     randomLengthValue: document.getElementById('randomLengthValue')
   };
@@ -982,6 +1078,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let selectedId = null;
   let nextId = 1;
   let recordMode = false;
+  let currentTab = 'composition';
   let toastTimer = 0;
   let audio = null;
   let playing = null;
@@ -995,6 +1092,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let libraryPlaybackTimer = 0;
   let libraryPlaying = null;
   let currentUnitSeconds = DEFAULT_UNIT_SECONDS;
+  let currentBPM = 110;
+  let currentVolume = 0.72;
+  const BPM_MIN = 40, BPM_MAX = 220, BPM_STEP = 10;
   let pianoSwipeMode = 'play';
   let currentScale = 1;
   let renderScoreRAF = null;
@@ -1009,6 +1109,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let smoothScrollEndTimer = 0;
   let suppressScrollSync = false;
   let smoothScrollAnimId = 0;
+  let smoothScrollRaf = 0;
+  const smoothScrollEase = (t) => 1 - Math.pow(1 - t, 3);
 
   const rootStyle = getComputedStyle(document.documentElement);
   function cssNumber(name) {
@@ -1020,7 +1122,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function blackKeyW() { return cssNumber('--black-key-w'); }
 
   function setupRuler() {
-    document.documentElement.style.setProperty('--ruler-h', '12px');
+    document.documentElement.style.setProperty('--ruler-h', '48px');
   }
 
   function noteInfo(midi) {
@@ -1033,33 +1135,65 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  function sanitizeLoaded(data) {
+  // 内部イベントは {id,type,midi,duration}。保存形式は軽量な2次元配列 [[midi,duration], ...]。
+  // midi===0 は休符。旧形式（オブジェクト配列）も読み込めるよう両方を許容する。
+  function parseEventList(data) {
     if (!Array.isArray(data)) return [];
     const clean = [];
     for (const item of data) {
-      if (!item || (item.type !== 'note' && item.type !== 'rest')) continue;
-      const duration = Math.max(1, Math.floor(Number(item.duration) || 1));
-      if (item.type === 'note') {
-        const midi = Math.floor(Number(item.midi));
-        if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
-        clean.push({ id: nextId++, type: 'note', midi, duration });
-      } else {
-        clean.push({ id: nextId++, type: 'rest', duration });
+      if (Array.isArray(item) && item.length >= 2) {
+        const midi = Math.floor(Number(item[0]));
+        const duration = Math.max(1, Math.floor(Number(item[1]) || 1));
+        if (midi === 0) {
+          clean.push({ id: nextId++, type: 'rest', duration });
+        } else if (midi >= FIRST_MIDI && midi < FIRST_MIDI + PITCH_COUNT) {
+          clean.push({ id: nextId++, type: 'note', midi, duration });
+        }
+      } else if (item && typeof item === 'object') {
+        const duration = Math.max(1, Math.floor(Number(item.duration) || 1));
+        if (item.type === 'note') {
+          const midi = Math.floor(Number(item.midi));
+          if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
+          clean.push({ id: nextId++, type: 'note', midi, duration });
+        } else if (item.type === 'rest') {
+          clean.push({ id: nextId++, type: 'rest', duration });
+        }
       }
     }
     return clean;
   }
+
+  function eventsToLight(list = events) {
+    return list.map(ev => ev.type === 'note' ? [ev.midi, ev.duration] : [0, ev.duration]);
+  }
+
+  function sanitizeLoaded(data) { return parseEventList(data); }
+
+  function clampBPM(bpm) {
+    return Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(bpm / BPM_STEP) * BPM_STEP));
+  }
+  function bpmFromUnitSeconds(unitSeconds) {
+    const u = Math.max(.05, Number(unitSeconds) || DEFAULT_UNIT_SECONDS);
+    return clampBPM(60 / u / 4);
+  }
+  function unitFromBPM(bpm) { return 60 / bpm / 4; }
 
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const saved = JSON.parse(raw);
-      events = sanitizeLoaded(saved.events);
+      events = parseEventList(saved.events);
       recordMode = Boolean(saved.recordMode);
-      currentSongId = saved.currentSongId || null;
       currentSongName = typeof saved.currentSongName === 'string' ? saved.currentSongName : '';
-      currentUnitSeconds = Math.max(.12, Math.min(1, Number(saved.unitSeconds) || DEFAULT_UNIT_SECONDS));
+      if (saved.bpm != null) {
+        currentBPM = clampBPM(Number(saved.bpm));
+        currentUnitSeconds = unitFromBPM(currentBPM);
+      } else {
+        currentUnitSeconds = Math.max(.12, Math.min(1, Number(saved.unitSeconds) || DEFAULT_UNIT_SECONDS));
+        currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
+      }
+      currentVolume = Math.max(0, Math.min(1, Number(saved.volume) != null ? Number(saved.volume) : 0.72));
       pianoSwipeMode = saved.pianoSwipeMode === 'scroll' ? 'scroll' : 'play';
       randomPhraseLength = Math.max(12, Math.min(100, Number(saved.randomPhraseLength) || 12));
       selectedId = events.length ? events[events.length - 1].id : null;
@@ -1071,32 +1205,39 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        events: events.map(({type, midi, duration}) => ({type, midi, duration})),
+        events: eventsToLight(events),
         recordMode,
-        currentSongId,
         currentSongName,
+        bpm: currentBPM,
         unitSeconds: currentUnitSeconds,
+        volume: currentVolume,
         pianoSwipeMode,
         randomPhraseLength
       }));
     } catch (_) {}
   }
 
-  function serializeEvents(list = events) {
-    return list.map(({type, midi, duration}) => type === 'note'
-      ? { type, midi, duration }
-      : { type, duration });
-  }
+  function serializeEvents(list = events) { return eventsToLight(list); }
+
+  function snapshotEvents(list = events) { return list.map(e => ({ id: e.id, type: e.type, midi: e.midi, duration: e.duration })); }
 
   function loadSongs() {
     try {
       const parsed = JSON.parse(localStorage.getItem(SONGS_KEY) || '[]');
-      songs = Array.isArray(parsed) ? parsed.filter(song => song && Array.isArray(song.events)) : [];
+      songs = Array.isArray(parsed) ? parsed.filter(s => s && Array.isArray(s.events)).map(s => ({
+        _id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+        name: typeof s.name === 'string' ? s.name : '無題の曲',
+        events: parseEventList(s.events),
+        unitSeconds: Math.max(.05, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS))
+      })) : [];
     } catch (_) { songs = []; }
   }
 
   function saveSongs() {
-    try { localStorage.setItem(SONGS_KEY, JSON.stringify(songs)); } catch (_) {}
+    try {
+      const data = songs.map(s => ({ name: s.name, events: eventsToLight(s.events), unitSeconds: s.unitSeconds }));
+      localStorage.setItem(SONGS_KEY, JSON.stringify(data));
+    } catch (_) {}
   }
 
   function openConfirm(title, message, confirmText, action) {
@@ -1112,7 +1253,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.confirmModal.classList.remove('is-open');
   }
 
+  function updateToastPosition() {
+    const isComp = currentTab === 'composition' && els.compositionView.classList.contains('is-active');
+    let bottom = 14;
+    if (isComp) {
+      const r = els.scoreViewport.getBoundingClientRect();
+      bottom = Math.max(14, window.innerHeight - r.bottom + 10);
+    }
+    document.documentElement.style.setProperty('--toast-bottom', bottom + 'px');
+  }
+
   function switchTab(name) {
+    currentTab = name;
     const map = { composition: els.compositionView, songs: els.songsView, settings: els.settingsView };
     Object.entries(map).forEach(([key, view]) => view.classList.toggle('is-active', key === name));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('is-active', btn.dataset.tab === name));
@@ -1126,6 +1278,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       renderScore();
       updateEdgeIndicators();
     });
+    updateToastPosition();
   }
 
   function renderSongList() {
@@ -1137,52 +1290,113 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       els.songList.appendChild(empty);
       return;
     }
-    const sorted = [...songs].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-    for (const song of sorted) {
+    for (const song of songs) {
+      const row = document.createElement('div');
+      row.className = 'song-row';
+
+      const bg = document.createElement('div');
+      bg.className = 'song-swipe-bg';
+      const hintEdit = document.createElement('span');
+      hintEdit.className = 'hint edit';
+      hintEdit.innerHTML = '<span class="hint-icon">✎</span><span class="hint-label">編集</span>';
+      const hintDelete = document.createElement('span');
+      hintDelete.className = 'hint delete';
+      hintDelete.innerHTML = '<span class="hint-icon">🗑</span><span class="hint-label">削除</span>';
+      bg.append(hintEdit, hintDelete);
+
       const item = document.createElement('article');
       item.className = 'song-item';
-      const info = document.createElement('div');
+      if (libraryPlaying && libraryPlaying.songId === song._id) item.classList.add('is-playing');
+
       const name = document.createElement('div');
       name.className = 'song-name';
       name.textContent = song.name || '無題の曲';
       const meta = document.createElement('div');
       meta.className = 'song-meta';
       const notes = song.events.filter(e => e.type === 'note').length;
-      meta.textContent = `${notes}音・1音 ${Number(song.unitSeconds || DEFAULT_UNIT_SECONDS).toFixed(2)}秒`;
-      info.append(name, meta);
-      const actions = document.createElement('div');
-      actions.className = 'song-actions';
-      const play = document.createElement('button');
-      play.className = 'mini-btn'; play.type = 'button'; play.textContent = '再生';
-      play.addEventListener('click', () => playLibrarySong(song, play));
-      const edit = document.createElement('button');
-      edit.className = 'mini-btn'; edit.type = 'button'; edit.textContent = '編集';
-      edit.addEventListener('click', () => editSong(song));
-      const del = document.createElement('button');
-      del.className = 'mini-btn'; del.type = 'button'; del.textContent = '削除';
-      del.addEventListener('click', () => openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => {
-        songs = songs.filter(item => item.id !== song.id);
-        if (currentSongId === song.id) currentSongId = null;
-        saveSongs(); saveState(); renderSongList();
-      }));
-      actions.append(play, edit, del);
-      item.append(info, actions);
-      els.songList.appendChild(item);
+      meta.textContent = `${notes}音・♩=${bpmFromUnitSeconds(song.unitSeconds)}`;
+      item.append(name, meta);
+
+      row.append(bg, item);
+      bindSongGesture(item, bg, song);
+      els.songList.appendChild(row);
     }
+  }
+
+  function bindSongGesture(item, bg, song) {
+    let startX = 0, startY = 0, pointerId = null, decided = null, moved = false;
+    const commitThreshold = 46;
+    const reset = () => {
+      item.style.transform = '';
+      bg.classList.remove('reveal-edit', 'reveal-delete');
+      bg.style.removeProperty('--reveal');
+    };
+    const down = (e) => {
+      if (pointerId !== null) return;
+      pointerId = e.pointerId;
+      startX = e.clientX; startY = e.clientY;
+      decided = null; moved = false;
+      try { item.setPointerCapture(e.pointerId); } catch (_) {}
+    };
+    const move = (e) => {
+      if (pointerId !== e.pointerId) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!moved && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) moved = true;
+      if (moved) {
+        e.preventDefault();
+        decided = dx > 0 ? 'right' : 'left';
+        const clamp = Math.max(-90, Math.min(90, dx * 0.55));
+        item.style.transform = `translateX(${clamp}px)`;
+        // Swiping right slides the row away to the right, uncovering the
+        // left edge underneath — that's where the revealed action (編集)
+        // should appear, and mirrored for swiping left (削除), matching
+        // how Gmail's swipe-to-archive reveal works.
+        bg.classList.toggle('reveal-edit', decided === 'right');
+        bg.classList.toggle('reveal-delete', decided === 'left');
+        bg.style.setProperty('--reveal', String(Math.min(1, Math.abs(clamp) / commitThreshold)));
+      }
+    };
+    const finish = (e) => {
+      if (pointerId !== e.pointerId) return;
+      const dx = e.clientX - startX;
+      pointerId = null;
+      reset();
+      if (!moved) { playLibrarySong(song, item); return; }
+      if (Math.abs(dx) < commitThreshold) return;
+      if (decided === 'right') editSong(song);
+      else if (decided === 'left') openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => deleteSong(song));
+    };
+    const cancel = (e) => {
+      if (pointerId !== e.pointerId) return;
+      pointerId = null;
+      reset();
+    };
+    item.addEventListener('pointerdown', down);
+    item.addEventListener('pointermove', move);
+    item.addEventListener('pointerup', finish);
+    item.addEventListener('pointercancel', cancel);
+  }
+
+  function deleteSong(song) {
+    songs = songs.filter(item => item._id !== song._id);
+    if (currentSongId === song._id) currentSongId = null;
+    if (libraryPlaying && libraryPlaying.songId === song._id) stopLibraryPlayback(false);
+    saveSongs(); saveState(); renderSongList();
+    showToast('楽曲を削除しました');
   }
 
   function saveCurrentSong() {
     if (!events.length) { showToast('保存する音符がありません'); return; }
     const name = (els.songNameInput.value || '').trim() || `無題の曲 ${songs.length + 1}`;
-    const now = Date.now();
     if (currentSongId) {
-      const song = songs.find(item => item.id === currentSongId);
-      if (song) { song.name = name; song.events = serializeEvents(); song.unitSeconds = currentUnitSeconds; song.updatedAt = now; }
+      const song = songs.find(item => item._id === currentSongId);
+      if (song) { song.name = name; song.events = snapshotEvents(); song.unitSeconds = currentUnitSeconds; }
       else currentSongId = null;
     }
     if (!currentSongId) {
-      currentSongId = `song-${now}-${Math.random().toString(36).slice(2,7)}`;
-      songs.push({ id: currentSongId, name, events: serializeEvents(), unitSeconds: currentUnitSeconds, updatedAt: now });
+      currentSongId = `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+      songs.push({ _id: currentSongId, name, events: snapshotEvents(), unitSeconds: currentUnitSeconds });
     }
     currentSongName = name;
     saveSongs(); saveState(); renderSongList();
@@ -1192,11 +1406,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function editSong(song) {
     stopPlayback(false);
     nextId = 1;
-    events = sanitizeLoaded(song.events);
+    events = parseEventList(snapshotEvents(song.events));
     selectedId = events.length ? events[events.length - 1].id : null;
-    currentSongId = song.id;
+    currentSongId = song._id;
     currentSongName = song.name || '';
-    currentUnitSeconds = Math.max(.12, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    currentUnitSeconds = Math.max(.05, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
     syncSettingsUI();
     saveState(); renderScore({ preserve: false });
     switchTab('composition');
@@ -1235,7 +1450,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const disableList = [
       els.restBtn, els.deleteBtn, els.shortenBtn, els.extendBtn,
       els.pitchDownBtn, els.pitchUpBtn, els.centerBtn, els.randomBtn,
-      els.recordBtn, els.keyLeft, els.keyRight, els.keyboardRange,
+      els.recordBtn, els.keyLeft, els.keyRight, els.keyboardRange, els.bpmBtn,
       ...document.querySelectorAll('.tab-btn')
     ];
     disableList.forEach(el => { if (el) el.disabled = active; });
@@ -1344,24 +1559,46 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function smoothScrollBoth(left, top) {
     const targetLeft = clampScrollLeft(left);
     const targetTop = clampScrollTop(top);
-
-    suppressScrollSync = true;
-    smoothScrollAnimId++;
-    const token = smoothScrollAnimId;
-    clearTimeout(smoothScrollEndTimer);
-
-    els.scoreViewport.scrollTo({ top: targetTop, left: targetLeft, behavior: 'smooth' });
-    els.keyboardViewport.scrollTo({ left: targetLeft, behavior: 'smooth' });
-    syncKeyboardRange(targetLeft);
-
-    smoothScrollEndTimer = setTimeout(() => {
-      if (token !== smoothScrollAnimId) return;
-      suppressScrollSync = false;
+    const startLeft = els.scoreViewport.scrollLeft;
+    const startTop = els.scoreViewport.scrollTop;
+    const dx = targetLeft - startLeft;
+    const dy = targetTop - startTop;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
       setLinkedScroll(targetLeft);
       els.scoreViewport.scrollTop = targetTop;
       syncKeyboardRange();
       updateEdgeIndicators();
-    }, 680);
+      return;
+    }
+
+    cancelAnimationFrame(smoothScrollRaf);
+    clearTimeout(smoothScrollEndTimer);
+    smoothScrollAnimId++;
+    const token = smoothScrollAnimId;
+    suppressScrollSync = true;
+    const duration = Math.max(220, Math.min(640, 180 + Math.abs(dx) * 0.6 + Math.abs(dy) * 0.3));
+    const startTime = performance.now();
+
+    const step = (now) => {
+      if (token !== smoothScrollAnimId) return;
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = smoothScrollEase(t);
+      const nextLeft = startLeft + dx * e;
+      const nextTop = startTop + dy * e;
+      setLinkedScroll(nextLeft);
+      els.scoreViewport.scrollTop = nextTop;
+      if (t < 1) {
+        smoothScrollRaf = requestAnimationFrame(step);
+      } else {
+        smoothScrollRaf = 0;
+        setLinkedScroll(targetLeft);
+        els.scoreViewport.scrollTop = targetTop;
+        suppressScrollSync = false;
+        syncKeyboardRange();
+        updateEdgeIndicators();
+      }
+    };
+    smoothScrollRaf = requestAnimationFrame(step);
   }
 
   function setLinkedScroll(left, source = '') {
@@ -1985,7 +2222,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   function createAudioGraph(ctx) {
     const master = ctx.createGain();
-    master.gain.value = 0.72;
+    master.gain.value = currentVolume;
     const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -18;
     compressor.knee.value = 18;
@@ -2428,9 +2665,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   function stopLibraryPlayback(showMessage = false) {
     clearTimeout(libraryPlaybackTimer);
-    if (libraryPlaying && libraryPlaying.button) {
-      libraryPlaying.button.textContent = '再生';
-      libraryPlaying.button.classList.remove('is-playing');
+    if (libraryPlaying && libraryPlaying.item) {
+      libraryPlaying.item.classList.remove('is-playing');
     }
     const wasPlaying = Boolean(libraryPlaying);
     libraryPlaying = null;
@@ -2438,8 +2674,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (showMessage && wasPlaying) showToast('停止しました');
   }
 
-  async function playLibrarySong(song, button) {
-    if (libraryPlaying && libraryPlaying.songId === song.id) {
+  async function playLibrarySong(song, item) {
+    if (libraryPlaying && libraryPlaying.songId === song._id) {
       stopLibraryPlayback(true);
       return;
     }
@@ -2448,21 +2684,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!song.events.length) return;
     ensureAudioSync();
     try { await unlockAudio(); } catch (_) { return; }
-    const unitSeconds = Math.max(.12, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    const unitSeconds = Math.max(.05, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
     let cursor = 0;
     for (const ev of song.events) {
       const duration = Math.max(1, Number(ev.duration) || 1);
       if (ev.type === 'note') pianoVoice(ev.midi, audio.ctx.currentTime + .06 + cursor * unitSeconds, duration * unitSeconds * .92, .76);
       cursor += duration;
     }
-    libraryPlaying = { songId: song.id, button };
-    button.textContent = '停止';
-    button.classList.add('is-playing');
+    libraryPlaying = { songId: song._id, item };
+    if (item) item.classList.add('is-playing');
     showToast(`「${song.name || '無題の曲'}」を再生`);
     libraryPlaybackTimer = setTimeout(() => {
-      if (libraryPlaying && libraryPlaying.songId === song.id) {
-        button.textContent = '再生';
-        button.classList.remove('is-playing');
+      if (libraryPlaying && libraryPlaying.songId === song._id) {
+        if (libraryPlaying.item) libraryPlaying.item.classList.remove('is-playing');
         libraryPlaying = null;
         showToast('再生が終わりました');
       }
@@ -2592,8 +2826,33 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.scrolling = false;
     keyboardGesture.audioReady = true;
 
-    ensureAudioSync();
-    enterKeyboardKey(midi);
+    const graph = ensureAudioSync();
+    if (graph && graph.ctx && graph.ctx.state === 'running') {
+      // Audio is already flowing (the common case) — start the note immediately.
+      enterKeyboardKey(midi);
+    } else {
+      // Cold start: the AudioContext hasn't actually resumed yet. Starting
+      // (and possibly stopping, on a very quick tap) a note against a still
+      // -suspended context schedules everything at a frozen "currentTime",
+      // which got silently cancelled before it ever became audible — this
+      // was why the very first tap made no sound, and a leftover scheduled
+      // note would then surface together with the second tap. Show the key
+      // press right away for immediate feedback, but wait for the context to
+      // truly be running before touching any audio nodes.
+      setKeyState(midi);
+      let sounded = false;
+      unlockAudio().then(() => {
+        if (sounded) return;
+        sounded = true;
+        if (keyboardGesture.pointerId === e.pointerId && keyboardGesture.lastMidi == null) {
+          enterKeyboardKey(midi);
+        } else {
+          // The finger already lifted before audio was ready — still play
+          // a short note so the tap isn't silently lost.
+          playPreview(midi);
+        }
+      }).catch(() => {});
+    }
   }, { passive: false });
 
   els.keyboardViewport.addEventListener('pointermove', e => {
@@ -2623,12 +2882,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
     if (midi != null) {
       enterKeyboardKey(midi);
-      try {
-        if (audio && audio.ctx && audio.ctx.state === 'running') {
-          if (keyboardGesture.voice) keyboardGesture.voice.stop();
-          keyboardGesture.voice = startSustainedVoice(midi);
-        }
-      } catch (err) {}
     }
     else cancelHold();
   }, { passive: false });
@@ -2669,7 +2922,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     showToast('全消去しました');
   }
 
-  function bindPress(button, onTap, onLong, delay = 550) {
+  function bindPress(button, onTap, onLong, delay = 550, tapHint = null) {
     let timer = 0, longFired = false, pointerId = null;
     button.addEventListener('pointerdown', e => {
       if (button.disabled || pointerId !== null) return;
@@ -2689,7 +2942,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       timer = 0;
       const shouldTap = !longFired && !button.disabled;
       pointerId = null;
-      if (shouldTap) onTap(e);
+      if (shouldTap) {
+        onTap(e);
+        // Let the person notice the long-press feature exists.
+        if (tapHint) showToast(tapHint);
+      }
     };
     const cancel = e => {
       if (pointerId !== e.pointerId) return;
@@ -2704,42 +2961,50 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function syncSettingsUI() {
     els.swipePlay.checked = pianoSwipeMode === 'play';
     els.swipeScroll.checked = pianoSwipeMode === 'scroll';
-    els.noteLengthRange.value = String(currentUnitSeconds);
-    els.noteLengthValue.textContent = `${currentUnitSeconds.toFixed(2)}秒`;
+    els.volumeRange.value = String(Math.round(currentVolume * 100));
+    els.volumeValue.textContent = `${Math.round(currentVolume * 100)}%`;
     els.randomLengthRange.value = String(randomPhraseLength);
     els.randomLengthValue.textContent = `${randomPhraseLength}音`;
+    updateBpmDisplay();
+  }
+
+  function updateBpmDisplay() {
+    if (els.bpmValue) els.bpmValue.textContent = String(currentBPM);
   }
 
   bindPress(els.playBtn,
     () => { startPlayback(false); },
     () => {
+      showToast('長押し：先頭から再生');
       if (playing) {
         stopPlayback(false);
         setTimeout(() => startPlayback(true), 520);
       } else {
         startPlayback(true);
       }
-    }, 650);
+    }, 650, '長押しで先頭から再生');
 
   bindPress(els.deleteBtn,
     () => { playButtonSound('delete'); deleteSelected(); },
-    () => openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition));
+    () => { showToast('長押し：全消去'); openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition); },
+    550, '長押しで全消去');
   bindPress(els.randomBtn,
-    () => { playButtonSound('random'); showToast('長押しでランダムフレーズを生成します'); },
-    () => { generateRandomPhrase(); }, 700);
+    () => { playButtonSound('random'); showToast('長押しでランダム生成'); },
+    () => { showToast('長押し：ランダム生成'); generateRandomPhrase(); }, 700);
 
   bindPress(els.centerBtn,
     () => { playButtonSound('center'); centerSelectedEvent(); },
     () => {
+      showToast('長押し：末尾の音符へ');
       playButtonSound('center');
       if (!events.length) { showToast('音符がありません'); return; }
       selectedId = events[events.length - 1].id;
       renderScore({ preserve: false });
       saveState();
       centerOnEvent(selectedId, true);
-    }, 500);
+    }, 500, '長押しで末尾の音符へ');
 
-  function bindDpadAction(button, onAction, delay = 480, interval = 120) {
+  function bindDpadAction(button, onAction, longLabel, tapHint = null, delay = 480, interval = 120) {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2759,6 +3024,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
+        if (longLabel) showToast(longLabel);
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
             onAction();
@@ -2773,7 +3039,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const finishTap = e => {
       if (pointerId !== e.pointerId) return;
       clearTimers();
-      if (!longFired && !button.disabled) onAction();
+      if (!longFired && !button.disabled) {
+        onAction();
+        if (tapHint) showToast(tapHint);
+      }
       pointerId = null;
     };
 
@@ -2787,7 +3056,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
-  function bindDpadNoteNav(button, direction) {
+  function bindDpadNoteNav(button, direction, longLabel, tapHint = null) {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2833,6 +3102,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
+        if (longLabel) showToast(longLabel);
         performLongAction();
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
@@ -2848,7 +3118,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const finishTap = e => {
       if (pointerId !== e.pointerId) return;
       clearTimers();
-      if (!longFired && !button.disabled) performTapNavigation();
+      if (!longFired && !button.disabled) {
+        performTapNavigation();
+        if (tapHint) showToast(tapHint);
+      }
       pointerId = null;
     };
 
@@ -2862,10 +3135,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
-  bindDpadAction(els.pitchDownBtn, () => changePitch(-1));
-  bindDpadAction(els.pitchUpBtn, () => changePitch(1));
-  bindDpadNoteNav(els.shortenBtn, -1);
-  bindDpadNoteNav(els.extendBtn, 1);
+  bindDpadAction(els.pitchDownBtn, () => changePitch(-1), '長押し：音程を連続で下げる', '長押しで音程を連続で下げる');
+  bindDpadAction(els.pitchUpBtn, () => changePitch(1), '長押し：音程を連続で上げる', '長押しで音程を連続で上げる');
+  bindDpadNoteNav(els.shortenBtn, -1, '長押し：音符を連続で短くする', '長押しで音符を連続で短くする');
+  bindDpadNoteNav(els.extendBtn, 1, '長押し：音符を連続で伸ばす', '長押しで音符を連続で伸ばす');
 
   (function setupRestHold() {
     let active = false;
@@ -2884,6 +3157,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
       activeEventId = addRest(1, true);
       timer = setTimeout(() => {
+        showToast('長押し：休符を伸ばす');
         interval = setInterval(() => {
           duration = Math.min(16, duration + 1);
           if (activeEventId) {
@@ -2910,7 +3184,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.restBtn.addEventListener('click', e => {
       e.preventDefault();
       activePointerId = null;
-      if (!els.restBtn.disabled && !active) addRest(1);
+      if (!els.restBtn.disabled && !active) {
+        addRest(1);
+        showToast('長押しで休符を伸ばす');
+      }
     });
   })();
 
@@ -2933,12 +3210,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   bindPress(els.keyLeft,
     () => { setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7); },
-    () => { shiftAllNotes(-1); },
-    480);
+    () => { showToast('長押し：1オクターブ下へ'); shiftAllNotes(-1); },
+    480, '長押しで1オクターブ下へ');
   bindPress(els.keyRight,
     () => { setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7); },
-    () => { shiftAllNotes(1); },
-    480);
+    () => { showToast('長押し：1オクターブ上へ'); shiftAllNotes(1); },
+    480, '長押しで1オクターブ上へ');
 
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   els.swipePlay.addEventListener('change', () => {
@@ -2949,9 +3226,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!els.swipeScroll.checked) return;
     pianoSwipeMode = 'scroll'; saveState();
   });
-  els.noteLengthRange.addEventListener('input', () => {
-    currentUnitSeconds = Math.max(.12, Math.min(1, Number(els.noteLengthRange.value) || DEFAULT_UNIT_SECONDS));
-    els.noteLengthValue.textContent = `${currentUnitSeconds.toFixed(2)}秒`;
+  els.volumeRange.addEventListener('input', () => {
+    currentVolume = Math.max(0, Math.min(1, Number(els.volumeRange.value) / 100));
+    els.volumeValue.textContent = `${Math.round(currentVolume * 100)}%`;
+    if (audio && audio.master) audio.master.gain.value = currentVolume;
     saveState();
   });
   els.randomLengthRange.addEventListener('input', () => {
@@ -2963,10 +3241,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.saveSongBtn.addEventListener('click', saveCurrentSong);
   els.exportBtn.addEventListener('click', () => {
     const payload = {
-      format: 'kantan-sakkyoku-v1',
+      format: 'kantan-sakkyoku-v2',
       exportedAt: new Date().toISOString(),
-      current: { name: currentSongName, events: serializeEvents(), unitSeconds: currentUnitSeconds },
-      songs
+      current: { name: currentSongName, events: eventsToLight(events), unitSeconds: currentUnitSeconds },
+      songs: songs.map(s => ({ name: s.name, events: eventsToLight(s.events), unitSeconds: s.unitSeconds }))
     };
     const json = '\uFEFF' + JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
@@ -2981,49 +3259,50 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.importBtn.addEventListener('click', () => els.importFileInput.click());
   els.importFileInput.addEventListener('change', handleImportFile);
 
-  function handleImportFile(e) {
+  function importSongList(data, file, label) {
+    const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
+      _id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+      name: s.name || '無題の曲',
+      events: parseEventList(s.events),
+      unitSeconds: Math.max(.05, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS))
+    }));
+    openConfirm('楽曲をインポート', `「${file.name}」から${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
+      songs = importedSongs;
+      saveSongs();
+      if (data.current && Array.isArray(data.current.events)) {
+        events = parseEventList(data.current.events);
+        selectedId = events.length ? events[events.length - 1].id : null;
+        currentSongId = null;
+        currentSongName = data.current.name || '';
+        currentUnitSeconds = Math.max(.05, Math.min(1, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
+        currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
+        syncSettingsUI();
+        renderScore({ preserve: false });
+      }
+      renderSongList();
+      showToast(label);
+    });
+  }
+
+  function readImportFile(e, label) {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const rawText = reader.result;
-        const jsonText = rawText.replace(/^\uFEFF/, '');
+        const jsonText = reader.result.replace(/^\uFEFF/, '');
         const data = JSON.parse(jsonText);
         if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
-        const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
-          id: s.id || `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-          name: s.name || '無題の曲',
-          events: s.events.filter(ev => ev && (ev.type === 'note' || ev.type === 'rest')).map(ev => ({
-            type: ev.type,
-            midi: ev.type === 'note' ? Math.floor(Number(ev.midi)) : undefined,
-            duration: Math.max(1, Math.floor(Number(ev.duration) || 1))
-          })).filter(ev => ev.type !== 'note' || (ev.midi >= FIRST_MIDI && ev.midi < FIRST_MIDI + PITCH_COUNT)),
-          unitSeconds: Math.max(.12, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS)),
-          updatedAt: s.updatedAt || Date.now()
-        }));
-        openConfirm('楽曲をインポート', `「${file.name}」から${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
-          songs = importedSongs;
-          saveSongs();
-          if (data.current && Array.isArray(data.current.events)) {
-            events = sanitizeLoaded(data.current.events);
-            selectedId = events.length ? events[events.length - 1].id : null;
-            currentSongId = data.current.id || null;
-            currentSongName = data.current.name || '';
-            currentUnitSeconds = Math.max(.12, Math.min(1, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
-            syncSettingsUI();
-            renderScore({ preserve: false });
-          }
-          renderSongList();
-          showToast('インポートしました');
-        });
+        importSongList(data, file, label);
       } catch (_) {
         showToast('インポートできませんでした');
       }
     };
     reader.readAsText(file, 'utf-8');
   }
+
+  function handleImportFile(e) { readImportFile(e, 'インポートしました'); }
 
   els.modalCancel.addEventListener('click', closeConfirm);
   els.modalConfirm.addEventListener('click', () => {
@@ -3033,7 +3312,48 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   });
   els.confirmModal.addEventListener('pointerdown', e => { if (e.target === els.confirmModal) closeConfirm(); });
 
-  els.keyboardRange.addEventListener('input', () => setKeyboardScroll(Number(els.keyboardRange.value)));
+  (function setupBpmControl() {
+    const btn = els.bpmBtn;
+    if (!btn) return;
+    let pointerId = null, startX = 0, startBPM = 110, lastShown = 0, moved = false;
+    const apply = (bpm) => {
+      currentBPM = clampBPM(bpm);
+      currentUnitSeconds = unitFromBPM(currentBPM);
+      updateBpmDisplay();
+      const now = Date.now();
+      if (now - lastShown > 250) { lastShown = now; showToast(`BPM ${currentBPM}`); }
+      saveState();
+    };
+    btn.addEventListener('pointerdown', e => {
+      if (btn.disabled || pointerId !== null) return;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      startBPM = currentBPM;
+      lastShown = 0;
+      moved = false;
+      btn.classList.add('dragging');
+      try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+      ensureAudioSync();
+      e.preventDefault();
+    });
+    btn.addEventListener('pointermove', e => {
+      if (pointerId !== e.pointerId) return;
+      e.preventDefault();
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      const steps = Math.round(dx / 16);
+      apply(startBPM + steps * BPM_STEP);
+    });
+    const end = (e) => {
+      if (pointerId !== e.pointerId) return;
+      pointerId = null;
+      btn.classList.remove('dragging');
+      if (!moved) showToast('左右スワイプで速度変更');
+    };
+    btn.addEventListener('pointerup', end);
+    btn.addEventListener('pointercancel', end);
+    btn.addEventListener('pointerleave', end);
+  })();
 
   let scrollSyncRaf = 0;
   let pendingScrollSource = null;
@@ -3091,18 +3411,30 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     updateEdgeIndicators();
   }
 
+  let viewportChangeTimer = 0;
   const handleViewportChange = () => {
-    if (playing || activeZoom || overviewState) {
-      setTimeout(() => {
-        if (!playing && !activeZoom && !overviewState) doResize();
-      }, 120);
-    } else {
-      doResize();
-    }
+    // Debounced: iOS Safari can fire several rapid visualViewport
+    // 'resize' events while the address bar settles on launch. Without
+    // this, each one triggered a full re-render + scroll re-sync,
+    // which looked like the screen shaking up and down after opening.
+    clearTimeout(viewportChangeTimer);
+    viewportChangeTimer = setTimeout(() => {
+      if (playing || activeZoom || overviewState) {
+        setTimeout(() => {
+          if (!playing && !activeZoom && !overviewState) doResize();
+        }, 120);
+      } else {
+        doResize();
+      }
+    }, 130);
   };
   window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  }
+  window.addEventListener('resize', updateToastPosition, { signal: __docSignal });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateToastPosition, { signal: __docSignal });
   }
 
   loadState();
