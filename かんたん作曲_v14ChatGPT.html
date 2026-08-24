@@ -287,18 +287,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   position: fixed;
   z-index: 40;
   left: 50%;
-  top: auto;
-  bottom: 14px;
+  bottom: var(--toast-bottom, 14px);
   max-width: calc(100% - 24px);
-  transform: translate(-50%, 12px);
+  transform: translate(-50%, 16px);
   padding: 8px 12px;
   border: 1px solid rgba(255,255,255,.18);
   border-radius: 999px;
   color: #fff;
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(27,38,53,.72);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(27,38,53,.78);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: 0 10px 28px rgba(0,0,0,.38);
+  box-shadow: 0 10px 28px rgba(0,0,0,.42);
   opacity: 0;
   pointer-events: none;
   white-space: nowrap;
@@ -309,7 +308,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   transition: opacity .18s ease, transform .18s ease;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
-.toast.in-score { pointer-events: none; }
 
 @keyframes controlShake {
   0%, 100% { transform: translateX(0); }
@@ -435,15 +433,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   background: linear-gradient(180deg, #8aeaff, var(--accent));
   box-shadow: 0 3px 14px rgba(83,215,255,.25);
 }
-.bpm-control {
-  min-height: 43px; height: 43px; width: 100%;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 10px; border-radius: 15px;
-  font-size: 15px; font-weight: 900; color: var(--accent);
-  touch-action: none; cursor: ew-resize;
-  position: relative; overflow: hidden;
-}
-.bpm-control::after { content: "↔ スライド"; position:absolute; right:9px; font-size:9px; color:var(--muted); font-weight:700; opacity:.9; }
 .length-row { display: grid; grid-template-columns: 1fr 62px; align-items: center; gap: 10px; }
 .length-value {
   min-height: 34px;
@@ -557,6 +546,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .control-deck .control:active { transform: scale(.97); }
 .control-deck .control.rest-action { color: var(--rest); }
 .control-deck .control.delete-action { color: #ff9aa6; }
+.bpm-action {
+  display: flex; align-items: center; justify-content: center; gap: 1px;
+  color: #06151b; background: linear-gradient(180deg, #8aeaff, var(--accent));
+  border-color: #8eeaff; cursor: grab; touch-action: none;
+  position: relative;
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.bpm-action:active { cursor: grabbing; transform: scale(.97); }
+.bpm-action .bpm-note { font-size: 12px; opacity: .85; margin-right: 1px; }
+.bpm-action #bpmValue { font-size: 15px; font-weight: 900; }
 .dpad {
   width: 142px;
   height: 142px;
@@ -689,21 +688,51 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   font-weight: 850;
 }
 .library-list { display: grid; gap: 9px; margin-top: 13px; }
- .song-item {
-  display: block;
+.song-item {
   position: relative;
-  overflow: hidden;
-  touch-action: pan-y;
-  padding: 12px;
+  display: block;
+  min-height: 62px;
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: pan-y;
+  transition: box-shadow .2s ease, border-color .2s ease;
 }
-.song-name { white-space: normal; overflow: visible; overflow-wrap: anywhere; word-break: break-word; font-weight: 850; line-height: 1.35; }
+.song-item:active { box-shadow: 0 4px 14px rgba(0,0,0,.24); }
+.song-content {
+  position: relative;
+  z-index: 2;
+  min-height: 62px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  will-change: transform;
+}
+.song-item.is-playing {
+  border-color: #8eeaff;
+  box-shadow: 0 0 0 2px rgba(83,215,255,.4), 0 8px 22px rgba(83,215,255,.18);
+}
+.song-item .song-hint {
+  position: absolute; top: 0; bottom: 0; width: 84px;
+  z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 850; color: #fff;
+  opacity: 0; transition: opacity .12s ease; pointer-events: none;
+}
+.song-item .song-hint.left { left: 0; background: linear-gradient(90deg, rgba(83,215,255,.95), rgba(83,215,255,.55)); color: #06151b; }
+.song-item .song-hint.right { right: 0; background: linear-gradient(270deg, rgba(255,85,115,.95), rgba(255,85,115,.55)); }
+.song-item .song-hint .hint-icon { font-size: 18px; line-height: 1; }
+.song-item .song-hint .hint-label { margin-top: 3px; }
+.song-name { font-weight: 850; white-space: normal; word-break: break-all; line-height: 1.3; }
 .song-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
- .song-actions { display: none; }
 .mini-btn {
   min-height: 37px;
   border: 1px solid var(--glass-border);
@@ -821,12 +850,20 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     var h = vv ? vv.height : window.innerHeight;
     document.documentElement.style.setProperty('--app-height', h + 'px');
   }
+  let appHeightRaf = 0;
+  function scheduleAppHeight() {
+    if (appHeightRaf) return;
+    appHeightRaf = requestAnimationFrame(() => {
+      appHeightRaf = 0;
+      setAppHeight();
+    });
+  }
   setAppHeight();
+  requestAnimationFrame(() => scheduleAppHeight());
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', setAppHeight);
-    window.visualViewport.addEventListener('scroll', setAppHeight);
+    window.visualViewport.addEventListener('resize', scheduleAppHeight);
   } else {
-    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('resize', scheduleAppHeight);
   }
 })();
 </script>
@@ -858,7 +895,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       </div>
       <div class="control-deck" aria-label="作曲コントロール">
         <div class="deck-side">
-          <div id="bpmControl" class="control bpm-control" role="button" tabindex="0" aria-label="BPM変更">108 BPM</div>
+          <div id="bpmBtn" class="control bpm-action" role="button" aria-label="BPMの変更は左右にスライドしてください" title="左右にスライドしてBPMを変更">
+            <span class="bpm-note">&#9833;=</span><span id="bpmValue">110</span>
+          </div>
           <button id="restBtn" class="control rest-action" type="button">休符</button>
           <button id="deleteBtn" class="control delete-action" type="button">削除</button>
         </div>
@@ -908,9 +947,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         <div class="setting-block">
           <label class="setting-label" for="volumeRange">音量</label>
           <div class="length-row">
-            <input id="volumeRange" type="range" min="0" max="100" step="5" value="72" aria-label="音量">
+            <input id="volumeRange" type="range" min="0" max="100" step="1" value="72">
             <output id="volumeValue" class="length-value" for="volumeRange">72%</output>
           </div>
+          <div class="setting-help">再生や鍵盤の音量を変更します。</div>
         </div>
         <div class="setting-block">
           <label class="setting-label" for="randomLengthRange">ランダム生成の長さ</label>
@@ -925,9 +965,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         <div class="settings-copy">保存したすべての楽曲と、現在作曲中の内容をJSONファイルとして書き出します。バックアップや別端末への保管に利用できます。</div>
         <button id="exportBtn" class="primary-action export-btn" type="button">すべての楽曲をエクスポート</button>
         <button id="importBtn" class="primary-action export-btn" type="button" style="margin-top:8px;">楽曲をインポート</button>
-        <button id="legacyImportBtn" class="primary-action export-btn" type="button" style="margin-top:8px;">旧形式の楽曲をインポート</button>
         <input id="importFileInput" type="file" accept="application/json,application/JSON" style="display:none">
-        <input id="legacyImportFileInput" type="file" accept="application/json,application/JSON" style="display:none">
       </div>
     </div>
   </section>
@@ -964,11 +1002,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   const PITCH_COUNT = 48;
   const FIRST_MIDI = 48;
-  const DEFAULT_BPM = 108;
-  const MIN_BPM = 40;
-  const MAX_BPM = 220;
-  const DEFAULT_UNIT_SECONDS = 60 / DEFAULT_BPM / 2;
+  const BPM = 110;
+  const DEFAULT_UNIT_SECONDS = 60 / BPM / 4;
   const STORAGE_KEY = 'kantan-sakkyoku-v4';
+  const TIMING_VERSION = 2; // 1=8分音符単位 / 2=16分音符単位
   const SONGS_KEY = 'kantan-sakkyoku-songs-v1';
   const NOTE_NAMES_JA = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
   const BLACK_PCS = new Set([1,3,6,8,10]);
@@ -999,9 +1036,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyLeft: document.getElementById('keyLeft'),
     keyRight: document.getElementById('keyRight'),
     randomBtn: document.getElementById('randomBtn'),
-    bpmControl: document.getElementById('bpmControl'),
-    volumeRange: document.getElementById('volumeRange'),
-    volumeValue: document.getElementById('volumeValue'),
     compositionView: document.getElementById('compositionView'),
     songsView: document.getElementById('songsView'),
     settingsView: document.getElementById('settingsView'),
@@ -1011,8 +1045,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     exportBtn: document.getElementById('exportBtn'),
     importBtn: document.getElementById('importBtn'),
     importFileInput: document.getElementById('importFileInput'),
-    legacyImportBtn: document.getElementById('legacyImportBtn'),
-    legacyImportFileInput: document.getElementById('legacyImportFileInput'),
     confirmModal: document.getElementById('confirmModal'),
     modalTitle: document.getElementById('modalTitle'),
     modalMessage: document.getElementById('modalMessage'),
@@ -1024,14 +1056,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     edgeDown: document.getElementById('edgeDown'),
     swipePlay: document.getElementById('swipePlay'),
     swipeScroll: document.getElementById('swipeScroll'),
+    bpmBtn: document.getElementById('bpmBtn'),
+    bpmValue: document.getElementById('bpmValue'),
+    volumeRange: document.getElementById('volumeRange'),
+    volumeValue: document.getElementById('volumeValue'),
     randomLengthRange: document.getElementById('randomLengthRange'),
-    randomLengthValue: document.getElementById('randomLengthValue')
+    randomLengthValue: document.getElementById('randomLengthValue'),
   };
 
   let events = [];
   let selectedId = null;
   let nextId = 1;
   let recordMode = false;
+  let currentTab = 'composition';
   let toastTimer = 0;
   let audio = null;
   let playing = null;
@@ -1045,8 +1082,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let libraryPlaybackTimer = 0;
   let libraryPlaying = null;
   let currentUnitSeconds = DEFAULT_UNIT_SECONDS;
-  let volumeLevel = 72;
-  let bpmGesture = { pointerId: null, startX: 0, startBpm: DEFAULT_BPM };
+  let currentBPM = 110;
+  let currentVolume = 0.72;
+  const BPM_MIN = 40, BPM_MAX = 220, BPM_STEP = 10;
   let pianoSwipeMode = 'play';
   let currentScale = 1;
   let renderScoreRAF = null;
@@ -1057,10 +1095,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let playbackStarting = false;
   let playbackToken = 0;
   let prePlaybackScroll = { left: 0, top: 0 };
+  let startupSettling = true;
 
   let smoothScrollEndTimer = 0;
   let suppressScrollSync = false;
   let smoothScrollAnimId = 0;
+  let smoothScrollRaf = 0;
+  const smoothScrollEase = (t) => 1 - Math.pow(1 - t, 3);
 
   const rootStyle = getComputedStyle(document.documentElement);
   function cssNumber(name) {
@@ -1085,66 +1126,69 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  function applyVolume() {
-    if (audio && audio.master) audio.master.gain.setTargetAtTime(volumeLevel / 100, audio.ctx.currentTime, .01);
-  }
-
-  function bpmFromUnitSeconds(unitSeconds) {
-    const n = Number(unitSeconds);
-    return Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round((60 / (Math.max(.01, n) * 2)) / 10) * 10));
-  }
-
-  function unitSecondsFromBpm(bpm) {
-    const n = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(Number(bpm) / 10) * 10));
-    return 60 / n / 2;
-  }
-
-  function sanitizeLoaded(data) {
+  // 内部イベントは {id,type,midi,duration}。保存形式は軽量な2次元配列 [[midi,duration], ...]。
+  // midi===0 は休符。旧形式（オブジェクト配列）も読み込めるよう両方を許容する。
+  function parseEventList(data) {
     if (!Array.isArray(data)) return [];
     const clean = [];
     for (const item of data) {
-      let type = null, midi = 0, duration = 1;
-      if (Array.isArray(item)) {
-        midi = Math.floor(Number(item[0]) || 0);
-        duration = Math.max(1, Math.floor(Number(item[1]) || 1));
-        type = midi === 0 ? 'rest' : 'note';
-      } else if (item && (item.type === 'note' || item.type === 'rest')) {
-        type = item.type;
-        midi = type === 'note' ? Math.floor(Number(item.midi)) : 0;
-        duration = Math.max(1, Math.floor(Number(item.duration) || 1));
-      } else continue;
-      if (type === 'note') {
-        if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
-        clean.push({ id: nextId++, type: 'note', midi, duration });
-      } else {
-        clean.push({ id: nextId++, type: 'rest', duration });
+      if (Array.isArray(item) && item.length >= 2) {
+        const midi = Math.floor(Number(item[0]));
+        const duration = Math.max(1, Math.floor(Number(item[1]) || 1));
+        if (midi === 0) {
+          clean.push({ id: nextId++, type: 'rest', duration });
+        } else if (midi >= FIRST_MIDI && midi < FIRST_MIDI + PITCH_COUNT) {
+          clean.push({ id: nextId++, type: 'note', midi, duration });
+        }
+      } else if (item && typeof item === 'object') {
+        const duration = Math.max(1, Math.floor(Number(item.duration) || 1));
+        if (item.type === 'note') {
+          const midi = Math.floor(Number(item.midi));
+          if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
+          clean.push({ id: nextId++, type: 'note', midi, duration });
+        } else if (item.type === 'rest') {
+          clean.push({ id: nextId++, type: 'rest', duration });
+        }
       }
     }
     return clean;
   }
 
-  function compactEvents(list = events) {
-    return list.map(ev => [ev.type === 'rest' ? 0 : ev.midi, Math.max(1, Math.floor(Number(ev.duration) || 1))]);
+  function eventsToLight(list = events) {
+    return list.map(ev => ev.type === 'note' ? [ev.midi, ev.duration] : [0, ev.duration]);
   }
 
-  function legacyEvents(list = []) {
-    return list.map(item => Array.isArray(item)
-      ? { type: Number(item[0]) === 0 ? 'rest' : 'note', midi: Number(item[0]) || undefined, duration: Math.max(1, Math.floor(Number(item[1]) || 1)) }
-      : item).filter(item => item && (item.type === 'note' || item.type === 'rest'));
+  function sanitizeLoaded(data) { return parseEventList(data); }
+
+  function clampBPM(bpm) {
+    return Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(bpm / BPM_STEP) * BPM_STEP));
   }
+  function bpmFromUnitSeconds(unitSeconds) {
+    const u = Math.max(.05, Number(unitSeconds) || DEFAULT_UNIT_SECONDS);
+    return clampBPM(60 / u / 4);
+  }
+  function unitFromBPM(bpm) { return 60 / bpm / 4; }
 
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const saved = JSON.parse(raw);
-      events = sanitizeLoaded(saved.events);
+      events = parseEventList(saved.events);
       recordMode = Boolean(saved.recordMode);
       currentSongName = typeof saved.currentSongName === 'string' ? saved.currentSongName : '';
-      currentUnitSeconds = Math.max(.12, Math.min(1.5, Number(saved.unitSeconds) || DEFAULT_UNIT_SECONDS));
+      if (saved.bpm != null) {
+        currentBPM = clampBPM(Number(saved.bpm));
+        currentUnitSeconds = unitFromBPM(currentBPM);
+      } else {
+        let storedUnit = Math.max(.06, Math.min(1, Number(saved.unitSeconds) || (60 / BPM / 2)));
+        if (Number(saved.timingVersion) !== TIMING_VERSION) storedUnit /= 2;
+        currentUnitSeconds = Math.max(.05, Math.min(1, storedUnit));
+        currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
+      }
+      currentVolume = Math.max(0, Math.min(1, Number(saved.volume) != null ? Number(saved.volume) : 0.72));
       pianoSwipeMode = saved.pianoSwipeMode === 'scroll' ? 'scroll' : 'play';
       randomPhraseLength = Math.max(12, Math.min(100, Number(saved.randomPhraseLength) || 12));
-      volumeLevel = Math.max(0, Math.min(100, Number(saved.volumeLevel ?? 72)));
       selectedId = events.length ? events[events.length - 1].id : null;
     } catch (_) {
       events = [];
@@ -1154,42 +1198,44 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        events: compactEvents(),
+        events: eventsToLight(events),
         recordMode,
         currentSongName,
+        bpm: currentBPM,
         unitSeconds: currentUnitSeconds,
+        timingVersion: TIMING_VERSION,
+        volume: currentVolume,
         pianoSwipeMode,
-        randomPhraseLength,
-        volumeLevel
+        randomPhraseLength
       }));
     } catch (_) {}
   }
 
+  function serializeEvents(list = events) { return eventsToLight(list); }
+
+  function snapshotEvents(list = events) { return list.map(e => ({ id: e.id, type: e.type, midi: e.midi, duration: e.duration })); }
+
   function loadSongs() {
     try {
       const parsed = JSON.parse(localStorage.getItem(SONGS_KEY) || '[]');
-      songs = Array.isArray(parsed) ? parsed.filter(song => song && Array.isArray(song.events)).map((song, i) => ({
-        id: `song-${Date.now()}-${i}-${Math.random().toString(36).slice(2,6)}`,
-        name: song.name || '無題の曲',
-        events: song.events,
-        unitSeconds: Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS
+      songs = Array.isArray(parsed) ? parsed.filter(s => s && Array.isArray(s.events)).map(s => ({
+        _id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+        name: typeof s.name === 'string' ? s.name : '無題の曲',
+        events: parseEventList(s.events),
+        unitSeconds: (() => {
+          let u = Math.max(.06, Math.min(1, Number(s.unitSeconds) || (60 / BPM / 2)));
+          if (Number(s.timingVersion) !== TIMING_VERSION) u /= 2;
+          return Math.max(.05, Math.min(1, u));
+        })(),
+        timingVersion: TIMING_VERSION
       })) : [];
-      if (!currentSongId && currentSongName) {
-        const same = songs.find(song => song.name === currentSongName);
-        if (same) currentSongId = same.id;
-      }
-      songs.forEach(song => { song.events = compactEvents(sanitizeLoaded(song.events)); });
     } catch (_) { songs = []; }
   }
 
   function saveSongs() {
     try {
-      const compact = songs.map(song => ({
-        name: song.name || '無題の曲',
-        events: Array.isArray(song.events) ? song.events.map(item => Array.isArray(item) ? [Number(item[0]) || 0, Math.max(1, Math.floor(Number(item[1]) || 1))] : [item.type === 'note' ? Number(item.midi) : 0, Math.max(1, Math.floor(Number(item.duration) || 1))]) : [],
-        unitSeconds: Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS
-      }));
-      localStorage.setItem(SONGS_KEY, JSON.stringify(compact));
+      const data = songs.map(s => ({ name: s.name, events: eventsToLight(s.events), unitSeconds: s.unitSeconds, timingVersion: TIMING_VERSION }));
+      localStorage.setItem(SONGS_KEY, JSON.stringify(data));
     } catch (_) {}
   }
 
@@ -1206,7 +1252,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.confirmModal.classList.remove('is-open');
   }
 
+  function updateToastPosition() {
+    const isComp = currentTab === 'composition' && els.compositionView.classList.contains('is-active');
+    let bottom = 14;
+    if (isComp) {
+      const r = els.scoreViewport.getBoundingClientRect();
+      bottom = Math.max(14, window.innerHeight - r.bottom + 10);
+    }
+    document.documentElement.style.setProperty('--toast-bottom', bottom + 'px');
+  }
+
   function switchTab(name) {
+    currentTab = name;
     const map = { composition: els.compositionView, songs: els.songsView, settings: els.settingsView };
     Object.entries(map).forEach(([key, view]) => view.classList.toggle('is-active', key === name));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('is-active', btn.dataset.tab === name));
@@ -1215,12 +1272,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       renderSongList();
     }
     if (name === 'settings') syncSettingsUI();
-    positionToast();
     if (name === 'composition') requestAnimationFrame(() => {
       renderKeyboard();
       renderScore();
       updateEdgeIndicators();
     });
+    updateToastPosition();
   }
 
   function renderSongList() {
@@ -1235,56 +1292,132 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     for (const song of songs) {
       const item = document.createElement('article');
       item.className = 'song-item';
-      item.dataset.songId = song.id;
-      const info = document.createElement('div');
+      if (libraryPlaying && libraryPlaying.songId === song._id) item.classList.add('is-playing');
+
+      const hintL = document.createElement('span');
+      hintL.className = 'song-hint left';
+      hintL.innerHTML = '<span class="hint-icon">✎</span><span class="hint-label">編集</span>';
+      const hintR = document.createElement('span');
+      hintR.className = 'song-hint right';
+      hintR.innerHTML = '<span class="hint-icon">🗑</span><span class="hint-label">削除</span>';
+      item.append(hintL, hintR);
+
       const name = document.createElement('div');
       name.className = 'song-name';
       name.textContent = song.name || '無題の曲';
       const meta = document.createElement('div');
       meta.className = 'song-meta';
-      const compact = song.events || [];
-      const notes = compact.filter(e => (Array.isArray(e) ? Number(e[0]) !== 0 : e.type === 'note')).length;
-      meta.textContent = `${notes}音・${bpmFromUnitSeconds(song.unitSeconds || DEFAULT_UNIT_SECONDS)} BPM`;
-      info.append(name, meta);
-      item.append(info);
-      let startX = 0, startY = 0, active = false;
-      item.addEventListener('pointerdown', e => {
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        active = true; startX = e.clientX; startY = e.clientY;
-        try { item.setPointerCapture(e.pointerId); } catch (_) {}
-      });
-      item.addEventListener('pointerup', e => {
-        if (!active) return;
-        active = false;
-        const dx = e.clientX - startX, dy = e.clientY - startY;
-        if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
-          playLibrarySong(song);
-        } else if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-          if (dx > 0) editSong(song);
-          else openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => {
-            songs = songs.filter(item => item.id !== song.id);
-            if (currentSongId === song.id) { currentSongId = null; }
-            saveSongs(); saveState(); renderSongList();
-            showToast('楽曲を削除しました');
-          });
-        }
-      });
-      item.addEventListener('pointercancel', () => { active = false; });
+      const notes = song.events.filter(e => e.type === 'note').length;
+      meta.textContent = `${notes}音・♩=${bpmFromUnitSeconds(song.unitSeconds)}`;
+      const content = document.createElement('div');
+      content.className = 'song-content';
+      content.append(name, meta);
+      item.append(hintL, hintR, content);
+
+      bindSongGesture(item, song);
       els.songList.appendChild(item);
     }
+  }
+
+  function bindSongGesture(item, song) {
+    const content = item.querySelector('.song-content');
+    const hintL = item.querySelector('.song-hint.left');
+    const hintR = item.querySelector('.song-hint.right');
+    let startX = 0, startY = 0, pointerId = null, moved = false, decided = null;
+    const reveal = 84;
+    const commitThreshold = 52;
+
+    const resetVisual = (animate = true) => {
+      if (!content) return;
+      content.style.transition = animate ? 'transform .2s cubic-bezier(.22,.8,.22,1)' : 'none';
+      content.style.transform = 'translateX(0)';
+      hintL.style.opacity = '0';
+      hintR.style.opacity = '0';
+    };
+
+    const down = (e) => {
+      if (pointerId !== null) return;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      moved = false;
+      decided = null;
+      content.style.transition = 'none';
+      try { item.setPointerCapture(e.pointerId); } catch (_) {}
+    };
+
+    const move = (e) => {
+      if (pointerId !== e.pointerId) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!moved && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) moved = true;
+      if (!moved) return;
+      e.preventDefault();
+      decided = dx > 0 ? 'right' : 'left';
+      const clamped = Math.max(-reveal, Math.min(reveal, dx));
+      content.style.transform = `translateX(${clamped}px)`;
+      hintL.style.opacity = dx > 0 ? String(Math.min(1, Math.abs(dx) / reveal)) : '0';
+      hintR.style.opacity = dx < 0 ? String(Math.min(1, Math.abs(dx) / reveal)) : '0';
+    };
+
+    const finish = (e) => {
+      if (pointerId !== e.pointerId) return;
+      const dx = e.clientX - startX;
+      pointerId = null;
+      if (!moved) {
+        resetVisual(true);
+        playLibrarySong(song, item);
+        return;
+      }
+
+      const committed = Math.abs(dx) >= commitThreshold;
+      if (committed) {
+        const direction = dx > 0 ? 1 : -1;
+        content.style.transition = 'transform .18s cubic-bezier(.22,.8,.22,1)';
+        content.style.transform = `translateX(${direction * reveal}px)`;
+        hintL.style.opacity = direction > 0 ? '1' : '0';
+        hintR.style.opacity = direction < 0 ? '1' : '0';
+        setTimeout(() => {
+          resetVisual(false);
+          if (direction > 0) editSong(song);
+          else openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => deleteSong(song));
+        }, 150);
+      } else {
+        resetVisual(true);
+      }
+    };
+
+    const cancel = (e) => {
+      if (pointerId !== e.pointerId) return;
+      pointerId = null;
+      resetVisual(true);
+    };
+
+    item.addEventListener('pointerdown', down);
+    item.addEventListener('pointermove', move);
+    item.addEventListener('pointerup', finish);
+    item.addEventListener('pointercancel', cancel);
+  }
+
+  function deleteSong(song) {
+    songs = songs.filter(item => item._id !== song._id);
+    if (currentSongId === song._id) currentSongId = null;
+    if (libraryPlaying && libraryPlaying.songId === song._id) stopLibraryPlayback(false);
+    saveSongs(); saveState(); renderSongList();
+    showToast('楽曲を削除しました');
   }
 
   function saveCurrentSong() {
     if (!events.length) { showToast('保存する音符がありません'); return; }
     const name = (els.songNameInput.value || '').trim() || `無題の曲 ${songs.length + 1}`;
     if (currentSongId) {
-      const song = songs.find(item => item.id === currentSongId);
-      if (song) { song.name = name; song.events = compactEvents(); song.unitSeconds = currentUnitSeconds; }
+      const song = songs.find(item => item._id === currentSongId);
+      if (song) { song.name = name; song.events = snapshotEvents(); song.unitSeconds = currentUnitSeconds; song.timingVersion = TIMING_VERSION; }
       else currentSongId = null;
     }
     if (!currentSongId) {
       currentSongId = `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-      songs.push({ id: currentSongId, name, events: compactEvents(), unitSeconds: currentUnitSeconds });
+      songs.push({ _id: currentSongId, name, events: snapshotEvents(), unitSeconds: currentUnitSeconds, timingVersion: TIMING_VERSION });
     }
     currentSongName = name;
     saveSongs(); saveState(); renderSongList();
@@ -1294,11 +1427,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function editSong(song) {
     stopPlayback(false);
     nextId = 1;
-    events = sanitizeLoaded(song.events);
+    events = parseEventList(snapshotEvents(song.events));
     selectedId = events.length ? events[events.length - 1].id : null;
-    currentSongId = song.id;
+    currentSongId = song._id;
     currentSongName = song.name || '';
-    currentUnitSeconds = Math.max(.12, Math.min(1.5, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    currentUnitSeconds = Math.max(.05, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
     syncSettingsUI();
     saveState(); renderScore({ preserve: false });
     switchTab('composition');
@@ -1326,20 +1460,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return -1;
   }
 
-  function positionToast() {
-    const r = els.scoreViewport.getBoundingClientRect();
-    const inScore = els.compositionView.classList.contains('is-active') && r.width > 0 && r.height > 0;
-    els.toast.classList.toggle('in-score', inScore);
-    if (inScore) {
-      els.toast.style.bottom = `${Math.max(10, window.innerHeight - r.bottom + 12)}px`;
-    } else {
-      els.toast.style.bottom = `calc(56px + max(8px, env(safe-area-inset-bottom)))`;
-    }
-  }
-
   function showToast(message) {
     clearTimeout(toastTimer);
-    positionToast();
     els.toast.textContent = message;
     els.toast.classList.add('show');
     toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1350);
@@ -1349,7 +1471,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const disableList = [
       els.restBtn, els.deleteBtn, els.shortenBtn, els.extendBtn,
       els.pitchDownBtn, els.pitchUpBtn, els.centerBtn, els.randomBtn,
-      els.recordBtn, els.keyLeft, els.keyRight, els.keyboardRange, els.bpmControl,
+      els.recordBtn, els.keyLeft, els.keyRight, els.keyboardRange, els.bpmBtn,
       ...document.querySelectorAll('.tab-btn')
     ];
     disableList.forEach(el => { if (el) el.disabled = active; });
@@ -1458,40 +1580,56 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function smoothScrollBoth(left, top) {
     const targetLeft = clampScrollLeft(left);
     const targetTop = clampScrollTop(top);
-
-    suppressScrollSync = true;
-    smoothScrollAnimId++;
-    const token = smoothScrollAnimId;
-    clearTimeout(smoothScrollEndTimer);
-
-    els.scoreViewport.scrollTo({ top: targetTop, left: targetLeft, behavior: 'smooth' });
-    els.keyboardViewport.scrollTo({ left: targetLeft, behavior: 'smooth' });
-    syncKeyboardRange(targetLeft);
-
-    smoothScrollEndTimer = setTimeout(() => {
-      if (token !== smoothScrollAnimId) return;
-      suppressScrollSync = false;
+    const startLeft = els.scoreViewport.scrollLeft;
+    const startTop = els.scoreViewport.scrollTop;
+    const dx = targetLeft - startLeft;
+    const dy = targetTop - startTop;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
       setLinkedScroll(targetLeft);
       els.scoreViewport.scrollTop = targetTop;
       syncKeyboardRange();
       updateEdgeIndicators();
-    }, 680);
+      return;
+    }
+
+    cancelAnimationFrame(smoothScrollRaf);
+    clearTimeout(smoothScrollEndTimer);
+    smoothScrollAnimId++;
+    const token = smoothScrollAnimId;
+    suppressScrollSync = true;
+    const duration = Math.max(220, Math.min(640, 180 + Math.abs(dx) * 0.6 + Math.abs(dy) * 0.3));
+    const startTime = performance.now();
+
+    const step = (now) => {
+      if (token !== smoothScrollAnimId) return;
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = smoothScrollEase(t);
+      const nextLeft = startLeft + dx * e;
+      const nextTop = startTop + dy * e;
+      setLinkedScroll(nextLeft);
+      els.scoreViewport.scrollTop = nextTop;
+      if (t < 1) {
+        smoothScrollRaf = requestAnimationFrame(step);
+      } else {
+        smoothScrollRaf = 0;
+        setLinkedScroll(targetLeft);
+        els.scoreViewport.scrollTop = targetTop;
+        suppressScrollSync = false;
+        syncKeyboardRange();
+        updateEdgeIndicators();
+      }
+    };
+    smoothScrollRaf = requestAnimationFrame(step);
   }
 
-  function setLinkedScroll(left, source = '', smooth = false) {
+  function setLinkedScroll(left, source = '') {
     const scoreMax = Math.max(0, pianoWidth - els.scoreViewport.clientWidth);
     const keyMax = Math.max(0, pianoWidth - els.keyboardViewport.clientWidth);
     const next = Math.max(0, Math.min(Math.min(scoreMax, keyMax), left));
-    const behavior = smooth ? 'smooth' : 'auto';
-    if (source !== 'score') els.scoreViewport.scrollTo({ left: next, behavior });
-    if (source !== 'keyboard') els.keyboardViewport.scrollTo({ left: next, behavior });
+    if (source !== 'score') els.scoreViewport.scrollLeft = next;
+    if (source !== 'keyboard') els.keyboardViewport.scrollLeft = next;
     const max = Math.max(1, Math.min(scoreMax, keyMax));
     els.keyboardRange.value = String(Math.round(next / max * 100));
-    if (smooth) {
-      suppressScrollSync = true;
-      clearTimeout(smoothScrollEndTimer);
-      smoothScrollEndTimer = setTimeout(() => { suppressScrollSync = false; }, 560);
-    }
   }
 
   function cancelRenderScoreRAF() {
@@ -2038,8 +2176,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       const x = geom.left;
       const safeLeft = els.scoreViewport.scrollLeft + 25;
       const safeRight = els.scoreViewport.scrollLeft + els.scoreViewport.clientWidth - geom.width - 25;
-      if (x < safeLeft) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .3), '', true);
-      else if (x > safeRight) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .7), '', true);
+      if (x < safeLeft) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .3));
+      else if (x > safeRight) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .7));
     }
   }
 
@@ -2105,7 +2243,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   function createAudioGraph(ctx) {
     const master = ctx.createGain();
-    master.gain.value = volumeLevel / 100;
+    master.gain.value = currentVolume;
     const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -18;
     compressor.knee.value = 18;
@@ -2548,34 +2686,38 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   function stopLibraryPlayback(showMessage = false) {
     clearTimeout(libraryPlaybackTimer);
+    if (libraryPlaying && libraryPlaying.item) {
+      libraryPlaying.item.classList.remove('is-playing');
+    }
     const wasPlaying = Boolean(libraryPlaying);
     libraryPlaying = null;
     stopAllLiveSources();
     if (showMessage && wasPlaying) showToast('停止しました');
   }
 
-  async function playLibrarySong(song) {
-    if (libraryPlaying && libraryPlaying.songId === song.id) {
+  async function playLibrarySong(song, item) {
+    if (libraryPlaying && libraryPlaying.songId === song._id) {
       stopLibraryPlayback(true);
       return;
     }
     stopPlayback(false);
     stopLibraryPlayback(false);
-    const normalized = sanitizeLoaded(song.events);
-    if (!normalized.length) return;
+    if (!song.events.length) return;
     ensureAudioSync();
     try { await unlockAudio(); } catch (_) { return; }
-    const unitSeconds = Math.max(.12, Math.min(1.5, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    const unitSeconds = Math.max(.05, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
     let cursor = 0;
-    for (const ev of normalized) {
+    for (const ev of song.events) {
       const duration = Math.max(1, Number(ev.duration) || 1);
       if (ev.type === 'note') pianoVoice(ev.midi, audio.ctx.currentTime + .06 + cursor * unitSeconds, duration * unitSeconds * .92, .76);
       cursor += duration;
     }
-    libraryPlaying = { songId: song.id };
+    libraryPlaying = { songId: song._id, item };
+    if (item) item.classList.add('is-playing');
     showToast(`「${song.name || '無題の曲'}」を再生`);
     libraryPlaybackTimer = setTimeout(() => {
-      if (libraryPlaying && libraryPlaying.songId === song.id) {
+      if (libraryPlaying && libraryPlaying.songId === song._id) {
+        if (libraryPlaying.item) libraryPlaying.item.classList.remove('is-playing');
         libraryPlaying = null;
         showToast('再生が終わりました');
       }
@@ -2705,19 +2847,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.scrolling = false;
     keyboardGesture.audioReady = true;
 
-    const graph = ensureAudioSync();
-    enterKeyboardKey(midi);
-    if (graph && graph.ctx.state !== 'running') {
-      unlockAudio().then(() => {
-        if (keyboardGesture.pointerId === e.pointerId && keyboardGesture.lastMidi === midi) {
-          const key = keyGeometry.get(midi);
-          if (key) {
-            stopGestureVoice();
-            keyboardGesture.voice = startSustainedVoice(midi);
-          }
-        }
-      }).catch(() => {});
-    }
+    unlockAudio().then(() => {
+      if (keyboardGesture.pointerId === e.pointerId && keyboardGesture.lastMidi == null && !keyboardGesture.scrolling) {
+        enterKeyboardKey(midi);
+      }
+    }).catch(() => {});
   }, { passive: false });
 
   els.keyboardViewport.addEventListener('pointermove', e => {
@@ -2741,7 +2875,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         cancelHold();
         stopGestureVoice();
         setKeyState(null);
-        setLinkedScroll(keyboardGesture.startScroll - dx, '', true);
+        setLinkedScroll(keyboardGesture.startScroll - dx);
       }
       return;
     }
@@ -2787,7 +2921,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     showToast('全消去しました');
   }
 
-  function bindPress(button, onTap, onLong, delay = 550) {
+  function bindPress(button, onTap, onLong, delay = 550, longHint = '') {
     let timer = 0, longFired = false, pointerId = null;
     button.addEventListener('pointerdown', e => {
       if (button.disabled || pointerId !== null) return;
@@ -2807,7 +2941,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       timer = 0;
       const shouldTap = !longFired && !button.disabled;
       pointerId = null;
-      if (shouldTap) onTap(e);
+      if (shouldTap) {
+        onTap(e);
+        if (longHint) showToast(longHint);
+      }
     };
     const cancel = e => {
       if (pointerId !== e.pointerId) return;
@@ -2822,50 +2959,48 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function syncSettingsUI() {
     els.swipePlay.checked = pianoSwipeMode === 'play';
     els.swipeScroll.checked = pianoSwipeMode === 'scroll';
+    els.volumeRange.value = String(Math.round(currentVolume * 100));
+    els.volumeValue.textContent = `${Math.round(currentVolume * 100)}%`;
     els.randomLengthRange.value = String(randomPhraseLength);
     els.randomLengthValue.textContent = `${randomPhraseLength}音`;
-    els.volumeRange.value = String(volumeLevel);
-    els.volumeValue.textContent = `${volumeLevel}%`;
-    updateBpmUI();
-    positionToast();
+    updateBpmDisplay();
   }
 
-  function updateBpmUI() {
-    if (els.bpmControl) els.bpmControl.textContent = `${bpmFromUnitSeconds(currentUnitSeconds)} BPM`;
+  function updateBpmDisplay() {
+    if (els.bpmValue) els.bpmValue.textContent = String(currentBPM);
   }
 
   bindPress(els.playBtn,
     () => { startPlayback(false); },
     () => {
-      showToast('長押しで先頭から再生します');
-      if (playing) { stopPlayback(false); setTimeout(() => startPlayback(true), 520); }
-      else startPlayback(true);
-    }, 650);
+      showToast('長押し：先頭から再生');
+      if (playing) {
+        stopPlayback(false);
+        setTimeout(() => startPlayback(true), 520);
+      } else {
+        startPlayback(true);
+      }
+    }, 650, '長押しで先頭から再生');
 
   bindPress(els.deleteBtn,
     () => { playButtonSound('delete'); deleteSelected(); },
-    () => {
-      showToast('長押しで全消去します');
-      openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition);
-    });
-
+    () => { openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition); }, 550, '長押しで全消去');
   bindPress(els.randomBtn,
-    () => { playButtonSound('random'); showToast('ランダムフレーズは長押しで生成'); },
-    () => { showToast('長押しでランダムフレーズを生成します'); generateRandomPhrase(); }, 700);
+    () => { playButtonSound('random'); },
+    () => { generateRandomPhrase(); }, 700, '長押しでランダム生成');
 
   bindPress(els.centerBtn,
     () => { playButtonSound('center'); centerSelectedEvent(); },
     () => {
       playButtonSound('center');
-      showToast('長押しで最後の音符を中央表示します');
       if (!events.length) { showToast('音符がありません'); return; }
       selectedId = events[events.length - 1].id;
       renderScore({ preserve: false });
       saveState();
       centerOnEvent(selectedId, true);
-    }, 500);
+    }, 500, '長押しで末尾の音符へ');
 
-  function bindDpadAction(button, onAction, delay = 480, interval = 120, longMessage = '') {
+  function bindDpadAction(button, onAction, longLabel, delay = 480, interval = 120) {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2885,7 +3020,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
-        if (longMessage) showToast(longMessage);
+        if (longLabel) showToast(longLabel);
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
             onAction();
@@ -2900,7 +3035,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const finishTap = e => {
       if (pointerId !== e.pointerId) return;
       clearTimers();
-      if (!longFired && !button.disabled) onAction();
+      if (!longFired && !button.disabled) { onAction(); if (longLabel) showToast(longLabel); }
       pointerId = null;
     };
 
@@ -2914,7 +3049,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
-  function bindDpadNoteNav(button, direction) {
+  function bindDpadNoteNav(button, direction, longLabel) {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2960,7 +3095,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
-        showToast(direction < 0 ? '長押しで音符を連続して短くします' : '長押しで音符を連続して伸ばします');
+        if (longLabel) showToast(longLabel);
         performLongAction();
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
@@ -2976,7 +3111,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const finishTap = e => {
       if (pointerId !== e.pointerId) return;
       clearTimers();
-      if (!longFired && !button.disabled) performTapNavigation();
+      if (!longFired && !button.disabled) { performTapNavigation(); if (longLabel) showToast(longLabel); }
       pointerId = null;
     };
 
@@ -2990,10 +3125,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
-  bindDpadAction(els.pitchDownBtn, () => changePitch(-1), 480, 120, '長押しで半音ずつ下げ続けます');
-  bindDpadAction(els.pitchUpBtn, () => changePitch(1), 480, 120, '長押しで半音ずつ上げ続けます');
-  bindDpadNoteNav(els.shortenBtn, -1);
-  bindDpadNoteNav(els.extendBtn, 1);
+  bindDpadAction(els.pitchDownBtn, () => changePitch(-1), '長押しで音程を連続で下げる');
+  bindDpadAction(els.pitchUpBtn, () => changePitch(1), '長押しで音程を連続で上げる');
+  bindDpadNoteNav(els.shortenBtn, -1, '長押しで音符を連続で短くする');
+  bindDpadNoteNav(els.extendBtn, 1, '長押しで音符を連続で伸ばす');
 
   (function setupRestHold() {
     let active = false;
@@ -3002,17 +3137,20 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     let interval = 0;
     let activeEventId = null;
     let activePointerId = null;
+    let longFired = false;
     const start = (e) => {
       if (els.restBtn.disabled || active) return;
       active = true;
       activePointerId = e.pointerId;
       duration = 1;
+      longFired = false;
 
       playButtonSound('rest');
-      showToast('長押しで休符を伸ばします');
 
       activeEventId = addRest(1, true);
       timer = setTimeout(() => {
+        longFired = true;
+        showToast('長押し：休符を伸ばす');
         interval = setInterval(() => {
           duration = Math.min(16, duration + 1);
           if (activeEventId) {
@@ -3029,18 +3167,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       active = false;
       activeEventId = null;
       activePointerId = null;
+      longFired = false;
     };
     els.restBtn.addEventListener('pointerdown', start);
     els.restBtn.addEventListener('pointerup', (e) => {
+      const wasLong = longFired;
       cleanup(e);
+      if (!wasLong && !els.restBtn.disabled) showToast('長押しで休符を伸ばす');
     });
     els.restBtn.addEventListener('pointercancel', cleanup);
     els.restBtn.addEventListener('pointerleave', cleanup);
-    els.restBtn.addEventListener('click', e => {
-      e.preventDefault();
-      activePointerId = null;
-      if (!els.restBtn.disabled && !active) addRest(1);
-    });
   })();
 
   function shiftAllNotes(offset) {
@@ -3061,13 +3197,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   bindPress(els.keyLeft,
-    () => { setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7, '', true); },
-    () => { showToast('長押しで全音符を1オクターブ下げます'); shiftAllNotes(-1); },
-    480);
+    () => { setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7); },
+    () => { shiftAllNotes(-1); },
+    480, '長押しで全音域を1オクターブ下へ');
   bindPress(els.keyRight,
-    () => { setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7, '', true); },
-    () => { showToast('長押しで全音符を1オクターブ上げます'); shiftAllNotes(1); },
-    480);
+    () => { setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7); },
+    () => { shiftAllNotes(1); },
+    480, '長押しで全音域を1オクターブ上へ');
 
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   els.swipePlay.addEventListener('change', () => {
@@ -3078,38 +3214,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!els.swipeScroll.checked) return;
     pianoSwipeMode = 'scroll'; saveState();
   });
-  els.bpmControl.addEventListener('pointerdown', e => {
-    bpmGesture.pointerId = e.pointerId;
-    bpmGesture.startX = e.clientX;
-    bpmGesture.startBpm = bpmFromUnitSeconds(currentUnitSeconds);
-    try { els.bpmControl.setPointerCapture(e.pointerId); } catch (_) {}
-  });
-  els.bpmControl.addEventListener('pointermove', e => {
-    if (bpmGesture.pointerId !== e.pointerId) return;
-    const delta = e.clientX - bpmGesture.startX;
-    const next = Math.max(MIN_BPM, Math.min(MAX_BPM, bpmGesture.startBpm + Math.round(delta / 8) * 10));
-    currentUnitSeconds = unitSecondsFromBpm(next);
-    updateBpmUI(); saveState();
-  });
-  const endBpmGesture = e => { if (bpmGesture.pointerId === e.pointerId) bpmGesture.pointerId = null; };
-  els.bpmControl.addEventListener('pointerup', endBpmGesture);
-  els.bpmControl.addEventListener('pointercancel', endBpmGesture);
-  els.bpmControl.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      const current = bpmFromUnitSeconds(currentUnitSeconds);
-      const next = Math.max(MIN_BPM, Math.min(MAX_BPM, current + (e.key === 'ArrowRight' ? 10 : -10)));
-      currentUnitSeconds = unitSecondsFromBpm(next); updateBpmUI(); saveState();
-    }
-  });
-
   els.volumeRange.addEventListener('input', () => {
-    volumeLevel = Math.max(0, Math.min(100, Number(els.volumeRange.value) || 0));
-    els.volumeValue.textContent = `${volumeLevel}%`;
-    applyVolume();
+    currentVolume = Math.max(0, Math.min(1, Number(els.volumeRange.value) / 100));
+    els.volumeValue.textContent = `${Math.round(currentVolume * 100)}%`;
+    if (audio && audio.master) audio.master.gain.value = currentVolume;
     saveState();
   });
-
   els.randomLengthRange.addEventListener('input', () => {
     randomPhraseLength = Math.max(12, Math.min(100, Number(els.randomLengthRange.value) || 12));
     els.randomLengthValue.textContent = `${randomPhraseLength}音`;
@@ -3121,8 +3231,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const payload = {
       format: 'kantan-sakkyoku-v2',
       exportedAt: new Date().toISOString(),
-      current: { name: currentSongName, events: compactEvents(), unitSeconds: currentUnitSeconds, volumeLevel },
-      songs: songs.map(song => ({ name: song.name || '無題の曲', events: song.events, unitSeconds: song.unitSeconds || DEFAULT_UNIT_SECONDS }))
+      current: { name: currentSongName, events: eventsToLight(events), unitSeconds: currentUnitSeconds, timingVersion: TIMING_VERSION },
+      songs: songs.map(s => ({ name: s.name, events: eventsToLight(s.events), unitSeconds: s.unitSeconds }))
     };
     const json = '\uFEFF' + JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
@@ -3136,67 +3246,58 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   els.importBtn.addEventListener('click', () => els.importFileInput.click());
   els.importFileInput.addEventListener('change', handleImportFile);
-  els.legacyImportBtn.addEventListener('click', () => els.legacyImportFileInput.click());
-  els.legacyImportFileInput.addEventListener('change', handleLegacyImportFile);
 
-  function normalizeImportedSong(song, legacy = false) {
-    if (!song || !Array.isArray(song.events)) return null;
-    const src = legacy ? legacyEvents(song.events) : song.events;
-    const normalized = sanitizeLoaded(src);
-    return {
-      id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-      name: song.name || '無題の曲',
-      events: compactEvents(normalized),
-      unitSeconds: Math.max(.12, Math.min(1.5, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS))
-    };
-  }
-
-  function importPayload(data, legacy = false) {
-    if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
-    const importedSongs = data.songs.map(s => normalizeImportedSong(s, legacy)).filter(Boolean);
-    openConfirm(legacy ? '旧形式の楽曲をインポート' : '楽曲をインポート', `${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
+  function importSongList(data, file, label) {
+    const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
+      _id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+      name: s.name || '無題の曲',
+      events: parseEventList(s.events),
+      unitSeconds: (() => {
+        let u = Math.max(.06, Math.min(1, Number(s.unitSeconds) || (60 / BPM / 2)));
+        if (Number(s.timingVersion) !== TIMING_VERSION) u /= 2;
+        return Math.max(.05, Math.min(1, u));
+      })(),
+      timingVersion: TIMING_VERSION
+    }));
+    openConfirm('楽曲をインポート', `「${file.name}」から${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
       songs = importedSongs;
       saveSongs();
       if (data.current && Array.isArray(data.current.events)) {
-        events = sanitizeLoaded(legacy ? data.current.events : data.current.events);
+        events = parseEventList(data.current.events);
         selectedId = events.length ? events[events.length - 1].id : null;
-        currentSongName = data.current.name || '';
         currentSongId = null;
-        currentUnitSeconds = Math.max(.12, Math.min(1.5, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
-        const same = songs.find(song => song.name === currentSongName);
-        if (same) currentSongId = same.id;
+        currentSongName = data.current.name || '';
+        let importedUnit = Math.max(.06, Math.min(1, Number(data.current.unitSeconds) || (60 / BPM / 2)));
+        if (Number(data.current.timingVersion) !== TIMING_VERSION) importedUnit /= 2;
+        currentUnitSeconds = Math.max(.05, Math.min(1, importedUnit));
+        currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
         syncSettingsUI();
         renderScore({ preserve: false });
-        saveState();
       }
       renderSongList();
-      showToast('インポートしました');
+      showToast(label);
     });
   }
 
-  function handleImportFile(e) {
+  function readImportFile(e, label) {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      try { importPayload(JSON.parse(String(reader.result).replace(/^\uFEFF/, '')), false); }
-      catch (_) { showToast('インポートできませんでした'); }
+      try {
+        const jsonText = reader.result.replace(/^\uFEFF/, '');
+        const data = JSON.parse(jsonText);
+        if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
+        importSongList(data, file, label);
+      } catch (_) {
+        showToast('インポートできませんでした');
+      }
     };
     reader.readAsText(file, 'utf-8');
   }
 
-  function handleLegacyImportFile(e) {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try { importPayload(JSON.parse(String(reader.result).replace(/^\uFEFF/, '')), true); }
-      catch (_) { showToast('旧形式を読み込めませんでした'); }
-    };
-    reader.readAsText(file, 'utf-8');
-  }
+  function handleImportFile(e) { readImportFile(e, 'インポートしました'); }
 
   els.modalCancel.addEventListener('click', closeConfirm);
   els.modalConfirm.addEventListener('click', () => {
@@ -3206,7 +3307,48 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   });
   els.confirmModal.addEventListener('pointerdown', e => { if (e.target === els.confirmModal) closeConfirm(); });
 
-  els.keyboardRange.addEventListener('input', () => setKeyboardScroll(Number(els.keyboardRange.value)));
+  (function setupBpmControl() {
+    const btn = els.bpmBtn;
+    if (!btn) return;
+    let pointerId = null, startX = 0, startBPM = 110, lastShown = 0, moved = false;
+    const apply = (bpm) => {
+      currentBPM = clampBPM(bpm);
+      currentUnitSeconds = unitFromBPM(currentBPM);
+      updateBpmDisplay();
+      const now = Date.now();
+      if (now - lastShown > 250) { lastShown = now; }
+      saveState();
+    };
+    btn.addEventListener('pointerdown', e => {
+      if (btn.disabled || pointerId !== null) return;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      startBPM = currentBPM;
+      lastShown = 0;
+      moved = false;
+      btn.classList.add('dragging');
+      try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+      ensureAudioSync();
+      e.preventDefault();
+    });
+    btn.addEventListener('pointermove', e => {
+      if (pointerId !== e.pointerId) return;
+      e.preventDefault();
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 5) moved = true;
+      const steps = Math.round(dx / 16);
+      apply(startBPM + steps * BPM_STEP);
+    });
+    const end = (e) => {
+      if (pointerId !== e.pointerId) return;
+      pointerId = null;
+      btn.classList.remove('dragging');
+    };
+    btn.addEventListener('pointerup', end);
+    btn.addEventListener('pointercancel', end);
+    btn.addEventListener('pointerleave', end);
+    btn.addEventListener('click', () => { if (!moved) showToast('左右スワイプで速度変更'); });
+  })();
 
   let scrollSyncRaf = 0;
   let pendingScrollSource = null;
@@ -3256,6 +3398,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }, { signal: __docSignal });
 
   function doResize() {
+    if (startupSettling) return;
     setupRuler();
     const currentLeft = els.scoreViewport.scrollLeft;
     renderKeyboard();
@@ -3274,9 +3417,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   };
   window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
-  window.addEventListener('orientationchange', positionToast, { signal: __docSignal });
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  }
+  window.addEventListener('resize', updateToastPosition, { signal: __docSignal });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateToastPosition, { signal: __docSignal });
   }
 
   loadState();
@@ -3287,7 +3433,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   renderKeyboard();
   renderScore({ preserve: false });
   updateControls();
-  positionToast();
   requestAnimationFrame(() => {
     const initial = 28;
     els.keyboardRange.value = String(initial);
@@ -3296,6 +3441,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const desiredPitch = c4.left - els.scoreViewport.clientWidth * .28;
     setLinkedScroll(Math.max(0, desiredPitch));
     if (selectedId) ensureEventVisible(selectedId);
+    requestAnimationFrame(() => { startupSettling = false; });
   });
 })();
 </script>
