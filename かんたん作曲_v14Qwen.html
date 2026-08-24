@@ -2,10 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<!-- viewport-fit=cover を追加し、Safe Areaを有効化 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- black-translucent により、Dynamic Island/ステータスバーの背後にアプリ背景が透過して表示されます -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1018">
 <title>かんたん作曲</title>
@@ -31,6 +29,11 @@
   --white-key-h: 146px;
   --black-key-w: 27px;
   --black-key-h: 92px;
+  --glass-bg: rgba(28,38,54,.5);
+  --glass-bg-strong: rgba(18,26,38,.66);
+  --glass-border: rgba(255,255,255,.16);
+  --glass-highlight: inset 0 1px rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.04);
+  --glass-blur: blur(26px) saturate(180%);
   color-scheme: dark;
 }
 * {
@@ -40,7 +43,7 @@
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
 }
-html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--bg); }
+html, body { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; background: var(--bg); }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
   color: var(--ink);
@@ -54,30 +57,31 @@ body {
 button, input { font: inherit; }
 button { -webkit-appearance: none; appearance: none; }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-
-/* Safe Area対応: 上部のDynamic Island背後まで背景を広げ、下部にタブバー分の余白を確保 */
 #app {
   position: fixed;
-  inset: 0;
-  height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
   background:
     radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
     var(--bg);
 }
-
 .control {
   min-height: 38px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
   padding: 0 10px;
   color: var(--ink);
-  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
-  box-shadow: inset 0 1px rgba(255,255,255,.05), 0 3px 9px rgba(0,0,0,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.015)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-highlight), 0 3px 9px rgba(0,0,0,.22);
   font-weight: 750;
   font-size: 12px;
   white-space: nowrap;
@@ -105,8 +109,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .record.is-on .rec-dot { background: #fff; box-shadow: 0 0 12px rgba(255,255,255,.85); }
 
 .control-deck .control.play { height: 31px; }
-.control:disabled { opacity: .42; filter: saturate(.4); }
 
+.control:disabled { opacity: .42; filter: saturate(.4); }
 .composer {
   position: relative;
   min-height: 0;
@@ -287,10 +291,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   max-width: calc(100% - 24px);
   transform: translate(-50%, -12px);
   padding: 8px 12px;
-  border: 1px solid rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.18);
   border-radius: 999px;
   color: #fff;
-  background: rgba(27,38,53,.94);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(27,38,53,.72);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   box-shadow: 0 10px 28px rgba(0,0,0,.38);
   opacity: 0;
   pointer-events: none;
@@ -381,7 +387,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .key-octave { display: block; margin-top: 2px; color: #78808a; font-size: 14px; }
 
 @media (max-height: 700px) {
-  :root { --white-key-h: 118px; --black-key-h: 75px; --row-h: 32px; }
+  :root { --white-key-H: 118px; --black-key-h: 75px; --row-h: 32px; }
   .control-deck { padding-top: 3px; }
   .control-deck .control { min-height: 26px; height: 26px; }
   .control-deck .control.play { height: 28px; }
@@ -397,9 +403,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .setting-stack { display: grid; gap: 12px; margin-bottom: 13px; }
 .setting-block {
   padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(17,25,37,.88);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .setting-label { display: block; margin-bottom: 8px; color: #e9f1fc; font-size: 13px; font-weight: 850; }
 .setting-help { margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.6; }
@@ -409,10 +417,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 13px;
   color: #b9c7d9;
-  background: #202d40;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), rgba(28,38,54,.4);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   font-size: 12px;
   font-weight: 800;
   touch-action: manipulation;
@@ -429,10 +439,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
   color: var(--accent);
-  background: #0d141e;
+  background: rgba(13,20,30,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   font-size: 12px;
   font-weight: 850;
 }
@@ -463,8 +475,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   flex: none;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #111926, #080c12);
-  border-top: 1px solid rgba(204,223,250,.24);
+  background: linear-gradient(180deg, rgba(24,34,50,.6), rgba(8,12,18,.72));
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
   box-shadow: 0 -10px 28px rgba(0,0,0,.34);
   padding-bottom: 0;
   gap: 10px;
@@ -483,10 +497,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   width: 32px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 11px;
   color: #c9d5e5;
-  background: #1b2636;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(28,38,54,.4);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   touch-action: manipulation;
 }
 .range-wrap { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; }
@@ -506,8 +522,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   align-items: center;
   gap: 8px;
   padding: 8px 8px 7px;
-  background: rgba(9, 13, 20, .96);
-  border-top: 1px solid var(--line);
+  background: rgba(9, 13, 20, .55);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
   border-bottom: 0;
   box-shadow: 0 -7px 18px rgba(0,0,0,.22);
 }
@@ -522,7 +540,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 43px;
   height: 43px;
   padding: 0 5px;
-  border-radius: 12px;
+  border-radius: 15px;
   font-size: 13px;
   font-weight: 800;
 }
@@ -544,7 +562,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   height: 44px !important;
   min-height: 44px !important;
   padding: 0 !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   font-size: 19px !important;
   line-height: 1;
 }
@@ -557,9 +575,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   height: 44px;
   min-height: 44px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: radial-gradient(circle, rgba(83,215,255,.16), rgba(255,255,255,.025));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(83,215,255,.22), rgba(255,255,255,.03));
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
   color: var(--ink);
   font-size: 19px;
   display: flex;
@@ -574,37 +594,27 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   border-color: rgba(183,151,255,.38);
   background: linear-gradient(180deg, #342c50, #241f39);
 }
-
-/* =========================================
-   iOS標準風 Liquid Glass タブバー (Safe Area対応)
-   ========================================= */
 .bottom-tabs {
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 24px);
-  max-width: 420px;
-  z-index: 100;
-  min-height: 60px;
-  padding: 6px 8px;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px rgba(255, 255, 255, 0.2);
+  flex: none;
+  z-index: 60;
+  min-height: 56px;
+  margin: 8px 16px clamp(8px, env(safe-area-inset-bottom), 20px);
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), rgba(15,23,34,.6);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 26px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.08);
 }
 .tab-btn {
-  flex: 1;
   min-width: 0;
   border: 0;
-  border-radius: 16px;
-  color: rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  color: #8fa0b5;
   background: transparent;
   display: flex;
   flex-direction: column;
@@ -612,38 +622,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   justify-content: center;
   gap: 2px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   touch-action: manipulation;
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
-  position: relative;
-  height: 48px;
+  transition: transform .18s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
 }
-.tab-btn:active { transform: scale(0.92); }
+.tab-btn:active { transform: scale(.93); }
 .tab-btn.is-active {
-  color: #ffffff;
-  background: rgba(83, 215, 255, 0.15);
-  border: 1px solid rgba(83, 215, 255, 0.3);
-  box-shadow: 0 4px 12px rgba(83, 215, 255, 0.15), inset 0 1px rgba(255, 255, 255, 0.2);
+  color: #04141a;
+  background: linear-gradient(145deg, #aaf2ff, #53d7ff 55%, #3bbde0);
+  box-shadow: 0 6px 18px rgba(83,215,255,.38), inset 0 1px rgba(255,255,255,.55);
 }
-.tab-btn.is-active .tab-ico {
-  filter: drop-shadow(0 0 8px rgba(83, 215, 255, 0.6));
-}
-.tab-ico { 
-  font-size: 22px; 
-  line-height: 1; 
-  margin-bottom: 2px; 
-  transition: filter 0.25s ease; 
-}
-.tab-label { 
-  font-size: 10px; 
-  letter-spacing: .02em; 
-}
-
+.tab-ico { font-size: 20px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.1)); }
+.tab-label { font-size: 10px; letter-spacing: .03em; }
 .content-screen {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  /* タブバーの高さ + Safe Area 分を下部余白として確保し、コンテンツが隠れないようにする */
-  padding: 14px 14px calc(env(safe-area-inset-bottom, 0px) + 88px);
+  padding: calc(14px + env(safe-area-inset-top)) 14px 22px;
   background:
     radial-gradient(circle at 85% 0, rgba(83,215,255,.12), transparent 30%),
     var(--bg);
@@ -652,9 +646,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .screen-title { margin: 0 0 14px; font-size: 22px; letter-spacing: -.04em; }
 .panel-card {
   padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 15px;
-  background: linear-gradient(180deg, rgba(31,44,62,.94), rgba(18,26,38,.96));
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow);
 }
 .save-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
@@ -662,10 +658,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-width: 0;
   height: 45px;
   border: 1px solid rgba(187,207,235,.25);
-  border-radius: 11px;
+  border-radius: 14px;
   padding: 0 12px;
   color: var(--ink);
-  background: #0d141e;
+  background: rgba(13,20,30,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   user-select: text;
   -webkit-user-select: text;
   -webkit-touch-callout: default;
@@ -675,7 +673,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-width: 78px;
   height: 45px;
   border: 1px solid #8eeaff;
-  border-radius: 11px;
+  border-radius: 14px;
   color: #06151b;
   background: linear-gradient(180deg, #8aeaff, var(--accent));
   font-weight: 850;
@@ -687,20 +685,24 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   gap: 9px;
   align-items: center;
   padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(22,32,47,.92);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .song-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 850; }
 .song-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
 .song-actions { display: flex; gap: 5px; }
 .mini-btn {
   min-height: 37px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
   padding: 0 9px;
   color: var(--ink);
-  background: #243247;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(28,38,54,.45);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   font-size: 11px;
   font-weight: 800;
 }
@@ -722,15 +724,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .modal-card {
   width: min(360px, 100%);
   padding: 18px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 17px;
-  background: #172131;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(23,33,49,.72);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
   box-shadow: 0 25px 70px rgba(0,0,0,.5);
 }
 .modal-title { margin: 0; font-size: 18px; }
 .modal-message { margin: 9px 0 17px; color: #bdcadd; font-size: 13px; line-height: 1.65; }
 .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.modal-btn { min-height: 45px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); background: #26354b; font-weight: 800; }
+.modal-btn { min-height: 45px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--ink); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(38,53,75,.55); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); font-weight: 800; }
 .modal-btn.danger { color: #fff; background: #b62e49; border-color: #ff738d; }
 
 .score-viewport.overview-mode { background-color: #080d14; }
@@ -800,6 +804,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   touch-action: none !important;
 }
 </style>
+<script>
+(function () {
+  function setAppHeight() {
+    var vv = window.visualViewport;
+    var h = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+    window.visualViewport.addEventListener('scroll', setAppHeight);
+  } else {
+    window.addEventListener('resize', setAppHeight);
+  }
+})();
+</script>
 </head>
 <body>
 <div id="app">
@@ -894,6 +914,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       <div class="panel-card">
         <div class="settings-copy">保存したすべての楽曲と、現在作曲中の内容をJSONファイルとして書き出します。バックアップや別端末への保管に利用できます。</div>
         <button id="exportBtn" class="primary-action export-btn" type="button">すべての楽曲をエクスポート</button>
+        <button id="exportWavBtn" class="primary-action export-btn" type="button">現在の楽曲をWAVでエクスポート</button>
         <button id="importBtn" class="primary-action export-btn" type="button" style="margin-top:8px;">楽曲をインポート</button>
         <input id="importFileInput" type="file" accept="application/json,application/JSON" style="display:none">
       </div>
@@ -920,7 +941,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   </div>
 </div>
 <script>
-// (既存のJavaScriptコードは変更せずにそのまま維持されています)
+
 (() => {
   'use strict';
 
@@ -972,6 +993,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     saveSongBtn: document.getElementById('saveSongBtn'),
     songList: document.getElementById('songList'),
     exportBtn: document.getElementById('exportBtn'),
+    exportWavBtn: document.getElementById('exportWavBtn'), // Added
     importBtn: document.getElementById('importBtn'),
     importFileInput: document.getElementById('importFileInput'),
     confirmModal: document.getElementById('confirmModal'),
@@ -1033,7 +1055,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function blackKeyW() { return cssNumber('--black-key-w'); }
 
   function setupRuler() {
-    document.documentElement.style.setProperty('--ruler-h', '12px');
+    document.documentElement.style.setProperty('--ruler-h', '48px');
   }
 
   function noteInfo(midi) {
@@ -2166,6 +2188,55 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     addPianoClick(when, velocity);
   }
 
+  // New function for OfflineAudioContext
+  function pianoVoiceForOffline(ctx, master, midi, when, holdSeconds, velocity = .72) {
+    const f = frequency(midi);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(7200, 1900 + f * 5.5), when);
+    filter.Q.setValueAtTime(.75, when);
+    const envelope = ctx.createGain();
+    const amp = Math.max(.035, Math.min(.22, velocity * .19));
+    envelope.gain.setValueAtTime(.0001, when);
+    envelope.gain.linearRampToValueAtTime(amp, when + .009);
+    envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, amp * .42), when + .16);
+    const releaseStart = when + Math.max(.12, holdSeconds);
+    const bodyEnd = Math.min(releaseStart - .015, when + Math.max(.20, holdSeconds * .72));
+    if (bodyEnd > when + .17) {
+      envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, amp * .13), bodyEnd);
+    }
+    envelope.gain.exponentialRampToValueAtTime(.0001, releaseStart + .42);
+    filter.connect(envelope);
+    envelope.connect(master);
+
+    PIANO_PARTIALS.forEach((part, index) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = part.type;
+      osc.frequency.setValueAtTime(f * part.ratio, when);
+      osc.detune.setValueAtTime(part.detune, when);
+      g.gain.setValueAtTime(part.gain, when);
+      if (index > 0) g.gain.exponentialRampToValueAtTime(.0001, when + Math.min(.9, .22 + holdSeconds * .4));
+      osc.connect(g);
+      g.connect(filter);
+      osc.start(when);
+      osc.stop(releaseStart + .48);
+    });
+
+    const click = ctx.createBufferSource();
+    const clickBuffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * .025)), ctx.sampleRate);
+    const cd = clickBuffer.getChannelData(0);
+    for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / cd.length, 4);
+    click.buffer = clickBuffer;
+    const clickGain = ctx.createGain();
+    clickGain.gain.setValueAtTime(.014 * velocity, when);
+    clickGain.gain.exponentialRampToValueAtTime(.0001, when + .025);
+    click.connect(clickGain);
+    clickGain.connect(master);
+    click.start(when);
+    click.stop(when + .03);
+  }
+
   function startSustainedVoice(midi, velocity = .78) {
     if (!audio) return null;
     const now = audio.ctx.currentTime;
@@ -2605,8 +2676,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.scrolling = false;
     keyboardGesture.audioReady = true;
 
-    ensureAudioSync();
-    enterKeyboardKey(midi);
+    const graph = ensureAudioSync();
+    if (graph && graph.ctx.state === 'running') {
+      enterKeyboardKey(midi);
+    } else {
+      unlockAudio().then(() => {
+        if (keyboardGesture.pointerId === e.pointerId && keyboardGesture.lastMidi == null) {
+          enterKeyboardKey(midi);
+        }
+      }).catch(() => {});
+    }
   }, { passive: false });
 
   els.keyboardViewport.addEventListener('pointermove', e => {
@@ -2636,12 +2715,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
     if (midi != null) {
       enterKeyboardKey(midi);
-      try {
-        if (audio && audio.ctx && audio.ctx.state === 'running') {
-          if (keyboardGesture.voice) keyboardGesture.voice.stop();
-          keyboardGesture.voice = startSustainedVoice(midi);
-        }
-      } catch (err) {}
     }
     else cancelHold();
   }, { passive: false });
@@ -2991,6 +3064,107 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     showToast('エクスポートしました');
   });
 
+  // New WAV Export Functionality
+  function floatTo16BitPCM(output, offset, input) {
+    for (let i = 0; i < input.length; i++, offset += 2) {
+      const s = Math.max(-1, Math.min(1, input[i]));
+      output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+  }
+
+  function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  function encodeWAV(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+
+    // RIFF identifier 'RIFF'
+    writeString(view, 0, 'RIFF');
+    // file length minus RIFF identifier length and file description length
+    view.setUint32(4, 36 + samples.length * 2, true);
+    // RIFF type 'WAVE'
+    writeString(view, 8, 'WAVE');
+    // format chunk identifier 'fmt '
+    writeString(view, 12, 'fmt ');
+    // format chunk length
+    view.setUint32(16, 16, true);
+    // sample format (raw)
+    view.setUint16(20, 1, true);
+    // channel count
+    view.setUint16(22, 2, true);
+    // sample rate
+    view.setUint32(24, sampleRate, true);
+    // byte rate (sample rate * block align)
+    view.setUint32(28, sampleRate * 4, true);
+    // block align (channel count * bytes per sample)
+    view.setUint16(32, 4, true);
+    // bits per sample
+    view.setUint16(34, 16, true);
+    // data chunk identifier 'data'
+    writeString(view, 36, 'data');
+    // data chunk length
+    view.setUint32(40, samples.length * 2, true);
+
+    floatTo16BitPCM(view, 44, samples);
+
+    return view;
+  }
+
+  async function exportToWav() {
+    if (!events.length) {
+      showToast('エクスポートする音符がありません');
+      return;
+    }
+
+    const { map, total } = layoutEvents();
+    const durationInSeconds = total * currentUnitSeconds;
+    const sampleRate = 44100;
+    const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil(sampleRate * durationInSeconds), sampleRate);
+    const master = offlineCtx.destination;
+
+    // Schedule all notes
+    for (const ev of events) {
+      if (ev.type !== 'note') continue;
+      const pos = map.get(ev.id);
+      const startAt = pos.start * currentUnitSeconds;
+      const holdSec = Math.max(.12, ev.duration * currentUnitSeconds * .92);
+      pianoVoiceForOffline(offlineCtx, master, ev.midi, startAt, holdSec, .78);
+    }
+
+    try {
+      const renderedBuffer = await offlineCtx.startRendering();
+      const leftChannel = renderedBuffer.getChannelData(0);
+      const rightChannel = renderedBuffer.getChannelData(1);
+      const interleaved = new Float32Array(leftChannel.length + rightChannel.length);
+      for (let i = 0, j = 0; i < leftChannel.length; i++, j += 2) {
+        interleaved[j] = leftChannel[i];
+        interleaved[j + 1] = rightChannel[i];
+      }
+
+      const wavBuffer = encodeWAV(interleaved, sampleRate);
+      const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (currentSongName || 'kantan_sakkyoku') + '.wav';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showToast('WAVエクスポートしました');
+    } catch (err) {
+      console.error(err);
+      showToast('WAVエクスポートに失敗しました');
+    }
+  }
+
+  els.exportWavBtn.addEventListener('click', exportToWav);
+  // End of new WAV Export Functionality
+
   els.importBtn.addEventListener('click', () => els.importFileInput.click());
   els.importFileInput.addEventListener('change', handleImportFile);
 
@@ -3104,7 +3278,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     updateEdgeIndicators();
   }
 
-  window.addEventListener('resize', () => {
+  const handleViewportChange = () => {
     if (playing || activeZoom || overviewState) {
       setTimeout(() => {
         if (!playing && !activeZoom && !overviewState) doResize();
@@ -3112,7 +3286,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     } else {
       doResize();
     }
-  }, { signal: __docSignal });
+  };
+  window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  }
 
   loadState();
   loadSongs();
