@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d141e">
+<meta name="theme-color" content="#0b1018">
 <title>かんたん作曲</title>
 <style>
 :root {
@@ -29,6 +29,11 @@
   --white-key-h: 146px;
   --black-key-w: 27px;
   --black-key-h: 92px;
+  --glass-bg: rgba(28,38,54,.5);
+  --glass-bg-strong: rgba(18,26,38,.66);
+  --glass-border: rgba(255,255,255,.16);
+  --glass-highlight: inset 0 1px rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.04);
+  --glass-blur: blur(26px) saturate(180%);
   color-scheme: dark;
 }
 * {
@@ -38,7 +43,7 @@
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
 }
-html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0d141e; }
+html, body { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; background: var(--bg); }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
   color: var(--ink);
@@ -54,23 +59,29 @@ button { -webkit-appearance: none; appearance: none; }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #app {
   position: fixed;
-  inset: 0;
-  height: auto;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background:
     radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-    #0d141e;
+    var(--bg);
 }
 .control {
   min-height: 38px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
   padding: 0 10px;
   color: var(--ink);
-  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
-  box-shadow: inset 0 1px rgba(255,255,255,.05), 0 3px 9px rgba(0,0,0,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.015)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-highlight), 0 3px 9px rgba(0,0,0,.22);
   font-weight: 750;
   font-size: 12px;
   white-space: nowrap;
@@ -129,7 +140,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   background-color: #0d141e;
   background-image: linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
   background-size: 100% var(--row-h);
-  background-position: 0 0;
+  background-position: 0 var(--ruler-h); /* 修正: ルーラー分オフセット */
   isolation: isolate;
   transform-origin: 0 0;
 }
@@ -141,6 +152,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   pointer-events: none;
   background-image: linear-gradient(to bottom, var(--grid-strong) 2px, transparent 2px);
   background-size: 100% calc(4 * var(--row-h));
+  background-position: 0 0; /* ルーラー内では開始しない */
 }
 .pitch-lane {
   position: absolute;
@@ -276,14 +288,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   position: fixed;
   z-index: 40;
   left: 50%;
-  top: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 140px); /* 楽譜の下部に表示 */
   max-width: calc(100% - 24px);
-  transform: translate(-50%, -12px);
+  transform: translate(-50%, 12px);
   padding: 8px 12px;
-  border: 1px solid rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.18);
   border-radius: 999px;
   color: #fff;
-  background: rgba(27,38,53,.94);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(27,38,53,.72);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   box-shadow: 0 10px 28px rgba(0,0,0,.38);
   opacity: 0;
   pointer-events: none;
@@ -390,9 +404,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .setting-stack { display: grid; gap: 12px; margin-bottom: 13px; }
 .setting-block {
   padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(17,25,37,.88);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .setting-label { display: block; margin-bottom: 8px; color: #e9f1fc; font-size: 13px; font-weight: 850; }
 .setting-help { margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.6; }
@@ -402,10 +418,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 13px;
   color: #b9c7d9;
-  background: #202d40;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), rgba(28,38,54,.4);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   font-size: 12px;
   font-weight: 800;
   touch-action: manipulation;
@@ -422,12 +440,33 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
   color: var(--accent);
-  background: #0d141e;
+  background: rgba(13,20,30,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   font-size: 12px;
   font-weight: 850;
+}
+/* BPMスライダー用スタイル */
+.bpm-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.bpm-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+  min-width: 48px;
+  text-align: center;
+}
+.bpm-slider {
+  flex: 1;
+  height: 24px;
+  accent-color: var(--accent);
 }
 .score-content, .keyboard-inner {
   transition: transform .5s cubic-bezier(.22,.8,.22,1);
@@ -456,8 +495,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   flex: none;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #111926, #080c12);
-  border-top: 1px solid rgba(204,223,250,.24);
+  background: linear-gradient(180deg, rgba(24,34,50,.6), rgba(8,12,18,.72));
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
   box-shadow: 0 -10px 28px rgba(0,0,0,.34);
   padding-bottom: 0;
   gap: 10px;
@@ -476,10 +517,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   width: 32px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 11px;
   color: #c9d5e5;
-  background: #1b2636;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(28,38,54,.4);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   touch-action: manipulation;
 }
 .range-wrap { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; }
@@ -499,8 +542,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   align-items: center;
   gap: 8px;
   padding: 8px 8px 7px;
-  background: rgba(9, 13, 20, .96);
-  border-top: 1px solid var(--line);
+  background: rgba(9, 13, 20, .55);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
   border-bottom: 0;
   box-shadow: 0 -7px 18px rgba(0,0,0,.22);
 }
@@ -515,7 +560,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-height: 43px;
   height: 43px;
   padding: 0 5px;
-  border-radius: 12px;
+  border-radius: 15px;
   font-size: 13px;
   font-weight: 800;
 }
@@ -537,7 +582,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   height: 44px !important;
   min-height: 44px !important;
   padding: 0 !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   font-size: 19px !important;
   line-height: 1;
 }
@@ -550,9 +595,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   height: 44px;
   min-height: 44px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: radial-gradient(circle, rgba(83,215,255,.16), rgba(255,255,255,.025));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(83,215,255,.22), rgba(255,255,255,.03));
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
   color: var(--ink);
   font-size: 19px;
   display: flex;
@@ -570,28 +617,23 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .bottom-tabs {
   flex: none;
   z-index: 60;
-  min-height: 52px;
-  margin: 8px 16px;
+  min-height: 56px;
+  margin: 8px 16px clamp(8px, env(safe-area-inset-bottom), 20px);
   padding: 4px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  background: linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.04) 42%, rgba(255,255,255,.02)), rgba(22,33,48,.46);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  backdrop-filter: blur(30px) saturate(180%);
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 18px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.12) inset, 0 -1px 0 rgba(255,255,255,.07) inset;
-}
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-tabs {
-    margin: 8px max(16px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
-  }
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), rgba(15,23,34,.6);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 26px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.08);
 }
 .tab-btn {
   min-width: 0;
   border: 0;
-  border-radius: 14px;
+  border-radius: 20px;
   color: #8fa0b5;
   background: transparent;
   display: flex;
@@ -606,34 +648,29 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 }
 .tab-btn:active { transform: scale(.93); }
 .tab-btn.is-active {
-  color: #06151b;
-  background: linear-gradient(145deg, rgba(170,242,255,.92), rgba(83,215,255,.82) 55%, rgba(59,189,224,.72));
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 6px 18px rgba(83,215,255,.32), inset 0 1px rgba(255,255,255,.55), inset 0 -1px rgba(0,0,0,.12);
+  color: #04141a;
+  background: linear-gradient(145deg, #aaf2ff, #53d7ff 55%, #3bbde0);
+  box-shadow: 0 6px 18px rgba(83,215,255,.38), inset 0 1px rgba(255,255,255,.55);
 }
 .tab-ico { font-size: 20px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.1)); }
 .tab-label { font-size: 10px; letter-spacing: .03em; }
 .content-screen {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 14px 22px;
+  padding: calc(14px + env(safe-area-inset-top)) 14px 22px;
   background:
     radial-gradient(circle at 85% 0, rgba(83,215,255,.12), transparent 30%),
     var(--bg);
-}
-@supports (padding-top: env(safe-area-inset-top)) {
-  .content-screen {
-    padding-top: calc(14px + env(safe-area-inset-top));
-  }
 }
 .screen-inner { width: min(720px, 100%); margin: 0 auto; }
 .screen-title { margin: 0 0 14px; font-size: 22px; letter-spacing: -.04em; }
 .panel-card {
   padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 15px;
-  background: linear-gradient(180deg, rgba(31,44,62,.94), rgba(18,26,38,.96));
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow);
 }
 .save-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
@@ -641,10 +678,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-width: 0;
   height: 45px;
   border: 1px solid rgba(187,207,235,.25);
-  border-radius: 11px;
+  border-radius: 14px;
   padding: 0 12px;
   color: var(--ink);
-  background: #0d141e;
+  background: rgba(13,20,30,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
   user-select: text;
   -webkit-user-select: text;
   -webkit-touch-callout: default;
@@ -654,7 +693,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   min-width: 78px;
   height: 45px;
   border: 1px solid #8eeaff;
-  border-radius: 11px;
+  border-radius: 14px;
   color: #06151b;
   background: linear-gradient(180deg, #8aeaff, var(--accent));
   font-weight: 850;
@@ -662,27 +701,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .library-list { display: grid; gap: 9px; margin-top: 13px; }
 .song-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 9px;
   align-items: center;
   padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(22,32,47,.92);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  cursor: pointer;
 }
-.song-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 850; }
+.song-name { font-weight: 850; white-space: normal; word-break: break-word; } /* 全文字表示 */
 .song-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
-.song-actions { display: flex; gap: 5px; }
-.mini-btn {
-  min-height: 37px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 0 9px;
-  color: var(--ink);
-  background: #243247;
-  font-size: 11px;
-  font-weight: 800;
-}
 .empty-library { padding: 26px 10px; color: var(--muted); text-align: center; font-size: 13px; }
 .settings-copy { color: #bdcadd; font-size: 13px; line-height: 1.75; }
 .export-btn { width: 100%; min-height: 49px; margin-top: 12px; }
@@ -701,15 +732,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .modal-card {
   width: min(360px, 100%);
   padding: 18px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 17px;
-  background: #172131;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(23,33,49,.72);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
   box-shadow: 0 25px 70px rgba(0,0,0,.5);
 }
 .modal-title { margin: 0; font-size: 18px; }
 .modal-message { margin: 9px 0 17px; color: #bdcadd; font-size: 13px; line-height: 1.65; }
 .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.modal-btn { min-height: 45px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); background: #26354b; font-weight: 800; }
+.modal-btn { min-height: 45px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--ink); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(38,53,75,.55); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); font-weight: 800; }
 .modal-btn.danger { color: #fff; background: #b62e49; border-color: #ff738d; }
 
 .score-viewport.overview-mode { background-color: #080d14; }
@@ -779,6 +812,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   touch-action: none !important;
 }
 </style>
+<script>
+(function () {
+  function setAppHeight() {
+    var vv = window.visualViewport;
+    var h = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+    window.visualViewport.addEventListener('scroll', setAppHeight);
+  } else {
+    window.addEventListener('resize', setAppHeight);
+  }
+})();
+</script>
 </head>
 <body>
 <div id="app">
@@ -807,6 +856,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       </div>
       <div class="control-deck" aria-label="作曲コントロール">
         <div class="deck-side">
+          <!-- BPMスライダーを休符ボタンの上に配置 -->
+          <div class="bpm-control">
+            <span class="bpm-value" id="bpmValue">108</span>
+            <input type="range" class="bpm-slider" id="bpmSlider" min="40" max="220" step="10" value="108">
+          </div>
           <button id="restBtn" class="control rest-action" type="button">休符</button>
           <button id="deleteBtn" class="control delete-action" type="button">削除</button>
         </div>
@@ -834,6 +888,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
           <input id="songNameInput" class="text-input" type="text" maxlength="60" placeholder="曲名を入力" aria-label="保存する曲名">
           <button id="saveSongBtn" class="primary-action" type="button">保存</button>
         </div>
+        <div class="settings-copy" style="margin-top:8px;font-size:11px;">タップで再生・右スワイプで編集・左スワイプで削除</div>
       </div>
       <div id="songList" class="library-list" aria-live="polite"></div>
     </div>
@@ -853,13 +908,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
           </div>
           <div class="setting-help">「音域を移動」でも、最初に触れた鍵盤は鳴ります。そのまま指を離さず左右へ動かすと、楽譜とピアノをスクロールします</div>
         </div>
+        <!-- 音量変更ブロック追加 -->
         <div class="setting-block">
-          <label class="setting-label" for="noteLengthRange">1音あたりの長さ</label>
+          <label class="setting-label" for="volumeSlider">音量</label>
           <div class="length-row">
-            <input id="noteLengthRange" type="range" min="0.12" max="1.00" step="0.02" value="0.28">
-            <output id="noteLengthValue" class="length-value" for="noteLengthRange">0.28秒</output>
+            <input id="volumeSlider" type="range" min="0" max="100" value="72">
+            <output id="volumeValue" class="length-value" for="volumeSlider">72%</output>
           </div>
-          <div class="setting-help">再生テンポを変更します。この値は楽曲ごとに保存されます。</div>
+          <div class="setting-help">全体の音量を調整します。</div>
         </div>
         <div class="setting-block">
           <label class="setting-label" for="randomLengthRange">ランダム生成の長さ</label>
@@ -874,7 +930,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         <div class="settings-copy">保存したすべての楽曲と、現在作曲中の内容をJSONファイルとして書き出します。バックアップや別端末への保管に利用できます。</div>
         <button id="exportBtn" class="primary-action export-btn" type="button">すべての楽曲をエクスポート</button>
         <button id="importBtn" class="primary-action export-btn" type="button" style="margin-top:8px;">楽曲をインポート</button>
+        <button id="importOldFormatBtn" class="primary-action export-btn" type="button" style="margin-top:8px;">旧形式をインポート</button>
         <input id="importFileInput" type="file" accept="application/json,application/JSON" style="display:none">
+        <input id="importOldFileInput" type="file" accept="application/json,application/JSON" style="display:none">
       </div>
     </div>
   </section>
@@ -912,9 +970,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   const PITCH_COUNT = 48;
   const FIRST_MIDI = 48;
   const BPM = 108;
-  const DEFAULT_UNIT_SECONDS = 60 / BPM / 2;
-  const STORAGE_KEY = 'kantan-sakkyoku-v4';
-  const SONGS_KEY = 'kantan-sakkyoku-songs-v1';
+  const DEFAULT_UNIT_SECONDS = 60 / BPM / 2; // 8分音符の長さ
+  const STORAGE_KEY = 'kantan-sakkyoku-v5';
+  const SONGS_KEY = 'kantan-sakkyoku-songs-v2';
   const NOTE_NAMES_JA = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
   const BLACK_PCS = new Set([1,3,6,8,10]);
   const PIANO_PARTIALS = [
@@ -952,7 +1010,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     songList: document.getElementById('songList'),
     exportBtn: document.getElementById('exportBtn'),
     importBtn: document.getElementById('importBtn'),
+    importOldFormatBtn: document.getElementById('importOldFormatBtn'),
     importFileInput: document.getElementById('importFileInput'),
+    importOldFileInput: document.getElementById('importOldFileInput'),
     confirmModal: document.getElementById('confirmModal'),
     modalTitle: document.getElementById('modalTitle'),
     modalMessage: document.getElementById('modalMessage'),
@@ -964,12 +1024,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     edgeDown: document.getElementById('edgeDown'),
     swipePlay: document.getElementById('swipePlay'),
     swipeScroll: document.getElementById('swipeScroll'),
-    noteLengthRange: document.getElementById('noteLengthRange'),
-    noteLengthValue: document.getElementById('noteLengthValue'),
     randomLengthRange: document.getElementById('randomLengthRange'),
-    randomLengthValue: document.getElementById('randomLengthValue')
+    randomLengthValue: document.getElementById('randomLengthValue'),
+    bpmSlider: document.getElementById('bpmSlider'),
+    bpmValue: document.getElementById('bpmValue'),
+    volumeSlider: document.getElementById('volumeSlider'),
+    volumeValue: document.getElementById('volumeValue')
   };
 
+  // 内部イベントは従来のオブジェクト形式で管理
   let events = [];
   let selectedId = null;
   let nextId = 1;
@@ -979,18 +1042,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let playing = null;
   let keyGeometry = new Map();
   let pianoWidth = 0;
-  let songs = [];
+  let songs = []; // 保存形式は2次元配列だが、内部ではオブジェクト形式に変換して扱う
   let currentSongId = null;
   let currentSongName = '';
   let modalAction = null;
   let overviewState = null;
   let libraryPlaybackTimer = 0;
   let libraryPlaying = null;
-  let currentUnitSeconds = DEFAULT_UNIT_SECONDS;
+  let currentUnitSeconds = DEFAULT_UNIT_SECONDS; // BPMから計算される8分音符の長さ
   let pianoSwipeMode = 'play';
   let currentScale = 1;
   let renderScoreRAF = null;
   let randomPhraseLength = 12;
+  let masterVolume = 0.72; // 音量（0〜1）
   let keyboardGesture = { pointerId: null, lastMidi: null, holdTimer: 0, holdInterval: 0, eventId: null, previousSelectedId: null, startX: 0, startScroll: 0, scrolling: false, voice: null, audioReady: false };
   let activeZoom = null;
   let audioUnlockPromise = null;
@@ -1012,7 +1076,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function blackKeyW() { return cssNumber('--black-key-w'); }
 
   function setupRuler() {
-    document.documentElement.style.setProperty('--ruler-h', '12px');
+    document.documentElement.style.setProperty('--ruler-h', '48px');
   }
 
   function noteInfo(midi) {
@@ -1025,18 +1089,54 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
+  // 旧形式（オブジェクト）と新形式（2次元配列）の両方に対応した読み込み
   function sanitizeLoaded(data) {
     if (!Array.isArray(data)) return [];
     const clean = [];
     for (const item of data) {
-      if (!item || (item.type !== 'note' && item.type !== 'rest')) continue;
-      const duration = Math.max(1, Math.floor(Number(item.duration) || 1));
-      if (item.type === 'note') {
-        const midi = Math.floor(Number(item.midi));
-        if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
-        clean.push({ id: nextId++, type: 'note', midi, duration });
-      } else {
+      if (Array.isArray(item)) {
+        // 新形式: [midi, duration]
+        if (item.length >= 2) {
+          const midi = Math.floor(Number(item[0]));
+          const duration = Math.max(1, Math.floor(Number(item[1]) || 1));
+          if (midi === 0) {
+            clean.push({ id: nextId++, type: 'rest', duration });
+          } else if (midi >= FIRST_MIDI && midi < FIRST_MIDI + PITCH_COUNT) {
+            clean.push({ id: nextId++, type: 'note', midi, duration });
+          }
+        }
+      } else if (item && typeof item === 'object') {
+        // 旧形式: {type, midi, duration}
+        if (item.type !== 'note' && item.type !== 'rest') continue;
+        const duration = Math.max(1, Math.floor(Number(item.duration) || 1));
+        if (item.type === 'note') {
+          const midi = Math.floor(Number(item.midi));
+          if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
+          clean.push({ id: nextId++, type: 'note', midi, duration });
+        } else {
+          clean.push({ id: nextId++, type: 'rest', duration });
+        }
+      }
+    }
+    return clean;
+  }
+
+  // 内部イベント配列を新形式（2次元配列）に変換
+  function eventsToNewFormat(list = events) {
+    return list.map(ev => ev.type === 'note' ? [ev.midi, ev.duration] : [0, ev.duration]);
+  }
+
+  // 新形式から内部イベント配列へ変換
+  function eventsFromNewFormat(arr) {
+    const clean = [];
+    for (const item of arr) {
+      if (!Array.isArray(item) || item.length < 2) continue;
+      const midi = Math.floor(Number(item[0]));
+      const duration = Math.max(1, Math.floor(Number(item[1]) || 1));
+      if (midi === 0) {
         clean.push({ id: nextId++, type: 'rest', duration });
+      } else if (midi >= FIRST_MIDI && midi < FIRST_MIDI + PITCH_COUNT) {
+        clean.push({ id: nextId++, type: 'note', midi, duration });
       }
     }
     return clean;
@@ -1051,10 +1151,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       recordMode = Boolean(saved.recordMode);
       currentSongId = saved.currentSongId || null;
       currentSongName = typeof saved.currentSongName === 'string' ? saved.currentSongName : '';
-      currentUnitSeconds = Math.max(.12, Math.min(1, Number(saved.unitSeconds) || DEFAULT_UNIT_SECONDS));
+      currentUnitSeconds = Math.max(.08, Math.min(1, Number(saved.unitSeconds) || DEFAULT_UNIT_SECONDS));
       pianoSwipeMode = saved.pianoSwipeMode === 'scroll' ? 'scroll' : 'play';
       randomPhraseLength = Math.max(12, Math.min(100, Number(saved.randomPhraseLength) || 12));
+      masterVolume = Math.max(0, Math.min(1, Number(saved.masterVolume) || 0.72));
       selectedId = events.length ? events[events.length - 1].id : null;
+      updateBpmFromUnitSeconds();
     } catch (_) {
       events = [];
     }
@@ -1063,32 +1165,57 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        events: events.map(({type, midi, duration}) => ({type, midi, duration})),
+        events: eventsToNewFormat(events), // 新形式で保存
         recordMode,
         currentSongId,
         currentSongName,
         unitSeconds: currentUnitSeconds,
         pianoSwipeMode,
-        randomPhraseLength
+        randomPhraseLength,
+        masterVolume
       }));
     } catch (_) {}
-  }
-
-  function serializeEvents(list = events) {
-    return list.map(({type, midi, duration}) => type === 'note'
-      ? { type, midi, duration }
-      : { type, duration });
   }
 
   function loadSongs() {
     try {
       const parsed = JSON.parse(localStorage.getItem(SONGS_KEY) || '[]');
-      songs = Array.isArray(parsed) ? parsed.filter(song => song && Array.isArray(song.events)) : [];
+      songs = Array.isArray(parsed) ? parsed.map(song => {
+        // 新形式を想定: eventsは2次元配列
+        return {
+          id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`, // 読み込み時に新しいIDを割り当て
+          name: song.name || '無題の曲',
+          events: eventsFromNewFormat(song.events || []),
+          unitSeconds: Math.max(.08, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS)),
+          // updatedAtは保持しないが、表示順は保存順に
+        };
+      }) : [];
     } catch (_) { songs = []; }
   }
 
   function saveSongs() {
-    try { localStorage.setItem(SONGS_KEY, JSON.stringify(songs)); } catch (_) {}
+    try {
+      const out = songs.map(song => ({
+        name: song.name,
+        events: eventsToNewFormat(song.events), // 新形式で保存
+        unitSeconds: song.unitSeconds
+        // id, updatedAtは含めない
+      }));
+      localStorage.setItem(SONGS_KEY, JSON.stringify(out));
+    } catch (_) {}
+  }
+
+  function updateBpmFromUnitSeconds() {
+    // unitSeconds = 60 / BPM / 2  → BPM = 30 / unitSeconds
+    const bpm = Math.round(30 / currentUnitSeconds);
+    const rounded = Math.max(40, Math.min(220, Math.round(bpm / 10) * 10));
+    els.bpmSlider.value = String(rounded);
+    els.bpmValue.textContent = String(rounded);
+    currentUnitSeconds = 30 / rounded; // 再計算して一致させる
+  }
+
+  function updateUnitSecondsFromBpm(bpm) {
+    currentUnitSeconds = 30 / bpm; // 8分音符の長さ
   }
 
   function openConfirm(title, message, confirmText, action) {
@@ -1129,10 +1256,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       els.songList.appendChild(empty);
       return;
     }
-    const sorted = [...songs].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-    for (const song of sorted) {
+    // 保存順に表示
+    for (let i = 0; i < songs.length; i++) {
+      const song = songs[i];
       const item = document.createElement('article');
       item.className = 'song-item';
+      item.dataset.index = String(i);
       const info = document.createElement('div');
       const name = document.createElement('div');
       name.className = 'song-name';
@@ -1140,27 +1269,73 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       const meta = document.createElement('div');
       meta.className = 'song-meta';
       const notes = song.events.filter(e => e.type === 'note').length;
-      meta.textContent = `${notes}音・1音 ${Number(song.unitSeconds || DEFAULT_UNIT_SECONDS).toFixed(2)}秒`;
+      meta.textContent = `${notes}音・1音 ${song.unitSeconds.toFixed(2)}秒`;
       info.append(name, meta);
-      const actions = document.createElement('div');
-      actions.className = 'song-actions';
-      const play = document.createElement('button');
-      play.className = 'mini-btn'; play.type = 'button'; play.textContent = '再生';
-      play.addEventListener('click', () => playLibrarySong(song, play));
-      const edit = document.createElement('button');
-      edit.className = 'mini-btn'; edit.type = 'button'; edit.textContent = '編集';
-      edit.addEventListener('click', () => editSong(song));
-      const del = document.createElement('button');
-      del.className = 'mini-btn'; del.type = 'button'; del.textContent = '削除';
-      del.addEventListener('click', () => openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => {
-        songs = songs.filter(item => item.id !== song.id);
-        if (currentSongId === song.id) currentSongId = null;
-        saveSongs(); saveState(); renderSongList();
-      }));
-      actions.append(play, edit, del);
-      item.append(info, actions);
+      item.append(info);
+
+      // ジェスチャー操作を登録
+      setupSongGesture(item, song, i);
+
       els.songList.appendChild(item);
     }
+  }
+
+  function setupSongGesture(item, song, index) {
+    let startX = 0, startY = 0;
+    let isSwiping = false;
+    let swipeDir = null;
+
+    item.addEventListener('pointerdown', e => {
+      if (libraryPlaying) return; // 再生中は操作無効
+      startX = e.clientX;
+      startY = e.clientY;
+      isSwiping = false;
+      swipeDir = null;
+      item.setPointerCapture(e.pointerId);
+    });
+
+    item.addEventListener('pointermove', e => {
+      if (startX === 0 && startY === 0) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          isSwiping = true;
+          swipeDir = dx > 0 ? 'right' : 'left';
+        } else {
+          isSwiping = false;
+          swipeDir = null;
+        }
+      }
+    });
+
+    item.addEventListener('pointerup', e => {
+      const wasSwiping = isSwiping;
+      const dir = swipeDir;
+      startX = startY = 0;
+      isSwiping = false;
+      swipeDir = null;
+      if (wasSwiping) {
+        if (dir === 'right') {
+          editSong(song);
+        } else if (dir === 'left') {
+          openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => {
+            songs.splice(index, 1);
+            if (currentSongId === song.id) currentSongId = null;
+            saveSongs(); saveState(); renderSongList();
+          });
+        }
+      } else {
+        // タップで再生
+        playLibrarySong(song, item);
+      }
+    });
+
+    item.addEventListener('pointercancel', () => {
+      startX = startY = 0;
+      isSwiping = false;
+      swipeDir = null;
+    });
   }
 
   function saveCurrentSong() {
@@ -1169,12 +1344,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     const now = Date.now();
     if (currentSongId) {
       const song = songs.find(item => item.id === currentSongId);
-      if (song) { song.name = name; song.events = serializeEvents(); song.unitSeconds = currentUnitSeconds; song.updatedAt = now; }
+      if (song) { song.name = name; song.events = events.map(ev => ({...ev})); song.unitSeconds = currentUnitSeconds; }
       else currentSongId = null;
     }
     if (!currentSongId) {
       currentSongId = `song-${now}-${Math.random().toString(36).slice(2,7)}`;
-      songs.push({ id: currentSongId, name, events: serializeEvents(), unitSeconds: currentUnitSeconds, updatedAt: now });
+      songs.push({ id: currentSongId, name, events: events.map(ev => ({...ev})), unitSeconds: currentUnitSeconds });
     }
     currentSongName = name;
     saveSongs(); saveState(); renderSongList();
@@ -1184,11 +1359,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function editSong(song) {
     stopPlayback(false);
     nextId = 1;
-    events = sanitizeLoaded(song.events);
+    events = song.events.map(ev => ({ ...ev, id: nextId++ }));
     selectedId = events.length ? events[events.length - 1].id : null;
     currentSongId = song.id;
     currentSongName = song.name || '';
-    currentUnitSeconds = Math.max(.12, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    currentUnitSeconds = Math.max(.08, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    updateBpmFromUnitSeconds();
     syncSettingsUI();
     saveState(); renderScore({ preserve: false });
     switchTab('composition');
@@ -1333,27 +1509,50 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return null;
   }
 
+  // スムーズスクロール改善: 鍵盤もアニメーションで動かす
   function smoothScrollBoth(left, top) {
     const targetLeft = clampScrollLeft(left);
     const targetTop = clampScrollTop(top);
+    const startLeft = els.keyboardViewport.scrollLeft;
+    const startTop = els.scoreViewport.scrollTop;
+    const startKeyLeft = els.keyboardViewport.scrollLeft;
+    const startScoreLeft = els.scoreViewport.scrollLeft;
+    const deltaLeft = targetLeft - startLeft;
+    const deltaTop = targetTop - startTop;
+    const duration = 500;
+    const startTime = performance.now();
 
     suppressScrollSync = true;
     smoothScrollAnimId++;
     const token = smoothScrollAnimId;
     clearTimeout(smoothScrollEndTimer);
 
-    els.scoreViewport.scrollTo({ top: targetTop, left: targetLeft, behavior: 'smooth' });
-    els.keyboardViewport.scrollTo({ left: targetLeft, behavior: 'smooth' });
-    syncKeyboardRange(targetLeft);
+    const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-    smoothScrollEndTimer = setTimeout(() => {
-      if (token !== smoothScrollAnimId) return;
-      suppressScrollSync = false;
-      setLinkedScroll(targetLeft);
-      els.scoreViewport.scrollTop = targetTop;
-      syncKeyboardRange();
-      updateEdgeIndicators();
-    }, 680);
+    function animate(now) {
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = ease(t);
+      const currentLeft = startLeft + deltaLeft * e;
+      const currentTop = startTop + deltaTop * e;
+      // 楽譜と鍵盤の両方に直接scrollLeftをセット（即時）
+      els.scoreViewport.scrollLeft = currentLeft;
+      els.scoreViewport.scrollTop = currentTop;
+      els.keyboardViewport.scrollLeft = currentLeft;
+      syncKeyboardRange(currentLeft);
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        if (token === smoothScrollAnimId) {
+          suppressScrollSync = false;
+          setLinkedScroll(targetLeft);
+          els.scoreViewport.scrollTop = targetTop;
+          syncKeyboardRange();
+          updateEdgeIndicators();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
   }
 
   function setLinkedScroll(left, source = '') {
@@ -1977,7 +2176,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   function createAudioGraph(ctx) {
     const master = ctx.createGain();
-    master.gain.value = 0.72;
+    master.gain.value = masterVolume;
     const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -18;
     compressor.knee.value = 18;
@@ -2016,6 +2215,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
         audio = createAudioGraph(new AudioCtx());
       }
+      // 音量を常に反映
+      if (audio.master) audio.master.gain.value = masterVolume;
       if (audio.ctx.state === 'suspended' || audio.ctx.state === 'interrupted') {
         const resume = audio.ctx.resume();
         if (resume && typeof resume.catch === 'function') resume.catch(() => {});
@@ -2421,8 +2622,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function stopLibraryPlayback(showMessage = false) {
     clearTimeout(libraryPlaybackTimer);
     if (libraryPlaying && libraryPlaying.button) {
-      libraryPlaying.button.textContent = '再生';
       libraryPlaying.button.classList.remove('is-playing');
+      // ボタンのテキストは特にないので、クラスだけ削除
     }
     const wasPlaying = Boolean(libraryPlaying);
     libraryPlaying = null;
@@ -2430,7 +2631,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (showMessage && wasPlaying) showToast('停止しました');
   }
 
-  async function playLibrarySong(song, button) {
+  async function playLibrarySong(song, itemElement) {
     if (libraryPlaying && libraryPlaying.songId === song.id) {
       stopLibraryPlayback(true);
       return;
@@ -2440,21 +2641,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!song.events.length) return;
     ensureAudioSync();
     try { await unlockAudio(); } catch (_) { return; }
-    const unitSeconds = Math.max(.12, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
+    const unitSeconds = Math.max(.08, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
     let cursor = 0;
     for (const ev of song.events) {
       const duration = Math.max(1, Number(ev.duration) || 1);
       if (ev.type === 'note') pianoVoice(ev.midi, audio.ctx.currentTime + .06 + cursor * unitSeconds, duration * unitSeconds * .92, .76);
       cursor += duration;
     }
-    libraryPlaying = { songId: song.id, button };
-    button.textContent = '停止';
-    button.classList.add('is-playing');
+    libraryPlaying = { songId: song.id, button: itemElement };
+    itemElement.classList.add('is-playing');
     showToast(`「${song.name || '無題の曲'}」を再生`);
     libraryPlaybackTimer = setTimeout(() => {
       if (libraryPlaying && libraryPlaying.songId === song.id) {
-        button.textContent = '再生';
-        button.classList.remove('is-playing');
+        itemElement.classList.remove('is-playing');
         libraryPlaying = null;
         showToast('再生が終わりました');
       }
@@ -2573,6 +2772,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     resetKeyboardGesture();
   }
 
+  // 初回タップ改善: pointerdownで即座にenterKeyboardKeyを呼ぶ
   els.keyboardViewport.addEventListener('pointerdown', e => {
     if (playing || keyboardGesture.pointerId != null) return;
     const midi = keyAtPoint(e.clientX, e.clientY);
@@ -2584,8 +2784,21 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.scrolling = false;
     keyboardGesture.audioReady = true;
 
-    ensureAudioSync();
-    enterKeyboardKey(midi);
+    // 音声コンテキストを準備して即座に鍵盤を鳴らす
+    const graph = ensureAudioSync();
+    if (graph) {
+      enterKeyboardKey(midi);
+      // resumeが必要なら呼ぶ
+      if (graph.ctx.state !== 'running') {
+        unlockAudio().catch(() => {});
+      }
+    } else {
+      unlockAudio().then(() => {
+        if (keyboardGesture.pointerId === e.pointerId && keyboardGesture.lastMidi == null) {
+          enterKeyboardKey(midi);
+        }
+      }).catch(() => {});
+    }
   }, { passive: false });
 
   els.keyboardViewport.addEventListener('pointermove', e => {
@@ -2615,12 +2828,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
     if (midi != null) {
       enterKeyboardKey(midi);
-      try {
-        if (audio && audio.ctx && audio.ctx.state === 'running') {
-          if (keyboardGesture.voice) keyboardGesture.voice.stop();
-          keyboardGesture.voice = startSustainedVoice(midi);
-        }
-      } catch (err) {}
     }
     else cancelHold();
   }, { passive: false });
@@ -2673,6 +2880,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
         onLong(e);
+        // 長押し時のアナウンスは各onLong内で行う
       }, delay);
     });
     const finish = e => {
@@ -2696,15 +2904,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   function syncSettingsUI() {
     els.swipePlay.checked = pianoSwipeMode === 'play';
     els.swipeScroll.checked = pianoSwipeMode === 'scroll';
-    els.noteLengthRange.value = String(currentUnitSeconds);
-    els.noteLengthValue.textContent = `${currentUnitSeconds.toFixed(2)}秒`;
     els.randomLengthRange.value = String(randomPhraseLength);
     els.randomLengthValue.textContent = `${randomPhraseLength}音`;
+    els.volumeSlider.value = String(Math.round(masterVolume * 100));
+    els.volumeValue.textContent = `${Math.round(masterVolume * 100)}%`;
+    updateBpmFromUnitSeconds();
   }
 
+  // 再生ボタンの長押しアナウンス
   bindPress(els.playBtn,
     () => { startPlayback(false); },
     () => {
+      showToast('長押しで最初から再生');
       if (playing) {
         stopPlayback(false);
         setTimeout(() => startPlayback(true), 520);
@@ -2713,16 +2924,26 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       }
     }, 650);
 
+  // 削除ボタン
   bindPress(els.deleteBtn,
     () => { playButtonSound('delete'); deleteSelected(); },
-    () => openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition));
+    () => {
+      showToast('長押しで全消去');
+      openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition);
+    });
+  // ランダムボタン
   bindPress(els.randomBtn,
     () => { playButtonSound('random'); showToast('長押しでランダムフレーズを生成します'); },
-    () => { generateRandomPhrase(); }, 700);
+    () => {
+      showToast('ランダムフレーズを生成します');
+      generateRandomPhrase();
+    }, 700);
 
+  // 中央ボタン
   bindPress(els.centerBtn,
     () => { playButtonSound('center'); centerSelectedEvent(); },
     () => {
+      showToast('長押しで最後の音符へ');
       playButtonSound('center');
       if (!events.length) { showToast('音符がありません'); return; }
       selectedId = events[events.length - 1].id;
@@ -2731,7 +2952,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       centerOnEvent(selectedId, true);
     }, 500);
 
-  function bindDpadAction(button, onAction, delay = 480, interval = 120) {
+  // D-pad系
+  function bindDpadAction(button, onAction, delay = 480, interval = 120, longPressMessage = '') {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
     const clearTimers = () => {
@@ -2751,6 +2973,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
+        if (longPressMessage) showToast(longPressMessage);
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
             onAction();
@@ -2779,6 +3002,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
+  bindDpadAction(els.pitchDownBtn, () => changePitch(-1), 480, 120, '長押しで連続半音下げ');
+  bindDpadAction(els.pitchUpBtn, () => changePitch(1), 480, 120, '長押しで連続半音上げ');
+
+  // 短く・長くは特殊
   function bindDpadNoteNav(button, direction) {
     let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
 
@@ -2825,6 +3052,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       longTimer = setTimeout(() => {
         longFired = true;
         if (navigator.vibrate) navigator.vibrate(18);
+        showToast(direction > 0 ? '長押しで音符を伸ばす' : '長押しで音符を短くする');
         performLongAction();
         repeatTimer = setInterval(() => {
           if (!button.disabled) {
@@ -2854,11 +3082,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancelNoTap);
   }
 
-  bindDpadAction(els.pitchDownBtn, () => changePitch(-1));
-  bindDpadAction(els.pitchUpBtn, () => changePitch(1));
   bindDpadNoteNav(els.shortenBtn, -1);
   bindDpadNoteNav(els.extendBtn, 1);
 
+  // 休符ボタン（長押しで長さ変更）
   (function setupRestHold() {
     let active = false;
     let duration = 1;
@@ -2876,6 +3103,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
       activeEventId = addRest(1, true);
       timer = setTimeout(() => {
+        showToast('長押しで休符の長さ変更');
         interval = setInterval(() => {
           duration = Math.min(16, duration + 1);
           if (activeEventId) {
@@ -2925,11 +3153,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
   bindPress(els.keyLeft,
     () => { setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7); },
-    () => { shiftAllNotes(-1); },
+    () => { showToast('長押しで1オクターブ下げ'); shiftAllNotes(-1); },
     480);
   bindPress(els.keyRight,
     () => { setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7); },
-    () => { shiftAllNotes(1); },
+    () => { showToast('長押しで1オクターブ上げ'); shiftAllNotes(1); },
     480);
 
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
@@ -2941,11 +3169,26 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (!els.swipeScroll.checked) return;
     pianoSwipeMode = 'scroll'; saveState();
   });
-  els.noteLengthRange.addEventListener('input', () => {
-    currentUnitSeconds = Math.max(.12, Math.min(1, Number(els.noteLengthRange.value) || DEFAULT_UNIT_SECONDS));
-    els.noteLengthValue.textContent = `${currentUnitSeconds.toFixed(2)}秒`;
+
+  // BPMスライダー
+  els.bpmSlider.addEventListener('input', () => {
+    const bpm = Number(els.bpmSlider.value);
+    els.bpmValue.textContent = String(bpm);
+    updateUnitSecondsFromBpm(bpm);
     saveState();
   });
+
+  // 音量スライダー
+  els.volumeSlider.addEventListener('input', () => {
+    const vol = Number(els.volumeSlider.value);
+    masterVolume = vol / 100;
+    els.volumeValue.textContent = `${vol}%`;
+    if (audio && audio.master) {
+      audio.master.gain.value = masterVolume;
+    }
+    saveState();
+  });
+
   els.randomLengthRange.addEventListener('input', () => {
     randomPhraseLength = Math.max(12, Math.min(100, Number(els.randomLengthRange.value) || 12));
     els.randomLengthValue.textContent = `${randomPhraseLength}音`;
@@ -2953,12 +3196,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   });
 
   els.saveSongBtn.addEventListener('click', saveCurrentSong);
+
+  // エクスポート（新形式）
   els.exportBtn.addEventListener('click', () => {
     const payload = {
-      format: 'kantan-sakkyoku-v1',
+      format: 'kantan-sakkyoku-v2',
       exportedAt: new Date().toISOString(),
-      current: { name: currentSongName, events: serializeEvents(), unitSeconds: currentUnitSeconds },
-      songs
+      current: { name: currentSongName, events: eventsToNewFormat(events), unitSeconds: currentUnitSeconds },
+      songs: songs.map(song => ({
+        name: song.name,
+        events: eventsToNewFormat(song.events),
+        unitSeconds: song.unitSeconds
+      }))
     };
     const json = '\uFEFF' + JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
@@ -2970,6 +3219,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     showToast('エクスポートしました');
   });
 
+  // インポート（新形式）
   els.importBtn.addEventListener('click', () => els.importFileInput.click());
   els.importFileInput.addEventListener('change', handleImportFile);
 
@@ -2984,16 +3234,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         const jsonText = rawText.replace(/^\uFEFF/, '');
         const data = JSON.parse(jsonText);
         if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
-        const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
-          id: s.id || `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+        const importedSongs = data.songs.map(s => ({
+          id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
           name: s.name || '無題の曲',
-          events: s.events.filter(ev => ev && (ev.type === 'note' || ev.type === 'rest')).map(ev => ({
-            type: ev.type,
-            midi: ev.type === 'note' ? Math.floor(Number(ev.midi)) : undefined,
-            duration: Math.max(1, Math.floor(Number(ev.duration) || 1))
-          })).filter(ev => ev.type !== 'note' || (ev.midi >= FIRST_MIDI && ev.midi < FIRST_MIDI + PITCH_COUNT)),
-          unitSeconds: Math.max(.12, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS)),
-          updatedAt: s.updatedAt || Date.now()
+          events: sanitizeLoaded(s.events), // 新旧両対応
+          unitSeconds: Math.max(.08, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS))
         }));
         openConfirm('楽曲をインポート', `「${file.name}」から${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
           songs = importedSongs;
@@ -3003,7 +3248,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
             selectedId = events.length ? events[events.length - 1].id : null;
             currentSongId = data.current.id || null;
             currentSongName = data.current.name || '';
-            currentUnitSeconds = Math.max(.12, Math.min(1, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
+            currentUnitSeconds = Math.max(.08, Math.min(1, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
+            updateBpmFromUnitSeconds();
             syncSettingsUI();
             renderScore({ preserve: false });
           }
@@ -3012,6 +3258,50 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
         });
       } catch (_) {
         showToast('インポートできませんでした');
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  // 旧形式インポート
+  els.importOldFormatBtn.addEventListener('click', () => els.importOldFileInput.click());
+  els.importOldFileInput.addEventListener('change', handleOldImportFile);
+
+  function handleOldImportFile(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const rawText = reader.result;
+        const jsonText = rawText.replace(/^\uFEFF/, '');
+        const data = JSON.parse(jsonText);
+        if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
+        const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
+          id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+          name: s.name || '無題の曲',
+          events: sanitizeLoaded(s.events), // 旧形式（オブジェクト）を変換
+          unitSeconds: Math.max(.08, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS))
+        }));
+        openConfirm('旧形式楽曲をインポート', `「${file.name}」から${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
+          songs = importedSongs;
+          saveSongs();
+          if (data.current && Array.isArray(data.current.events)) {
+            events = sanitizeLoaded(data.current.events);
+            selectedId = events.length ? events[events.length - 1].id : null;
+            currentSongId = data.current.id || null;
+            currentSongName = data.current.name || '';
+            currentUnitSeconds = Math.max(.08, Math.min(1, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
+            updateBpmFromUnitSeconds();
+            syncSettingsUI();
+            renderScore({ preserve: false });
+          }
+          renderSongList();
+          showToast('旧形式からインポートしました');
+        });
+      } catch (_) {
+        showToast('旧形式のインポートに失敗しました');
       }
     };
     reader.readAsText(file, 'utf-8');
@@ -3083,7 +3373,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     updateEdgeIndicators();
   }
 
-  window.addEventListener('resize', () => {
+  const handleViewportChange = () => {
     if (playing || activeZoom || overviewState) {
       setTimeout(() => {
         if (!playing && !activeZoom && !overviewState) doResize();
@@ -3091,7 +3381,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     } else {
       doResize();
     }
-  }, { signal: __docSignal });
+  };
+  window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange, { signal: __docSignal });
+  }
 
   loadState();
   loadSongs();
