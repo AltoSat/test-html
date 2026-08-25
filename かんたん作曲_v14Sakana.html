@@ -1,3562 +1,1525 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0b1018">
-<title>かんたん作曲</title>
+<title>iPhone 17 Pro PWAプレビューア</title>
 <style>
+/* =============================================
+   Design Tokens
+   ============================================= */
 :root {
-  --bg: #090d14;
-  --surface: #111824;
-  --surface-2: #172131;
-  --surface-3: #202d40;
-  --ink: #f5f8ff;
-  --muted: #98a8bd;
-  --line: rgba(187, 207, 235, .16);
-  --grid: rgba(183, 205, 235, .12);
-  --grid-strong: rgba(183, 205, 235, .26);
-  --accent: #53d7ff;
-  --record: #ff5573;
-  --record-soft: rgba(255, 85, 115, .18);
-  --rest: #f6c45b;
-  --row-h: 36px;
-  --ruler-h: 0px;
-  --shadow: 0 12px 30px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.22);
-  --white-key-w: 44px;
-  --white-key-h: 146px;
-  --black-key-w: 27px;
-  --black-key-h: 92px;
-  --glass-bg: rgba(28,38,54,.5);
-  --glass-bg-strong: rgba(18,26,38,.66);
-  --glass-border: rgba(255,255,255,.16);
-  --glass-highlight: inset 0 1px rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.04);
-  --glass-blur: blur(26px) saturate(180%);
-  color-scheme: dark;
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-elevated: #141414;
+  --surface-hover: #1c1c1c;
+  --ink: #ffffff;
+  --ink-secondary: rgba(255,255,255,0.6);
+  --ink-tertiary: rgba(255,255,255,0.35);
+  --accent: #0A84FF;
+  --accent-hover: #3395FF;
+  --danger: #FF453A;
+  --success: #30D158;
+  --line: rgba(255,255,255,0.1);
+  --line-strong: rgba(255,255,255,0.2);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --space-xs: 6px;
+  --space-sm: 10px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --iphone-width: 402px;
+  --iphone-height: 873px;
+  --safe-top: 59px;
+  --safe-bottom: 34px;
+  --dynamic-island-w: 126px;
+  --dynamic-island-h: 37px;
+  --home-indicator-w: 134px;
+  --home-indicator-h: 5px;
+  --shadow: 0 24px 80px rgba(0,0,0,0.6);
 }
-* {
+
+/* =============================================
+   Reset & Base
+   ============================================= */
+*, *::before, *::after {
   box-sizing: border-box;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-user-drag: none;
+  margin: 0;
+  padding: 0;
 }
-html, body { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; background: var(--bg); }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+
+html, body {
+  height: 100%;
+  background: var(--bg);
   color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Hiragino Sans", "Noto Sans JP", sans-serif;
   -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
+  -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
-  touch-action: manipulation;
 }
-button, input { font: inherit; }
-button { -webkit-appearance: none; appearance: none; }
-button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-#app {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  height: var(--app-height, 100dvh);
+
+body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% -20%, rgba(83,215,255,.13), transparent 34%),
-    var(--bg);
 }
-.control {
-  min-height: 38px;
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  padding: 0 10px;
+
+button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+textarea {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+}
+
+/* =============================================
+   App Shell
+   ============================================= */
+.app-header {
+  flex-shrink: 0;
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  z-index: 100;
+}
+
+.app-title {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.tab-bar {
+  display: flex;
+  gap: var(--space-xs);
+  background: var(--surface-elevated);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.tab-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tab-btn:not(.active):active {
+  background: var(--surface-hover);
   color: var(--ink);
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.015)), var(--glass-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-highlight), 0 3px 9px rgba(0,0,0,.22);
-  font-weight: 750;
-  font-size: 12px;
-  white-space: nowrap;
-  touch-action: manipulation;
 }
-.control:active { transform: translateY(1px); filter: brightness(.92); }
-.control.play { color: #06151b; background: linear-gradient(180deg, #85e8ff, var(--accent)); border-color: #8eeaff; }
-.control.play.is-playing { color: #fff; background: linear-gradient(180deg, #ff7189, #d92d52); border-color: #ff8197; }
-.control.record { min-width: 76px; }
-.control.record.is-on {
-  color: #fff;
-  background: linear-gradient(180deg, #d93657, #a91f3b);
-  border-color: rgba(255,145,164,.8);
-  box-shadow: 0 0 0 3px var(--record-soft), inset 0 1px rgba(255,255,255,.16);
-}
-.rec-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 4px;
-  border-radius: 50%;
-  background: var(--muted);
-  box-shadow: 0 0 0 2px rgba(255,255,255,.08);
-}
-.record.is-on .rec-dot { background: #fff; box-shadow: 0 0 12px rgba(255,255,255,.85); }
 
-.control-deck .control.play { height: 31px; }
+.header-actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
 
-.control:disabled { opacity: .42; filter: saturate(.4); }
-.composer {
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-secondary);
+  transition: all 0.2s ease;
+  font-size: 18px;
+}
+
+.icon-btn:active {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.app-body {
+  flex: 1;
+  overflow: hidden;
   position: relative;
-  min-height: 0;
-  flex: 1 1 auto;
+}
+
+/* =============================================
+   Editor Panel
+   ============================================= */
+.editor-panel {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  padding: var(--space-md) var(--space-lg);
+  gap: var(--space-md);
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.25s ease;
 }
-.score-viewport {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  background: #0d141e;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-x pan-y;
-  scrollbar-color: var(--surface-3) transparent;
-  scrollbar-width: thin;
-  transition: background-color .4s ease;
-}
-.score-viewport::-webkit-scrollbar { width: 5px; height: 5px; }
-.score-viewport::-webkit-scrollbar-thumb { background: #35455c; border-radius: 9px; }
-.score-content {
-  position: relative;
-  min-height: 100%;
-  background-color: #0d141e;
-  background-image: linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-  background-size: 100% var(--row-h);
-  background-position: 0 var(--ruler-h);
-  isolation: isolate;
-  transform-origin: 0 0;
-}
-.score-content::before {
-  content: "";
-  position: absolute;
-  inset: var(--ruler-h) 0 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: linear-gradient(to bottom, var(--grid-strong) 2px, transparent 2px);
-  background-size: 100% calc(4 * var(--row-h));
-}
-.pitch-lane {
-  position: absolute;
-  top: var(--ruler-h);
-  bottom: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-left: 1px solid rgba(183,205,235,.12);
-  border-right: 1px solid rgba(183,205,235,.08);
-  background: rgba(255,255,255,.012);
-}
-.pitch-lane.is-black {
-  z-index: 1;
-  background: rgba(0,0,0,.28);
-  border-color: rgba(183,205,235,.2);
-}
-.time-label {
-  position: absolute;
-  z-index: 1;
-  left: 4px;
-  height: 16px;
-  padding: 1px 5px 0;
-  color: #71839a;
-  background: rgba(9,13,20,.78);
-  border-radius: 5px;
-  font-size: 9px;
-  line-height: 14px;
-  pointer-events: none;
-}
-.note-block {
-  position: absolute;
-  z-index: 4;
-  min-height: 12px;
-  border: 1px solid rgba(164,235,255,.72);
-  border-radius: 7px;
-  color: #05202a;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.5), transparent 38%),
-    linear-gradient(180deg, #68ddfa, #31afd5);
-  box-shadow: inset 0 1px rgba(255,255,255,.48), 0 4px 11px rgba(0,0,0,.28);
-  overflow: hidden;
-  touch-action: pan-x pan-y;
-}
-.note-block::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  bottom: 3px;
-  height: 2px;
-  border-radius: 2px;
-  background: rgba(2,49,66,.32);
-}
-.note-label {
-  position: sticky;
-  top: 3px;
-  display: block;
-  padding: 3px 2px 0;
-  font-size: 13px;
-  line-height: 1;
-  font-weight: 900;
-  text-align: center;
-  text-shadow: 0 1px rgba(255,255,255,.28);
-}
-.note-block.is-selected {
-  z-index: 7;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 3px rgba(83,215,255,.65), 0 0 25px rgba(83,215,255,.5), inset 0 1px rgba(255,255,255,.6);
-}
-.note-block.is-playing {
-  z-index: 8;
-  background: linear-gradient(180deg, #fff5a8, #f6bf46);
-  border-color: #fff8ce;
-  box-shadow: 0 0 0 3px rgba(246,196,91,.35), 0 0 28px rgba(246,196,91,.72);
-}
-.rest-block {
-  position: absolute;
-  left: 0;
-  z-index: 3;
-  width: 100%;
-  min-height: 12px;
-  border-top: 1px solid rgba(246,196,91,.58);
-  border-bottom: 1px solid rgba(246,196,91,.58);
-  background:
-    repeating-linear-gradient(135deg, rgba(246,196,91,.12) 0 8px, rgba(246,196,91,.035) 8px 16px),
-    rgba(48,42,25,.25);
-  color: var(--rest);
-  touch-action: pan-x pan-y;
-}
-.rest-block.is-selected {
-  z-index: 6;
-  border: 2px solid #ffe49c;
-  box-shadow: inset 0 0 0 2px rgba(246,196,91,.28), 0 0 20px rgba(246,196,91,.24);
-}
-.rest-block.is-playing { background-color: rgba(246,196,91,.2); }
-.rest-label {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  min-width: 54px;
-  padding: 2px 7px;
-  border: 1px solid rgba(246,196,91,.35);
-  border-radius: 999px;
-  background: rgba(20,18,12,.78);
-  font-size: 10px;
-  font-weight: 850;
-  text-align: center;
-}
-.playhead {
-  position: absolute;
-  z-index: 11;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  pointer-events: none;
-  display: none;
-  background: #ff5573;
-  box-shadow: 0 0 12px #ff5573, 0 0 3px #fff;
-}
-.playhead::before {
-  content: "";
-  position: sticky;
-  left: 5px;
-  display: block;
-  width: 10px;
-  height: 10px;
-  transform: translateY(-4px) rotate(45deg);
-  border-radius: 2px;
-  background: #ff5573;
-  box-shadow: 0 0 10px rgba(255,85,115,.8);
-}
-.toast {
-  position: fixed;
-  z-index: 40;
-  left: 50%;
-  bottom: var(--toast-bottom, 14px);
-  max-width: calc(100% - 24px);
-  transform: translate(-50%, 16px);
-  padding: 8px 12px;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 999px;
-  color: #fff;
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(27,38,53,.78);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: 0 10px 28px rgba(0,0,0,.42);
+
+.editor-panel.hidden {
   opacity: 0;
   pointer-events: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  font-weight: 750;
-  transition: opacity .18s ease, transform .18s ease;
 }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-@keyframes controlShake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
+.editor-toolbar {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
 }
-.control.is-shaking { animation: controlShake .38s ease; }
 
-.keyboard-viewport {
-  order: 1;
-  height: var(--white-key-h);
-  overflow: hidden;
+.btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:active {
+  background: var(--accent-hover);
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background: var(--surface-elevated);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn-secondary:active {
+  background: var(--surface-hover);
+  transform: scale(0.97);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(255,69,58,0.3);
+}
+
+.btn-danger:active {
+  background: rgba(255,69,58,0.1);
+  transform: scale(0.97);
+}
+
+.editor-wrap {
+  flex: 1;
   position: relative;
-  touch-action: none;
-  background: #080b10;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+#htmlInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-md);
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--ink);
+  background: var(--surface);
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.editor-status {
+  position: absolute;
+  bottom: var(--space-sm);
+  right: var(--space-sm);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  background: rgba(0,0,0,0.6);
+  padding: 4px 10px;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+/* =============================================
+   Preview Panel
+   ============================================= */
+.preview-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.preview-panel.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =============================================
+   iPhone 17 Pro Frame
+   ============================================= */
+.iphone-frame {
+  position: relative;
+  width: var(--iphone-width);
+  height: var(--iphone-height);
+  background: #000;
+  border-radius: 54px;
+  box-shadow:
+    0 0 0 2px #1a1a1a,
+    0 0 0 4px #0d0d0d,
+    var(--shadow);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.iphone-bezel {
+  position: absolute;
+  inset: 10px;
+  border-radius: 44px;
+  background: #000;
+  overflow: hidden;
+}
+
+.iphone-screen {
+  position: absolute;
+  inset: 0;
+  border-radius: 44px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Dynamic Island */
+.dynamic-island {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--dynamic-island-w);
+  height: var(--dynamic-island-h);
+  background: #000;
+  border-radius: 20px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* Status bar simulation */
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-top);
+  z-index: 40;
+  pointer-events: none;
   display: flex;
   align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 6px;
 }
-.keyboard-inner {
+
+.status-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 12px;
+}
+
+.signal-bar {
+  width: 3px;
+  background: #fff;
+  border-radius: 1px;
+}
+
+.signal-bar:nth-child(1) { height: 5px; }
+.signal-bar:nth-child(2) { height: 7px; }
+.signal-bar:nth-child(3) { height: 9px; }
+.signal-bar:nth-child(4) { height: 12px; }
+
+.status-wifi {
+  width: 16px;
+  height: 12px;
+}
+
+.status-battery {
+  width: 25px;
+  height: 12px;
+  border: 1.2px solid rgba(255,255,255,0.4);
+  border-radius: 3px;
   position: relative;
-  height: var(--white-key-h);
-  transform: translateZ(0);
-  flex: 0 0 auto;
-  transform-origin: 0 100%;
+  display: flex;
+  align-items: center;
+  padding: 1.5px;
 }
-.piano-key {
+
+.status-battery::after {
+  content: "";
   position: absolute;
-  top: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0 0 7px 7px;
-  overflow: hidden;
+  right: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5px;
+  height: 5px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 0 1px 1px 0;
 }
-.white-key {
-  z-index: 1;
-  width: var(--white-key-w);
-  height: var(--white-key-h);
-  border-right: 1px solid #7d8490;
-  border-bottom: 5px solid #9da5b0;
-  background: linear-gradient(90deg, #d6d9df 0, #fff 12%, #f8f9fb 76%, #bdc2ca 100%);
-  box-shadow: inset 0 -8px 10px rgba(60,67,77,.12), inset 0 1px #fff;
+
+.battery-level {
+  width: 80%;
+  height: 100%;
+  background: #fff;
+  border-radius: 1.5px;
 }
-.white-key:first-child { border-left: 1px solid #7d8490; }
-.black-key {
-  z-index: 3;
-  width: var(--black-key-w);
-  height: var(--black-key-h);
-  border: 1px solid #020305;
-  border-bottom: 7px solid #020305;
-  background: linear-gradient(90deg, #06080b, #303640 45%, #0b0e13 78%, #020304);
-  box-shadow: inset 0 -5px 4px rgba(255,255,255,.06), 0 5px 7px rgba(0,0,0,.5);
+
+/* Home indicator */
+.home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--home-indicator-w);
+  height: var(--home-indicator-h);
+  background: #fff;
+  border-radius: 3px;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.9;
 }
-.piano-key.is-pressed.white-key {
-  background: linear-gradient(90deg, #8ddff2, #e4fbff 30%, #9ce8f7);
-  border-bottom-width: 2px;
-  transform: translateY(3px);
-}
-.piano-key.is-pressed.black-key {
-  background: linear-gradient(90deg, #063b4c, #32b9db 50%, #062c38);
-  border-bottom-width: 3px;
-  transform: translateY(3px);
-  box-shadow: 0 0 17px rgba(83,215,255,.45);
-}
-.key-label {
+
+/* Safe area guides (visible in debug mode) */
+.safe-area-guide {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 8px;
-  color: #39414d;
-  font-size: 14px;
-  font-weight: 850;
-  text-align: center;
-  pointer-events: none;
-}
-.key-octave { display: block; margin-top: 2px; color: #78808a; font-size: 14px; }
-
-@media (max-height: 700px) {
-  :root { --white-key-h: 118px; --black-key-h: 75px; --row-h: 32px; }
-  .control-deck { padding-top: 3px; }
-  .control-deck .control { min-height: 26px; height: 26px; }
-  .control-deck .control.play { height: 28px; }
-  .keyboard-nav { height: 28px; }
-}
-@media (min-width: 700px) {
-  :root { --row-h: 39px; --white-key-w: 52px; --black-key-w: 31px; --white-key-h: 168px; --black-key-h: 106px; }
-  .control-deck { grid-template-columns: minmax(120px, 1fr) 128px minmax(120px, 1fr); padding-left: 14px; padding-right: 14px; }
-  .dpad { width: 128px; }
-  .control-deck .control { font-size: 12px; }
-}
-
-.setting-stack { display: grid; gap: 12px; margin-bottom: 13px; }
-.setting-block {
-  padding: 13px;
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-}
-.setting-label { display: block; margin-bottom: 8px; color: #e9f1fc; font-size: 13px; font-weight: 850; }
-.setting-help { margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.6; }
-.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.segmented input { position: absolute; opacity: 0; pointer-events: none; }
-.segmented label {
-  min-height: 42px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--glass-border);
-  border-radius: 13px;
-  color: #b9c7d9;
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), rgba(28,38,54,.4);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
-  font-size: 12px;
-  font-weight: 800;
-  touch-action: manipulation;
-}
-.segmented input:checked + label {
-  color: #06151b;
-  border-color: #8eeaff;
-  background: linear-gradient(180deg, #8aeaff, var(--accent));
-  box-shadow: 0 3px 14px rgba(83,215,255,.25);
-}
-.length-row { display: grid; grid-template-columns: 1fr 62px; align-items: center; gap: 10px; }
-.length-value {
-  min-height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  color: var(--accent);
-  background: rgba(13,20,30,.55);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  font-size: 12px;
-  font-weight: 850;
-}
-.score-content, .keyboard-inner {
-  transition: transform .5s cubic-bezier(.22,.8,.22,1);
-}
-.score-viewport.playback-fit { overflow-x: hidden; scroll-behavior: auto; }
-.keyboard-viewport.playback-fit { overflow: hidden; }
-
-@keyframes keyRadiance {
-  from { filter: brightness(1.2) saturate(1.25); }
-  to { filter: brightness(1.65) saturate(1.6); }
-}
-
-.tab-view {
-  display: none;
-  min-height: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-}
-.tab-view.is-active { display: flex; flex-direction: column; }
-.composition-view .composer { flex: 1 1 auto; }
-
-.keyboard-panel {
-  position: relative;
-  z-index: 25;
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(180deg, rgba(24,34,50,.6), rgba(8,12,18,.72));
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border-top: 1px solid var(--glass-border);
-  box-shadow: 0 -10px 28px rgba(0,0,0,.34);
-  padding-bottom: 0;
-  gap: 10px;
-}
-.keyboard-nav {
-  order: 3;
-  height: 32px;
-  display: grid;
-  grid-template-columns: 32px 1fr 32px;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 8px;
-  border-bottom: 1px solid var(--line);
-}
-.octave-shift {
-  width: 32px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--glass-border);
-  border-radius: 11px;
-  color: #c9d5e5;
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.01)), rgba(28,38,54,.4);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
-  touch-action: manipulation;
-}
-.range-wrap { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; }
-.range-label { color: var(--muted); font-size: 10px; font-weight: 750; white-space: nowrap; }
-#keyboardRange {
-  width: 100%;
-  height: 24px;
-  margin: 0;
-  accent-color: var(--accent);
-  touch-action: manipulation;
-}
-.control-deck {
-  order: 2;
-  flex: none;
-  display: grid;
-  grid-template-columns: minmax(84px, 1fr) 142px minmax(84px, 1fr);
-  align-items: center;
-  gap: 8px;
-  padding: 8px 8px 7px;
-  background: rgba(9, 13, 20, .55);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border-top: 1px solid var(--glass-border);
-  border-bottom: 0;
-  box-shadow: 0 -7px 18px rgba(0,0,0,.22);
-}
-.deck-side {
-  min-width: 0;
-  display: grid;
-  gap: 6px;
-}
-.control-deck .control {
-  width: 100%;
-  min-width: 0;
-  min-height: 43px;
-  height: 43px;
-  padding: 0 5px;
-  border-radius: 15px;
-  font-size: 13px;
-  font-weight: 800;
-}
-.control-deck .control:active { transform: scale(.97); }
-.control-deck .control.rest-action { color: var(--rest); }
-.control-deck .control.delete-action { color: #ff9aa6; }
-.bpm-action {
-  display: flex; align-items: center; justify-content: center; gap: 1px;
-  color: #06151b; background: linear-gradient(180deg, #8aeaff, var(--accent));
-  border-color: #8eeaff; cursor: grab; touch-action: none;
-  position: relative;
-  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
-}
-.bpm-action:active { cursor: grabbing; transform: scale(.97); }
-.bpm-action .bpm-note { font-size: 12px; opacity: .85; margin-right: 1px; }
-.bpm-action #bpmValue { font-size: 15px; font-weight: 900; }
-.dpad {
-  width: 142px;
-  height: 142px;
-  display: grid;
-  grid-template-columns: 44px 44px 44px;
-  grid-template-rows: 44px 44px 44px;
-  gap: 4px;
-  justify-content: center;
-  align-content: center;
-}
-.dpad-btn {
-  width: 44px !important;
-  height: 44px !important;
-  min-height: 44px !important;
-  padding: 0 !important;
-  border-radius: 14px !important;
-  font-size: 19px !important;
-  line-height: 1;
-}
-.dpad-up { grid-column: 2; grid-row: 1; }
-.dpad-left { grid-column: 1; grid-row: 2; }
-.dpad-center {
-  grid-column: 2;
-  grid-row: 2;
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  background: radial-gradient(circle, rgba(83,215,255,.22), rgba(255,255,255,.03));
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-  backdrop-filter: blur(18px) saturate(180%);
-  color: var(--ink);
-  font-size: 19px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: manipulation;
-}
-.dpad-right { grid-column: 3; grid-row: 2; }
-.dpad-down { grid-column: 2; grid-row: 3; }
-.control.random-action {
-  color: #d9c8ff;
-  border-color: rgba(183,151,255,.38);
-  background: linear-gradient(180deg, #342c50, #241f39);
-}
-.bottom-tabs {
-  flex: none;
-  z-index: 60;
-  min-height: 56px;
-  margin: 8px 16px clamp(8px, env(safe-area-inset-bottom), 20px);
-  padding: 4px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), rgba(15,23,34,.6);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 26px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.08);
-}
-.tab-btn {
-  min-width: 0;
-  border: 0;
-  border-radius: 20px;
-  color: #8fa0b5;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  font-size: 10px;
-  font-weight: 700;
-  touch-action: manipulation;
-  transition: transform .18s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
-}
-.tab-btn:active { transform: scale(.93); }
-.tab-btn.is-active {
-  color: #04141a;
-  background: linear-gradient(145deg, #aaf2ff, #53d7ff 55%, #3bbde0);
-  box-shadow: 0 6px 18px rgba(83,215,255,.38), inset 0 1px rgba(255,255,255,.55);
-}
-.tab-ico { font-size: 20px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.1)); }
-.tab-label { font-size: 10px; letter-spacing: .03em; }
-.content-screen {
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: calc(14px + env(safe-area-inset-top)) 14px 22px;
-  background:
-    radial-gradient(circle at 85% 0, rgba(83,215,255,.12), transparent 30%),
-    var(--bg);
-}
-.screen-inner { width: min(720px, 100%); margin: 0 auto; }
-.screen-title { margin: 0 0 14px; font-size: 22px; letter-spacing: -.04em; }
-.panel-card {
-  padding: 14px;
-  border: 1px solid var(--glass-border);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--shadow);
-}
-.save-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-.text-input {
-  min-width: 0;
-  height: 45px;
-  border: 1px solid rgba(187,207,235,.25);
-  border-radius: 14px;
-  padding: 0 12px;
-  color: var(--ink);
-  background: rgba(13,20,30,.55);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  user-select: text;
-  -webkit-user-select: text;
-  -webkit-touch-callout: default;
-  font-size: 16px;
-}
-.primary-action {
-  min-width: 78px;
-  height: 45px;
-  border: 1px solid #8eeaff;
-  border-radius: 14px;
-  color: #06151b;
-  background: linear-gradient(180deg, #8aeaff, var(--accent));
-  font-weight: 850;
-}
-.library-list { display: grid; gap: 9px; margin-top: 13px; }
- .song-item {
-  position: relative;
-  display: block;
-  min-height: 62px;
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  background: #182332;
-  overflow: hidden;
-  cursor: pointer;
-  touch-action: pan-y;
-  transition: box-shadow .2s ease, border-color .2s ease;
-}
-.song-item:active { box-shadow: 0 5px 16px rgba(0,0,0,.22); }
-.song-item.is-playing {
-  border-color: #8eeaff;
-  box-shadow: 0 0 0 2px rgba(83,215,255,.4), 0 8px 22px rgba(83,215,255,.18);
-}
-.song-item .song-hint {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 850;
+  z-index: 45;
   pointer-events: none;
   opacity: 0;
+  transition: opacity 0.2s ease;
 }
-.song-item .song-hint.left {
-  left: 0;
-  justify-content: flex-start;
-  padding-left: 20px;
-  background: linear-gradient(90deg, rgba(83,215,255,.98), rgba(83,215,255,.66));
-  color: #06151b;
+
+.safe-area-guide.show {
+  opacity: 1;
 }
-.song-item .song-hint.right {
-  right: 0;
-  justify-content: flex-end;
-  padding-right: 20px;
-  background: linear-gradient(270deg, rgba(255,85,115,.98), rgba(255,85,115,.66));
+
+.safe-area-guide.top {
+  top: 0;
+  height: var(--safe-top);
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(10,132,255,0.08),
+    rgba(10,132,255,0.08) 8px,
+    rgba(10,132,255,0.15) 8px,
+    rgba(10,132,255,0.15) 16px
+  );
+  border-bottom: 1px dashed rgba(10,132,255,0.4);
+}
+
+.safe-area-guide.bottom {
+  bottom: 0;
+  height: var(--safe-bottom);
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(10,132,255,0.08),
+    rgba(10,132,255,0.08) 8px,
+    rgba(10,132,255,0.15) 8px,
+    rgba(10,132,255,0.15) 16px
+  );
+  border-top: 1px dashed rgba(10,132,255,0.4);
+}
+
+.safe-area-label {
+  position: absolute;
+  font-size: 9px;
+  color: rgba(10,132,255,0.8);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.safe-area-guide.top .safe-area-label {
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.safe-area-guide.bottom .safe-area-label {
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* =============================================
+   Preview iframe
+   ============================================= */
+#previewFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #000;
+}
+
+/* =============================================
+   Scale wrapper for smaller screens
+   ============================================= */
+.scale-wrapper {
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+}
+
+/* =============================================
+   Fullscreen mode
+   ============================================= */
+body.fullscreen .app-header,
+body.fullscreen .editor-panel,
+body.fullscreen .tab-bar {
+  display: none !important;
+}
+
+body.fullscreen .preview-panel {
+  opacity: 1;
+  pointer-events: auto;
+  padding: 0;
+  background: #000;
+}
+
+body.fullscreen .iphone-frame {
+  border-radius: 0;
+  box-shadow: none;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+}
+
+body.fullscreen .iphone-bezel {
+  inset: 0;
+  border-radius: 0;
+}
+
+body.fullscreen .iphone-screen {
+  border-radius: 0;
+}
+
+body.fullscreen .dynamic-island,
+body.fullscreen .home-indicator,
+body.fullscreen .status-bar {
+  display: none;
+}
+
+.exit-fs-btn {
+  position: fixed;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 200;
+  background: rgba(30,30,30,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+body.fullscreen .exit-fs-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =============================================
+   Info overlay
+   ============================================= */
+.info-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: var(--surface-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  max-width: 420px;
+  width: 90vw;
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+}
+
+.info-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.info-overlay h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
+
+.info-overlay p, .info-overlay li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-secondary);
+}
+
+.info-overlay ul {
+  margin: var(--space-sm) 0 var(--space-md);
+  padding-left: 18px;
+}
+
+.info-overlay li {
+  margin-bottom: 4px;
+}
+
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 250;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.overlay-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =============================================
+   Debug toggle
+   ============================================= */
+.debug-bar {
+  position: fixed;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-sm);
+  background: rgba(20,20,20,0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 6px;
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.preview-panel.active ~ .debug-bar,
+.preview-panel.active + .debug-bar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.debug-bar.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.debug-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.debug-btn.active {
+  background: var(--accent);
   color: #fff;
 }
-.song-item .song-hint .hint-icon { font-size: 18px; }
-.song-item .song-hint .hint-label { margin: 0 5px; opacity: .98; }
-.song-surface {
-  position: relative;
-  z-index: 2;
-  min-height: 62px;
-  padding: 12px 14px;
-  border: 1px solid var(--glass-border);
-  border-radius: 15px;
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  transition: transform .12s cubic-bezier(.2,.75,.2,1);
-  will-change: transform;
-  touch-action: pan-y;
-}
-.song-name { font-weight: 850; white-space: normal; word-break: break-all; line-height: 1.3; }
-.song-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
-.empty-library { padding: 26px 10px; color: var(--muted); text-align: center; font-size: 13px; }
-.settings-copy { color: #bdcadd; font-size: 13px; line-height: 1.75; }
-.export-btn { width: 100%; min-height: 49px; margin-top: 12px; }
-.modal-backdrop {
-  position: fixed;
-  z-index: 200;
-  inset: 0;
-  display: none;
-  place-items: center;
-  padding: 22px;
-  background: rgba(0,0,0,.64);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-.modal-backdrop.is-open { display: grid; }
-.modal-card {
-  width: min(360px, 100%);
-  padding: 18px;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(23,33,49,.72);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  backdrop-filter: blur(30px) saturate(180%);
-  box-shadow: 0 25px 70px rgba(0,0,0,.5);
-}
-.modal-title { margin: 0; font-size: 18px; }
-.modal-message { margin: 9px 0 17px; color: #bdcadd; font-size: 13px; line-height: 1.65; }
-.modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.modal-btn { min-height: 45px; border: 1px solid var(--glass-border); border-radius: 14px; color: var(--ink); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(38,53,75,.55); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); font-weight: 800; }
-.modal-btn.danger { color: #fff; background: #b62e49; border-color: #ff738d; }
 
-.score-viewport.overview-mode { background-color: #080d14; }
-.score-viewport.overview-mode .score-content { box-shadow: 0 0 0 1px rgba(83,215,255,.2); }
-
-.piano-key.is-playing-key.white-key {
-  background: linear-gradient(90deg, #fff4a4, #fffbdc 38%, #ffd45e);
-  border-color: #fff6a2;
-  box-shadow: inset 0 -7px 8px rgba(120,80,0,.16), 0 0 22px rgba(255,215,90,.9);
-  filter: brightness(1.3) saturate(1.35);
-  animation: keyRadiance .48s ease-in-out infinite alternate;
-}
-.piano-key.is-playing-key.black-key {
-  background: linear-gradient(90deg, #7a4b00, #ffd85f 48%, #8c5700);
-  border-color: #fff375;
-  box-shadow: 0 0 24px rgba(255,215,90,.9);
-  filter: brightness(1.42) saturate(1.45);
-  animation: keyRadiance .48s ease-in-out infinite alternate;
+.debug-btn:not(.active):active {
+  background: var(--surface-hover);
+  color: var(--ink);
 }
 
-.edge-cue {
+/* =============================================
+   Device info badge
+   ============================================= */
+.device-badge {
   position: absolute;
-  z-index: 25;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* =============================================
+   Toast
+   ============================================= */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface-elevated);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 400;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .25s ease;
-}
-.edge-cue.is-visible { opacity: 1; }
-.edge-cue.left, .edge-cue.right {
-  top: 18%; bottom: 18%; width: 13px;
-  background: radial-gradient(ellipse at center, rgba(83,215,255,.95), rgba(83,215,255,.12) 50%, transparent 73%);
-  filter: drop-shadow(0 0 8px rgba(83,215,255,.85));
-}
-.edge-cue.left { left: 0; border-radius: 0 999px 999px 0; }
-.edge-cue.right { right: 0; border-radius: 999px 0 0 999px; }
-.edge-cue.up, .edge-cue.down {
-  left: 18%; right: 18%; height: 12px;
-  background: radial-gradient(ellipse at center, rgba(246,196,91,.95), rgba(246,196,91,.1) 55%, transparent 76%);
-  filter: drop-shadow(0 0 8px rgba(246,196,91,.72));
-}
-.edge-cue.up { top: 0; border-radius: 0 0 999px 999px; }
-.edge-cue.down { bottom: 0; border-radius: 999px 999px 0 0; }
-
-@media (max-height: 720px) {
-  :root { --white-key-h: 104px; --black-key-h: 67px; }
-  .control-deck { grid-template-columns: minmax(76px,1fr) 126px minmax(76px,1fr); padding-top: 5px; padding-bottom: 5px; }
-  .control-deck .control { min-height: 37px; height: 37px; font-size: 12px; }
-  .dpad { width: 126px; height: 122px; grid-template-columns: 38px 38px 38px; grid-template-rows: 38px 38px 38px; }
-  .dpad-btn { width: 38px !important; height: 38px !important; min-height: 38px !important; }
-  .dpad-center { width: 38px; height: 38px; min-height: 38px; }
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
+@media (max-width: 480px) {
+  .app-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+  .app-title {
+    font-size: 16px;
+  }
+  .editor-panel {
+    padding: var(--space-sm) var(--space-md);
+  }
+  .iphone-frame {
+    transform: scale(0.85);
+    transform-origin: top center;
+  }
+}
+
+@media (max-width: 380px) {
+  .iphone-frame {
+    transform: scale(0.75);
+  }
+}
+
+@media (max-height: 700px) {
+  .iphone-frame {
+    transform: scale(0.78);
+  }
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-}
-@media print {
-  body { background: #fff; }
-  .keyboard-panel, .control-deck { display: none; }
-}
-
-.score-viewport.playback-lock { overflow: hidden !important; touch-action: none !important; pointer-events: none !important; }
-.keyboard-viewport.playback-lock { overflow: hidden !important; touch-action: none !important; pointer-events: none !important; }
-.tab-btn:disabled { opacity: .4; pointer-events: none; }
-
-.score-viewport.is-zooming, .keyboard-viewport.is-zooming {
-  overflow: hidden !important;
-  touch-action: none !important;
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 </style>
-<script>
-(function () {
-  function setAppHeight() {
-    var vv = window.visualViewport;
-    var h = vv ? vv.height : window.innerHeight;
-    document.documentElement.style.setProperty('--app-height', h + 'px');
-  }
-  setAppHeight();
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', setAppHeight);
-    window.visualViewport.addEventListener('scroll', setAppHeight);
-  } else {
-    window.addEventListener('resize', setAppHeight);
-  }
-})();
-</script>
 </head>
 <body>
-<div id="app">
-  <section id="compositionView" class="tab-view composition-view is-active" aria-label="作曲">
-    <main class="composer">
-      <div id="scoreViewport" class="score-viewport" aria-label="縦型ピアノロール。左右が音程、上から下が時間です。">
-        <div id="scoreContent" class="score-content"></div>
-      </div>
-      <div id="edgeLeft" class="edge-cue left" aria-hidden="true"></div>
-      <div id="edgeRight" class="edge-cue right" aria-hidden="true"></div>
-      <div id="edgeUp" class="edge-cue up" aria-hidden="true"></div>
-      <div id="edgeDown" class="edge-cue down" aria-hidden="true"></div>
-    </main>
 
-    <section class="keyboard-panel" aria-label="4オクターブのピアノ鍵盤">
-      <div class="keyboard-nav">
-        <button id="keyLeft" class="octave-shift" type="button" aria-label="低い音域へ">◀</button>
-        <div class="range-wrap">
-          <span class="range-label">音域</span>
-          <input id="keyboardRange" type="range" min="0" max="100" value="28" aria-label="盤の表示音域">
-        </div>
-        <button id="keyRight" class="octave-shift" type="button" aria-label="高い音域へ">▶</button>
-      </div>
-      <div id="keyboardViewport" class="keyboard-viewport">
-        <div id="keyboardInner" class="keyboard-inner"></div>
-      </div>
-      <div class="control-deck" aria-label="作曲コントロール">
-        <div class="deck-side">
-          <div id="bpmBtn" class="control bpm-action" role="button" aria-label="BPMの変更は左右にスライドしてください" title="左右にスライドしてBPMを変更">
-            <span class="bpm-note">&#9833;=</span><span id="bpmValue">110</span>
-          </div>
-          <button id="restBtn" class="control rest-action" type="button">休符</button>
-          <button id="deleteBtn" class="control delete-action" type="button">削除</button>
-        </div>
-        <div class="dpad" aria-label="選択音符の編集">
-          <button id="shortenBtn" class="control dpad-btn dpad-up" type="button" aria-label="選択中の音符を短くする">▲</button>
-          <button id="pitchDownBtn" class="control dpad-btn dpad-left" type="button" aria-label="選択中の音符を半音下げる">◀</button>
-          <button id="centerBtn" class="control dpad-btn dpad-center" type="button" aria-label="選択中の音符を中心に表示">◎</button>
-          <button id="pitchUpBtn" class="control dpad-btn dpad-right" type="button" aria-label="選択中の音符を半音上げる">▶</button>
-          <button id="extendBtn" class="control dpad-btn dpad-down" type="button" aria-label="選択中の音符を伸ばす">▼</button>
-        </div>
-        <div class="deck-side">
-          <button id="playBtn" class="control play" type="button">▶ 再生</button>
-          <button id="recordBtn" class="control record" type="button" aria-pressed="false"><span class="rec-dot"></span><span id="recordLabel">記録</span></button>
-          <button id="randomBtn" class="control random-action" type="button">ランダム</button>
-        </div>
-      </div>
-    </section>
-  </section>
-
-  <section id="songsView" class="tab-view content-screen" aria-label="楽曲">
-    <div class="screen-inner">
-      <h2 class="screen-title">楽曲</h2>
-      <div class="panel-card">
-        <div class="save-row">
-          <input id="songNameInput" class="text-input" type="text" maxlength="60" placeholder="曲名を入力" aria-label="保存する曲名">
-          <button id="saveSongBtn" class="primary-action" type="button">保存</button>
-        </div>
-      </div>
-      <div id="songList" class="library-list" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <section id="settingsView" class="tab-view content-screen" aria-label="設定">
-    <div class="screen-inner">
-      <h2 class="screen-title">設定</h2>
-      <div class="setting-stack">
-        <div class="setting-block">
-          <span class="setting-label">ピアノ左右スワイプ</span>
-          <div class="segmented" role="radiogroup" aria-label="ピアノ左右スワイプの動作">
-            <input id="swipePlay" type="radio" name="swipeMode" value="play" checked>
-            <label for="swipePlay">音をたどる</label>
-            <input id="swipeScroll" type="radio" name="swipeMode" value="scroll">
-            <label for="swipeScroll">音域を移動</label>
-          </div>
-          <div class="setting-help">「音域を移動」でも、最初に触れた鍵盤は鳴ります。そのまま指を離さず左右へ動かすと、楽譜とピアノをスクロールします</div>
-        </div>
-        <div class="setting-block">
-          <label class="setting-label" for="volumeRange">音量</label>
-          <div class="length-row">
-            <input id="volumeRange" type="range" min="0" max="100" step="1" value="72">
-            <output id="volumeValue" class="length-value" for="volumeRange">72%</output>
-          </div>
-          <div class="setting-help">再生や鍵盤の音量を変更します。</div>
-        </div>
-        <div class="setting-block">
-          <label class="setting-label" for="randomLengthRange">ランダム生成の長さ</label>
-          <div class="length-row">
-            <input id="randomLengthRange" type="range" min="12" max="100" step="1" value="12">
-            <output id="randomLengthValue" class="length-value" for="randomLengthRange">12音</output>
-          </div>
-          <div class="setting-help">ランダムボタンで生成するフレーズの長さ（音符・休符の合計数）を指定します。</div>
-        </div>
-      </div>
-      <div class="panel-card">
-        <div class="settings-copy">保存したすべての楽曲と、現在作曲中の内容をJSONファイルとして書き出します。バックアップや別端末への保管に利用できます。</div>
-        <button id="exportBtn" class="primary-action export-btn" type="button">すべての楽曲をエクスポート</button>
-        <button id="importBtn" class="primary-action export-btn" type="button" style="margin-top:8px;">楽曲をインポート</button>
-        <input id="importFileInput" type="file" accept="application/json,application/JSON" style="display:none">
-      </div>
-    </div>
-  </section>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <nav class="bottom-tabs" aria-label="画面切り替え">
-    <button class="tab-btn is-active" type="button" data-tab="composition"><span class="tab-ico">🎹</span><span class="tab-label">作曲</span></button>
-    <button class="tab-btn" type="button" data-tab="songs"><span class="tab-ico">🎵</span><span class="tab-label">楽曲</span></button>
-    <button class="tab-btn" type="button" data-tab="settings"><span class="tab-ico">⚙️</span><span class="tab-label">設定</span></button>
+<!-- Header -->
+<header class="app-header">
+  <div class="app-title">iPhone 17 Pro PWAプレビューア</div>
+  <nav class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-tab="editor" id="tabEditor">入力</button>
+    <button class="tab-btn" data-tab="preview" id="tabPreview">プレビュー</button>
   </nav>
-</div>
-
-<div id="confirmModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="modal-card">
-    <h2 id="modalTitle" class="modal-title">確認</h2>
-    <div id="modalMessage" class="modal-message"></div>
-    <div class="modal-actions">
-      <button id="modalCancel" class="modal-btn" type="button">キャンセル</button>
-      <button id="modalConfirm" class="modal-btn danger" type="button">実行</button>
-    </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="btnInfo" title="情報">&#9432;</button>
+    <button class="icon-btn" id="btnFullscreen" title="全画面">&#9974;</button>
   </div>
+</header>
+
+<!-- Body -->
+<main class="app-body">
+
+  <!-- Editor Panel -->
+  <section class="editor-panel" id="editorPanel">
+    <div class="editor-toolbar">
+      <button class="btn btn-primary" id="btnPreview">&#9658; プレビュー</button>
+      <button class="btn btn-secondary" id="btnSample">サンプルHTML</button>
+      <button class="btn btn-danger" id="btnClear">クリア</button>
+    </div>
+    <div class="editor-wrap">
+      <textarea id="htmlInput" placeholder="&lt;!-- HTMLをここに貼り付けてください --&gt;
+&lt;!-- CSS・JavaScriptも同じく貼り付け可能です --&gt;
+&lt;style&gt;
+  /* PWA用のスタイル */
+&lt;/style&gt;
+&lt;script&gt;
+  // JavaScriptも動作します
+&lt;/script&gt;" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      <span class="editor-status" id="editorStatus">0 文字</span>
+    </div>
+  </section>
+
+  <!-- Preview Panel -->
+  <section class="preview-panel" id="previewPanel">
+    <div class="scale-wrapper" id="scaleWrapper">
+      <div class="device-badge">iPhone 17 Pro &middot; 402×873 pt &middot; 縦画面 &middot; Dynamic Island</div>
+      <div class="iphone-frame" id="iphoneFrame">
+        <div class="iphone-bezel">
+          <div class="iphone-screen">
+            <!-- Safe area guides -->
+            <div class="safe-area-guide top" id="safeTop">
+              <span class="safe-area-label">Safe Area Top (59px)</span>
+            </div>
+            <div class="safe-area-guide bottom" id="safeBottom">
+              <span class="safe-area-label">Safe Area Bottom (34px)</span>
+            </div>
+            <!-- Status bar -->
+            <div class="status-bar">
+              <span class="status-time" id="statusTime">9:41</span>
+              <div class="status-icons">
+                <div class="status-signal">
+                  <div class="signal-bar"></div>
+                  <div class="signal-bar"></div>
+                  <div class="signal-bar"></div>
+                  <div class="signal-bar"></div>
+                </div>
+                <svg class="status-wifi" viewBox="0 0 16 12" fill="none"><path d="M8 1.5c2.5 0 4.7.9 6.4 2.4l.8.8-1.4 1.4-.8-.8C12.1 4.2 10.2 3.5 8 3.5s-4.1.7-5.6 1.8l-.8.8L0 4.7l.8-.8C2.3 2.4 4.5 1.5 8 1.5zM3.3 7.1l1.4 1.4.8-.8c.7-.5 1.6-.8 2.5-.8s1.8.3 2.5.8l.8.8 1.4-1.4-.8-.8C10.6 5.7 9.4 5.2 8 5.2s-2.6.5-3.5 1.1l-.8.8zm2.9 2.9L8 11.8l1.8-1.8L8 8.2l-1.8 1.8z" fill="#fff"/></svg>
+                <div class="status-battery"><div class="battery-level"></div></div>
+              </div>
+            </div>
+            <!-- Dynamic Island -->
+            <div class="dynamic-island"></div>
+            <!-- Preview iframe -->
+            <iframe id="previewFrame" sandbox="allow-scripts allow-modals allow-popups allow-forms allow-same-origin allow-downloads" title="PWAプレビュー"></iframe>
+            <!-- Home indicator -->
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Debug bar -->
+<div class="debug-bar visible" id="debugBar">
+  <button class="debug-btn" id="btnSafeArea">Safe Area</button>
+  <button class="debug-btn" id="btnReload">&#8635; 再読込</button>
 </div>
+
+<!-- Exit fullscreen button -->
+<button class="exit-fs-btn" id="btnExitFs">&#10005; 全画面を終了</button>
+
+<!-- Info overlay -->
+<div class="overlay-backdrop" id="overlayBackdrop"></div>
+<div class="info-overlay" id="infoOverlay">
+  <h2>iPhone 17 Pro PWAプレビューア</h2>
+  <p>iPhone 17 ProでPWAを開いたときの見た目・操作感を確認できるテスト環境です。</p>
+  <ul>
+    <li>画面サイズ：402 × 873 pt（縦画面）</li>
+    <li>Safe Area Top：59px（Dynamic Island対応）</li>
+    <li>Safe Area Bottom：34px（ホームインジケータ）</li>
+    <li>env(safe-area-inset-*) をシミュレート</li>
+    <li>iframe sandbox でプレビューア本体を保護</li>
+    <li>LocalStorage で入力内容を自動保存</li>
+  </ul>
+  <p style="font-size:12px;color:var(--ink-tertiary);margin-top:8px;">HTML/CSS/JavaScriptを1ファイルにまとめて貼り付けて「プレビュー」をタップしてください。</p>
+  <button class="btn btn-primary" style="width:100%;margin-top:var(--space-md);" id="btnCloseInfo">閉じる</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
+/* =============================================
+   State
+   ============================================= */
+const STORAGE_KEY = "pwa-previewer-html-v1";
+let safeAreaVisible = false;
 
-(() => {
-  'use strict';
+/* =============================================
+   Elements
+   ============================================= */
+const els = {
+  htmlInput: document.getElementById("htmlInput"),
+  editorPanel: document.getElementById("editorPanel"),
+  previewPanel: document.getElementById("previewPanel"),
+  previewFrame: document.getElementById("previewFrame"),
+  tabEditor: document.getElementById("tabEditor"),
+  tabPreview: document.getElementById("tabPreview"),
+  btnPreview: document.getElementById("btnPreview"),
+  btnSample: document.getElementById("btnSample"),
+  btnClear: document.getElementById("btnClear"),
+  btnInfo: document.getElementById("btnInfo"),
+  btnFullscreen: document.getElementById("btnFullscreen"),
+  btnExitFs: document.getElementById("btnExitFs"),
+  btnSafeArea: document.getElementById("btnSafeArea"),
+  btnReload: document.getElementById("btnReload"),
+  safeTop: document.getElementById("safeTop"),
+  safeBottom: document.getElementById("safeBottom"),
+  statusTime: document.getElementById("statusTime"),
+  editorStatus: document.getElementById("editorStatus"),
+  toast: document.getElementById("toast"),
+  infoOverlay: document.getElementById("infoOverlay"),
+  overlayBackdrop: document.getElementById("overlayBackdrop"),
+  btnCloseInfo: document.getElementById("btnCloseInfo"),
+  scaleWrapper: document.getElementById("scaleWrapper"),
+  debugBar: document.getElementById("debugBar"),
+};
 
-  // 二重初期化を防ぐ: 既存インスタンスのイベントを AbortController で一括解除する
-  if (window.__kantanDocAbort) {
-    try { window.__kantanDocAbort.abort(); } catch (_) {}
+/* =============================================
+   Sample HTML
+   ============================================= */
+const SAMPLE_HTML = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>サンプルPWA</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #000;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+/* Safe Area対応 */
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* 固定ヘッダー */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  background: rgba(20,20,20,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h1 { font-size: 18px; font-weight: 600; }
+.header-icon {
+  width: 32px; height: 32px;
+  background: #0A84FF;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+/* メインコンテンツ */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 70px 20px 100px;
+}
+.card {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.card p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+}
+.row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.col {
+  flex: 1;
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+}
+.col .num {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0A84FF;
+}
+.col .label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+/* ボタン */
+.btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: #0A84FF;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { opacity: 0.8; transform: scale(0.98); }
+.btn-secondary {
+  background: #1c1c1c;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+/* 入力 */
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #141414;
+  color: #fff;
+  font-size: 16px;
+  margin-bottom: 12px;
+  -webkit-appearance: none;
+}
+.input:focus { outline: none; border-color: #0A84FF; }
+/* リスト */
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.list-item:last-child { border-bottom: none; }
+/* 下部タブバー */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(20,20,20,0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  justify-content: space-around;
+  padding-top: 8px;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0 10px;
+  color: rgba(255,255,255,0.5);
+  font-size: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-item.active { color: #0A84FF; }
+.tab-icon { font-size: 22px; }
+/* Safe Area可視化 */
+.safe-demo {
+  background: rgba(10,132,255,0.08);
+  border: 1px dashed rgba(10,132,255,0.4);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: rgba(10,132,255,0.9);
+  text-align: center;
+}
+/* スクロールテスト */
+.scroll-box {
+  height: 200px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #0d0d0d;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.scroll-item {
+  padding: 14px;
+  background: #1c1c1c;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 固定ヘッダー -->
+  <header class="header">
+    <h1>サンプルPWA</h1>
+    <div class="header-icon">&#9733;</div>
+  </header>
+
+  <!-- メイン -->
+  <main class="main">
+
+    <div class="safe-demo">
+      env(safe-area-inset-top) / env(safe-area-inset-bottom) が適用されています
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="num">128</div>
+        <div class="label">アイテム</div>
+      </div>
+      <div class="col">
+        <div class="num">24</div>
+        <div class="label">通知</div>
+      </div>
+      <div class="col">
+        <div class="num">98%</div>
+        <div class="label">進捗</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>タップ・スワイプ・長押し</h2>
+      <p>このプレビュー内では実際にタップ・スクロール・入力が動作します。下部タブバーはSafe Areaを考慮して配置されています。</p>
+    </div>
+
+    <button class="btn" id="demoBtn">タップテスト</button>
+    <button class="btn btn-secondary" id="demoBtn2">長押しテスト</button>
+
+    <input type="text" class="input" placeholder="テキスト入力テスト">
+
+    <div class="card">
+      <h2>スクロールテスト</h2>
+      <div class="scroll-box" id="scrollBox">
+        <div class="scroll-item">スクロールアイテム 1</div>
+        <div class="scroll-item">スクロールアイテム 2</div>
+        <div class="scroll-item">スクロールアイテム 3</div>
+        <div class="scroll-item">スクロールアイテム 4</div>
+        <div class="scroll-item">スクロールアイテム 5</div>
+        <div class="scroll-item">スクロールアイテム 6</div>
+        <div class="scroll-item">スクロールアイテム 7</div>
+        <div class="scroll-item">スクロールアイテム 8</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>100dvh vs 100vh</h2>
+      <p>このページは min-height: 100dvh を使用しています。Safariのアドレスバーによるレイアウト崩れを防ぎます。</p>
+    </div>
+
+    <div class="card">
+      <div class="list-item">
+        <span>ダークモード</span>
+        <span style="color:#30D158;">ON</span>
+      </div>
+      <div class="list-item">
+        <span>Safe Area</span>
+        <span style="color:#30D158;">適用済み</span>
+      </div>
+      <div class="list-item">
+        <span>Viewport Fit</span>
+        <span style="color:#30D158;">Cover</span>
+      </div>
+    </div>
+
+    <div style="height:40px;"></div>
+  </main>
+
+  <!-- 下部タブバー -->
+  <nav class="tabbar">
+    <div class="tab-item active">
+      <span class="tab-icon">&#8962;</span>
+      <span>ホーム</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">&#9733;</span>
+      <span>お気に入り</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">&#9998;</span>
+      <span>メモ</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">&#9881;</span>
+      <span>設定</span>
+    </div>
+  </nav>
+
+</div>
+
+<script>
+// タップテスト
+let tapCount = 0;
+document.getElementById("demoBtn").addEventListener("click", function() {
+  tapCount++;
+  this.textContent = "タップ " + tapCount + " 回";
+});
+
+// 長押しテスト
+let pressTimer;
+var btn2 = document.getElementById("demoBtn2");
+btn2.addEventListener("touchstart", function(e) {
+  pressTimer = setTimeout(() => {
+    this.textContent = "長押し検出！";
+    this.style.background = "#30D158";
+  }, 500);
+});
+btn2.addEventListener("touchend", function() {
+  clearTimeout(pressTimer);
+});
+btn2.addEventListener("touchcancel", function() {
+  clearTimeout(pressTimer);
+});
+
+// タブ切り替え
+document.querySelectorAll(".tab-item").forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    document.querySelectorAll(".tab-item").forEach(function(t) { t.classList.remove("active"); });
+    this.classList.add("active");
+  });
+});
+` + "<" + "/script>
+</body>
+</html>";
+
+/* =============================================
+   Safe Area simulation CSS for iframe
+   ============================================= */
+const SAFE_AREA_CSS = `
+:root {
+  --sat: 59px;
+  --sab: 34px;
+  --sar: 0px;
+  --sal: 0px;
+}
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --sat: env(safe-area-inset-top);
+    --sab: env(safe-area-inset-bottom);
+    --sar: env(safe-area-inset-right);
+    --sal: env(safe-area-inset-left);
   }
-  window.__kantanDocAbort = new AbortController();
-  const __docSignal = window.__kantanDocAbort.signal;
+}
+`;
 
-  /* =========================================================================
-   * 定数
-   * ===================================================================== */
-  const PITCH_COUNT = 48;                       // 表示する半音の総数（4オクターブ）
-  const FIRST_MIDI = 48;                        // 最低音の MIDI 番号（C3）
-  const BPM = 110;
-  const DEFAULT_UNIT_SECONDS = 60 / BPM / 4;    // 16分音符1つ分の秒数
-  const STORAGE_KEY = 'kantan-sakkyoku-v4';     // 作業状態の保存キー
-  const SONGS_KEY = 'kantan-sakkyoku-songs-v1'; // 保存済み楽曲ライブラリのキー
-  const NOTE_NAMES_JA = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
-  const BLACK_PCS = new Set([1,3,6,8,10]);      // 黒鍵となるピッチクラス
-  const PIANO_PARTIALS = [                       // ピアノ音色を作る倍音構成
-    { ratio: 1, type: 'triangle', gain: .82, detune: -1.7 },
-    { ratio: 2, type: 'sine', gain: .24, detune: 1.1 },
-    { ratio: 3, type: 'sine', gain: .10, detune: -.6 },
-    { ratio: 4.01, type: 'sine', gain: .045, detune: 1.8 }
-  ];
+/* =============================================
+   Utilities
+   ============================================= */
+function showToast(msg) {
+  els.toast.textContent = msg;
+  els.toast.classList.add("show");
+  setTimeout(function() { els.toast.classList.remove("show"); }, 2000);
+}
 
-  /* =========================================================================
-   * DOM 参照（起動時に一度だけ取得してキャッシュ）
-   * ===================================================================== */
-  const els = {
-    playBtn: document.getElementById('playBtn'),
-    recordBtn: document.getElementById('recordBtn'),
-    recordLabel: document.getElementById('recordLabel'),
-    extendBtn: document.getElementById('extendBtn'),
-    shortenBtn: document.getElementById('shortenBtn'),
-    restBtn: document.getElementById('restBtn'),
-    deleteBtn: document.getElementById('deleteBtn'),
-    pitchDownBtn: document.getElementById('pitchDownBtn'),
-    pitchUpBtn: document.getElementById('pitchUpBtn'),
-    centerBtn: document.getElementById('centerBtn'),
-    scoreViewport: document.getElementById('scoreViewport'),
-    scoreContent: document.getElementById('scoreContent'),
-    toast: document.getElementById('toast'),
-    keyboardViewport: document.getElementById('keyboardViewport'),
-    keyboardInner: document.getElementById('keyboardInner'),
-    keyboardRange: document.getElementById('keyboardRange'),
-    keyLeft: document.getElementById('keyLeft'),
-    keyRight: document.getElementById('keyRight'),
-    randomBtn: document.getElementById('randomBtn'),
-    compositionView: document.getElementById('compositionView'),
-    songsView: document.getElementById('songsView'),
-    settingsView: document.getElementById('settingsView'),
-    songNameInput: document.getElementById('songNameInput'),
-    saveSongBtn: document.getElementById('saveSongBtn'),
-    songList: document.getElementById('songList'),
-    exportBtn: document.getElementById('exportBtn'),
-    importBtn: document.getElementById('importBtn'),
-    importFileInput: document.getElementById('importFileInput'),
-    confirmModal: document.getElementById('confirmModal'),
-    modalTitle: document.getElementById('modalTitle'),
-    modalMessage: document.getElementById('modalMessage'),
-    modalCancel: document.getElementById('modalCancel'),
-    modalConfirm: document.getElementById('modalConfirm'),
-    edgeLeft: document.getElementById('edgeLeft'),
-    edgeRight: document.getElementById('edgeRight'),
-    edgeUp: document.getElementById('edgeUp'),
-    edgeDown: document.getElementById('edgeDown'),
-    swipePlay: document.getElementById('swipePlay'),
-    swipeScroll: document.getElementById('swipeScroll'),
-    bpmBtn: document.getElementById('bpmBtn'),
-    bpmValue: document.getElementById('bpmValue'),
-    volumeRange: document.getElementById('volumeRange'),
-    volumeValue: document.getElementById('volumeValue'),
-    randomLengthRange: document.getElementById('randomLengthRange'),
-    randomLengthValue: document.getElementById('randomLengthValue')
-  };
+function updateStatus() {
+  var len = els.htmlInput.value.length;
+  els.editorStatus.textContent = len + " 文字";
+}
 
-  /* =========================================================================
-   * アプリケーション状態
-   *  - events: 楽譜本体（音符/休符の配列。表示順＝再生順）
-   *  - selectedId: 選択中イベント。編集・再生開始位置の基準
-   *  - playing / activeZoom / overviewState: 再生とズームの一時状態
-   * ===================================================================== */
-  let events = [];
-  let selectedId = null;
-  let nextId = 1;
-  let recordMode = false;
-  let currentTab = 'composition';
-  let toastTimer = 0;
-  let audio = null;
-  let playing = null;
-  let keyGeometry = new Map();
-  let pianoWidth = 0;
-  let songs = [];
-  let currentSongId = null;
-  let currentSongName = '';
-  let modalAction = null;
-  let overviewState = null;
-  let libraryPlaybackTimer = 0;
-  let libraryPlaying = null;
-  let currentUnitSeconds = DEFAULT_UNIT_SECONDS;
-  let currentBPM = 110;
-  let currentVolume = 0.72;
-  const BPM_MIN = 40, BPM_MAX = 220, BPM_STEP = 10;
-  let pianoSwipeMode = 'play';
-  let currentScale = 1;
-  let renderScoreRAF = null;
-  let randomPhraseLength = 12;
-  let resizeTimer = 0;
-  // 鍵盤のポインタ操作（押下～スライド）に伴う一時状態
-  let keyboardGesture = { pointerId: null, lastMidi: null, holdTimer: 0, holdInterval: 0, eventId: null, previousSelectedId: null, startX: 0, startScroll: 0, scrolling: false, voice: null };
-  let activeZoom = null;
-  let audioUnlockPromise = null;
-  let playbackStarting = false;
-  let playbackToken = 0;
+function updateTime() {
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2, "0");
+  var m = String(now.getMinutes()).padStart(2, "0");
+  els.statusTime.textContent = h + ":" + m;
+}
 
-  // なめらかスクロール制御用
-  let suppressScrollSync = false;
-  let smoothScrollAnimId = 0;
-  let smoothScrollRaf = 0;
-  const smoothScrollEase = (t) => 1 - Math.pow(1 - t, 3);
-
-  /* =========================================================================
-   * CSS カスタムプロパティの読み取り（レイアウト計算に使用）
-   * ===================================================================== */
-  const rootStyle = getComputedStyle(document.documentElement);
-  function cssNumber(name) {
-    return parseFloat(rootStyle.getPropertyValue(name));
+/* =============================================
+   LocalStorage
+   ============================================= */
+function saveHTML() {
+  var val = els.htmlInput.value;
+  if (val.trim()) {
+    localStorage.setItem(STORAGE_KEY, val);
   }
-  function rowH() { return cssNumber('--row-h'); }
-  function rulerH() { return cssNumber('--ruler-h'); }
-  function whiteKeyW() { return cssNumber('--white-key-w'); }
-  function blackKeyW() { return cssNumber('--black-key-w'); }
+}
 
-  function setupRuler() {
-    document.documentElement.style.setProperty('--ruler-h', '48px');
+function loadHTML() {
+  var saved = localStorage.getItem(STORAGE_KEY);
+  if (saved && saved.trim()) {
+    els.htmlInput.value = saved;
+    updateStatus();
+    return true;
   }
+  return false;
+}
 
-  /* =========================================================================
-   * 音楽的ユーティリティ（MIDI ⇔ 表示名 / 周波数）
-   * ===================================================================== */
-  function noteInfo(midi) {
-    const pc = ((midi % 12) + 12) % 12;
-    const octave = Math.floor(midi / 12) - 1;
-    return { pc, octave, name: NOTE_NAMES_JA[pc], label: NOTE_NAMES_JA[pc] + octave };
-  }
-
-  function frequency(midi) {
-    return 440 * Math.pow(2, (midi - 69) / 12);
-  }
-
-  /* =========================================================================
-   * データ変換とバリデーション
-   *  parseEventList: 保存形式（配列/オブジェクト）→内部イベント配列に正規化
-   *  eventsToLight : 内部イベント配列→軽量な保存形式 [midi, duration]（休符は midi=0）
-   * ===================================================================== */
-  function parseEventList(data) {
-    if (!Array.isArray(data)) return [];
-    const clean = [];
-    for (const item of data) {
-      if (Array.isArray(item) && item.length >= 2) {
-        const midi = Math.floor(Number(item[0]));
-        const duration = Math.max(1, Math.floor(Number(item[1]) || 1));
-        if (midi === 0) {
-          clean.push({ id: nextId++, type: 'rest', duration });
-        } else if (midi >= FIRST_MIDI && midi < FIRST_MIDI + PITCH_COUNT) {
-          clean.push({ id: nextId++, type: 'note', midi, duration });
-        }
-      } else if (item && typeof item === 'object') {
-        const duration = Math.max(1, Math.floor(Number(item.duration) || 1));
-        if (item.type === 'note') {
-          const midi = Math.floor(Number(item.midi));
-          if (midi < FIRST_MIDI || midi >= FIRST_MIDI + PITCH_COUNT) continue;
-          clean.push({ id: nextId++, type: 'note', midi, duration });
-        } else if (item.type === 'rest') {
-          clean.push({ id: nextId++, type: 'rest', duration });
-        }
-      }
-    }
-    return clean;
-  }
-
-  function eventsToLight(list = events) {
-    return list.map(ev => ev.type === 'note' ? [ev.midi, ev.duration] : [0, ev.duration]);
-  }
-
-  /* =========================================================================
-   * BPM とテンポ換算
-   * ===================================================================== */
-  function clampBPM(bpm) {
-    return Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(bpm / BPM_STEP) * BPM_STEP));
-  }
-  function bpmFromUnitSeconds(unitSeconds) {
-    const u = Math.max(.05, Number(unitSeconds) || DEFAULT_UNIT_SECONDS);
-    return clampBPM(60 / u / 4);
-  }
-  function unitFromBPM(bpm) { return 60 / bpm / 4; }
-
-  /* =========================================================================
-   * 永続化（作業状態）
-   * ===================================================================== */
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
-      events = parseEventList(saved.events);
-      recordMode = Boolean(saved.recordMode);
-      currentSongName = typeof saved.currentSongName === 'string' ? saved.currentSongName : '';
-      if (saved.bpm != null) {
-        currentBPM = clampBPM(Number(saved.bpm));
-        currentUnitSeconds = unitFromBPM(currentBPM);
-      } else {
-        currentUnitSeconds = Math.max(.12, Math.min(1, Number(saved.unitSeconds) || DEFAULT_UNIT_SECONDS));
-        currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
-      }
-      currentVolume = Math.max(0, Math.min(1, Number(saved.volume) != null ? Number(saved.volume) : 0.72));
-      pianoSwipeMode = saved.pianoSwipeMode === 'scroll' ? 'scroll' : 'play';
-      randomPhraseLength = Math.max(12, Math.min(100, Number(saved.randomPhraseLength) || 12));
-      selectedId = events.length ? events[events.length - 1].id : null;
-    } catch (_) {
-      events = [];
-    }
-  }
-
-  function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        events: eventsToLight(events),
-        recordMode,
-        currentSongName,
-        bpm: currentBPM,
-        unitSeconds: currentUnitSeconds,
-        volume: currentVolume,
-        pianoSwipeMode,
-        randomPhraseLength
-      }));
-    } catch (_) {}
-  }
-
-  // イベント配列のディープコピー（楽曲保存/読込時に参照を切り離す）
-  function snapshotEvents(list = events) { return list.map(e => ({ id: e.id, type: e.type, midi: e.midi, duration: e.duration })); }
-
-  /* =========================================================================
-   * 永続化（楽曲ライブラリ）
-   * ===================================================================== */
-  function loadSongs() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(SONGS_KEY) || '[]');
-      songs = Array.isArray(parsed) ? parsed.filter(s => s && Array.isArray(s.events)).map(s => ({
-        _id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-        name: typeof s.name === 'string' ? s.name : '無題の曲',
-        events: parseEventList(s.events),
-        unitSeconds: Math.max(.05, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS))
-      })) : [];
-    } catch (_) { songs = []; }
-  }
-
-  function saveSongs() {
-    try {
-      const data = songs.map(s => ({ name: s.name, events: eventsToLight(s.events), unitSeconds: s.unitSeconds }));
-      localStorage.setItem(SONGS_KEY, JSON.stringify(data));
-    } catch (_) {}
-  }
-
-  /* =========================================================================
-   * 確認モーダル
-   * ===================================================================== */
-  function openConfirm(title, message, confirmText, action) {
-    modalAction = action;
-    els.modalTitle.textContent = title;
-    els.modalMessage.textContent = message;
-    els.modalConfirm.textContent = confirmText;
-    els.confirmModal.classList.add('is-open');
-  }
-
-  function closeConfirm() {
-    modalAction = null;
-    els.confirmModal.classList.remove('is-open');
-  }
-
-  /* =========================================================================
-   * トースト通知
-   * ===================================================================== */
-  function updateToastPosition() {
-    const isComp = currentTab === 'composition' && els.compositionView.classList.contains('is-active');
-    let bottom = 14;
-    if (isComp) {
-      const r = els.keyboardViewport.getBoundingClientRect();
-      bottom = Math.max(14, window.innerHeight - r.top + 10);
-    }
-    document.documentElement.style.setProperty('--toast-bottom', bottom + 'px');
-  }
-
-  function showToast(message) {
-    clearTimeout(toastTimer);
-    updateToastPosition();
-    els.toast.textContent = message;
-    els.toast.classList.add('show');
-    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1350);
-  }
-
-  /* =========================================================================
-   * タブ切り替え
-   * ===================================================================== */
-  function switchTab(name) {
-    currentTab = name;
-    const map = { composition: els.compositionView, songs: els.songsView, settings: els.settingsView };
-    Object.entries(map).forEach(([key, view]) => view.classList.toggle('is-active', key === name));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('is-active', btn.dataset.tab === name));
-    if (name === 'songs') {
-      els.songNameInput.value = currentSongName;
-      renderSongList();
-    }
-    if (name === 'settings') syncSettingsUI();
-    if (name === 'composition') requestAnimationFrame(() => {
-      renderKeyboard();
-      renderScore();
-      updateEdgeIndicators();
-    });
-    updateToastPosition();
-  }
-
-  /* =========================================================================
-   * 楽曲ライブラリ表示とスワイプ操作（編集/削除）
-   * ===================================================================== */
-  function renderSongList() {
-    els.songList.innerHTML = '';
-    if (!songs.length) {
-      const empty = document.createElement('div');
-      empty.className = 'empty-library panel-card';
-      empty.textContent = '保存した楽曲はまだありません。';
-      els.songList.appendChild(empty);
-      return;
-    }
-    for (const song of songs) {
-      const item = document.createElement('article');
-      item.className = 'song-item';
-      if (libraryPlaying && libraryPlaying.songId === song._id) item.classList.add('is-playing');
-
-      const hintL = document.createElement('span');
-      hintL.className = 'song-hint left';
-      hintL.innerHTML = '<span class="hint-label">編集</span><span class="hint-icon">✎</span>';
-
-      const hintR = document.createElement('span');
-      hintR.className = 'song-hint right';
-      hintR.innerHTML = '<span class="hint-icon">🗑</span><span class="hint-label">削除</span>';
-
-      const surface = document.createElement('div');
-      surface.className = 'song-surface';
-
-      const name = document.createElement('div');
-      name.className = 'song-name';
-      name.textContent = song.name || '無題の曲';
-
-      const meta = document.createElement('div');
-      meta.className = 'song-meta';
-      const notes = song.events.filter(e => e.type === 'note').length;
-      meta.textContent = `${notes}音・♩=${bpmFromUnitSeconds(song.unitSeconds)}`;
-
-      surface.append(name, meta);
-      item.append(hintL, hintR, surface);
-
-      bindSongGesture(item, song);
-      els.songList.appendChild(item);
-    }
-  }
-
-  function bindSongGesture(item, song) {
-    const surface = item.querySelector('.song-surface');
-    const leftHint = item.querySelector('.song-hint.left');
-    const rightHint = item.querySelector('.song-hint.right');
-    const leftLabel = leftHint.querySelector('.hint-label');
-    const rightLabel = rightHint.querySelector('.hint-label');
-
-    let startX = 0, startY = 0, pointerId = null, moved = false, decided = null;
-    const commitThreshold = 72;
-    const maxReveal = 112;
-
-    const reset = (animate = true) => {
-      surface.style.transition = animate ? 'transform .2s cubic-bezier(.2,.8,.2,1)' : 'none';
-      surface.style.transform = 'translateX(0)';
-      leftHint.style.opacity = '0';
-      rightHint.style.opacity = '0';
-      leftLabel.style.transform = '';
-      rightLabel.style.transform = '';
-    };
-
-    const down = (e) => {
-      if (pointerId !== null) return;
-      pointerId = e.pointerId;
-      startX = e.clientX;
-      startY = e.clientY;
-      moved = false;
-      decided = null;
-      surface.style.transition = 'none';
-      try { item.setPointerCapture(e.pointerId); } catch (_) {}
-    };
-
-    const move = (e) => {
-      if (pointerId !== e.pointerId) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-
-      if (!moved && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) moved = true;
-      if (!moved) return;
-
-      e.preventDefault();
-      decided = dx > 0 ? 'edit' : 'delete';
-
-      const reveal = Math.max(0, Math.min(maxReveal, Math.abs(dx) * 0.72));
-      const progress = Math.min(1, reveal / commitThreshold);
-      const translate = Math.max(-maxReveal, Math.min(maxReveal, dx * 0.72));
-
-      surface.style.transform = `translateX(${translate}px)`;
-      leftHint.style.opacity = dx > 0 ? String(Math.min(1, .35 + progress * .65)) : '0';
-      rightHint.style.opacity = dx < 0 ? String(Math.min(1, .35 + progress * .65)) : '0';
-
-      leftLabel.style.transform = dx > 0 ? `translateX(${Math.max(0, 14 - reveal * .12)}px) scale(${.88 + .12 * progress})` : '';
-      rightLabel.style.transform = dx < 0 ? `translateX(${Math.min(0, -14 + reveal * .12)}px) scale(${.88 + .12 * progress})` : '';
-    };
-
-    const finish = (e) => {
-      if (pointerId !== e.pointerId) return;
-      const dx = e.clientX - startX;
-      pointerId = null;
-
-      if (!moved) {
-        reset(true);
-        playLibrarySong(song, item);
-        return;
-      }
-
-      if (Math.abs(dx) < commitThreshold) {
-        reset(true);
-        return;
-      }
-
-      if (decided === 'edit') {
-        surface.style.transition = 'transform .14s ease-out';
-        surface.style.transform = 'translateX(100%)';
-        setTimeout(() => { reset(false); editSong(song); }, 120);
-      } else {
-        surface.style.transition = 'transform .14s ease-out';
-        surface.style.transform = 'translateX(-100%)';
-        setTimeout(() => {
-          reset(false);
-          openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => deleteSong(song));
-        }, 120);
-      }
-    };
-
-    const cancel = (e) => {
-      if (pointerId !== e.pointerId) return;
-      pointerId = null;
-      reset(true);
-    };
-
-    item.addEventListener('pointerdown', down);
-    item.addEventListener('pointermove', move, { passive: false });
-    item.addEventListener('pointerup', finish);
-    item.addEventListener('pointercancel', cancel);
+/* =============================================
+   Preview
+   ============================================= */
+function runPreview() {
+  var code = els.htmlInput.value.trim();
+  if (!code) {
+    showToast("HTMLを入力してください");
+    return;
   }
 
-  function deleteSong(song) {
-    songs = songs.filter(item => item._id !== song._id);
-    if (currentSongId === song._id) currentSongId = null;
-    if (libraryPlaying && libraryPlaying.songId === song._id) stopLibraryPlayback(false);
-    saveSongs(); saveState(); renderSongList();
-    showToast('楽曲を削除しました');
-  }
+  saveHTML();
 
-  function saveCurrentSong() {
-    if (!events.length) { showToast('保存する音符がありません'); return; }
-    const name = (els.songNameInput.value || '').trim() || `無題の曲 ${songs.length + 1}`;
-    if (currentSongId) {
-      const song = songs.find(item => item._id === currentSongId);
-      if (song) { song.name = name; song.events = snapshotEvents(); song.unitSeconds = currentUnitSeconds; }
-      else currentSongId = null;
-    }
-    if (!currentSongId) {
-      currentSongId = `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-      songs.push({ _id: currentSongId, name, events: snapshotEvents(), unitSeconds: currentUnitSeconds });
-    }
-    currentSongName = name;
-    saveSongs(); saveState(); renderSongList();
-    showToast('楽曲を保存しました');
-  }
+  var doc = code;
 
-  function editSong(song) {
-    stopPlayback(false);
-    nextId = 1;
-    events = parseEventList(snapshotEvents(song.events));
-    selectedId = events.length ? events[events.length - 1].id : null;
-    currentSongId = song._id;
-    currentSongName = song.name || '';
-    currentUnitSeconds = Math.max(.05, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
-    currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
-    syncSettingsUI();
-    saveState(); renderScore({ preserve: false });
-    switchTab('composition');
-    showToast('楽曲を読み込みました');
-  }
-
-  /* =========================================================================
-   * イベント配列のレイアウト計算とインデックス探索
-   * ===================================================================== */
-  // 各イベントの開始/終了位置（16分音符単位）と全体長を求める
-  function layoutEvents() {
-    let cursor = 0;
-    const map = new Map();
-    for (const ev of events) {
-      map.set(ev.id, { start: cursor, end: cursor + ev.duration });
-      cursor += ev.duration;
-    }
-    return { map, total: cursor };
-  }
-
-  function selectedIndex() {
-    return events.findIndex(ev => ev.id === selectedId);
-  }
-
-  function findAdjacentNote(fromIndex, direction) {
-    for (let i = fromIndex + direction; i >= 0 && i < events.length; i += direction) {
-      if (events[i].type === 'note') return i;
-    }
-    return -1;
-  }
-
-  /* =========================================================================
-   * コントロールの有効/無効・再生ロック UI
-   * ===================================================================== */
-  function setPlaybackUI(active) {
-    const disableList = [
-      els.restBtn, els.deleteBtn, els.shortenBtn, els.extendBtn,
-      els.pitchDownBtn, els.pitchUpBtn, els.centerBtn, els.randomBtn,
-      els.recordBtn, els.keyLeft, els.keyRight, els.keyboardRange, els.bpmBtn,
-      ...document.querySelectorAll('.tab-btn')
-    ];
-    disableList.forEach(el => { if (el) el.disabled = active; });
-    els.playBtn.disabled = false;
-    els.playBtn.style.pointerEvents = 'auto';
-    if (active) {
-      els.scoreViewport.classList.add('playback-lock');
-      els.keyboardViewport.classList.add('playback-lock');
+  if (doc.includes("<html") || doc.includes("<!DOCTYPE")) {
+    var safeStyleTag = "<style>/* PWA Previewer Safe Area */\n" + SAFE_AREA_CSS + "\n</style>";
+    if (doc.includes("</head>")) {
+      doc = doc.replace("</head>", safeStyleTag + "\n</head>");
+    } else if (doc.includes("<head>")) {
+      doc = doc.replace("<head>", "<head>\n" + safeStyleTag);
     } else {
-      els.scoreViewport.classList.remove('playback-lock');
-      els.keyboardViewport.classList.remove('playback-lock');
+      doc = "<head>\n" + safeStyleTag + "\n</head>\n" + doc;
     }
+  } else {
+    doc = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<style>` + SAFE_AREA_CSS + `</style>
+</head>
+<body>
+` + doc + `
+</body>
+</html>`;
   }
 
-  function updateControls() {
-    const isPlaying = Boolean(playing);
-    const idx = selectedIndex();
-    const hasSelection = idx >= 0;
-    const selected = hasSelection ? events[idx] : null;
-    const noteSelected = Boolean(selected && selected.type === 'note');
-    const canResize = Boolean(selected);
-    els.extendBtn.disabled = !canResize || isPlaying;
-    els.shortenBtn.disabled = !canResize || isPlaying;
-    els.deleteBtn.disabled = (!hasSelection && events.length === 0) || isPlaying;
-    els.restBtn.disabled = isPlaying;
-    els.pitchDownBtn.disabled = !noteSelected || selected.midi <= FIRST_MIDI || isPlaying;
-    els.pitchUpBtn.disabled = !noteSelected || selected.midi >= FIRST_MIDI + PITCH_COUNT - 1 || isPlaying;
-    els.recordBtn.classList.toggle('is-on', recordMode);
-    els.recordBtn.setAttribute('aria-pressed', String(recordMode));
-    els.recordLabel.textContent = '記録';
-  }
-
-  /* =========================================================================
-   * 鍵盤ジオメトリ（白鍵/黒鍵の x 座標と幅）
-   * ===================================================================== */
-  function buildKeyGeometry() {
-    keyGeometry = new Map();
-    let whiteIndex = 0;
-    for (let midi = FIRST_MIDI; midi < FIRST_MIDI + PITCH_COUNT; midi++) {
-      const info = noteInfo(midi);
-      if (!BLACK_PCS.has(info.pc)) {
-        keyGeometry.set(midi, { left: whiteIndex * whiteKeyW(), width: whiteKeyW(), isBlack: false });
-        whiteIndex++;
+  if (!doc.includes("viewport-fit=cover")) {
+    doc = doc.replace(
+      /name="viewport" content="([^"]+)"/,
+      function(m, p1) {
+        if (p1.includes("viewport-fit")) return m;
+        return 'name="viewport" content="' + p1 + ', viewport-fit=cover"';
       }
-    }
-    for (let midi = FIRST_MIDI; midi < FIRST_MIDI + PITCH_COUNT; midi++) {
-      const info = noteInfo(midi);
-      if (BLACK_PCS.has(info.pc)) {
-        let previousWhite = 0;
-        for (let m = FIRST_MIDI; m < midi; m++) {
-          if (!BLACK_PCS.has(noteInfo(m).pc)) previousWhite++;
-        }
-        keyGeometry.set(midi, {
-          left: previousWhite * whiteKeyW() - blackKeyW() / 2,
-          width: blackKeyW(),
-          isBlack: true
-        });
-      }
-    }
-    pianoWidth = whiteIndex * whiteKeyW();
+    );
   }
 
-  function geometryFor(midi) {
-    return keyGeometry.get(midi) || { left: 0, width: whiteKeyW(), isBlack: false };
+  var blob = new Blob([doc], { type: "text/html" });
+  var url = URL.createObjectURL(blob);
+  els.previewFrame.src = url;
+
+  switchTab("preview");
+  showToast("プレビューを更新しました");
+}
+
+/* =============================================
+   Tab switching
+   ============================================= */
+function switchTab(tab) {
+  if (tab === "editor") {
+    els.editorPanel.classList.remove("hidden");
+    els.previewPanel.classList.remove("active");
+    els.tabEditor.classList.add("active");
+    els.tabPreview.classList.remove("active");
+    els.debugBar.classList.remove("visible");
+  } else {
+    els.editorPanel.classList.add("hidden");
+    els.previewPanel.classList.add("active");
+    els.tabEditor.classList.remove("active");
+    els.tabPreview.classList.add("active");
+    els.debugBar.classList.add("visible");
   }
+}
 
-  /* =========================================================================
-   * スクロール範囲のクランプと座標→鍵盤の対応
-   * ===================================================================== */
-  function clampScrollLeft(left) {
-    const scoreMax = Math.max(0, pianoWidth - els.scoreViewport.clientWidth);
-    const keyMax = Math.max(0, pianoWidth - els.keyboardViewport.clientWidth);
-    const maxLeft = Math.min(scoreMax, keyMax);
-    return Math.max(0, Math.min(maxLeft, left));
+/* =============================================
+   Scale calculation
+   ============================================= */
+function updateScale() {
+  var frameW = 402;
+  var frameH = 873 + 60;
+  var availW = window.innerWidth - 32;
+  var availH = window.innerHeight - (document.body.classList.contains("fullscreen") ? 0 : 140);
+
+  var scaleX = availW / frameW;
+  var scaleY = availH / frameH;
+  var scale = Math.min(scaleX, scaleY, 1);
+
+  if (!document.body.classList.contains("fullscreen")) {
+    els.scaleWrapper.style.transform = "scale(" + scale + ")";
+  } else {
+    els.scaleWrapper.style.transform = "none";
   }
+}
 
-  function clampScrollTop(top) {
-    const maxTop = Math.max(0, els.scoreContent.scrollHeight - els.scoreViewport.clientHeight);
-    return Math.max(0, Math.min(maxTop, top));
+/* =============================================
+   Event listeners
+   ============================================= */
+
+// Tabs
+els.tabEditor.addEventListener("click", function() { switchTab("editor"); });
+els.tabPreview.addEventListener("click", function() { switchTab("preview"); });
+
+// Buttons
+els.btnPreview.addEventListener("click", runPreview);
+els.btnSample.addEventListener("click", function() {
+  if (els.htmlInput.value.trim() && !confirm("現在の内容を上書きしますか？")) return;
+  els.htmlInput.value = SAMPLE_HTML;
+  updateStatus();
+  saveHTML();
+  showToast("サンプルを読み込みました");
+});
+els.btnClear.addEventListener("click", function() {
+  if (!els.htmlInput.value.trim()) return;
+  if (confirm("入力内容をクリアしますか？")) {
+    els.htmlInput.value = "";
+    updateStatus();
+    localStorage.removeItem(STORAGE_KEY);
+    showToast("クリアしました");
   }
-
-  // 画面上の座標がどの鍵盤に当たるか（黒鍵を優先判定）
-  function keyAtPoint(clientX, clientY) {
-    const rect = els.keyboardViewport.getBoundingClientRect();
-    const x = clientX - rect.left + els.keyboardViewport.scrollLeft;
-    const y = clientY - rect.top;
-    if (y < 0 || y > rect.height) {
-        return null;
-    }
-
-    const blackKeyHeight = cssNumber('--black-key-h');
-
-    if (y <= blackKeyHeight) {
-        for (let midi = FIRST_MIDI + PITCH_COUNT - 1; midi >= FIRST_MIDI; midi--) {
-            const geom = keyGeometry.get(midi);
-            if (!geom || !geom.isBlack) continue;
-            if (x >= geom.left && x < geom.left + geom.width) {
-                return midi;
-            }
-        }
-    }
-
-    for (let midi = FIRST_MIDI; midi < FIRST_MIDI + PITCH_COUNT; midi++) {
-        const geom = keyGeometry.get(midi);
-        if (!geom || geom.isBlack) continue;
-        if (x >= geom.left && x < geom.left + geom.width) {
-            return midi;
-        }
-    }
-    return null;
-  }
-
-  /* =========================================================================
-   * スクロール同期（楽譜と鍵盤は横スクロールを共有）
-   * ===================================================================== */
-  function smoothScrollBoth(left, top) {
-    const targetLeft = clampScrollLeft(left);
-    const targetTop = clampScrollTop(top);
-    const startLeft = els.scoreViewport.scrollLeft;
-    const startTop = els.scoreViewport.scrollTop;
-    const dx = targetLeft - startLeft;
-    const dy = targetTop - startTop;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-      setLinkedScroll(targetLeft);
-      els.scoreViewport.scrollTop = targetTop;
-      syncKeyboardRange();
-      updateEdgeIndicators();
-      return;
-    }
-
-    cancelAnimationFrame(smoothScrollRaf);
-    smoothScrollAnimId++;
-    const token = smoothScrollAnimId;
-    suppressScrollSync = true;
-    const duration = Math.max(220, Math.min(640, 180 + Math.abs(dx) * 0.6 + Math.abs(dy) * 0.3));
-    const startTime = performance.now();
-
-    const step = (now) => {
-      if (token !== smoothScrollAnimId) return;
-      const t = Math.min(1, (now - startTime) / duration);
-      const e = smoothScrollEase(t);
-      const nextLeft = startLeft + dx * e;
-      const nextTop = startTop + dy * e;
-      setLinkedScroll(nextLeft);
-      els.scoreViewport.scrollTop = nextTop;
-      if (t < 1) {
-        smoothScrollRaf = requestAnimationFrame(step);
-      } else {
-        smoothScrollRaf = 0;
-        setLinkedScroll(targetLeft);
-        els.scoreViewport.scrollTop = targetTop;
-        suppressScrollSync = false;
-        syncKeyboardRange();
-        updateEdgeIndicators();
-      }
-    };
-    smoothScrollRaf = requestAnimationFrame(step);
-  }
-
-  function setLinkedScroll(left, source = '') {
-    const scoreMax = Math.max(0, pianoWidth - els.scoreViewport.clientWidth);
-    const keyMax = Math.max(0, pianoWidth - els.keyboardViewport.clientWidth);
-    const next = Math.max(0, Math.min(Math.min(scoreMax, keyMax), left));
-    if (source !== 'score') els.scoreViewport.scrollLeft = next;
-    if (source !== 'keyboard') els.keyboardViewport.scrollLeft = next;
-    const max = Math.max(1, Math.min(scoreMax, keyMax));
-    els.keyboardRange.value = String(Math.round(next / max * 100));
-  }
-
-  /* =========================================================================
-   * 楽譜（ピアノロール）の描画
-   * ===================================================================== */
-  function cancelRenderScoreRAF() {
-    if (renderScoreRAF) {
-      cancelAnimationFrame(renderScoreRAF);
-      renderScoreRAF = null;
-    }
-  }
-
-  function renderScore(options = {}) {
-    cancelRenderScoreRAF();
-    if (!keyGeometry.size) buildKeyGeometry();
-    const preserveLeft = els.scoreViewport.scrollLeft;
-    const preserveTop = els.scoreViewport.scrollTop;
-    const { map, total } = layoutEvents();
-    const viewport = els.scoreViewport;
-    const bottomPadUnits = Math.ceil(viewport.clientHeight / Math.max(rowH(), 1)) + 2;
-    const minUnits = Math.max(total + bottomPadUnits, Math.ceil(viewport.clientHeight / Math.max(rowH(), 1)) + 5, 18);
-    const h = rulerH() + minUnits * rowH();
-    els.scoreContent.style.height = `${h}px`;
-    els.scoreContent.style.width = `${pianoWidth}px`;
-    els.scoreContent.innerHTML = '';
-
-    const orderedMidis = Array.from(keyGeometry.keys()).sort((a, b) => {
-      const ga = geometryFor(a), gb = geometryFor(b);
-      return Number(ga.isBlack) - Number(gb.isBlack) || ga.left - gb.left;
-    });
-    for (const midi of orderedMidis) {
-      const geom = geometryFor(midi);
-      const lane = document.createElement('div');
-      lane.className = 'pitch-lane' + (geom.isBlack ? ' is-black' : '');
-      lane.style.left = `${geom.left}px`;
-      lane.style.width = `${geom.width}px`;
-      lane.style.top = `${rulerH()}px`;
-      els.scoreContent.appendChild(lane);
-    }
-
-    const labelLimit = Math.max(total + 8, 16);
-    for (let t = 0; t <= labelLimit; t += 4) {
-      const marker = document.createElement('div');
-      marker.className = 'time-label';
-      marker.style.top = `${rulerH() + t * rowH() + 3}px`;
-      marker.textContent = `${Math.floor(t / 4) + 1}`;
-      els.scoreContent.appendChild(marker);
-    }
-
-    for (const ev of events) {
-      const pos = map.get(ev.id);
-      const top = rulerH() + pos.start * rowH() + 2;
-      const height = Math.max(12, ev.duration * rowH() - 4);
-      const block = document.createElement('div');
-      block.dataset.eventId = String(ev.id);
-      block.style.top = `${top}px`;
-      block.style.height = `${height}px`;
-      block.setAttribute('role', 'button');
-      block.setAttribute('tabindex', '0');
-      block.setAttribute('aria-pressed', String(ev.id === selectedId));
-
-      if (ev.type === 'note') {
-        const geom = geometryFor(ev.midi);
-        block.className = 'note-block' + (ev.id === selectedId ? ' is-selected' : '');
-        block.style.left = `${geom.left}px`;
-        block.style.width = `${geom.width}px`;
-        block.style.zIndex = geom.isBlack ? '5' : '4';
-        block.setAttribute('aria-label', `${noteInfo(ev.midi).label}、長さ${ev.duration}`);
-        const label = document.createElement('span');
-        label.className = 'note-label';
-        label.textContent = noteInfo(ev.midi).name;
-        block.appendChild(label);
-      } else {
-        block.className = 'rest-block' + (ev.id === selectedId ? ' is-selected' : '');
-        block.setAttribute('aria-label', `休符、長さ${ev.duration}`);
-        for (let x = 115; x < pianoWidth; x += 320) {
-          const label = document.createElement('span');
-          label.className = 'rest-label';
-          label.style.left = `${x}px`;
-          label.textContent = '— 休符 —';
-          block.appendChild(label);
-        }
-      }
-      block.addEventListener('click', () => selectEvent(ev.id));
-      block.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          selectEvent(ev.id);
-        }
-      });
-      els.scoreContent.appendChild(block);
-    }
-
-    const playhead = document.createElement('div');
-    playhead.id = 'playhead';
-    playhead.className = 'playhead';
-    els.scoreContent.appendChild(playhead);
-
-    updateControls();
-    requestAnimationFrame(updateEdgeIndicators);
-
-    if (options.preserve !== false) {
-      setLinkedScroll(preserveLeft);
-      els.scoreViewport.scrollTop = preserveTop;
-    }
-
-    if (options.focusId) {
-      renderScoreRAF = requestAnimationFrame(() => {
-        renderScoreRAF = null;
-        focusEvent(options.focusId, options.smooth !== false);
-      });
-    }
-  }
-
-  function focusEvent(id, smooth = true) {
-    centerOnEvent(id, smooth);
-  }
-
-  /* =========================================================================
-   * 選択と編集操作
-   * ===================================================================== */
-  function selectEvent(id, audition = true) {
-    selectedId = id;
-    const ev = events.find(item => item.id === id);
-    renderScore();
-    saveState();
-    if (audition && ev && ev.type === 'note') playPreview(ev.midi);
-  }
-
-  // 新規イベントは選択中イベントの直後に挿入する
-  function insertionIndex() {
-    const idx = selectedIndex();
-    return idx >= 0 ? idx + 1 : events.length;
-  }
-
-  function addNote(midi, opts = {}) {
-    if (!opts.skipStop) stopPlayback(false);
-    const ev = { id: nextId++, type: 'note', midi, duration: 1 };
-    events.splice(insertionIndex(), 0, ev);
-    selectedId = ev.id;
-    renderScore();
-    saveState();
-    if (opts.audition !== false) playPreview(midi);
-    requestAnimationFrame(() => ensureEventVisible(ev.id));
-    return ev.id;
-  }
-
-  function addRest(duration = 1, quiet = false) {
-    stopPlayback(false);
-    const ev = { id: nextId++, type: 'rest', duration: Math.max(1, duration) };
-    events.splice(insertionIndex(), 0, ev);
-    selectedId = ev.id;
-    renderScore();
-    saveState();
-    if (!quiet) showToast('休符を追加（長押しで伸ばす）');
-    requestAnimationFrame(() => ensureEventVisible(ev.id));
-    return ev.id;
-  }
-
-  function changeDuration(delta, id = selectedId, quiet = false, focusAfter = false) {
-    const ev = events.find(item => item.id === id);
-    if (!ev) return;
-    const next = Math.max(1, ev.duration + delta);
-    if (next === ev.duration) {
-      if (!quiet) showToast('これ以上変更できません');
-      return;
-    }
-    ev.duration = next;
-    selectedId = ev.id;
-    renderScore(focusAfter ? { focusId: ev.id } : {});
-    saveState();
-    if (!quiet) showToast(delta > 0 ? `長さ ${next}` : `長さ ${next}`);
-    if (!focusAfter) requestAnimationFrame(() => ensureEventVisible(ev.id));
-  }
-
-  function changePitch(delta, focusAfter = true) {
-    const idx = selectedIndex();
-    if (idx < 0 || events[idx].type !== 'note') {
-      showToast('音符を選択してください');
-      return;
-    }
-    const ev = events[idx];
-    const next = Math.max(FIRST_MIDI, Math.min(FIRST_MIDI + PITCH_COUNT - 1, ev.midi + delta));
-    if (next === ev.midi) return;
-    ev.midi = next;
-    selectedId = ev.id;
-    renderScore(focusAfter ? { focusId: ev.id } : {});
-    saveState();
-    playPreview(ev.midi);
-    if (!focusAfter) requestAnimationFrame(() => ensureEventVisible(ev.id));
-  }
-
-  function deleteSelected() {
-    stopPlayback(false);
-    const idx = selectedIndex();
-    if (idx < 0) return;
-    events.splice(idx, 1);
-    selectedId = idx > 0 ? events[idx - 1].id : null;
-    renderScore();
-    saveState();
-    showToast('削除しました（長押しで全消去）');
-  }
-
-  function generateRandomPhrase() {
-    stopPlayback(false);
-    const scale = [0, 2, 4, 5, 7, 9, 11, 12];
-    const base = 60 + (Math.random() < .5 ? 0 : -5);
-    const length = Math.max(4, Math.floor(randomPhraseLength));
-    events = [];
-    nextId = 1;
-    let previous = 3;
-    for (let i = 0; i < length; i++) {
-      if (i > 1 && i < length - 1 && Math.random() < .16) {
-        events.push({ id: nextId++, type: 'rest', duration: Math.random() < .7 ? 1 : 2 });
-        continue;
-      }
-      const step = Math.max(0, Math.min(scale.length - 1, previous + Math.floor(Math.random() * 5) - 2));
-      previous = step;
-      const duration = Math.random() < .62 ? 1 : (Math.random() < .82 ? 2 : 3);
-      events.push({ id: nextId++, type: 'note', midi: Math.max(FIRST_MIDI, Math.min(FIRST_MIDI + PITCH_COUNT - 1, base + scale[step])), duration });
-    }
-    selectedId = events.length ? events[events.length - 1].id : null;
-    currentSongId = null;
-    currentSongName = '';
-    renderScore();
-    saveState();
-    showToast('新しいフレーズを生成しました');
-    void startPlayback(true);
-  }
-
-  /* =========================================================================
-   * 画面端インジケータ（表示範囲外に音符があることを示す）
-   * ===================================================================== */
-  function updateEdgeIndicators() {
-    if (!els.compositionView.classList.contains('is-active') || els.scoreViewport.classList.contains('overview-mode') || els.scoreViewport.classList.contains('is-zooming')) {
-      [els.edgeLeft, els.edgeRight, els.edgeUp, els.edgeDown].forEach(el => el.classList.remove('is-visible'));
-      return;
-    }
-    const notes = events.filter(ev => ev.type === 'note');
-    const viewport = els.scoreViewport;
-    const left = viewport.scrollLeft;
-    const right = left + viewport.clientWidth;
-    let hiddenLeft = false, hiddenRight = false;
-    for (const ev of notes) {
-      const geom = geometryFor(ev.midi);
-      hiddenLeft ||= geom.left + geom.width < left + 2;
-      hiddenRight ||= geom.left > right - 2;
-    }
-    const { map, total } = layoutEvents();
-    const top = viewport.scrollTop;
-    const bottom = top + viewport.clientHeight;
-    let hiddenUp = false, hiddenDown = false;
-    for (const ev of events) {
-      const pos = map.get(ev.id);
-      const y1 = rulerH() + pos.start * rowH();
-      const y2 = rulerH() + pos.end * rowH();
-      hiddenUp ||= y2 < top + 2;
-      hiddenDown ||= y1 > bottom - 2;
-    }
-    els.edgeLeft.classList.toggle('is-visible', hiddenLeft);
-    els.edgeRight.classList.toggle('is-visible', hiddenRight);
-    els.edgeUp.classList.toggle('is-visible', hiddenUp);
-    els.edgeDown.classList.toggle('is-visible', hiddenDown && total > 0);
-  }
-
-  /* =========================================================================
-   * 俯瞰（オーバービュー）ズーム: 再生時に楽譜全体を縮小表示する
-   * ===================================================================== */
-  function setContentTransitions(enabled) {
-    els.scoreContent.style.transition = enabled ? 'transform .5s cubic-bezier(.22,.8,.22,1)' : 'none';
-    els.keyboardInner.style.transition = enabled ? 'transform .5s cubic-bezier(.22,.8,.22,1)' : 'none';
-  }
-
-  function cancelZoomAnimation() {
-    if (activeZoom) {
-      cancelAnimationFrame(activeZoom.raf);
-      activeZoom = null;
-    }
-    setContentTransitions(true);
-    suppressScrollSync = false;
-  }
-
-  function finishEnterOverviewImmediate() {
-    if (!overviewState) return;
-    const st = overviewState;
-    els.scoreContent.style.transform = `translate(${st.targetTx}px, ${st.targetTy}px) scale(${st.scoreScale})`;
-    els.keyboardInner.style.transform = `translate(0, 0) scale(${st.keyScale})`;
-    els.scoreViewport.scrollLeft = 0;
-    els.scoreViewport.scrollTop = 0;
-    els.keyboardViewport.scrollLeft = 0;
-    els.keyboardViewport.style.height = `${st.targetKeyboardHeight}px`;
-    overviewState.currentTx = st.targetTx;
-    overviewState.currentTy = st.targetTy;
-    overviewState.currentKeyTx = 0;
-    setContentTransitions(true);
-    suppressScrollSync = false;
-    activeZoom = null;
-    syncKeyboardRange(0);
-    updateEdgeIndicators();
-  }
-
-  function finishLeaveOverviewImmediateFallback() {
-    if (!overviewState) return;
-    const st = overviewState;
-    const viewport = els.scoreViewport;
-    els.scoreContent.style.transform = '';
-    els.keyboardInner.style.transform = '';
-    viewport.classList.remove('is-zooming');
-    els.keyboardViewport.classList.remove('is-zooming');
-    viewport.scrollLeft = clampScrollLeft(st.targetScrollLeft != null ? st.targetScrollLeft : (st.left || 0));
-    viewport.scrollTop = clampScrollTop(st.targetScrollTop != null ? st.targetScrollTop : (st.top || 0));
-    els.keyboardViewport.scrollLeft = viewport.scrollLeft;
-    els.keyboardViewport.style.height = '';
-    setContentTransitions(true);
-    suppressScrollSync = false;
-    overviewState = null;
-    currentScale = 1;
-    activeZoom = null;
-    viewport.classList.remove('overview-mode', 'playback-fit');
-    els.keyboardViewport.classList.remove('playback-fit');
-    els.scoreViewport.classList.remove('playback-lock');
-    els.keyboardViewport.classList.remove('playback-lock');
-    syncKeyboardRange(viewport.scrollLeft);
-    updateEdgeIndicators();
-  }
-
-  function enterOverview(startUnit = 0) {
-    if (activeZoom) {
-      const previousPhase = activeZoom.phase;
-      cancelZoomAnimation();
-      if (previousPhase === 'enter') finishEnterOverviewImmediate();
-      else if (previousPhase === 'leave') finishLeaveOverviewImmediateFallback();
-    }
-
-    const viewport = els.scoreViewport;
-    const kViewport = els.keyboardViewport;
-    const startTop = viewport.scrollTop;
-    const startLeft = viewport.scrollLeft;
-    const startY = rulerH() + startUnit * rowH();
-
-    const scoreScale = viewport.clientWidth / Math.max(1, pianoWidth);
-    const keyScale = kViewport.clientWidth / Math.max(1, pianoWidth);
-    currentScale = scoreScale;
-
-    const normalKeyboardHeight = kViewport.getBoundingClientRect().height;
-    const targetKeyboardHeight = Math.max(0, els.keyboardInner.offsetHeight * keyScale);
-
-    const targetTx = 0;
-    const targetTy = viewport.clientHeight / 2 - startY * scoreScale;
-
-    const startTx = -startLeft;
-    const startTy = -startTop;
-
-    const startKeyScrollLeft = kViewport.scrollLeft;
-    const startKeyTx = -startKeyScrollLeft;
-    const targetKeyTx = 0;
-
-    overviewState = {
-      left: startLeft,
-      top: startTop,
-      focusY: startY,
-      scoreScale,
-      keyScale,
-      normalKeyboardHeight,
-      targetKeyboardHeight,
-      targetTx,
-      targetTy,
-      targetScrollLeft: startLeft,
-      targetScrollTop: startTop,
-      currentTx: startTx,
-      currentTy: startTy,
-      currentKeyTx: startKeyTx
-    };
-
-    viewport.classList.add('is-zooming', 'overview-mode', 'playback-fit');
-    kViewport.classList.add('is-zooming', 'playback-fit');
-
-    setContentTransitions(false);
-    suppressScrollSync = true;
-
-    els.scoreContent.style.transformOrigin = '0 0';
-    els.keyboardInner.style.transformOrigin = '0 100%';
-    els.scoreContent.style.transform = `translate(${startTx}px, ${startTy}px) scale(1)`;
-    els.keyboardInner.style.transform = `translate(${startKeyTx}px, 0) scale(1)`;
-
-    viewport.scrollLeft = 0;
-    viewport.scrollTop = 0;
-    kViewport.scrollLeft = 0;
-
-    const duration = 520;
-    const startTime = performance.now();
-    const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    activeZoom = { raf: 0, phase: 'enter' };
-
-    const frame = (now) => {
-      if (!activeZoom || activeZoom.phase !== 'enter') return;
-      let t = Math.min(1, (now - startTime) / duration);
-      const e = ease(t);
-      const scale = 1 + (scoreScale - 1) * e;
-      const kScale = 1 + (keyScale - 1) * e;
-
-      const tx = startTx + (targetTx - startTx) * e;
-      const ty = startTy + (targetTy - startTy) * e;
-      const currentKeyTx = startKeyTx + (targetKeyTx - startKeyTx) * e;
-      const currentHeight = normalKeyboardHeight + (targetKeyboardHeight - normalKeyboardHeight) * e;
-
-      els.scoreContent.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-      els.keyboardInner.style.transform = `translate(${currentKeyTx}px, 0) scale(${kScale})`;
-      kViewport.style.height = `${currentHeight}px`;
-      overviewState.currentKeyTx = currentKeyTx;
-      updateToastPosition();
-
-      if (t < 1) {
-        activeZoom.raf = requestAnimationFrame(frame);
-      } else {
-        finishEnterOverviewImmediate();
-      }
-    };
-    activeZoom.raf = requestAnimationFrame(frame);
-    syncKeyboardRange(0);
-  }
-
-  function leaveOverview(targetEventId = null) {
-    if (!overviewState) return;
-    if (activeZoom && activeZoom.phase === 'leave') return;
-    if (activeZoom && activeZoom.phase === 'enter') {
-      cancelZoomAnimation();
-      finishEnterOverviewImmediate();
-    }
-
-    const viewport = els.scoreViewport;
-    const kViewport = els.keyboardViewport;
-    const startScale = currentScale || overviewState.scoreScale || 1;
-    const startKeyScale = overviewState.keyScale || startScale;
-    const startHeight = kViewport.getBoundingClientRect().height;
-    const targetHeight = overviewState.normalKeyboardHeight || cssNumber('--white-key-h');
-
-    let finalScrollLeft, finalScrollTop;
-
-    if (targetEventId) {
-      const ev = events.find(item => item.id === targetEventId);
-      if (ev) {
-        const { map } = layoutEvents();
-        const pos = map.get(targetEventId);
-        const targetY = rulerH() + ((pos.start + pos.end) / 2) * rowH();
-        let targetX;
-        if (ev.type === 'note') {
-          const geom = geometryFor(ev.midi);
-          targetX = geom.left + geom.width / 2;
-        } else {
-          targetX = pianoWidth / 2;
-        }
-        finalScrollLeft = clampScrollLeft(targetX - viewport.clientWidth / 2);
-        finalScrollTop = clampScrollTop(targetY - viewport.clientHeight / 2);
-      } else {
-        finalScrollLeft = clampScrollLeft(overviewState.left || 0);
-        finalScrollTop = clampScrollTop(overviewState.top || 0);
-      }
-    } else {
-      finalScrollLeft = clampScrollLeft(overviewState.left || 0);
-      finalScrollTop = clampScrollTop(overviewState.top || 0);
-    }
-
-    const startTx = overviewState.currentTx !== undefined ? overviewState.currentTx : (overviewState.targetTx || 0);
-    const startTy = overviewState.currentTy !== undefined ? overviewState.currentTy : (overviewState.targetTy || 0);
-    const finalTx = -finalScrollLeft;
-    const finalTy = -finalScrollTop;
-
-    const startKeyTx = overviewState.currentKeyTx !== undefined ? overviewState.currentKeyTx : 0;
-    const finalKeyTx = -finalScrollLeft;
-
-    setContentTransitions(false);
-    suppressScrollSync = true;
-
-    els.scoreContent.style.transformOrigin = '0 0';
-    els.keyboardInner.style.transformOrigin = '0 100%';
-
-    const duration = 520;
-    const startTime = performance.now();
-    const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    activeZoom = { raf: 0, phase: 'leave' };
-    overviewState.targetScrollLeft = finalScrollLeft;
-    overviewState.targetScrollTop = finalScrollTop;
-
-    const frame = (now) => {
-      if (!activeZoom || activeZoom.phase !== 'leave') return;
-      let t = Math.min(1, (now - startTime) / duration);
-      const e = ease(t);
-      const scale = startScale + (1 - startScale) * e;
-      const kScale = startKeyScale + (1 - startKeyScale) * e;
-
-      const currentTx = startTx + (finalTx - startTx) * e;
-      const currentTy = startTy + (finalTy - startTy) * e;
-      const currentKeyTx = startKeyTx + (finalKeyTx - startKeyTx) * e;
-      const currentHeight = startHeight + (targetHeight - startHeight) * e;
-
-      overviewState.currentTx = currentTx;
-      overviewState.currentTy = currentTy;
-      overviewState.currentKeyTx = currentKeyTx;
-
-      els.scoreContent.style.transform = `translate(${currentTx}px, ${currentTy}px) scale(${scale})`;
-      els.keyboardInner.style.transform = `translate(${currentKeyTx}px, 0) scale(${kScale})`;
-      kViewport.style.height = `${currentHeight}px`;
-      updateToastPosition();
-
-      if (t < 1) {
-        activeZoom.raf = requestAnimationFrame(frame);
-      } else {
-        els.scoreContent.style.transform = '';
-        els.keyboardInner.style.transform = '';
-
-        viewport.classList.remove('is-zooming', 'overview-mode', 'playback-fit');
-        kViewport.classList.remove('is-zooming', 'playback-fit');
-        els.scoreViewport.classList.remove('playback-lock');
-        kViewport.classList.remove('playback-lock');
-
-        viewport.scrollLeft = finalScrollLeft;
-        viewport.scrollTop = finalScrollTop;
-        kViewport.scrollLeft = finalScrollLeft;
-        kViewport.style.height = '';
-
-        setContentTransitions(true);
-        suppressScrollSync = false;
-        overviewState = null;
-        currentScale = 1;
-        activeZoom = null;
-
-        syncKeyboardRange(finalScrollLeft);
-        updateEdgeIndicators();
-      }
-    };
-    activeZoom.raf = requestAnimationFrame(frame);
-  }
-
-  /* =========================================================================
-   * 再生ハイライトとスクロール追従（鍵盤/音符）
-   * ===================================================================== */
-  function setPlayingKey(midi) {
-    els.keyboardInner.querySelectorAll('.is-playing-key').forEach(key => key.classList.remove('is-playing-key'));
-    if (midi == null) return;
-    const key = els.keyboardInner.querySelector(`[data-midi="${midi}"]`);
-    if (key) key.classList.add('is-playing-key');
-  }
-
-  // 選択イベントが表示範囲に入るよう最小限だけスクロールする
-  function ensureEventVisible(id) {
-    cancelRenderScoreRAF();
-    const ev = events.find(item => item.id === id);
-    if (!ev) return;
-    const { map } = layoutEvents();
-    const pos = map.get(id);
-    const top = rulerH() + pos.start * rowH();
-    const bottom = rulerH() + pos.end * rowH();
-    const safeTop = els.scoreViewport.scrollTop + 18;
-    const safeBottom = els.scoreViewport.scrollTop + els.scoreViewport.clientHeight - 24;
-    if (top < safeTop) els.scoreViewport.scrollTop = Math.max(0, top - 18);
-    else if (bottom > safeBottom) els.scoreViewport.scrollTop = Math.max(0, bottom - els.scoreViewport.clientHeight + 36);
-
-    if (ev.type === 'note' && !recordMode) {
-      const geom = geometryFor(ev.midi);
-      const x = geom.left;
-      const safeLeft = els.scoreViewport.scrollLeft + 25;
-      const safeRight = els.scoreViewport.scrollLeft + els.scoreViewport.clientWidth - geom.width - 25;
-      if (x < safeLeft) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .3));
-      else if (x > safeRight) setLinkedScroll(Math.max(0, x - els.scoreViewport.clientWidth * .7));
-    }
-  }
-
-  // 選択イベントを画面中央へスクロールする
-  function centerOnEvent(id, smooth = true) {
-    if (!id) return;
-    cancelRenderScoreRAF();
-    const ev = events.find(e => e.id === id);
-    if (!ev) return;
-    const { map } = layoutEvents();
-    const pos = map.get(id);
-    const viewport = els.scoreViewport;
-    const blockTop = rulerH() + pos.start * rowH();
-    const blockBottom = rulerH() + pos.end * rowH();
-
-    const targetY = (blockTop + blockBottom) / 2;
-    const maxTop = Math.max(0, els.scoreContent.scrollHeight - viewport.clientHeight);
-    let top = Math.max(0, targetY - viewport.clientHeight / 2);
-    top = Math.min(top, maxTop);
-
-    let left = viewport.scrollLeft;
-    if (ev.type === 'note') {
-      const geom = geometryFor(ev.midi);
-      const targetX = geom.left + geom.width / 2;
-      const maxLeft = Math.max(0, pianoWidth - viewport.clientWidth);
-      left = Math.max(0, targetX - viewport.clientWidth / 2);
-      left = Math.min(left, maxLeft);
-    } else {
-      const maxLeft = Math.max(0, pianoWidth - viewport.clientWidth);
-      left = Math.max(0, pianoWidth / 2 - viewport.clientWidth / 2);
-      left = Math.min(left, maxLeft);
-    }
-
-    if (smooth) {
-      smoothScrollBoth(left, top);
-    } else {
-      setLinkedScroll(left);
-      viewport.scrollTop = top;
-    }
-  }
-
-  function updateSelectedHighlight(id) {
-    document.querySelectorAll('.note-block.is-selected, .rest-block.is-selected').forEach(n => n.classList.remove('is-selected'));
-    const node = els.scoreContent.querySelector(`[data-event-id="${id}"]`);
-    if (node) node.classList.add('is-selected');
-    els.scoreContent.querySelectorAll('[data-event-id]').forEach(n => {
-      n.setAttribute('aria-pressed', n.dataset.eventId === String(id) ? 'true' : 'false');
-    });
-    updateControls();
-  }
-
-  function centerSelectedEvent() {
-    if (selectedId) {
-      centerOnEvent(selectedId, true);
-    } else if (events.length > 0) {
-      selectedId = events[0].id;
-      renderScore({ preserve: false });
-      saveState();
-      centerOnEvent(selectedId, true);
-    } else {
-      showToast('音符がありません');
-    }
-  }
-
-  /* =========================================================================
-   * オーディオエンジン（Web Audio）
-   *  - createAudioGraph: マスター/コンプレッサ/簡易リバーブを構築
-   *  - pianoVoice / startSustainedVoice: 発音（発音時/押しっぱなし）
-   * ===================================================================== */
-  function createAudioGraph(ctx) {
-    const master = ctx.createGain();
-    master.gain.value = currentVolume;
-    const compressor = ctx.createDynamicsCompressor();
-    compressor.threshold.value = -18;
-    compressor.knee.value = 18;
-    compressor.ratio.value = 4;
-    compressor.attack.value = 0.004;
-    compressor.release.value = 0.22;
-
-    const dry = ctx.createGain();
-    dry.gain.value = 0.88;
-    const wet = ctx.createGain();
-    wet.gain.value = 0.13;
-    const convolver = ctx.createConvolver();
-    const length = Math.floor(ctx.sampleRate * 1.35);
-    const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
-    for (let c = 0; c < 2; c++) {
-      const data = impulse.getChannelData(c);
-      for (let i = 0; i < length; i++) {
-        const decay = Math.pow(1 - i / length, 2.7);
-        data[i] = (Math.random() * 2 - 1) * decay * (c ? .92 : 1);
-      }
-    }
-    convolver.buffer = impulse;
-    master.connect(dry);
-    master.connect(convolver);
-    convolver.connect(wet);
-    dry.connect(compressor);
-    wet.connect(compressor);
-    compressor.connect(ctx.destination);
-    return { ctx, master, liveSources: new Set() };
-  }
-
-  // AudioContext を同期的に用意/再開する（無音バッファで iOS のロックを解除）
-  function ensureAudioSync() {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return null;
-    try {
-      if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
-        audio = createAudioGraph(new AudioCtx());
-      }
-      if (audio.ctx.state === 'suspended' || audio.ctx.state === 'interrupted') {
-        const resume = audio.ctx.resume();
-        if (resume && typeof resume.catch === 'function') resume.catch(() => {});
-      }
-      if (!audio._primed) {
-        audio._primed = true;
-        try {
-          const buf = audio.ctx.createBuffer(1, 1, audio.ctx.sampleRate || 22050);
-          const src = audio.ctx.createBufferSource();
-          src.buffer = buf;
-          src.connect(audio.ctx.destination);
-          src.start(0);
-        } catch (_) {}
-      }
-      return audio;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  async function unlockAudio() {
-    if (audioUnlockPromise) return audioUnlockPromise;
-    audioUnlockPromise = (async () => {
-      const graph = ensureAudioSync();
-      if (!graph) {
-        showToast('このブラウザはWeb Audioに対応していません');
-        throw new Error('Web Audio unsupported');
-      }
-      const ctx = graph.ctx;
-      if (ctx.state !== 'running') {
-        try { await ctx.resume(); } catch (_) {}
-      }
-      if (!audio || !audio.ctx || audio.ctx.state === 'closed') {
-        throw new Error('AudioContext closed');
-      }
-      return audio;
-    })().finally(() => { audioUnlockPromise = null; });
-    return audioUnlockPromise;
-  }
-
-  function stopAllLiveSources() {
-    if (!audio) return;
-    for (const source of Array.from(audio.liveSources)) {
-      try { source.stop(); } catch (_) {}
-    }
-    audio.liveSources.clear();
-  }
-
-  // 1音のフィルタ＋エンベロープの土台を作る（発音関数から共有）
-  function createPianoVoiceBase(midi, when, velocity) {
-    if (!audio) return null;
-    const { ctx, master } = audio;
-    const f = frequency(midi);
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(Math.min(7200, 1900 + f * 5.5), when);
-    filter.Q.setValueAtTime(.75, when);
-    const envelope = ctx.createGain();
-    const amp = Math.max(.035, Math.min(.22, velocity * .19));
-    envelope.gain.setValueAtTime(.0001, when);
-    envelope.gain.linearRampToValueAtTime(amp, when + .009);
-    envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, amp * .42), when + .16);
-    filter.connect(envelope);
-    envelope.connect(master);
-    return { f, filter, envelope, amp };
-  }
-
-  function createPianoOscillators(base, when, opts = {}) {
-    const { ctx, liveSources } = audio;
-    const oscillators = [];
-    PIANO_PARTIALS.forEach((part, index) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = part.type;
-      osc.frequency.setValueAtTime(base.f * part.ratio, when);
-      osc.detune.setValueAtTime(part.detune, when);
-      g.gain.setValueAtTime(part.gain, when);
-      if (opts.sustained) {
-        osc.connect(g);
-        g.connect(base.filter);
-        liveSources.add(osc);
-        osc.onended = () => liveSources.delete(osc);
-        osc.start();
-        oscillators.push(osc);
-      } else {
-        if (index > 0) g.gain.exponentialRampToValueAtTime(.0001, when + Math.min(.9, .22 + opts.holdSeconds * .4));
-        osc.connect(g);
-        g.connect(base.filter);
-        liveSources.add(osc);
-        osc.onended = () => liveSources.delete(osc);
-        osc.start(when);
-        osc.stop(opts.releaseStart + .48);
-      }
-    });
-    return oscillators;
-  }
-
-  // 打鍵時のアタック（ノイズ）を加えて生っぽさを出す
-  function addPianoClick(when, velocity) {
-    if (!audio) return null;
-    const { ctx, master, liveSources } = audio;
-    const click = ctx.createBufferSource();
-    const clickBuffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * .025)), ctx.sampleRate);
-    const cd = clickBuffer.getChannelData(0);
-    for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / cd.length, 4);
-    click.buffer = clickBuffer;
-    const clickGain = ctx.createGain();
-    clickGain.gain.setValueAtTime(.014 * velocity, when);
-    clickGain.gain.exponentialRampToValueAtTime(.0001, when + .025);
-    click.connect(clickGain);
-    clickGain.connect(master);
-    liveSources.add(click);
-    click.onended = () => liveSources.delete(click);
-    click.start(when);
-    return click;
-  }
-
-  // 長さの決まった1音を鳴らす（再生・プレビュー用）
-  function pianoVoice(midi, when, holdSeconds, velocity = .72) {
-    if (!audio) return;
-    const base = createPianoVoiceBase(midi, when, velocity);
-    if (!base) return;
-    const releaseStart = when + Math.max(.12, holdSeconds);
-    const bodyEnd = Math.min(releaseStart - .015, when + Math.max(.20, holdSeconds * .72));
-    if (bodyEnd > when + .17) {
-      base.envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, base.amp * .13), bodyEnd);
-    }
-    base.envelope.gain.exponentialRampToValueAtTime(.0001, releaseStart + .42);
-    createPianoOscillators(base, when, { holdSeconds, releaseStart });
-    addPianoClick(when, velocity);
-  }
-
-  // 指を離すまで鳴り続ける音（鍵盤タッチ用）。stop() で減衰させる
-  function startSustainedVoice(midi, velocity = .78) {
-    if (!audio) return null;
-    const now = audio.ctx.currentTime;
-    const base = createPianoVoiceBase(midi, now, velocity);
-    if (!base) return null;
-    const oscillators = createPianoOscillators(base, now, { sustained: true });
-    const click = addPianoClick(now, velocity);
-
-    let stopped = false;
-    const stop = () => {
-      if (stopped) return;
-      stopped = true;
-      const t = audio.ctx.currentTime;
-      base.envelope.gain.cancelScheduledValues(t);
-      base.envelope.gain.setTargetAtTime(0.0001, t, 0.03);
-      oscillators.forEach(osc => { try { osc.stop(t + .12); } catch(_){} });
-      if (click) { try { click.stop(t + .01); } catch(_){} }
-    };
-    return { stop };
-  }
-
-  function playPreview(midi) {
-    ensureAudioSync();
-    unlockAudio().then(() => {
-      if (!audio || !audio.ctx) return;
-      pianoVoice(midi, audio.ctx.currentTime + .008, .28, .72);
-    }).catch(() => {});
-  }
-
-  // ボタン操作のフィードバック音（種類ごとに音程/形状を変える）
-  function playButtonSound(type = 'default') {
-    ensureAudioSync();
-    unlockAudio().then(() => {
-      if (!audio || !audio.ctx) return;
-      const now = audio.ctx.currentTime;
-      const osc = audio.ctx.createOscillator();
-      const gain = audio.ctx.createGain();
-
-      switch(type) {
-        case 'up':
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.08);
-          break;
-        case 'down':
-          osc.frequency.setValueAtTime(659.25, now);
-          osc.frequency.exponentialRampToValueAtTime(523.25, now + 0.08);
-          break;
-        case 'left':
-          osc.frequency.setValueAtTime(587.33, now);
-          osc.frequency.exponentialRampToValueAtTime(493.88, now + 0.08);
-          break;
-        case 'right':
-          osc.frequency.setValueAtTime(493.88, now);
-          osc.frequency.exponentialRampToValueAtTime(587.33, now + 0.08);
-          break;
-        case 'center':
-          osc.frequency.setValueAtTime(440, now);
-          osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-          break;
-        case 'rest':
-          osc.frequency.setValueAtTime(329.63, now);
-          break;
-        case 'delete':
-          osc.frequency.setValueAtTime(200, now);
-          osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
-          break;
-        case 'record':
-          osc.frequency.setValueAtTime(880, now);
-          break;
-        case 'play':
-          osc.frequency.setValueAtTime(698.46, now);
-          osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.1);
-          break;
-        case 'random':
-          osc.frequency.setValueAtTime(392, now);
-          osc.frequency.exponentialRampToValueAtTime(784, now + 0.12);
-          break;
-        default:
-          osc.frequency.setValueAtTime(440, now);
-      }
-
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
-      osc.connect(gain);
-      gain.connect(audio.master);
-      osc.start(now);
-      osc.stop(now + 0.15);
-    }).catch(() => {});
-  }
-
-  /* =========================================================================
-   * 鍵盤ジェスチャー（タッチ/ポインタでの発音・記録・スクロール）
-   * ===================================================================== */
-  function resetKeyboardGesture() {
-    cancelHold();
-    stopGestureVoice();
-    keyboardGesture.pointerId = null;
-    keyboardGesture.lastMidi = null;
-    keyboardGesture.eventId = null;
-    keyboardGesture.previousSelectedId = null;
-    keyboardGesture.scrolling = false;
-    keyboardGesture.startX = 0;
-    keyboardGesture.startScroll = 0;
-  }
-
-  /* =========================================================================
-   * メイン楽譜の再生制御
-   * ===================================================================== */
-  function stopPlayback(showMessage = false, focusEventId = null) {
-    playbackToken += 1;
-    playbackStarting = false;
-    const wasPlaying = Boolean(playing);
-    const currentPlaying = playing;
-    const targetId = focusEventId || (currentPlaying ? currentPlaying.currentId : null);
-    const leaveTargetId = targetId || (currentPlaying && events.length ? events[events.length - 1].id : null);
-
-    if (currentPlaying) cancelAnimationFrame(currentPlaying.raf);
-    stopAllLiveSources();
-    playing = null;
-    setPlayingKey(null);
-    setPlaybackUI(false);
-
-    try {
-      leaveOverview(leaveTargetId);
-    } catch (_) {
-      finishLeaveOverviewImmediateFallback();
-    }
-    resetKeyboardGesture();
-
-    els.playBtn.textContent = '▶ 再生';
-    els.playBtn.classList.remove('is-playing');
-    const playhead = document.getElementById('playhead');
-    if (playhead) playhead.style.display = 'none';
-    document.querySelectorAll('.note-block.is-playing, .rest-block.is-playing').forEach(node => node.classList.remove('is-playing'));
-
-    if (leaveTargetId) {
-      selectedId = leaveTargetId;
-      updateSelectedHighlight(leaveTargetId);
-      saveState();
-    } else {
-      updateControls();
-    }
-
-    if (showMessage && wasPlaying) showToast('停止しました');
-  }
-
-  // 再生開始位置: 選択が末尾付近/未選択なら先頭から、それ以外は選択位置から
-  function playbackStartIndex(forceBeginning = false) {
-    if (forceBeginning) return 0;
-    const idx = selectedIndex();
-    if (idx < 0 || idx >= events.length - 1) return 0;
-    return idx;
-  }
-
-  async function startPlayback(forceBeginning = false) {
-    if (playing) {
-      const focusId = playing.currentId || null;
-      stopPlayback(true, focusId);
-      return;
-    }
-    if (playbackStarting) {
-      stopPlayback(true, null);
-      return;
-    }
-    stopLibraryPlayback(false);
-    if (!events.length) {
-      showToast('鍵盤から音符を入力してください');
-      els.playBtn.classList.remove('is-shaking');
-      void els.playBtn.offsetWidth;
-      els.playBtn.classList.add('is-shaking');
-      setTimeout(() => els.playBtn.classList.remove('is-shaking'), 400);
-      return;
-    }
-
-    ensureAudioSync();
-
-    const token = ++playbackToken;
-    playbackStarting = true;
-
-    const { map, total } = layoutEvents();
-    const startIndex = playbackStartIndex(forceBeginning);
-    const startUnit = map.get(events[startIndex].id).start;
-    const playUnits = Math.max(0, total - startUnit);
-
-    setPlaybackUI(true);
-    enterOverview(startUnit);
-    els.playBtn.textContent = '■ 停止';
-    els.playBtn.classList.add('is-playing');
-    const playhead = document.getElementById('playhead');
-    if (playhead) playhead.style.display = 'block';
-
-    try {
-      await unlockAudio();
-      if (token !== playbackToken) return;
-      if (!audio || !audio.ctx) throw new Error('AudioContext is not available');
-      if (audio.ctx.state !== 'running') {
-        try { await audio.ctx.resume(); } catch (_) {}
-      }
-      if (token !== playbackToken) return;
-      if (audio.ctx.state !== 'running') {
-        showToast('再生できませんでした。もう一度▶を押してください');
-        stopPlayback(false);
-        return;
-      }
-      if (!events.length) {
-        stopPlayback(false);
-        return;
-      }
-
-      const startAt = audio.ctx.currentTime + .075;
-
-      // 開始位置以降の全音符を事前にスケジュール
-      for (let i = startIndex; i < events.length; i++) {
-        const ev = events[i];
-        if (ev.type !== 'note') continue;
-        const pos = map.get(ev.id);
-        const relativeStart = pos.start - startUnit;
-        pianoVoice(ev.midi, startAt + relativeStart * currentUnitSeconds, Math.max(.12, ev.duration * currentUnitSeconds * .92), .78);
-      }
-
-      playing = { startAt, total, map, startUnit, playUnits, lastId: null, currentId: null, raf: 0 };
-
-      // 毎フレーム: 経過時間から現在位置を求め、ハイライト・プレイヘッド・追従を更新
-      const tick = () => {
-        if (!playing || !audio) return;
-        const elapsedUnits = Math.max(0, (audio.ctx.currentTime - playing.startAt) / currentUnitSeconds);
-        if (elapsedUnits >= playing.playUnits + .03) {
-          const lastEvent = events.length ? events[events.length - 1] : null;
-          const focusId = lastEvent ? lastEvent.id : null;
-          stopPlayback(false, focusId);
-          showToast('再生が終わりました');
-          return;
-        }
-        const absoluteUnit = playing.startUnit + elapsedUnits;
-        const y = rulerH() + Math.min(playing.total, absoluteUnit) * rowH();
-        const ph = document.getElementById('playhead');
-        if (ph) ph.style.top = `${y}px`;
-        let current = events[events.length - 1];
-        for (const ev of events) {
-          const pos = playing.map.get(ev.id);
-          if (absoluteUnit >= pos.start && absoluteUnit < pos.end) { current = ev; break; }
-        }
-        playing.currentId = current.id;
-        if (playing.lastId !== current.id) {
-          document.querySelectorAll('.note-block.is-playing, .rest-block.is-playing').forEach(n => n.classList.remove('is-playing'));
-          const node = els.scoreContent.querySelector(`[data-event-id="${current.id}"]`);
-          if (node) node.classList.add('is-playing');
-          setPlayingKey(current.type === 'note' ? current.midi : null);
-          playing.lastId = current.id;
-        }
-
-        if (activeZoom && activeZoom.phase === 'enter') {
-          // enterOverviewアニメーション中はtransformを上書きしない
-        } else if (overviewState && els.scoreViewport.classList.contains('is-zooming')) {
-          const scale = currentScale || overviewState.scoreScale || 1;
-          const ty = els.scoreViewport.clientHeight / 2 - y * scale;
-          const tx = overviewState.targetTx || 0;
-          els.scoreContent.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-          overviewState.currentTx = tx;
-          overviewState.currentTy = ty;
-        } else {
-          const viewport = els.scoreViewport;
-          const focusY = overviewState && overviewState.focusY != null ? overviewState.focusY : 0;
-          const targetTop = focusY + (y - focusY) * currentScale - viewport.clientHeight / 2;
-          const maxTop = Math.max(0, els.scoreContent.scrollHeight - viewport.clientHeight);
-          viewport.scrollTop = Math.max(0, Math.min(targetTop, maxTop));
-        }
-        playing.raf = requestAnimationFrame(tick);
-      };
-      playing.raf = requestAnimationFrame(tick);
-    } catch (err) {
-      showToast('再生エラー: ' + (err && err.message ? err.message : '不明'));
-      stopPlayback(false);
-    } finally {
-      if (token === playbackToken) playbackStarting = false;
-    }
-  }
-
-  /* =========================================================================
-   * 楽曲ライブラリのプレビュー再生（俯瞰なしの簡易再生）
-   * ===================================================================== */
-  function stopLibraryPlayback(showMessage = false) {
-    clearTimeout(libraryPlaybackTimer);
-    if (libraryPlaying && libraryPlaying.item) {
-      libraryPlaying.item.classList.remove('is-playing');
-    }
-    const wasPlaying = Boolean(libraryPlaying);
-    libraryPlaying = null;
-    stopAllLiveSources();
-    if (showMessage && wasPlaying) showToast('停止しました');
-  }
-
-  async function playLibrarySong(song, item) {
-    if (libraryPlaying && libraryPlaying.songId === song._id) {
-      stopLibraryPlayback(true);
-      return;
-    }
-    stopPlayback(false);
-    stopLibraryPlayback(false);
-    if (!song.events.length) return;
-    ensureAudioSync();
-    try { await unlockAudio(); } catch (_) { return; }
-    const unitSeconds = Math.max(.05, Math.min(1, Number(song.unitSeconds) || DEFAULT_UNIT_SECONDS));
-    let cursor = 0;
-    for (const ev of song.events) {
-      const duration = Math.max(1, Number(ev.duration) || 1);
-      if (ev.type === 'note') pianoVoice(ev.midi, audio.ctx.currentTime + .06 + cursor * unitSeconds, duration * unitSeconds * .92, .76);
-      cursor += duration;
-    }
-    libraryPlaying = { songId: song._id, item };
-    if (item) item.classList.add('is-playing');
-    showToast(`「${song.name || '無題の曲'}」を再生`);
-    libraryPlaybackTimer = setTimeout(() => {
-      if (libraryPlaying && libraryPlaying.songId === song._id) {
-        if (libraryPlaying.item) libraryPlaying.item.classList.remove('is-playing');
-        libraryPlaying = null;
-        showToast('再生が終わりました');
-      }
-    }, (cursor * unitSeconds + .7) * 1000);
-  }
-
-  /* =========================================================================
-   * 鍵盤の描画とスクロール操作
-   * ===================================================================== */
-  function renderKeyboard() {
-    buildKeyGeometry();
-    els.keyboardInner.innerHTML = '';
-    const orderedMidis = Array.from(keyGeometry.keys()).sort((a, b) => {
-      const ga = geometryFor(a), gb = geometryFor(b);
-      return Number(ga.isBlack) - Number(gb.isBlack) || ga.left - gb.left;
-    });
-    for (const midi of orderedMidis) {
-      const info = noteInfo(midi);
-      const geom = geometryFor(midi);
-      const key = document.createElement('div');
-      key.className = 'piano-key ' + (geom.isBlack ? 'black-key' : 'white-key');
-      key.dataset.midi = String(midi);
-      key.style.left = `${geom.left}px`;
-      key.style.width = `${geom.width}px`;
-      key.setAttribute('role', 'button');
-      key.setAttribute('aria-label', info.label);
-      if (!geom.isBlack && info.pc === 0) {
-        const label = document.createElement('span');
-        label.className = 'key-label';
-        label.innerHTML = `<span class="key-octave">${info.octave}</span>`;
-        key.appendChild(label);
-      }
-      els.keyboardInner.appendChild(key);
-    }
-    els.keyboardInner.style.width = `${pianoWidth}px`;
-  }
-
-  function maxKeyboardScroll() {
-    return Math.max(0, els.keyboardInner.offsetWidth - els.keyboardViewport.clientWidth);
-  }
-
-  function setKeyboardScroll(value) {
-    const max = maxKeyboardScroll();
-    setLinkedScroll(max * Math.max(0, Math.min(100, value)) / 100);
-  }
-
-  function syncKeyboardRange(left = els.keyboardViewport.scrollLeft) {
-    const max = maxKeyboardScroll();
-    const clamped = Math.max(0, Math.min(max, Number.isFinite(left) ? left : els.keyboardViewport.scrollLeft));
-    els.keyboardRange.value = max ? String(Math.round(clamped / max * 100)) : '0';
-  }
-
-  function setKeyState(midi) {
-    els.keyboardInner.querySelectorAll('.is-pressed').forEach(k => k.classList.remove('is-pressed'));
-    if (midi != null) {
-      const key = els.keyboardInner.querySelector(`[data-midi="${midi}"]`);
-      if (key) key.classList.add('is-pressed');
-    }
-  }
-
-  function cancelHold() {
-    clearTimeout(keyboardGesture.holdTimer);
-    clearInterval(keyboardGesture.holdInterval);
-    keyboardGesture.holdTimer = 0;
-    keyboardGesture.holdInterval = 0;
-  }
-
-  function stopGestureVoice() {
-    if (keyboardGesture.voice) {
-      keyboardGesture.voice.stop();
-      keyboardGesture.voice = null;
-    }
-  }
-
-  // 記録中に鍵盤スライドで入力途中の音符を取り消す
-  function cancelGestureNote() {
-    if (keyboardGesture.eventId == null) return;
-    const idx = events.findIndex(ev => ev.id === keyboardGesture.eventId);
-    if (idx >= 0) {
-      events.splice(idx, 1);
-      selectedId = (keyboardGesture.previousSelectedId != null && events.some(ev => ev.id === keyboardGesture.previousSelectedId))
-        ? keyboardGesture.previousSelectedId
-        : (events.length ? events[events.length - 1].id : null);
-      renderScore();
-      saveState();
-    }
-    keyboardGesture.eventId = null;
-    keyboardGesture.previousSelectedId = null;
-  }
-
-  // 鍵盤を押しっぱなしにしている間、音符を伸ばし続ける
-  function armHold(eventId) {
-    cancelHold();
-    keyboardGesture.holdTimer = setTimeout(() => {
-      changeDuration(1, eventId, true);
-      showToast('長押しで音符を伸ばしています');
-      keyboardGesture.holdInterval = setInterval(() => changeDuration(1, eventId, true), 330);
-    }, 470);
-  }
-
-  // 指が別の鍵盤へ移ったときの発音切り替え（記録中は音符を追加）
-  function enterKeyboardKey(midi) {
-    if (!Number.isFinite(midi) || midi === keyboardGesture.lastMidi) return;
-    stopGestureVoice();
-    keyboardGesture.lastMidi = midi;
-    cancelHold();
-    setKeyState(midi);
-    keyboardGesture.voice = startSustainedVoice(midi);
-    if (!recordMode) {
-      keyboardGesture.eventId = null;
-      return;
-    }
-    keyboardGesture.previousSelectedId = selectedId;
-    const id = addNote(midi, { audition: false, skipStop: true });
-    keyboardGesture.eventId = id;
-    armHold(id);
-  }
-
-  function endKeyboardGesture(pointerId) {
-    if (keyboardGesture.pointerId !== pointerId) return;
-    setKeyState(null);
-    resetKeyboardGesture();
-  }
-
-  els.keyboardViewport.addEventListener('pointerdown', e => {
-    if (playing || keyboardGesture.pointerId != null) return;
-    const midi = keyAtPoint(e.clientX, e.clientY);
-    if (midi == null) return;
-
-    keyboardGesture.pointerId = e.pointerId;
-    keyboardGesture.startX = e.clientX;
-    keyboardGesture.startScroll = els.keyboardViewport.scrollLeft;
-    keyboardGesture.scrolling = false;
-
-    const graph = ensureAudioSync();
-    if (graph && graph.ctx && graph.ctx.state === 'suspended') { try { graph.ctx.resume(); } catch (_) {} }
-    enterKeyboardKey(midi);
-    unlockAudio().then(() => {
-      if (keyboardGesture.pointerId === e.pointerId && audio && audio.ctx && audio.ctx.state !== 'running') {
-        try { audio.ctx.resume(); } catch (_) {}
-      }
-    }).catch(() => {});
-  }, { passive: false });
-
-  els.keyboardViewport.addEventListener('pointermove', e => {
-    if (keyboardGesture.pointerId !== e.pointerId) return;
+});
+
+// Info overlay
+els.btnInfo.addEventListener("click", function() {
+  els.infoOverlay.classList.add("show");
+  els.overlayBackdrop.classList.add("show");
+});
+function closeInfo() {
+  els.infoOverlay.classList.remove("show");
+  els.overlayBackdrop.classList.remove("show");
+}
+els.btnCloseInfo.addEventListener("click", closeInfo);
+els.overlayBackdrop.addEventListener("click", closeInfo);
+
+// Fullscreen
+els.btnFullscreen.addEventListener("click", function() {
+  document.body.classList.add("fullscreen");
+  updateScale();
+});
+els.btnExitFs.addEventListener("click", function() {
+  document.body.classList.remove("fullscreen");
+  updateScale();
+});
+
+// Safe area toggle
+els.btnSafeArea.addEventListener("click", function() {
+  safeAreaVisible = !safeAreaVisible;
+  els.safeTop.classList.toggle("show", safeAreaVisible);
+  els.safeBottom.classList.toggle("show", safeAreaVisible);
+  els.btnSafeArea.classList.toggle("active", safeAreaVisible);
+  showToast(safeAreaVisible ? "Safe Area 表示" : "Safe Area 非表示");
+});
+
+// Reload
+els.btnReload.addEventListener("click", function() {
+  els.previewFrame.contentWindow.location.reload();
+  showToast("再読込しました");
+});
+
+// Input events
+els.htmlInput.addEventListener("input", function() {
+  updateStatus();
+  saveHTML();
+});
+
+// Keyboard shortcuts
+els.htmlInput.addEventListener("keydown", function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
     e.preventDefault();
-    const midi = keyAtPoint(e.clientX, e.clientY);
-
-    if (midi == null && recordMode && keyboardGesture.eventId != null) {
-      cancelHold();
-      stopGestureVoice();
-      setKeyState(null);
-      cancelGestureNote();
-      keyboardGesture.lastMidi = null;
-      keyboardGesture.scrolling = false;
-    }
-
-    const dx = e.clientX - keyboardGesture.startX;
-    if (pianoSwipeMode === 'scroll') {
-      if (Math.abs(dx) > 7) keyboardGesture.scrolling = true;
-      if (keyboardGesture.scrolling) {
-        cancelHold();
-        stopGestureVoice();
-        setKeyState(null);
-        setLinkedScroll(keyboardGesture.startScroll - dx);
-      }
-      return;
-    }
-    if (midi != null) {
-      enterKeyboardKey(midi);
-    }
-    else cancelHold();
-  }, { passive: false });
-
-  els.keyboardViewport.addEventListener('pointerup', e => endKeyboardGesture(e.pointerId));
-  els.keyboardViewport.addEventListener('pointercancel', e => endKeyboardGesture(e.pointerId));
-  els.keyboardViewport.addEventListener('pointerleave', e => {
-    if (keyboardGesture.pointerId === e.pointerId) {
-      if (recordMode && keyboardGesture.eventId != null) {
-        cancelHold();
-        stopGestureVoice();
-        setKeyState(null);
-        cancelGestureNote();
-        keyboardGesture.lastMidi = null;
-      }
-      endKeyboardGesture(e.pointerId);
-    }
-  });
-
-  // 初回のユーザー操作で確実にオーディオを解錠する
-  document.addEventListener('pointerdown', () => {
-    ensureAudioSync();
-    unlockAudio().catch(() => {});
-  }, { capture: true, passive: true, signal: __docSignal });
-
-  els.recordBtn.addEventListener('click', () => {
-    playButtonSound('record');
-    recordMode = !recordMode;
-    updateControls();
-    saveState();
-    showToast(recordMode ? '記録 ON' : '記録 OFF');
-  });
-
-  function clearComposition() {
-    stopPlayback(false);
-    events.length = 0; selectedId = null; nextId = 1;
-    currentSongId = null; currentSongName = '';
-    renderScore(); saveState(); els.scoreViewport.scrollTop = 0;
-    showToast('全消去しました');
+    runPreview();
   }
+});
 
-  /* =========================================================================
-   * ボタンの押下ハンドラ（タップ/長押し/長押しリピート）
-   * ===================================================================== */
-  // タップと長押しを判別する汎用バインダー
-  function bindPress(button, onTap, onLong, delay = 550) {
-    let timer = 0, longFired = false, pointerId = null;
-    button.addEventListener('pointerdown', e => {
-      if (button.disabled || pointerId !== null) return;
-      pointerId = e.pointerId;
-      longFired = false;
-      try { button.setPointerCapture(e.pointerId); } catch (_) {}
-      ensureAudioSync();
-      timer = setTimeout(() => {
-        longFired = true;
-        if (navigator.vibrate) navigator.vibrate(18);
-        onLong(e);
-      }, delay);
-    });
-    const finish = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimeout(timer);
-      timer = 0;
-      const shouldTap = !longFired && !button.disabled;
-      pointerId = null;
-      if (shouldTap) onTap(e);
-    };
-    const cancel = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimeout(timer);
-      timer = 0;
-      pointerId = null;
-    };
-    button.addEventListener('pointerup', finish);
-    button.addEventListener('pointercancel', cancel);
+// Window resize
+window.addEventListener("resize", updateScale);
+
+// Time update
+setInterval(updateTime, 1000);
+updateTime();
+
+/* =============================================
+   Init
+   ============================================= */
+function init() {
+  if (!loadHTML()) {
+    setTimeout(function() {
+      els.infoOverlay.classList.add("show");
+      els.overlayBackdrop.classList.add("show");
+    }, 300);
   }
+  updateStatus();
+  updateScale();
+}
 
-  // タップ＋長押しリピートを扱う汎用バインダー（D-pad 系ボタンで共有）
-  //  opts: { onTap, onRepeat, longLabel, delay, interval, fireOnLongStart }
-  //   - fireOnLongStart: 長押し判定した瞬間に onRepeat を1回即実行するか
-  function bindRepeatButton(button, opts) {
-    const { onTap, onRepeat, longLabel = '', delay = 480, interval = 120, fireOnLongStart = false } = opts;
-    let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
-
-    const clearTimers = () => {
-      clearTimeout(longTimer);
-      clearInterval(repeatTimer);
-      longTimer = 0;
-      repeatTimer = 0;
-    };
-
-    button.addEventListener('pointerdown', e => {
-      if (button.disabled || pointerId !== null) return;
-      pointerId = e.pointerId;
-      longFired = false;
-      try { button.setPointerCapture(e.pointerId); } catch (_) {}
-      ensureAudioSync();
-
-      longTimer = setTimeout(() => {
-        longFired = true;
-        if (navigator.vibrate) navigator.vibrate(18);
-        if (longLabel) showToast(longLabel);
-        if (fireOnLongStart) onRepeat();
-        repeatTimer = setInterval(() => {
-          if (!button.disabled) {
-            onRepeat();
-          } else {
-            clearInterval(repeatTimer);
-            repeatTimer = 0;
-          }
-        }, interval);
-      }, delay);
-    });
-
-    const finishTap = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimers();
-      if (!longFired && !button.disabled) {
-        onTap();
-        if (longLabel) showToast(longLabel);
-      }
-      pointerId = null;
-    };
-
-    const cancelNoTap = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimers();
-      pointerId = null;
-    };
-
-    button.addEventListener('pointerup', finishTap);
-    button.addEventListener('pointercancel', cancelNoTap);
-  }
-
-  function syncSettingsUI() {
-    els.swipePlay.checked = pianoSwipeMode === 'play';
-    els.swipeScroll.checked = pianoSwipeMode === 'scroll';
-    els.volumeRange.value = String(Math.round(currentVolume * 100));
-    els.volumeValue.textContent = `${Math.round(currentVolume * 100)}%`;
-    els.randomLengthRange.value = String(randomPhraseLength);
-    els.randomLengthValue.textContent = `${randomPhraseLength}音`;
-    updateBpmDisplay();
-  }
-
-  function updateBpmDisplay() {
-    if (els.bpmValue) els.bpmValue.textContent = String(currentBPM);
-  }
-
-  // 再生ボタン: タップで再生/停止、長押しで先頭から再生
-  bindPress(els.playBtn,
-    () => { startPlayback(false); showToast('長押しで先頭から再生'); },
-    () => {
-      showToast('長押し：先頭から再生');
-      if (playing) {
-        stopPlayback(false);
-        setTimeout(() => startPlayback(true), 520);
-      } else {
-        startPlayback(true);
-      }
-    }, 650);
-
-  bindPress(els.deleteBtn,
-    () => { playButtonSound('delete'); deleteSelected(); },
-    () => { showToast('長押し：全消去'); openConfirm('楽譜を全消去', '現在の音符と休符をすべて消去しますか？保存済みの楽曲は削除されません。', '全消去', clearComposition); });
-  bindPress(els.randomBtn,
-    () => { playButtonSound('random'); showToast('長押しでランダム生成'); },
-    () => { showToast('長押し：ランダム生成'); generateRandomPhrase(); }, 700);
-
-  bindPress(els.centerBtn,
-    () => { playButtonSound('center'); centerSelectedEvent(); showToast('長押しで末尾の音符へ'); },
-    () => {
-      showToast('長押し：末尾の音符へ');
-      playButtonSound('center');
-      if (!events.length) { showToast('音符がありません'); return; }
-      selectedId = events[events.length - 1].id;
-      renderScore({ preserve: false });
-      saveState();
-      centerOnEvent(selectedId, true);
-    }, 500);
-
-  // 音程ボタン（◀▶）: タップで半音、長押しで連続変更
-  bindRepeatButton(els.pitchDownBtn, {
-    onTap: () => changePitch(-1),
-    onRepeat: () => changePitch(-1),
-    longLabel: '長押し：音程を連続で下げる'
-  });
-  bindRepeatButton(els.pitchUpBtn, {
-    onTap: () => changePitch(1),
-    onRepeat: () => changePitch(1),
-    longLabel: '長押し：音程を連続で上げる'
-  });
-
-  // 長さボタン（▲▼）: タップで前後の音符へ移動、長押しで長さを連続変更
-  function bindNoteNav(button, direction, longLabel) {
-    const performLongAction = () => {
-      const ev = events.find(item => item.id === selectedId);
-      if (!ev) return;
-      changeDuration(direction, ev.id, true, false);
-      if (ev.type === 'note') playPreview(ev.midi);
-    };
-    const performTapNavigation = () => {
-      const idx = selectedIndex();
-      if (idx < 0) return;
-      const targetIdx = findAdjacentNote(idx, direction);
-      let target;
-      if (targetIdx < 0) {
-        const noteIndices = events.map((e, i) => e.type === 'note' ? i : -1).filter(i => i >= 0);
-        if (!noteIndices.length) { showToast('音符がありません'); return; }
-        target = events[direction < 0 ? noteIndices[noteIndices.length - 1] : noteIndices[0]];
-      } else {
-        target = events[targetIdx];
-      }
-      selectedId = target.id;
-      renderScore({ preserve: false });
-      saveState();
-      playPreview(target.midi);
-      requestAnimationFrame(() => centerOnEvent(target.id, true));
-    };
-    bindRepeatButton(button, {
-      onTap: performTapNavigation,
-      onRepeat: performLongAction,
-      longLabel,
-      delay: 470,
-      interval: 330,
-      fireOnLongStart: true
-    });
-  }
-  bindNoteNav(els.shortenBtn, -1, '長押し：音符を連続で短くする');
-  bindNoteNav(els.extendBtn, 1, '長押し：音符を連続で伸ばす');
-
-  // 休符ボタン: タップで休符追加、長押しで長さを伸ばす
-  (function setupRestHold() {
-    let active = false;
-    let duration = 1;
-    let timer = 0;
-    let interval = 0;
-    let activeEventId = null;
-    let activePointerId = null;
-    let longFired = false;
-
-    const start = (e) => {
-      if (els.restBtn.disabled || active) return;
-
-      active = true;
-      activePointerId = e.pointerId;
-      longFired = false;
-      duration = 1;
-
-      playButtonSound('rest');
-      activeEventId = addRest(1, true);
-
-      timer = setTimeout(() => {
-        longFired = true;
-        if (navigator.vibrate) navigator.vibrate(18);
-        interval = setInterval(() => {
-          duration = Math.min(16, duration + 1);
-          if (activeEventId) changeDuration(1, activeEventId, true);
-          showToast(`休符の長さ ${duration}`);
-        }, 380);
-      }, 420);
-    };
-
-    const cleanup = (e) => {
-      if (e && activePointerId !== null && e.pointerId !== activePointerId) return;
-
-      clearTimeout(timer);
-      clearInterval(interval);
-
-      const wasTap = active && !longFired;
-      active = false;
-      activePointerId = null;
-      timer = 0;
-      interval = 0;
-      activeEventId = null;
-      longFired = false;
-
-      if (wasTap) showToast('長押し：休符を伸ばす');
-    };
-
-    els.restBtn.addEventListener('pointerdown', start);
-    els.restBtn.addEventListener('pointerup', cleanup);
-    els.restBtn.addEventListener('pointercancel', cleanup);
-    els.restBtn.addEventListener('pointerleave', cleanup);
-  })();
-
-  // すべての音符を1オクターブ移動（範囲外にならない場合のみ）
-  function shiftAllNotes(offset) {
-    const targetNotes = events.filter(ev => ev.type === 'note');
-    if (!targetNotes.length) { showToast('音符がありません'); return; }
-    const canShift = targetNotes.every(ev => {
-      const next = ev.midi + offset * 12;
-      return next >= FIRST_MIDI && next < FIRST_MIDI + PITCH_COUNT;
-    });
-    if (!canShift) {
-      showToast('これ以上オクターブを変更できません');
-      return;
-    }
-    targetNotes.forEach(ev => { ev.midi += offset * 12; });
-    renderScore({ preserve: false });
-    saveState();
-    showToast(offset > 0 ? '1オクターブ上げました' : '1オクターブ下げました');
-  }
-
-  bindPress(els.keyLeft,
-    () => { setLinkedScroll(els.keyboardViewport.scrollLeft - whiteKeyW() * 7); showToast('長押しで1オクターブ下へ'); },
-    () => { showToast('長押し：1オクターブ下へ'); shiftAllNotes(-1); },
-    480);
-  bindPress(els.keyRight,
-    () => { setLinkedScroll(els.keyboardViewport.scrollLeft + whiteKeyW() * 7); showToast('長押しで1オクターブ上へ'); },
-    () => { showToast('長押し：1オクターブ上へ'); shiftAllNotes(1); },
-    480);
-
-  /* =========================================================================
-   * タブ・設定・エクスポート/インポートの UI 配線
-   * ===================================================================== */
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-  els.swipePlay.addEventListener('change', () => {
-    if (!els.swipePlay.checked) return;
-    pianoSwipeMode = 'play'; saveState();
-  });
-  els.swipeScroll.addEventListener('change', () => {
-    if (!els.swipeScroll.checked) return;
-    pianoSwipeMode = 'scroll'; saveState();
-  });
-  els.volumeRange.addEventListener('input', () => {
-    currentVolume = Math.max(0, Math.min(1, Number(els.volumeRange.value) / 100));
-    els.volumeValue.textContent = `${Math.round(currentVolume * 100)}%`;
-    if (audio && audio.master) audio.master.gain.value = currentVolume;
-    saveState();
-  });
-  els.randomLengthRange.addEventListener('input', () => {
-    randomPhraseLength = Math.max(12, Math.min(100, Number(els.randomLengthRange.value) || 12));
-    els.randomLengthValue.textContent = `${randomPhraseLength}音`;
-    saveState();
-  });
-
-  els.keyboardRange.addEventListener('input', () => {
-    if (playing || activeZoom || els.keyboardRange.disabled) return;
-    setKeyboardScroll(Number(els.keyboardRange.value) || 0);
-    updateEdgeIndicators();
-  });
-
-  els.keyboardRange.addEventListener('change', () => {
-    if (playing || activeZoom || els.keyboardRange.disabled) return;
-    setKeyboardScroll(Number(els.keyboardRange.value) || 0);
-    updateEdgeIndicators();
-  });
-
-  els.saveSongBtn.addEventListener('click', saveCurrentSong);
-  els.exportBtn.addEventListener('click', () => {
-    const payload = {
-      format: 'kantan-sakkyoku-v2',
-      exportedAt: new Date().toISOString(),
-      current: { name: currentSongName, events: eventsToLight(events), unitSeconds: currentUnitSeconds },
-      songs: songs.map(s => ({ name: s.name, events: eventsToLight(s.events), unitSeconds: s.unitSeconds }))
-    };
-    const json = '\uFEFF' + JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'kantan_sakkyoku_backup.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-    showToast('エクスポートしました');
-  });
-
-  els.importBtn.addEventListener('click', () => els.importFileInput.click());
-  els.importFileInput.addEventListener('change', handleImportFile);
-
-  function importSongList(data, file, label) {
-    const importedSongs = data.songs.filter(s => s && Array.isArray(s.events)).map(s => ({
-      _id: `song-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-      name: s.name || '無題の曲',
-      events: parseEventList(s.events),
-      unitSeconds: Math.max(.05, Math.min(1, Number(s.unitSeconds) || DEFAULT_UNIT_SECONDS))
-    }));
-    openConfirm('楽曲をインポート', `「${file.name}」から${importedSongs.length}曲を読み込み、現在の楽曲ライブラリを置き換えますか？`, 'インポート', () => {
-      songs = importedSongs;
-      saveSongs();
-      if (data.current && Array.isArray(data.current.events)) {
-        events = parseEventList(data.current.events);
-        selectedId = events.length ? events[events.length - 1].id : null;
-        currentSongId = null;
-        currentSongName = data.current.name || '';
-        currentUnitSeconds = Math.max(.05, Math.min(1, Number(data.current.unitSeconds) || DEFAULT_UNIT_SECONDS));
-        currentBPM = bpmFromUnitSeconds(currentUnitSeconds);
-        syncSettingsUI();
-        renderScore({ preserve: false });
-      }
-      renderSongList();
-      showToast(label);
-    });
-  }
-
-  function readImportFile(e, label) {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const jsonText = reader.result.replace(/^\uFEFF/, '');
-        const data = JSON.parse(jsonText);
-        if (!data || !Array.isArray(data.songs)) throw new Error('invalid');
-        importSongList(data, file, label);
-      } catch (_) {
-        showToast('インポートできませんでした');
-      }
-    };
-    reader.readAsText(file, 'utf-8');
-  }
-
-  function handleImportFile(e) { readImportFile(e, 'インポートしました'); }
-
-  els.modalCancel.addEventListener('click', closeConfirm);
-  els.modalConfirm.addEventListener('click', () => {
-    const action = modalAction;
-    closeConfirm();
-    if (action) action();
-  });
-  els.confirmModal.addEventListener('pointerdown', e => { if (e.target === els.confirmModal) closeConfirm(); });
-
-  // BPM ボタン: 左右ドラッグで速度を変更
-  (function setupBpmControl() {
-    const btn = els.bpmBtn;
-    if (!btn) return;
-    let pointerId = null, startX = 0, startBPM = 110, lastShown = 0;
-    const apply = (bpm) => {
-      currentBPM = clampBPM(bpm);
-      currentUnitSeconds = unitFromBPM(currentBPM);
-      updateBpmDisplay();
-      const now = Date.now();
-      if (now - lastShown > 250) { lastShown = now; showToast(`BPM ${currentBPM}`); }
-      saveState();
-    };
-    btn.addEventListener('pointerdown', e => {
-      if (btn.disabled || pointerId !== null) return;
-      pointerId = e.pointerId;
-      startX = e.clientX;
-      startBPM = currentBPM;
-      lastShown = 0;
-      btn.classList.add('dragging');
-      try { btn.setPointerCapture(e.pointerId); } catch (_) {}
-      ensureAudioSync();
-      e.preventDefault();
-    });
-    btn.addEventListener('pointermove', e => {
-      if (pointerId !== e.pointerId) return;
-      e.preventDefault();
-      const dx = e.clientX - startX;
-      const steps = Math.round(dx / 16);
-      apply(startBPM + steps * BPM_STEP);
-    });
-    const end = (e) => {
-      if (pointerId !== e.pointerId) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) < 5) {
-        showToast('左右スワイプで速度変更');
-      }
-      pointerId = null;
-      btn.classList.remove('dragging');
-    };
-    btn.addEventListener('pointerup', end);
-    btn.addEventListener('pointercancel', end);
-    btn.addEventListener('pointerleave', end);
-  })();
-
-  /* =========================================================================
-   * 楽譜と鍵盤の横スクロール同期（RAF でまとめて反映）
-   * ===================================================================== */
-  let scrollSyncRaf = 0;
-  let pendingScrollSource = null;
-  function scheduleScrollSync(source) {
-    pendingScrollSource = source;
-    if (scrollSyncRaf) return;
-    scrollSyncRaf = requestAnimationFrame(() => {
-      scrollSyncRaf = 0;
-      if (pendingScrollSource === 'keyboard') {
-        const left = els.keyboardViewport.scrollLeft;
-        if (!suppressScrollSync && Math.abs(els.scoreViewport.scrollLeft - left) > 0.5) els.scoreViewport.scrollLeft = left;
-      } else if (pendingScrollSource === 'score') {
-        const left = els.scoreViewport.scrollLeft;
-        if (!suppressScrollSync && Math.abs(els.keyboardViewport.scrollLeft - left) > 0.5) els.keyboardViewport.scrollLeft = left;
-      }
-      pendingScrollSource = null;
-      syncKeyboardRange();
-      updateEdgeIndicators();
-    });
-  }
-  els.keyboardViewport.addEventListener('scroll', () => scheduleScrollSync('keyboard'), { passive: true });
-  els.scoreViewport.addEventListener('scroll', () => scheduleScrollSync('score'), { passive: true });
-
-  /* =========================================================================
-   * グローバルなジェスチャー抑止（ピンチズーム・選択・長押しメニュー等）
-   * ===================================================================== */
-  const preventDefault = e => e.preventDefault();
-  document.addEventListener('gesturestart', preventDefault, { passive: false, signal: __docSignal });
-  document.addEventListener('gesturechange', preventDefault, { passive: false, signal: __docSignal });
-  document.addEventListener('gestureend', preventDefault, { passive: false, signal: __docSignal });
-  document.addEventListener('selectstart', preventDefault, { passive: false, signal: __docSignal });
-  document.addEventListener('dragstart', preventDefault, { passive: false, signal: __docSignal });
-  document.addEventListener('contextmenu', preventDefault, { passive: false, signal: __docSignal });
-  document.addEventListener('touchmove', e => {
-    if (e.touches && e.touches.length > 1) e.preventDefault();
-  }, { passive: false, signal: __docSignal });
-
-  // バックグラウンド遷移時は再生停止、復帰時はオーディオを再開
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      stopPlayback(false);
-    } else {
-      ensureAudioSync();
-      if (audio && audio.ctx) {
-        const ctx = audio.ctx;
-        if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
-          ctx.resume().catch(() => {});
-        }
-      }
-    }
-  }, { signal: __docSignal });
-
-  /* =========================================================================
-   * 画面サイズ変更への追従（再生・ズーム中は再レイアウトを避ける）
-   * ===================================================================== */
-  function doResize() {
-    setupRuler();
-    renderKeyboard();
-    renderScore({ preserve: true });
-    updateEdgeIndicators();
-  }
-
-  const handleViewportChange = () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      if (!playing && !activeZoom && !overviewState) {
-        doResize();
-      }
-    }, 100);
-  };
-  window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', handleViewportChange, { signal: __docSignal });
-  }
-  window.addEventListener('resize', updateToastPosition, { signal: __docSignal });
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateToastPosition, { signal: __docSignal });
-  }
-
-  /* =========================================================================
-   * 初期化
-   * ===================================================================== */
-  loadState();
-  loadSongs();
-  setupRuler();
-  els.songNameInput.value = currentSongName;
-  syncSettingsUI();
-  renderKeyboard();
-  renderScore({ preserve: false });
-  updateControls();
-  requestAnimationFrame(() => {
-    const initial = 28;
-    els.keyboardRange.value = String(initial);
-    setKeyboardScroll(initial);
-    const c4 = geometryFor(60);
-    const desiredPitch = c4.left - els.scoreViewport.clientWidth * .28;
-    setLinkedScroll(Math.max(0, desiredPitch));
-    if (selectedId) ensureEventVisible(selectedId);
-  });
-})();
+init();
 </script>
 </body>
 </html>
