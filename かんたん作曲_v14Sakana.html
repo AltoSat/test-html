@@ -457,7 +457,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   from { filter: brightness(1.2) saturate(1.25); }
   to { filter: brightness(1.65) saturate(1.6); }
 }
-.mini-btn.is-playing { color: #fff; border-color: #ff8197; background: linear-gradient(180deg, #e34c69, #a91f3b); }
 
 .tab-view {
   display: none;
@@ -688,49 +687,65 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   font-weight: 850;
 }
 .library-list { display: grid; gap: 9px; margin-top: 13px; }
-.song-item {
+ .song-item {
   position: relative;
   display: block;
-  padding: 12px 14px;
+  min-height: 62px;
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
+  background: #182332;
   overflow: hidden;
   cursor: pointer;
   touch-action: pan-y;
-  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+  transition: box-shadow .2s ease, border-color .2s ease;
 }
-.song-item:active { transform: scale(.99); }
+.song-item:active { box-shadow: 0 5px 16px rgba(0,0,0,.22); }
 .song-item.is-playing {
   border-color: #8eeaff;
   box-shadow: 0 0 0 2px rgba(83,215,255,.4), 0 8px 22px rgba(83,215,255,.18);
 }
 .song-item .song-hint {
-  position: absolute; top: 0; bottom: 0; width: 78px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 850; color: #fff;
-  opacity: 0; transition: opacity .12s ease; pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 850;
+  pointer-events: none;
+  opacity: 0;
 }
-.song-item .song-hint.left { left: 0; background: linear-gradient(90deg, rgba(255,85,115,.95), rgba(255,85,115,.55)); }
-.song-item .song-hint.right { right: 0; background: linear-gradient(270deg, rgba(83,215,255,.95), rgba(83,215,255,.55)); color: #06151b; }
+.song-item .song-hint.left {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 20px;
+  background: linear-gradient(90deg, rgba(83,215,255,.98), rgba(83,215,255,.66));
+  color: #06151b;
+}
+.song-item .song-hint.right {
+  right: 0;
+  justify-content: flex-end;
+  padding-right: 20px;
+  background: linear-gradient(270deg, rgba(255,85,115,.98), rgba(255,85,115,.66));
+  color: #fff;
+}
 .song-item .song-hint .hint-icon { font-size: 18px; }
-.song-item .song-hint .hint-label { margin-left: 4px; }
+.song-item .song-hint .hint-label { margin: 0 5px; opacity: .98; }
+.song-surface {
+  position: relative;
+  z-index: 2;
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  transition: transform .12s cubic-bezier(.2,.75,.2,1);
+  will-change: transform;
+  touch-action: pan-y;
+}
 .song-name { font-weight: 850; white-space: normal; word-break: break-all; line-height: 1.3; }
 .song-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
-.mini-btn {
-  min-height: 37px;
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 0 9px;
-  color: var(--ink);
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)), rgba(28,38,54,.45);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  font-size: 11px;
-  font-weight: 800;
-}
 .empty-library { padding: 26px 10px; color: var(--muted); text-align: center; font-size: 13px; }
 .settings-copy { color: #bdcadd; font-size: 13px; line-height: 1.75; }
 .export-btn { width: 100%; min-height: 49px; margin-top: 12px; }
@@ -969,31 +984,37 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 </div>
 <script>
 
-
 (() => {
   'use strict';
 
+  // 二重初期化を防ぐ: 既存インスタンスのイベントを AbortController で一括解除する
   if (window.__kantanDocAbort) {
     try { window.__kantanDocAbort.abort(); } catch (_) {}
   }
   window.__kantanDocAbort = new AbortController();
   const __docSignal = window.__kantanDocAbort.signal;
 
-  const PITCH_COUNT = 48;
-  const FIRST_MIDI = 48;
+  /* =========================================================================
+   * 定数
+   * ===================================================================== */
+  const PITCH_COUNT = 48;                       // 表示する半音の総数（4オクターブ）
+  const FIRST_MIDI = 48;                        // 最低音の MIDI 番号（C3）
   const BPM = 110;
-  const DEFAULT_UNIT_SECONDS = 60 / BPM / 4;
-  const STORAGE_KEY = 'kantan-sakkyoku-v4';
-  const SONGS_KEY = 'kantan-sakkyoku-songs-v1';
+  const DEFAULT_UNIT_SECONDS = 60 / BPM / 4;    // 16分音符1つ分の秒数
+  const STORAGE_KEY = 'kantan-sakkyoku-v4';     // 作業状態の保存キー
+  const SONGS_KEY = 'kantan-sakkyoku-songs-v1'; // 保存済み楽曲ライブラリのキー
   const NOTE_NAMES_JA = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
-  const BLACK_PCS = new Set([1,3,6,8,10]);
-  const PIANO_PARTIALS = [
+  const BLACK_PCS = new Set([1,3,6,8,10]);      // 黒鍵となるピッチクラス
+  const PIANO_PARTIALS = [                       // ピアノ音色を作る倍音構成
     { ratio: 1, type: 'triangle', gain: .82, detune: -1.7 },
     { ratio: 2, type: 'sine', gain: .24, detune: 1.1 },
     { ratio: 3, type: 'sine', gain: .10, detune: -.6 },
     { ratio: 4.01, type: 'sine', gain: .045, detune: 1.8 }
   ];
 
+  /* =========================================================================
+   * DOM 参照（起動時に一度だけ取得してキャッシュ）
+   * ===================================================================== */
   const els = {
     playBtn: document.getElementById('playBtn'),
     recordBtn: document.getElementById('recordBtn'),
@@ -1042,6 +1063,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     randomLengthValue: document.getElementById('randomLengthValue')
   };
 
+  /* =========================================================================
+   * アプリケーション状態
+   *  - events: 楽譜本体（音符/休符の配列。表示順＝再生順）
+   *  - selectedId: 選択中イベント。編集・再生開始位置の基準
+   *  - playing / activeZoom / overviewState: 再生とズームの一時状態
+   * ===================================================================== */
   let events = [];
   let selectedId = null;
   let nextId = 1;
@@ -1068,19 +1095,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   let renderScoreRAF = null;
   let randomPhraseLength = 12;
   let resizeTimer = 0;
-  let keyboardGesture = { pointerId: null, lastMidi: null, holdTimer: 0, holdInterval: 0, eventId: null, previousSelectedId: null, startX: 0, startScroll: 0, scrolling: false, voice: null, audioReady: false };
+  // 鍵盤のポインタ操作（押下～スライド）に伴う一時状態
+  let keyboardGesture = { pointerId: null, lastMidi: null, holdTimer: 0, holdInterval: 0, eventId: null, previousSelectedId: null, startX: 0, startScroll: 0, scrolling: false, voice: null };
   let activeZoom = null;
   let audioUnlockPromise = null;
   let playbackStarting = false;
   let playbackToken = 0;
-  let prePlaybackScroll = { left: 0, top: 0 };
 
-  let smoothScrollEndTimer = 0;
+  // なめらかスクロール制御用
   let suppressScrollSync = false;
   let smoothScrollAnimId = 0;
   let smoothScrollRaf = 0;
   const smoothScrollEase = (t) => 1 - Math.pow(1 - t, 3);
 
+  /* =========================================================================
+   * CSS カスタムプロパティの読み取り（レイアウト計算に使用）
+   * ===================================================================== */
   const rootStyle = getComputedStyle(document.documentElement);
   function cssNumber(name) {
     return parseFloat(rootStyle.getPropertyValue(name));
@@ -1094,6 +1124,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     document.documentElement.style.setProperty('--ruler-h', '48px');
   }
 
+  /* =========================================================================
+   * 音楽的ユーティリティ（MIDI ⇔ 表示名 / 周波数）
+   * ===================================================================== */
   function noteInfo(midi) {
     const pc = ((midi % 12) + 12) % 12;
     const octave = Math.floor(midi / 12) - 1;
@@ -1104,6 +1137,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
+  /* =========================================================================
+   * データ変換とバリデーション
+   *  parseEventList: 保存形式（配列/オブジェクト）→内部イベント配列に正規化
+   *  eventsToLight : 内部イベント配列→軽量な保存形式 [midi, duration]（休符は midi=0）
+   * ===================================================================== */
   function parseEventList(data) {
     if (!Array.isArray(data)) return [];
     const clean = [];
@@ -1134,8 +1172,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return list.map(ev => ev.type === 'note' ? [ev.midi, ev.duration] : [0, ev.duration]);
   }
 
-  function sanitizeLoaded(data) { return parseEventList(data); }
-
+  /* =========================================================================
+   * BPM とテンポ換算
+   * ===================================================================== */
   function clampBPM(bpm) {
     return Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(bpm / BPM_STEP) * BPM_STEP));
   }
@@ -1145,6 +1184,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
   function unitFromBPM(bpm) { return 60 / bpm / 4; }
 
+  /* =========================================================================
+   * 永続化（作業状態）
+   * ===================================================================== */
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -1184,10 +1226,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     } catch (_) {}
   }
 
-  function serializeEvents(list = events) { return eventsToLight(list); }
-
+  // イベント配列のディープコピー（楽曲保存/読込時に参照を切り離す）
   function snapshotEvents(list = events) { return list.map(e => ({ id: e.id, type: e.type, midi: e.midi, duration: e.duration })); }
 
+  /* =========================================================================
+   * 永続化（楽曲ライブラリ）
+   * ===================================================================== */
   function loadSongs() {
     try {
       const parsed = JSON.parse(localStorage.getItem(SONGS_KEY) || '[]');
@@ -1207,6 +1251,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     } catch (_) {}
   }
 
+  /* =========================================================================
+   * 確認モーダル
+   * ===================================================================== */
   function openConfirm(title, message, confirmText, action) {
     modalAction = action;
     els.modalTitle.textContent = title;
@@ -1220,22 +1267,30 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.confirmModal.classList.remove('is-open');
   }
 
+  /* =========================================================================
+   * トースト通知
+   * ===================================================================== */
   function updateToastPosition() {
     const isComp = currentTab === 'composition' && els.compositionView.classList.contains('is-active');
     let bottom = 14;
     if (isComp) {
-      const panel = els.compositionView.querySelector('.keyboard-panel');
-      if (panel) {
-        const r = panel.getBoundingClientRect();
-        bottom = Math.max(14, window.innerHeight - r.top + 10);
-      } else {
-        const r = els.scoreViewport.getBoundingClientRect();
-        bottom = Math.max(14, window.innerHeight - r.bottom + 10);
-      }
+      const r = els.keyboardViewport.getBoundingClientRect();
+      bottom = Math.max(14, window.innerHeight - r.top + 10);
     }
     document.documentElement.style.setProperty('--toast-bottom', bottom + 'px');
   }
 
+  function showToast(message) {
+    clearTimeout(toastTimer);
+    updateToastPosition();
+    els.toast.textContent = message;
+    els.toast.classList.add('show');
+    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1350);
+  }
+
+  /* =========================================================================
+   * タブ切り替え
+   * ===================================================================== */
   function switchTab(name) {
     currentTab = name;
     const map = { composition: els.compositionView, songs: els.songsView, settings: els.settingsView };
@@ -1254,6 +1309,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     updateToastPosition();
   }
 
+  /* =========================================================================
+   * 楽曲ライブラリ表示とスワイプ操作（編集/削除）
+   * ===================================================================== */
   function renderSongList() {
     els.songList.innerHTML = '';
     if (!songs.length) {
@@ -1270,20 +1328,26 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
       const hintL = document.createElement('span');
       hintL.className = 'song-hint left';
-      hintL.innerHTML = '<span class="hint-icon">✎</span><span class="hint-label">編集</span>';
+      hintL.innerHTML = '<span class="hint-label">編集</span><span class="hint-icon">✎</span>';
+
       const hintR = document.createElement('span');
       hintR.className = 'song-hint right';
       hintR.innerHTML = '<span class="hint-icon">🗑</span><span class="hint-label">削除</span>';
-      item.append(hintL, hintR);
+
+      const surface = document.createElement('div');
+      surface.className = 'song-surface';
 
       const name = document.createElement('div');
       name.className = 'song-name';
       name.textContent = song.name || '無題の曲';
+
       const meta = document.createElement('div');
       meta.className = 'song-meta';
       const notes = song.events.filter(e => e.type === 'note').length;
       meta.textContent = `${notes}音・♩=${bpmFromUnitSeconds(song.unitSeconds)}`;
-      item.append(name, meta);
+
+      surface.append(name, meta);
+      item.append(hintL, hintR, surface);
 
       bindSongGesture(item, song);
       els.songList.appendChild(item);
@@ -1291,76 +1355,97 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   function bindSongGesture(item, song) {
-    let startX = 0, startY = 0, startTime = 0, pointerId = null, decided = null, moved = false;
-    const commitThreshold = 46;
-    const hintLeft = item.querySelector('.song-hint.left');
-    const hintRight = item.querySelector('.song-hint.right');
-    const resetHints = () => {
-      item.style.transition = '';
-      item.style.transform = '';
-      [hintLeft, hintRight].forEach(h => { h.style.opacity = ''; h.style.width = ''; });
+    const surface = item.querySelector('.song-surface');
+    const leftHint = item.querySelector('.song-hint.left');
+    const rightHint = item.querySelector('.song-hint.right');
+    const leftLabel = leftHint.querySelector('.hint-label');
+    const rightLabel = rightHint.querySelector('.hint-label');
+
+    let startX = 0, startY = 0, pointerId = null, moved = false, decided = null;
+    const commitThreshold = 72;
+    const maxReveal = 112;
+
+    const reset = (animate = true) => {
+      surface.style.transition = animate ? 'transform .2s cubic-bezier(.2,.8,.2,1)' : 'none';
+      surface.style.transform = 'translateX(0)';
+      leftHint.style.opacity = '0';
+      rightHint.style.opacity = '0';
+      leftLabel.style.transform = '';
+      rightLabel.style.transform = '';
     };
+
     const down = (e) => {
       if (pointerId !== null) return;
       pointerId = e.pointerId;
-      startX = e.clientX; startY = e.clientY; startTime = Date.now();
-      decided = null; moved = false;
-      item.style.transition = 'none';
+      startX = e.clientX;
+      startY = e.clientY;
+      moved = false;
+      decided = null;
+      surface.style.transition = 'none';
       try { item.setPointerCapture(e.pointerId); } catch (_) {}
     };
+
     const move = (e) => {
       if (pointerId !== e.pointerId) return;
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
+
       if (!moved && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) moved = true;
-      if (moved) {
-        e.preventDefault();
-        // 右スワイプ=編集 / 左スワイプ=削除
-        decided = dx > 0 ? 'right' : 'left';
-        const clamp = Math.max(-96, Math.min(96, dx));
-        item.style.transform = `translateX(${clamp}px)`;
-        const reveal = Math.abs(clamp);
-        if (dx > 0) {
-          hintLeft.style.width = reveal + 'px';
-          hintLeft.style.opacity = '1';
-          hintRight.style.opacity = '0';
-        } else {
-          hintRight.style.width = reveal + 'px';
-          hintRight.style.opacity = '1';
-          hintLeft.style.opacity = '0';
-        }
-      }
+      if (!moved) return;
+
+      e.preventDefault();
+      decided = dx > 0 ? 'edit' : 'delete';
+
+      const reveal = Math.max(0, Math.min(maxReveal, Math.abs(dx) * 0.72));
+      const progress = Math.min(1, reveal / commitThreshold);
+      const translate = Math.max(-maxReveal, Math.min(maxReveal, dx * 0.72));
+
+      surface.style.transform = `translateX(${translate}px)`;
+      leftHint.style.opacity = dx > 0 ? String(Math.min(1, .35 + progress * .65)) : '0';
+      rightHint.style.opacity = dx < 0 ? String(Math.min(1, .35 + progress * .65)) : '0';
+
+      leftLabel.style.transform = dx > 0 ? `translateX(${Math.max(0, 14 - reveal * .12)}px) scale(${.88 + .12 * progress})` : '';
+      rightLabel.style.transform = dx < 0 ? `translateX(${Math.min(0, -14 + reveal * .12)}px) scale(${.88 + .12 * progress})` : '';
     };
+
     const finish = (e) => {
       if (pointerId !== e.pointerId) return;
       const dx = e.clientX - startX;
       pointerId = null;
-      item.style.transition = 'transform .18s ease';
-      if (!moved) { resetHints(); playLibrarySong(song, item); return; }
-      if (Math.abs(dx) < commitThreshold) { resetHints(); return; }
-      if (decided === 'right') {
-        // 編集：カードを右へ流してから実行
-        item.style.transform = 'translateX(100%)';
-        setTimeout(() => { resetHints(); editSong(song); }, 160);
-      } else if (decided === 'left') {
-        // 削除：カードを左へ流してから確認
-        item.style.transform = 'translateX(-100%)';
-        setTimeout(() => {
-          resetHints();
-          openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => deleteSong(song));
-        }, 160);
+
+      if (!moved) {
+        reset(true);
+        playLibrarySong(song, item);
+        return;
+      }
+
+      if (Math.abs(dx) < commitThreshold) {
+        reset(true);
+        return;
+      }
+
+      if (decided === 'edit') {
+        surface.style.transition = 'transform .14s ease-out';
+        surface.style.transform = 'translateX(100%)';
+        setTimeout(() => { reset(false); editSong(song); }, 120);
       } else {
-        resetHints();
+        surface.style.transition = 'transform .14s ease-out';
+        surface.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+          reset(false);
+          openConfirm('楽曲を削除', `「${song.name || '無題の曲'}」を削除しますか？`, '削除', () => deleteSong(song));
+        }, 120);
       }
     };
+
     const cancel = (e) => {
       if (pointerId !== e.pointerId) return;
       pointerId = null;
-      item.style.transition = 'transform .18s ease';
-      resetHints();
+      reset(true);
     };
+
     item.addEventListener('pointerdown', down);
-    item.addEventListener('pointermove', move);
+    item.addEventListener('pointermove', move, { passive: false });
     item.addEventListener('pointerup', finish);
     item.addEventListener('pointercancel', cancel);
   }
@@ -1405,6 +1490,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     showToast('楽曲を読み込みました');
   }
 
+  /* =========================================================================
+   * イベント配列のレイアウト計算とインデックス探索
+   * ===================================================================== */
+  // 各イベントの開始/終了位置（16分音符単位）と全体長を求める
   function layoutEvents() {
     let cursor = 0;
     const map = new Map();
@@ -1426,14 +1515,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return -1;
   }
 
-  function showToast(message) {
-    clearTimeout(toastTimer);
-    updateToastPosition();
-    els.toast.textContent = message;
-    els.toast.classList.add('show');
-    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1350);
-  }
-
+  /* =========================================================================
+   * コントロールの有効/無効・再生ロック UI
+   * ===================================================================== */
   function setPlaybackUI(active) {
     const disableList = [
       els.restBtn, els.deleteBtn, els.shortenBtn, els.extendBtn,
@@ -1471,6 +1555,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.recordLabel.textContent = '記録';
   }
 
+  /* =========================================================================
+   * 鍵盤ジオメトリ（白鍵/黒鍵の x 座標と幅）
+   * ===================================================================== */
   function buildKeyGeometry() {
     keyGeometry = new Map();
     let whiteIndex = 0;
@@ -1502,6 +1589,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return keyGeometry.get(midi) || { left: 0, width: whiteKeyW(), isBlack: false };
   }
 
+  /* =========================================================================
+   * スクロール範囲のクランプと座標→鍵盤の対応
+   * ===================================================================== */
   function clampScrollLeft(left) {
     const scoreMax = Math.max(0, pianoWidth - els.scoreViewport.clientWidth);
     const keyMax = Math.max(0, pianoWidth - els.keyboardViewport.clientWidth);
@@ -1514,6 +1604,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return Math.max(0, Math.min(maxTop, top));
   }
 
+  // 画面上の座標がどの鍵盤に当たるか（黒鍵を優先判定）
   function keyAtPoint(clientX, clientY) {
     const rect = els.keyboardViewport.getBoundingClientRect();
     const x = clientX - rect.left + els.keyboardViewport.scrollLeft;
@@ -1544,6 +1635,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return null;
   }
 
+  /* =========================================================================
+   * スクロール同期（楽譜と鍵盤は横スクロールを共有）
+   * ===================================================================== */
   function smoothScrollBoth(left, top) {
     const targetLeft = clampScrollLeft(left);
     const targetTop = clampScrollTop(top);
@@ -1560,7 +1654,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
 
     cancelAnimationFrame(smoothScrollRaf);
-    clearTimeout(smoothScrollEndTimer);
     smoothScrollAnimId++;
     const token = smoothScrollAnimId;
     suppressScrollSync = true;
@@ -1599,6 +1692,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.keyboardRange.value = String(Math.round(next / max * 100));
   }
 
+  /* =========================================================================
+   * 楽譜（ピアノロール）の描画
+   * ===================================================================== */
   function cancelRenderScoreRAF() {
     if (renderScoreRAF) {
       cancelAnimationFrame(renderScoreRAF);
@@ -1712,6 +1808,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     centerOnEvent(id, smooth);
   }
 
+  /* =========================================================================
+   * 選択と編集操作
+   * ===================================================================== */
   function selectEvent(id, audition = true) {
     selectedId = id;
     const ev = events.find(item => item.id === id);
@@ -1720,6 +1819,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (audition && ev && ev.type === 'note') playPreview(ev.midi);
   }
 
+  // 新規イベントは選択中イベントの直後に挿入する
   function insertionIndex() {
     const idx = selectedIndex();
     return idx >= 0 ? idx + 1 : events.length;
@@ -1820,6 +1920,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     void startPlayback(true);
   }
 
+  /* =========================================================================
+   * 画面端インジケータ（表示範囲外に音符があることを示す）
+   * ===================================================================== */
   function updateEdgeIndicators() {
     if (!els.compositionView.classList.contains('is-active') || els.scoreViewport.classList.contains('overview-mode') || els.scoreViewport.classList.contains('is-zooming')) {
       [els.edgeLeft, els.edgeRight, els.edgeUp, els.edgeDown].forEach(el => el.classList.remove('is-visible'));
@@ -1852,6 +1955,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.edgeDown.classList.toggle('is-visible', hiddenDown && total > 0);
   }
 
+  /* =========================================================================
+   * 俯瞰（オーバービュー）ズーム: 再生時に楽譜全体を縮小表示する
+   * ===================================================================== */
   function setContentTransitions(enabled) {
     els.scoreContent.style.transition = enabled ? 'transform .5s cubic-bezier(.22,.8,.22,1)' : 'none';
     els.keyboardInner.style.transition = enabled ? 'transform .5s cubic-bezier(.22,.8,.22,1)' : 'none';
@@ -1883,7 +1989,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     activeZoom = null;
     syncKeyboardRange(0);
     updateEdgeIndicators();
-    updateToastPosition();
   }
 
   function finishLeaveOverviewImmediateFallback() {
@@ -1909,7 +2014,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.keyboardViewport.classList.remove('playback-lock');
     syncKeyboardRange(viewport.scrollLeft);
     updateEdgeIndicators();
-    updateToastPosition();
   }
 
   function enterOverview(startUnit = 0) {
@@ -2117,12 +2221,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
         syncKeyboardRange(finalScrollLeft);
         updateEdgeIndicators();
-        updateToastPosition();
       }
     };
     activeZoom.raf = requestAnimationFrame(frame);
   }
 
+  /* =========================================================================
+   * 再生ハイライトとスクロール追従（鍵盤/音符）
+   * ===================================================================== */
   function setPlayingKey(midi) {
     els.keyboardInner.querySelectorAll('.is-playing-key').forEach(key => key.classList.remove('is-playing-key'));
     if (midi == null) return;
@@ -2130,6 +2236,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (key) key.classList.add('is-playing-key');
   }
 
+  // 選択イベントが表示範囲に入るよう最小限だけスクロールする
   function ensureEventVisible(id) {
     cancelRenderScoreRAF();
     const ev = events.find(item => item.id === id);
@@ -2153,6 +2260,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   }
 
+  // 選択イベントを画面中央へスクロールする
   function centerOnEvent(id, smooth = true) {
     if (!id) return;
     cancelRenderScoreRAF();
@@ -2213,6 +2321,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   }
 
+  /* =========================================================================
+   * オーディオエンジン（Web Audio）
+   *  - createAudioGraph: マスター/コンプレッサ/簡易リバーブを構築
+   *  - pianoVoice / startSustainedVoice: 発音（発音時/押しっぱなし）
+   * ===================================================================== */
   function createAudioGraph(ctx) {
     const master = ctx.createGain();
     master.gain.value = currentVolume;
@@ -2247,6 +2360,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return { ctx, master, liveSources: new Set() };
   }
 
+  // AudioContext を同期的に用意/再開する（無音バッファで iOS のロックを解除）
   function ensureAudioSync() {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return null;
@@ -2302,6 +2416,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     audio.liveSources.clear();
   }
 
+  // 1音のフィルタ＋エンベロープの土台を作る（発音関数から共有）
   function createPianoVoiceBase(midi, when, velocity) {
     if (!audio) return null;
     const { ctx, master } = audio;
@@ -2350,6 +2465,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return oscillators;
   }
 
+  // 打鍵時のアタック（ノイズ）を加えて生っぽさを出す
   function addPianoClick(when, velocity) {
     if (!audio) return null;
     const { ctx, master, liveSources } = audio;
@@ -2369,6 +2485,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     return click;
   }
 
+  // 長さの決まった1音を鳴らす（再生・プレビュー用）
   function pianoVoice(midi, when, holdSeconds, velocity = .72) {
     if (!audio) return;
     const base = createPianoVoiceBase(midi, when, velocity);
@@ -2383,6 +2500,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     addPianoClick(when, velocity);
   }
 
+  // 指を離すまで鳴り続ける音（鍵盤タッチ用）。stop() で減衰させる
   function startSustainedVoice(midi, velocity = .78) {
     if (!audio) return null;
     const now = audio.ctx.currentTime;
@@ -2412,6 +2530,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }).catch(() => {});
   }
 
+  // ボタン操作のフィードバック音（種類ごとに音程/形状を変える）
   function playButtonSound(type = 'default') {
     ensureAudioSync();
     unlockAudio().then(() => {
@@ -2473,6 +2592,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }).catch(() => {});
   }
 
+  /* =========================================================================
+   * 鍵盤ジェスチャー（タッチ/ポインタでの発音・記録・スクロール）
+   * ===================================================================== */
   function resetKeyboardGesture() {
     cancelHold();
     stopGestureVoice();
@@ -2481,11 +2603,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.eventId = null;
     keyboardGesture.previousSelectedId = null;
     keyboardGesture.scrolling = false;
-    keyboardGesture.audioReady = false;
     keyboardGesture.startX = 0;
     keyboardGesture.startScroll = 0;
   }
 
+  /* =========================================================================
+   * メイン楽譜の再生制御
+   * ===================================================================== */
   function stopPlayback(showMessage = false, focusEventId = null) {
     playbackToken += 1;
     playbackStarting = false;
@@ -2524,6 +2648,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (showMessage && wasPlaying) showToast('停止しました');
   }
 
+  // 再生開始位置: 選択が末尾付近/未選択なら先頭から、それ以外は選択位置から
   function playbackStartIndex(forceBeginning = false) {
     if (forceBeginning) return 0;
     const idx = selectedIndex();
@@ -2555,9 +2680,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
     const token = ++playbackToken;
     playbackStarting = true;
-
-    prePlaybackScroll.left = els.scoreViewport.scrollLeft;
-    prePlaybackScroll.top = els.scoreViewport.scrollTop;
 
     const { map, total } = layoutEvents();
     const startIndex = playbackStartIndex(forceBeginning);
@@ -2591,6 +2713,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
       const startAt = audio.ctx.currentTime + .075;
 
+      // 開始位置以降の全音符を事前にスケジュール
       for (let i = startIndex; i < events.length; i++) {
         const ev = events[i];
         if (ev.type !== 'note') continue;
@@ -2601,6 +2724,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
       playing = { startAt, total, map, startUnit, playUnits, lastId: null, currentId: null, raf: 0 };
 
+      // 毎フレーム: 経過時間から現在位置を求め、ハイライト・プレイヘッド・追従を更新
       const tick = () => {
         if (!playing || !audio) return;
         const elapsedUnits = Math.max(0, (audio.ctx.currentTime - playing.startAt) / currentUnitSeconds);
@@ -2656,6 +2780,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   }
 
+  /* =========================================================================
+   * 楽曲ライブラリのプレビュー再生（俯瞰なしの簡易再生）
+   * ===================================================================== */
   function stopLibraryPlayback(showMessage = false) {
     clearTimeout(libraryPlaybackTimer);
     if (libraryPlaying && libraryPlaying.item) {
@@ -2696,6 +2823,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }, (cursor * unitSeconds + .7) * 1000);
   }
 
+  /* =========================================================================
+   * 鍵盤の描画とスクロール操作
+   * ===================================================================== */
   function renderKeyboard() {
     buildKeyGeometry();
     els.keyboardInner.innerHTML = '';
@@ -2761,6 +2891,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   }
 
+  // 記録中に鍵盤スライドで入力途中の音符を取り消す
   function cancelGestureNote() {
     if (keyboardGesture.eventId == null) return;
     const idx = events.findIndex(ev => ev.id === keyboardGesture.eventId);
@@ -2776,6 +2907,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.previousSelectedId = null;
   }
 
+  // 鍵盤を押しっぱなしにしている間、音符を伸ばし続ける
   function armHold(eventId) {
     cancelHold();
     keyboardGesture.holdTimer = setTimeout(() => {
@@ -2785,6 +2917,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }, 470);
   }
 
+  // 指が別の鍵盤へ移ったときの発音切り替え（記録中は音符を追加）
   function enterKeyboardKey(midi) {
     if (!Number.isFinite(midi) || midi === keyboardGesture.lastMidi) return;
     stopGestureVoice();
@@ -2802,12 +2935,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     armHold(id);
   }
 
-  function restartGestureVoice(midi) {
-    if (!Number.isFinite(midi)) return;
-    stopGestureVoice();
-    keyboardGesture.voice = startSustainedVoice(midi);
-  }
-
   function endKeyboardGesture(pointerId) {
     if (keyboardGesture.pointerId !== pointerId) return;
     setKeyState(null);
@@ -2823,15 +2950,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     keyboardGesture.startX = e.clientX;
     keyboardGesture.startScroll = els.keyboardViewport.scrollLeft;
     keyboardGesture.scrolling = false;
-    keyboardGesture.audioReady = true;
 
     const graph = ensureAudioSync();
     if (graph && graph.ctx && graph.ctx.state === 'suspended') { try { graph.ctx.resume(); } catch (_) {} }
     enterKeyboardKey(midi);
     unlockAudio().then(() => {
-      // オーディオ解錠後は「音の鳴り直し」だけを行い、音符の二重登録を防ぐ
-      if (keyboardGesture.pointerId === e.pointerId && keyboardGesture.lastMidi === midi && !keyboardGesture.scrolling) {
-        restartGestureVoice(midi);
+      if (keyboardGesture.pointerId === e.pointerId && audio && audio.ctx && audio.ctx.state !== 'running') {
+        try { audio.ctx.resume(); } catch (_) {}
       }
     }).catch(() => {});
   }, { passive: false });
@@ -2882,6 +3007,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   });
 
+  // 初回のユーザー操作で確実にオーディオを解錠する
   document.addEventListener('pointerdown', () => {
     ensureAudioSync();
     unlockAudio().catch(() => {});
@@ -2903,6 +3029,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     showToast('全消去しました');
   }
 
+  /* =========================================================================
+   * ボタンの押下ハンドラ（タップ/長押し/長押しリピート）
+   * ===================================================================== */
+  // タップと長押しを判別する汎用バインダー
   function bindPress(button, onTap, onLong, delay = 550) {
     let timer = 0, longFired = false, pointerId = null;
     button.addEventListener('pointerdown', e => {
@@ -2935,6 +3065,63 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     button.addEventListener('pointercancel', cancel);
   }
 
+  // タップ＋長押しリピートを扱う汎用バインダー（D-pad 系ボタンで共有）
+  //  opts: { onTap, onRepeat, longLabel, delay, interval, fireOnLongStart }
+  //   - fireOnLongStart: 長押し判定した瞬間に onRepeat を1回即実行するか
+  function bindRepeatButton(button, opts) {
+    const { onTap, onRepeat, longLabel = '', delay = 480, interval = 120, fireOnLongStart = false } = opts;
+    let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
+
+    const clearTimers = () => {
+      clearTimeout(longTimer);
+      clearInterval(repeatTimer);
+      longTimer = 0;
+      repeatTimer = 0;
+    };
+
+    button.addEventListener('pointerdown', e => {
+      if (button.disabled || pointerId !== null) return;
+      pointerId = e.pointerId;
+      longFired = false;
+      try { button.setPointerCapture(e.pointerId); } catch (_) {}
+      ensureAudioSync();
+
+      longTimer = setTimeout(() => {
+        longFired = true;
+        if (navigator.vibrate) navigator.vibrate(18);
+        if (longLabel) showToast(longLabel);
+        if (fireOnLongStart) onRepeat();
+        repeatTimer = setInterval(() => {
+          if (!button.disabled) {
+            onRepeat();
+          } else {
+            clearInterval(repeatTimer);
+            repeatTimer = 0;
+          }
+        }, interval);
+      }, delay);
+    });
+
+    const finishTap = e => {
+      if (pointerId !== e.pointerId) return;
+      clearTimers();
+      if (!longFired && !button.disabled) {
+        onTap();
+        if (longLabel) showToast(longLabel);
+      }
+      pointerId = null;
+    };
+
+    const cancelNoTap = e => {
+      if (pointerId !== e.pointerId) return;
+      clearTimers();
+      pointerId = null;
+    };
+
+    button.addEventListener('pointerup', finishTap);
+    button.addEventListener('pointercancel', cancelNoTap);
+  }
+
   function syncSettingsUI() {
     els.swipePlay.checked = pianoSwipeMode === 'play';
     els.swipeScroll.checked = pianoSwipeMode === 'scroll';
@@ -2949,6 +3136,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (els.bpmValue) els.bpmValue.textContent = String(currentBPM);
   }
 
+  // 再生ボタン: タップで再生/停止、長押しで先頭から再生
   bindPress(els.playBtn,
     () => { startPlayback(false); showToast('長押しで先頭から再生'); },
     () => {
@@ -2980,75 +3168,26 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       centerOnEvent(selectedId, true);
     }, 500);
 
-  function bindDpadAction(button, onAction, longLabel, delay = 480, interval = 120) {
-    let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
+  // 音程ボタン（◀▶）: タップで半音、長押しで連続変更
+  bindRepeatButton(els.pitchDownBtn, {
+    onTap: () => changePitch(-1),
+    onRepeat: () => changePitch(-1),
+    longLabel: '長押し：音程を連続で下げる'
+  });
+  bindRepeatButton(els.pitchUpBtn, {
+    onTap: () => changePitch(1),
+    onRepeat: () => changePitch(1),
+    longLabel: '長押し：音程を連続で上げる'
+  });
 
-    const clearTimers = () => {
-      clearTimeout(longTimer);
-      clearInterval(repeatTimer);
-      longTimer = 0;
-      repeatTimer = 0;
-    };
-
-    button.addEventListener('pointerdown', e => {
-      if (button.disabled || pointerId !== null) return;
-      pointerId = e.pointerId;
-      longFired = false;
-      try { button.setPointerCapture(e.pointerId); } catch (_) {}
-      ensureAudioSync();
-
-      longTimer = setTimeout(() => {
-        longFired = true;
-        if (navigator.vibrate) navigator.vibrate(18);
-        if (longLabel) showToast(longLabel);
-        repeatTimer = setInterval(() => {
-          if (!button.disabled) {
-            onAction();
-          } else {
-            clearInterval(repeatTimer);
-            repeatTimer = 0;
-          }
-        }, interval);
-      }, delay);
-    });
-
-    const finishTap = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimers();
-      if (!longFired && !button.disabled) {
-        onAction();
-        if (longLabel) showToast(longLabel);
-      }
-      pointerId = null;
-    };
-
-    const cancelNoTap = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimers();
-      pointerId = null;
-    };
-
-    button.addEventListener('pointerup', finishTap);
-    button.addEventListener('pointercancel', cancelNoTap);
-  }
-
-  function bindDpadNoteNav(button, direction, longLabel) {
-    let longTimer = 0, repeatTimer = 0, pointerId = null, longFired = false;
-
-    const clearTimers = () => {
-      clearTimeout(longTimer);
-      clearInterval(repeatTimer);
-      longTimer = 0;
-      repeatTimer = 0;
-    };
-
+  // 長さボタン（▲▼）: タップで前後の音符へ移動、長押しで長さを連続変更
+  function bindNoteNav(button, direction, longLabel) {
     const performLongAction = () => {
       const ev = events.find(item => item.id === selectedId);
       if (!ev) return;
       changeDuration(direction, ev.id, true, false);
       if (ev.type === 'note') playPreview(ev.midi);
     };
-
     const performTapNavigation = () => {
       const idx = selectedIndex();
       if (idx < 0) return;
@@ -3067,55 +3206,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       playPreview(target.midi);
       requestAnimationFrame(() => centerOnEvent(target.id, true));
     };
-
-    button.addEventListener('pointerdown', e => {
-      if (button.disabled || pointerId !== null) return;
-      pointerId = e.pointerId;
-      longFired = false;
-      try { button.setPointerCapture(e.pointerId); } catch (_) {}
-      ensureAudioSync();
-
-      longTimer = setTimeout(() => {
-        longFired = true;
-        if (navigator.vibrate) navigator.vibrate(18);
-        if (longLabel) showToast(longLabel);
-        performLongAction();
-        repeatTimer = setInterval(() => {
-          if (!button.disabled) {
-            performLongAction();
-          } else {
-            clearInterval(repeatTimer);
-            repeatTimer = 0;
-          }
-        }, 330);
-      }, 470);
+    bindRepeatButton(button, {
+      onTap: performTapNavigation,
+      onRepeat: performLongAction,
+      longLabel,
+      delay: 470,
+      interval: 330,
+      fireOnLongStart: true
     });
-
-    const finishTap = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimers();
-      if (!longFired && !button.disabled) {
-        performTapNavigation();
-        if (longLabel) showToast(longLabel);
-      }
-      pointerId = null;
-    };
-
-    const cancelNoTap = e => {
-      if (pointerId !== e.pointerId) return;
-      clearTimers();
-      pointerId = null;
-    };
-
-    button.addEventListener('pointerup', finishTap);
-    button.addEventListener('pointercancel', cancelNoTap);
   }
+  bindNoteNav(els.shortenBtn, -1, '長押し：音符を連続で短くする');
+  bindNoteNav(els.extendBtn, 1, '長押し：音符を連続で伸ばす');
 
-  bindDpadAction(els.pitchDownBtn, () => changePitch(-1), '長押し：音程を連続で下げる');
-  bindDpadAction(els.pitchUpBtn, () => changePitch(1), '長押し：音程を連続で上げる');
-  bindDpadNoteNav(els.shortenBtn, -1, '長押し：音符を連続で短くする');
-  bindDpadNoteNav(els.extendBtn, 1, '長押し：音符を連続で伸ばす');
-
+  // 休符ボタン: タップで休符追加、長押しで長さを伸ばす
   (function setupRestHold() {
     let active = false;
     let duration = 1;
@@ -3124,46 +3227,53 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     let activeEventId = null;
     let activePointerId = null;
     let longFired = false;
+
     const start = (e) => {
       if (els.restBtn.disabled || active) return;
+
       active = true;
-      longFired = false;
       activePointerId = e.pointerId;
+      longFired = false;
       duration = 1;
 
       playButtonSound('rest');
-
       activeEventId = addRest(1, true);
-      try { els.restBtn.setPointerCapture(e.pointerId); } catch (_) {}
+
       timer = setTimeout(() => {
         longFired = true;
+        if (navigator.vibrate) navigator.vibrate(18);
         interval = setInterval(() => {
           duration = Math.min(16, duration + 1);
-          if (activeEventId) {
-            changeDuration(1, activeEventId, true);
-          }
+          if (activeEventId) changeDuration(1, activeEventId, true);
           showToast(`休符の長さ ${duration}`);
         }, 380);
       }, 420);
     };
+
     const cleanup = (e) => {
       if (e && activePointerId !== null && e.pointerId !== activePointerId) return;
+
       clearTimeout(timer);
       clearInterval(interval);
-      // タップ（長押しでない）で指を離した時にヒントを表示
-      if (active && !longFired) {
-        showToast('長押し：休符を伸ばす');
-      }
+
+      const wasTap = active && !longFired;
       active = false;
-      activeEventId = null;
       activePointerId = null;
+      timer = 0;
+      interval = 0;
+      activeEventId = null;
       longFired = false;
+
+      if (wasTap) showToast('長押し：休符を伸ばす');
     };
+
     els.restBtn.addEventListener('pointerdown', start);
     els.restBtn.addEventListener('pointerup', cleanup);
     els.restBtn.addEventListener('pointercancel', cleanup);
+    els.restBtn.addEventListener('pointerleave', cleanup);
   })();
 
+  // すべての音符を1オクターブ移動（範囲外にならない場合のみ）
   function shiftAllNotes(offset) {
     const targetNotes = events.filter(ev => ev.type === 'note');
     if (!targetNotes.length) { showToast('音符がありません'); return; }
@@ -3190,6 +3300,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     () => { showToast('長押し：1オクターブ上へ'); shiftAllNotes(1); },
     480);
 
+  /* =========================================================================
+   * タブ・設定・エクスポート/インポートの UI 配線
+   * ===================================================================== */
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   els.swipePlay.addEventListener('change', () => {
     if (!els.swipePlay.checked) return;
@@ -3211,9 +3324,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     saveState();
   });
 
-  // 音域スライダー：楽譜と鍵盤を左右にスクロールさせる
   els.keyboardRange.addEventListener('input', () => {
-    if (els.keyboardRange.disabled) return;
+    if (playing || activeZoom || els.keyboardRange.disabled) return;
+    setKeyboardScroll(Number(els.keyboardRange.value) || 0);
+    updateEdgeIndicators();
+  });
+
+  els.keyboardRange.addEventListener('change', () => {
+    if (playing || activeZoom || els.keyboardRange.disabled) return;
     setKeyboardScroll(Number(els.keyboardRange.value) || 0);
     updateEdgeIndicators();
   });
@@ -3292,6 +3410,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   });
   els.confirmModal.addEventListener('pointerdown', e => { if (e.target === els.confirmModal) closeConfirm(); });
 
+  // BPM ボタン: 左右ドラッグで速度を変更
   (function setupBpmControl() {
     const btn = els.bpmBtn;
     if (!btn) return;
@@ -3336,6 +3455,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     btn.addEventListener('pointerleave', end);
   })();
 
+  /* =========================================================================
+   * 楽譜と鍵盤の横スクロール同期（RAF でまとめて反映）
+   * ===================================================================== */
   let scrollSyncRaf = 0;
   let pendingScrollSource = null;
   function scheduleScrollSync(source) {
@@ -3358,6 +3480,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   els.keyboardViewport.addEventListener('scroll', () => scheduleScrollSync('keyboard'), { passive: true });
   els.scoreViewport.addEventListener('scroll', () => scheduleScrollSync('score'), { passive: true });
 
+  /* =========================================================================
+   * グローバルなジェスチャー抑止（ピンチズーム・選択・長押しメニュー等）
+   * ===================================================================== */
   const preventDefault = e => e.preventDefault();
   document.addEventListener('gesturestart', preventDefault, { passive: false, signal: __docSignal });
   document.addEventListener('gesturechange', preventDefault, { passive: false, signal: __docSignal });
@@ -3369,6 +3494,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (e.touches && e.touches.length > 1) e.preventDefault();
   }, { passive: false, signal: __docSignal });
 
+  // バックグラウンド遷移時は再生停止、復帰時はオーディオを再開
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopPlayback(false);
@@ -3383,6 +3509,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     }
   }, { signal: __docSignal });
 
+  /* =========================================================================
+   * 画面サイズ変更への追従（再生・ズーム中は再レイアウトを避ける）
+   * ===================================================================== */
   function doResize() {
     setupRuler();
     renderKeyboard();
@@ -3407,6 +3536,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     window.visualViewport.addEventListener('resize', updateToastPosition, { signal: __docSignal });
   }
 
+  /* =========================================================================
+   * 初期化
+   * ===================================================================== */
   loadState();
   loadSongs();
   setupRuler();
@@ -3425,7 +3557,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     if (selectedId) ensureEventVisible(selectedId);
   });
 })();
-
 </script>
 </body>
 </html>
