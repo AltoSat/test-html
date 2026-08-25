@@ -1300,11 +1300,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       if (!moved && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) moved = true;
       if (moved) {
         e.preventDefault();
-        decided = dx > 0 ? 'left' : 'right';
+        // 右スワイプで編集、左スワイプで削除
+        decided = dx > 0 ? 'right' : 'left';
         const clamp = Math.max(-90, Math.min(90, dx * 0.55));
         item.style.transform = `translateX(${clamp}px)`;
-        item.querySelector('.song-hint.left').style.opacity = dx > 0 ? '1' : '0';
-        item.querySelector('.song-hint.right').style.opacity = dx < 0 ? '1' : '0';
+        item.querySelector('.song-hint.left').style.opacity = dx < 0 ? '1' : '0';
+        item.querySelector('.song-hint.right').style.opacity = dx > 0 ? '1' : '0';
       }
     };
     const finish = (e) => {
@@ -1391,6 +1392,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   }
 
   function showToast(message) {
+    updateToastPosition();
     clearTimeout(toastTimer);
     els.toast.textContent = message;
     els.toast.classList.add('show');
@@ -1846,6 +1848,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     activeZoom = null;
     syncKeyboardRange(0);
     updateEdgeIndicators();
+    updateToastPosition();
   }
 
   function finishLeaveOverviewImmediateFallback() {
@@ -1871,6 +1874,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.keyboardViewport.classList.remove('playback-lock');
     syncKeyboardRange(viewport.scrollLeft);
     updateEdgeIndicators();
+    updateToastPosition();
   }
 
   function enterOverview(startUnit = 0) {
@@ -1958,6 +1962,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       els.keyboardInner.style.transform = `translate(${currentKeyTx}px, 0) scale(${kScale})`;
       kViewport.style.height = `${currentHeight}px`;
       overviewState.currentKeyTx = currentKeyTx;
+
+      updateToastPosition();
 
       if (t < 1) {
         activeZoom.raf = requestAnimationFrame(frame);
@@ -2052,6 +2058,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       els.keyboardInner.style.transform = `translate(${currentKeyTx}px, 0) scale(${kScale})`;
       kViewport.style.height = `${currentHeight}px`;
 
+      updateToastPosition();
+
       if (t < 1) {
         activeZoom.raf = requestAnimationFrame(frame);
       } else {
@@ -2076,6 +2084,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
         syncKeyboardRange(finalScrollLeft);
         updateEdgeIndicators();
+        updateToastPosition();
       }
     };
     activeZoom.raf = requestAnimationFrame(frame);
@@ -2479,6 +2488,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       updateControls();
     }
 
+    updateToastPosition();
+
     if (showMessage && wasPlaying) showToast('停止しました');
   }
 
@@ -2603,6 +2614,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
           const maxTop = Math.max(0, els.scoreContent.scrollHeight - viewport.clientHeight);
           viewport.scrollTop = Math.max(0, Math.min(targetTop, maxTop));
         }
+        updateToastPosition();
         playing.raf = requestAnimationFrame(tick);
       };
       playing.raf = requestAnimationFrame(tick);
@@ -3086,7 +3098,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
       activeEventId = addRest(1, true);
       timer = setTimeout(() => {
-        showToast('長押し：休符を伸ばす');
         interval = setInterval(() => {
           duration = Math.min(16, duration + 1);
           if (activeEventId) {
@@ -3113,7 +3124,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     els.restBtn.addEventListener('click', e => {
       e.preventDefault();
       activePointerId = null;
-      if (!els.restBtn.disabled && !active) addRest(1);
+      if (!els.restBtn.disabled && !active) {
+        addRest(1, true);
+        showToast('長押し：休符を伸ばす');
+      }
     });
   })();
 
@@ -3162,6 +3176,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
     randomPhraseLength = Math.max(12, Math.min(100, Number(els.randomLengthRange.value) || 12));
     els.randomLengthValue.textContent = `${randomPhraseLength}音`;
     saveState();
+  });
+
+  // 音域スライダーのinputイベントを追加
+  els.keyboardRange.addEventListener('input', () => {
+    setKeyboardScroll(Number(els.keyboardRange.value));
   });
 
   els.saveSongBtn.addEventListener('click', saveCurrentSong);
@@ -3342,6 +3361,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
       if (!playing && !activeZoom && !overviewState) {
         doResize();
       }
+      updateToastPosition();
     }, 100);
   };
   window.addEventListener('resize', handleViewportChange, { signal: __docSignal });
