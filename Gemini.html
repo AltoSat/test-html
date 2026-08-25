@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>iPhone 17 Pro PWA Previewer</title>
+  <style>
+    :root {
+      --bg-main: #000000;
+      --bg-card: #1c1c1e;
+      --bg-input: #2c2c2e;
+      --accent: #0a84ff;
+      --accent-danger: #ff453a;
+      --text-main: #ffffff;
+      --text-sub: #8e8e93;
+      --border-color: #38383a;
+      
+      /* iPhone 17 Pro Display Specs (Scalable Aspect Ratio Approx 19.5:9) */
+      --iphone-width: 402px;
+      --iphone-height: 874px;
+      --iphone-radius: 55px;
+      --safe-top: 59px;
+      --safe-bottom: 34px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 8px 4px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    /* Main Container Grid */
+    .app-container {
+      width: 100%;
+      max-width: 1000px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (min-width: 850px) {
+      .app-container {
+        grid-template-columns: 1fr 420px;
+      }
+    }
+
+    /* Editor Section */
+    .editor-section {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .action-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      background: var(--bg-input);
+      color: var(--accent);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
+
+    button:active {
+      opacity: 0.7;
+    }
+
+    button.btn-primary {
+      background: var(--accent);
+      color: #fff;
+      flex: 1;
+    }
+
+    button.btn-danger {
+      color: var(--accent-danger);
+    }
+
+    textarea {
+      width: 100%;
+      height: 480px;
+      background: var(--bg-input);
+      color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    /* Device Preview Container */
+    .preview-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .device-wrapper {
+      position: relative;
+      width: var(--iphone-width);
+      height: var(--iphone-height);
+      background: #000;
+      border-radius: var(--iphone-radius);
+      box-shadow: 0 0 0 12px #2c2c2e, 0 20px 50px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      transform-origin: top center;
+    }
+
+    /* Scaling for mobile screens */
+    @media (max-width: 440px) {
+      .device-wrapper {
+        transform: scale(0.85);
+        margin-bottom: -110px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .device-wrapper {
+        transform: scale(0.75);
+        margin-bottom: -180px;
+      }
+    }
+
+    /* Hardware Elements */
+    .dynamic-island {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 35px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 12px;
+    }
+
+    .dynamic-island::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      background: #111122;
+      border-radius: 50%;
+      box-shadow: inset 0 0 2px rgba(255,255,255,0.2);
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--safe-top);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 32px 10px 32px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      z-index: 9998;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .status-bar-icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .home-indicator-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--safe-bottom);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9998;
+      pointer-events: none;
+    }
+
+    .home-indicator {
+      width: 134px;
+      height: 5px;
+      background: #ffffff;
+      border-radius: 3px;
+    }
+
+    /* Iframe Screen */
+    .screen-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000;
+      border-radius: var(--iphone-radius);
+    }
+
+    /* Fullscreen Modal Override */
+    .device-wrapper.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+      z-index: 10000;
+      transform: none !important;
+      margin: 0 !important;
+    }
+
+    .device-wrapper.fullscreen .screen-iframe {
+      border-radius: 0;
+    }
+
+    .exit-fullscreen-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 10001;
+      background: rgba(44, 44, 46, 0.8);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: none;
+    }
+
+    .device-wrapper.fullscreen ~ .exit-fullscreen-btn {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>iPhone 17 Pro PWA Previewer</h1>
+      <div class="subtitle">iOS WebKit Environment Simulator</div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Editor Control -->
+    <div class="editor-section">
+      <div class="action-toolbar">
+        <button class="btn-primary" id="renderBtn">プレビュー実行</button>
+        <button id="sampleBtn">サンプルHTML</button>
+        <button id="fullscreenBtn">全画面表示</button>
+        <button class="btn-danger" id="clearBtn">クリア</button>
+      </div>
+      <textarea id="htmlInput" placeholder="ここにPWAのHTMLコードを貼り付けてください..."></textarea>
+    </div>
+
+    <!-- Device Emulator -->
+    <div class="preview-section">
+      <div class="device-wrapper" id="deviceWrapper">
+        <div class="status-bar">
+          <span id="clock">9:41</span>
+          <div class="status-bar-icons">
+            <span>5G</span>
+            <span>100%</span>
+          </div>
+        </div>
+        <div class="dynamic-island"></div>
+        <iframe id="previewIframe" class="screen-iframe" title="PWA Preview Target"></iframe>
+        <div class="home-indicator-container">
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <button class="exit-fullscreen-btn" id="exitFullscreenBtn">全画面解除</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'pwa_previewer_code';
+
+    const defaultSample = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PWA Test App</title>
+  <style>
+    /* Safe Area Setup for PWA */
+    :root {
+      --sat: env(safe-area-inset-top);
+      --sab: env(safe-area-inset-bottom);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      /* 100dvh verification */
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Fixed Top Header (Accounts for Dynamic Island & Safe Area) */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(44px + var(--sat));
+      padding-top: var(--sat);
+      background: rgba(30, 30, 30, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      border-bottom: 0.5px solid #333;
+      z-index: 100;
+    }
+
+    /* Scrollable Content Area */
+    main {
+      flex: 1;
+      padding-top: calc(50px + var(--sat));
+      padding-bottom: calc(65px + var(--sab));
+      padding-left: 16px;
+      padding-right: 16px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: #1c1c1e;
+      border-radius: 12px;
+      padding: 16px;
+      margin-vertical: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #2c2c2e;
+    }
+
+    .card h3 {
+      margin-bottom: 8px;
+      color: #0a84ff;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    button.interactive-btn {
+      background: #0a84ff;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    /* Fixed Bottom Tabbar (Accounts for Home Indicator) */
+    nav.tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(50px + var(--sab));
+      padding-bottom: var(--sab);
+      background: rgba(30, 30, 30, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 0.5px solid #333;
+      z-index: 100;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+      color: #8e8e93;
+    }
+
+    .tab-item.active {
+      color: #0a84ff;
+    }
+
+    .tab-icon {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>App Header</header>
+
+  <main>
+    <div class="card">
+      <h3>Safe Area Verification</h3>
+      <p>ヘッダーがDynamic Islandに被らず、タブバーがホームインジケータに侵食されていないか確認できます。</p>
+    </div>
+
+    <div class="card">
+      <h3>インタラクティブテスト</h3>
+      <p>JavaScriptの実行やタップレスポンスのテストが可能です。</p>
+      <button class="interactive-btn" onclick="countUp()">カウント: <span id="counter">0</span></button>
+    </div>
+
+    <div class="card">
+      <h3>スクロール動作</h3>
+      <p>コンテンツをスクロールした際の固定ヘッダー・フッターの非透過状態やグラデーションを確認できます。</p>
+    </div>
+    <div class="card"><p>ダミーコンテンツ 1</p></div>
+    <div class="card"><p>ダミーコンテンツ 2</p></div>
+    <div class="card"><p>ダミーコンテンツ 3</p></div>
+  </main>
+
+  <nav class="tabbar">
+    <div class="tab-item active"><span class="tab-icon">★</span>ホーム</div>
+    <div class="tab-item"><span class="tab-icon">🔍</span>検索</div>
+    <div class="tab-item"><span class="tab-icon">⚙</span>設定</div>
+  </nav>
+
+  <script>
+    let count = 0;
+    function countUp() {
+      count++;
+      document.getElementById('counter').innerText = count;
+    }
+  <\/script>
+</body>
+</html>`;
+
+    const htmlInput = document.getElementById('htmlInput');
+    const previewIframe = document.getElementById('previewIframe');
+    const renderBtn = document.getElementById('renderBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+    const deviceWrapper = document.getElementById('deviceWrapper');
+    const clockEl = document.getElementById('clock');
+
+    // Real-time Clock Sync
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      clockEl.textContent = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Render Logic with iOS WebKit Safe Area Injection
+    function renderPreview() {
+      const userCode = htmlInput.value;
+      localStorage.setItem(STORAGE_KEY, userCode);
+
+      // System Injection Code for Safe Area Emulation
+      const injectedStyles = `
+        <style id="__pwa_emulator_css">
+          :root {
+            --sat: 59px !important;
+            --sab: 34px !important;
+            --sal: 0px !important;
+            --sar: 0px !important;
+          }
+          
+          /* Emulate WebKit env() functions inside iframe */
+          @supports (padding: env(safe-area-inset-top)) {
+            :root {
+              --safe-area-inset-top: 59px;
+              --safe-area-inset-bottom: 34px;
+            }
+          }
+
+          html, body {
+            height: 100%;
+            background-color: #000;
+            color-scheme: dark;
+            -webkit-user-select: none;
+            user-select: none;
+          }
+
+          /* Handle 100dvh fallback inside fixed emulator iframe */
+          @supports (height: 100dvh) {
+            body { min-height: 100dvh; }
+          }
+        </style>
+      `;
+
+      // Inject runtime CSS variables replacing raw env() calls
+      let processedCode = userCode.replace(/env\(safe-area-inset-top\)/g, 'var(--sat, 59px)');
+      processedCode = processedCode.replace(/env\(safe-area-inset-bottom\)/g, 'var(--sab, 34px)');
+      processedCode = processedCode.replace(/env\(safe-area-inset-left\)/g, 'var(--sal, 0px)');
+      processedCode = processedCode.replace(/env\(safe-area-inset-right\)/g, 'var(--sar, 0px)');
+
+      // Combine and inject into iframe document
+      const doc = previewIframe.contentWindow.document;
+      doc.open();
+      if (processedCode.includes('<head>')) {
+        doc.write(processedCode.replace('<head>', '<head>' + injectedStyles));
+      } else {
+        doc.write(injectedStyles + processedCode);
+      }
+      doc.close();
+    }
+
+    // Event Handlers
+    renderBtn.addEventListener('click', renderPreview);
+
+    clearBtn.addEventListener('click', () => {
+      htmlInput.value = '';
+      localStorage.removeItem(STORAGE_KEY);
+      renderPreview();
+    });
+
+    sampleBtn.addEventListener('click', () => {
+      htmlInput.value = defaultSample;
+      renderPreview();
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+      deviceWrapper.classList.add('fullscreen');
+    });
+
+    exitFullscreenBtn.addEventListener('click', () => {
+      deviceWrapper.classList.remove('fullscreen');
+    });
+
+    // Initialize from LocalStorage or Sample
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedCode = localStorage.getItem(STORAGE_KEY);
+      if (savedCode) {
+        htmlInput.value = savedCode;
+      } else {
+        htmlInput.value = defaultSample;
+      }
+      renderPreview();
+    });
+  </script>
+</body>
+</html>
