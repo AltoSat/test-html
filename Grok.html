@@ -6,216 +6,311 @@
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>PWA Previewer — iPhone 17 Pro / iPad 7</title>
+<title>PWA Previewer</title>
 <style>
 :root{
   color-scheme:dark;
   --bg:#000;
   --panel:#1c1c1e;
   --panel2:#2c2c2e;
-  --panel3:#3a3a3c;
   --text:#f5f5f7;
   --muted:#98989f;
   --accent:#0a84ff;
   --danger:#ff453a;
-  --ok:#30d158;
+  --card:#2c2c2e;
+  --card-active:#3a3a3c;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
-body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);overflow-x:hidden}
 button,textarea,input{font:inherit}
-button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer}
+button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button.primary{background:var(--accent)}
-button.danger{background:var(--danger)}
-button.ghost{background:transparent;border:1px solid #38383c}
+button.danger{background:var(--danger);color:#fff}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto}
-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px 12px}
-h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.02em}
-.header-actions{display:flex;gap:6px;flex-shrink:0}
-.header-actions button{min-height:36px;padding:0 12px;font-size:13px}
 
-/* tabs */
-.tabs{display:flex;background:var(--panel);border-radius:12px;padding:3px;margin-bottom:12px}
-.tab{flex:1;min-height:36px;background:transparent;color:var(--muted);font-size:14px}
-.tab.active{background:var(--panel3);color:#fff}
+.app{max-width:960px;margin:0 auto;padding:8px 12px 20px}
 
-/* list */
-.list-panel{display:none}
-.list-panel.show{display:block}
-.item-list{display:flex;flex-direction:column;gap:6px;max-height:min(38vh,320px);overflow:auto;padding-right:2px;margin-bottom:14px}
-.item{
-  display:flex;align-items:center;gap:10px;
-  background:var(--panel);border-radius:14px;padding:12px 14px;
-  border:2px solid transparent;cursor:pointer;transition:border-color .15s,background .15s;
+/* カード一覧（横スクロール） */
+.cards-wrap{
+  margin:0 -12px 10px;
+  padding:4px 12px 8px;
+  overflow:hidden;
 }
-.item:active{background:var(--panel2)}
-.item.active{border-color:var(--accent);background:#0a84ff18}
-.item-name{flex:1;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item-meta{font-size:11px;color:var(--muted);white-space:nowrap}
-.item-empty{text-align:center;color:var(--muted);padding:28px 12px;font-size:14px}
+.cards{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+}
+.cards::-webkit-scrollbar{height:4px}
+.cards::-webkit-scrollbar-thumb{background:#444;border-radius:4px}
+.card{
+  flex:0 0 auto;
+  width:118px;
+  height:78px;
+  background:var(--card);
+  border-radius:14px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  scroll-snap-align:start;
+  border:2px solid transparent;
+  position:relative;
+  user-select:none;
+  -webkit-user-select:none;
+  transition:border-color .15s,background .15s;
+}
+.card.active{border-color:var(--accent);background:var(--card-active)}
+.card.new-card{
+  align-items:center;
+  justify-content:center;
+  border:2px dashed #48484a;
+  background:transparent;
+  color:var(--muted);
+  font-size:28px;
+  font-weight:300;
+}
+.card.new-card:active{background:var(--panel2)}
+.card-title{
+  font-size:13px;
+  font-weight:600;
+  line-height:1.25;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  word-break:break-all;
+}
+.card-meta{font-size:10px;color:var(--muted)}
 
-/* device previews */
-.devices{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
-.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.device-label{font-size:12px;color:var(--muted);font-weight:500}
+/* ツールバー */
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.device-toggle{
+  display:flex;
+  background:var(--panel);
+  border-radius:10px;
+  padding:2px;
+}
+.device-toggle button{
+  min-height:34px;
+  padding:0 12px;
+  font-size:13px;
+  background:transparent;
+  color:var(--muted);
+  border-radius:8px;
+}
+.device-toggle button.active{background:var(--panel2);color:#fff}
+.spacer{flex:1}
+
+/* プレビュー */
+.preview-area{display:grid;place-items:center;padding:4px 0 16px}
+.phone,.ipad{
+  position:relative;
+  background:#000;
+  overflow:hidden;
+  box-shadow:0 16px 48px #000,0 0 0 1px #3a3a3c;
+}
 .phone{
-  position:relative;width:min(280px,42vw);aspect-ratio:393/852;
-  background:#000;border:6px solid #202023;border-radius:40px;overflow:hidden;
-  box-shadow:0 14px 40px #000,0 0 0 1px #444;
-}
-.phone iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;color-scheme:dark}
-.island{
-  position:absolute;z-index:5;top:9px;left:50%;transform:translateX(-50%);
-  width:90px;height:28px;background:#000;border-radius:18px;pointer-events:none;
-  box-shadow:0 0 0 1px rgba(255,255,255,.03);
-}
-.homebar{
-  position:absolute;z-index:6;bottom:6px;left:50%;transform:translateX(-50%);
-  width:90px;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
+  /* iPhone 17 Pro logical 402×874。表示は少し大きめ */
+  width:min(380px,92vw);
+  aspect-ratio:402/874;
+  border:6px solid #1c1c1e;
+  border-radius:44px;
 }
 .ipad{
-  position:relative;width:min(420px,92vw);aspect-ratio:4/3;
-  background:#000;border:8px solid #2a2a2e;border-radius:18px;overflow:hidden;
-  box-shadow:0 14px 40px #000,0 0 0 1px #444;
+  /* iPad 7th gen logical 810×1080。横幅を抑えて表示 */
+  width:min(320px,88vw);
+  aspect-ratio:810/1080;
+  border:8px solid #2a2a2c;
+  border-radius:18px;
 }
-.ipad iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;color-scheme:dark}
-.ipad-bezel{
-  position:absolute;z-index:5;top:50%;left:6px;transform:translateY(-50%);
-  width:4px;height:28px;background:#1a1a1c;border-radius:2px;pointer-events:none;
+.phone iframe,.ipad iframe{
+  position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;
+  color-scheme:dark;
 }
+/* Dynamic Island（実機に近い比率） */
+.island{
+  position:absolute;z-index:5;
+  top:2.4%;
+  left:50%;transform:translateX(-50%);
+  width:31.3%; /* ~126/402 */
+  height:4.23%; /* ~37/874 */
+  background:#000;
+  border-radius:999px;
+  pointer-events:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03);
+}
+/* Home Indicator */
+.homebar{
+  position:absolute;z-index:6;
+  bottom:1.15%;
+  left:50%;transform:translateX(-50%);
+  width:33.6%; /* ~135/402 */
+  height:0.57%; /* ~5/874 */
+  min-height:4px;
+  border-radius:4px;
+  background:#fff;
+  pointer-events:none;
+  opacity:.92;
+}
+.ipad .island,.ipad .homebar{display:none}
+.ipad-home-btn{
+  display:none;
+  position:absolute;z-index:6;
+  bottom:1.8%;left:50%;transform:translateX(-50%);
+  width:9%;aspect-ratio:1;border-radius:50%;
+  border:2px solid #555;background:transparent;pointer-events:none;
+}
+.ipad .ipad-home-btn{display:block}
+.device-label{font-size:11px;color:var(--muted);margin-top:8px;text-align:center}
 
-/* editor */
-.editor-panel{display:none}
-.editor-panel.show{display:block}
-.editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.editor-tools .name-input{
-  flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 12px;outline:none;
+/* 全画面 */
+.fullscreen{
+  position:fixed;inset:0;z-index:200;background:#000;display:none;
 }
-.editor-tools .name-input:focus{border-color:var(--accent)}
-#count{font-size:13px;color:var(--muted);white-space:nowrap}
-.search-box{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
-.search-box input{
-  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 11px;outline:none;
-}
-#searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
-textarea{
-  width:100%;height:min(42vh,360px);resize:vertical;
-  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
-  padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-}
-textarea:focus{border-color:var(--accent)}
-.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
-.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.editor-actions button{flex:1;min-width:100px}
-
-/* fullscreen */
-.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none}
 .fullscreen.show{display:block}
 .fullscreen iframe{width:100%;height:100%;border:0}
 .fullscreen .exit{
-  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
+  position:absolute;z-index:10;
+  top:max(12px,env(safe-area-inset-top));right:14px;
   width:44px;height:44px;padding:0;border-radius:50%;
-  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:20px;
+  background:rgba(60,60,65,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:22px;
 }
-.preview-actions{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
-.preview-actions button{min-height:38px;font-size:13px}
 
-@media(min-width:800px){
-  .item-list{max-height:min(50vh,420px)}
-  .phone{width:min(320px,38vw)}
-  .ipad{width:min(480px,48vw)}
-  textarea{height:min(50vh,420px)}
+/* 編集画面 */
+.editor-overlay{
+  position:fixed;inset:0;z-index:150;background:var(--bg);
+  display:none;flex-direction:column;
+  padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+}
+.editor-overlay.show{display:flex}
+.editor-header{
+  display:flex;align-items:center;gap:8px;padding:10px 0 8px;flex-shrink:0;
+}
+.editor-header h2{font-size:17px;margin:0;font-weight:700;flex:1}
+.editor-body{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+.editor-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.editor-tools .count{font-size:12px;color:var(--muted);white-space:nowrap}
+.search-row{display:flex;align-items:center;gap:6px;flex:1;min-width:140px}
+.search-row input{
+  flex:1;height:36px;border:1px solid #38383c;border-radius:10px;
+  background:#111113;color:#fff;padding:0 10px;outline:none;font-size:14px;
+}
+.search-row input:focus{border-color:var(--accent)}
+#searchInfo{font-size:11px;color:var(--muted);white-space:nowrap;min-width:3.5em}
+.title-input{
+  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 12px;outline:none;font-size:15px;
+}
+.title-input:focus{border-color:var(--accent)}
+textarea#source{
+  width:100%;flex:1;min-height:180px;resize:none;
+  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
+  padding:12px;outline:none;font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.45;
+}
+textarea#source:focus{border-color:var(--accent)}
+.editor-footer{display:flex;gap:8px;padding-top:6px;flex-shrink:0}
+.editor-footer button{flex:1}
+.status-hint{font-size:11px;color:var(--muted);padding:0 2px}
+
+@media(min-width:700px){
+  .phone{width:min(420px,90vw)}
+  .ipad{width:min(360px,70vw)}
+  textarea#source{font-size:13px}
 }
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>PWA Previewer</h1>
-    <div class="header-actions">
-      <button id="btnNew" class="primary">＋ 新規</button>
-    </div>
-  </header>
+  <!-- 横スクロールカード一覧 + 新規カード -->
+  <div class="cards-wrap">
+    <div class="cards" id="cards"></div>
+  </div>
 
-  <nav class="tabs">
-    <button id="tabList" class="tab active">一覧・プレビュー</button>
-    <button id="tabEdit" class="tab">編集</button>
-  </nav>
-
-  <!-- LIST + PREVIEW -->
-  <section id="listPanel" class="list-panel show">
-    <div id="itemList" class="item-list"></div>
-
-    <div class="preview-actions">
-      <button id="btnFullPhone" class="primary">iPhone全画面</button>
-      <button id="btnFullIpad">iPad全画面</button>
-      <button id="btnEditSelected" class="ghost">選択を編集</button>
-      <button id="btnDelete" class="danger">削除</button>
+  <!-- ツールバー -->
+  <div class="toolbar">
+    <div class="device-toggle">
+      <button type="button" id="btnPhone" class="active">iPhone</button>
+      <button type="button" id="btnIpad">iPad</button>
     </div>
+    <div class="spacer"></div>
+    <button type="button" id="full" class="primary">全画面</button>
+  </div>
 
-    <div class="devices">
-      <div class="device-wrap">
-        <div class="device-label">iPhone 17 Pro</div>
-        <div class="phone" id="phone">
-          <div class="island"></div>
-          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-          <div class="homebar"></div>
-        </div>
-      </div>
-      <div class="device-wrap">
-        <div class="device-label">iPad 第7世代（横）</div>
-        <div class="ipad" id="ipad">
-          <div class="ipad-bezel"></div>
-          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-        </div>
-      </div>
+  <!-- プレビュー -->
+  <div class="preview-area">
+    <div class="phone" id="deviceFrame">
+      <div class="island"></div>
+      <iframe id="frame" title="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
+      <div class="homebar"></div>
+      <div class="ipad-home-btn"></div>
     </div>
-  </section>
-
-  <!-- EDITOR -->
-  <section id="editorPanel" class="editor-panel">
-    <div class="editor-tools">
-      <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <span id="count">0文字</span>
-      <div class="search-box">
-        <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <span id="searchResult"></span>
-      </div>
-    </div>
-    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
-    <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-    <div class="editor-actions">
-      <button id="btnSave" class="primary">保存して一覧へ</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCancel" class="ghost">キャンセル</button>
-    </div>
-  </section>
+    <div class="device-label" id="deviceLabel">iPhone 17 Pro · 402×874</div>
+  </div>
 </div>
 
+<!-- 全画面 -->
 <div id="fullscreen" class="fullscreen">
-  <button class="exit" id="exit">×</button>
-  <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+  <button type="button" class="exit" id="exit" aria-label="閉じる">×</button>
+  <iframe id="fullFrame" title="fullscreen" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
+</div>
+
+<!-- 編集オーバーレイ -->
+<div id="editorOverlay" class="editor-overlay">
+  <div class="editor-header">
+    <button type="button" id="btnBack">戻る</button>
+    <h2 id="editorTitle">編集</h2>
+  </div>
+  <div class="editor-body">
+    <input type="text" id="titleInput" class="title-input" placeholder="タイトル" maxlength="80" autocomplete="off">
+    <div class="editor-tools">
+      <span class="count" id="count">0文字</span>
+      <div class="search-row">
+        <input type="search" id="search" placeholder="検索" autocomplete="off">
+        <button type="button" id="searchNext" style="min-height:36px;padding:0 10px;font-size:13px">次へ</button>
+        <span id="searchInfo"></span>
+      </div>
+    </div>
+    <p class="status-hint">HTML・CSS・JavaScriptをそのまま貼り付け</p>
+    <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
+  </div>
+  <div class="editor-footer">
+    <button type="button" id="btnDelete" class="danger">削除</button>
+    <button type="button" id="btnSave" class="primary">保存</button>
+  </div>
 </div>
 
 <script>
 (() => {
+  const STORAGE_KEY = "iphone17pro-pwa-preview-items-v2";
   const $ = id => document.getElementById(id);
-  const STORAGE_KEY = "pwa-previewer-items-v2";
-  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+
+  // iPhone 17 Pro: 402×874 / iPad 7th: 810×1080
+  const DEVICES = {
+    phone: { w: 402, h: 874, label: "iPhone 17 Pro · 402×874", frameClass: "phone" },
+    ipad:  { w: 810, h: 1080, label: "iPad 第7世代 · 810×1080", frameClass: "ipad" }
+  };
 
   let items = [];
   let selectedId = null;
-  let editingId = null; // null = new
-
-  const source = $("source");
-  const nameInput = $("nameInput");
-  const framePhone = $("framePhone");
-  const frameIpad = $("frameIpad");
-  const fullFrame = $("fullFrame");
+  let editingId = null; // null = 新規
+  let currentDevice = "phone";
+  let searchMatches = [];
+  let searchIndex = -1;
+  let longPressTimer = null;
+  let longPressTriggered = false;
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -224,220 +319,264 @@ textarea:focus{border-color:var(--accent)}
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        items = JSON.parse(raw);
-        if (!Array.isArray(items)) items = [];
-      } else {
-        // migrate old single-html storage
-        const old = localStorage.getItem(OLD_KEY);
-        if (old) {
-          items = [{
-            id: uid(),
-            name: "移行したHTML",
-            html: old,
-            updated: Date.now()
-          }];
-          persist();
-        }
-      }
-    } catch (e) {
+      items = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(items)) items = [];
+    } catch {
       items = [];
     }
-    if (items.length && !selectedId) selectedId = items[0].id;
+    // 旧単一キーからの移行
+    const old = localStorage.getItem("iphone17pro-pwa-preview-html-v1");
+    if (old && items.length === 0) {
+      items.push({ id: uid(), title: "移行データ", html: old, updated: Date.now() });
+      saveAll();
+      localStorage.removeItem("iphone17pro-pwa-preview-html-v1");
+    }
   }
 
-  function persist() {
+  function saveAll() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
 
-  function formatDate(ts) {
-    const d = new Date(ts);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `${m}/${day} ${h}:${min}`;
+  function getSelected() {
+    return items.find(i => i.id === selectedId) || null;
   }
 
-  function renderList() {
-    const list = $("itemList");
-    if (!items.length) {
-      list.innerHTML = `<div class="item-empty">まだHTMLがありません。<br>「＋ 新規」から追加してください。</div>`;
-      clearPreviews();
-      return;
-    }
-    list.innerHTML = items
-      .slice()
-      .sort((a, b) => b.updated - a.updated)
-      .map(it => `
-        <div class="item ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
-          <div class="item-name">${escapeHtml(it.name || "無題")}</div>
-          <div class="item-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
-        </div>
-      `).join("");
-    list.querySelectorAll(".item").forEach(el => {
-      el.onclick = () => {
-        selectedId = el.dataset.id;
-        renderList();
-        updatePreview();
-      };
+  function renderCards() {
+    const el = $("cards");
+    el.innerHTML = "";
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card" + (item.id === selectedId ? " active" : "");
+      card.dataset.id = item.id;
+      const title = item.title || "無題";
+      const date = new Date(item.updated || 0);
+      const meta = date.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
+      card.innerHTML = `<div class="card-title">${escapeHtml(title)}</div><div class="card-meta">${meta}</div>`;
+      bindCardEvents(card, item.id);
+      el.appendChild(card);
     });
+    // 新規カード（一番右）
+    const neu = document.createElement("div");
+    neu.className = "card new-card";
+    neu.textContent = "+";
+    neu.title = "新規作成";
+    neu.addEventListener("click", () => openEditor(null));
+    el.appendChild(neu);
   }
 
   function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
-  function clearPreviews() {
-    framePhone.srcdoc = "";
-    frameIpad.srcdoc = "";
-  }
-
-  function updatePreview() {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) {
-      clearPreviews();
-      return;
-    }
-    const html = it.html || "";
-    framePhone.srcdoc = html;
-    frameIpad.srcdoc = html;
-  }
-
-  function showList() {
-    $("listPanel").classList.add("show");
-    $("editorPanel").classList.remove("show");
-    $("tabList").classList.add("active");
-    $("tabEdit").classList.remove("active");
-    renderList();
-    updatePreview();
-  }
-
-  function showEditor(isNew) {
-    $("listPanel").classList.remove("show");
-    $("editorPanel").classList.add("show");
-    $("tabList").classList.remove("active");
-    $("tabEdit").classList.add("active");
-
-    if (isNew) {
-      editingId = null;
-      nameInput.value = "";
-      source.value = "";
-    } else {
-      const it = items.find(x => x.id === selectedId);
-      if (!it) {
-        editingId = null;
-        nameInput.value = "";
-        source.value = "";
-      } else {
-        editingId = it.id;
-        nameInput.value = it.name || "";
-        source.value = it.html || "";
+  function bindCardEvents(card, id) {
+    const start = (e) => {
+      longPressTriggered = false;
+      longPressTimer = setTimeout(() => {
+        longPressTriggered = true;
+        openEditor(id);
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 520);
+    };
+    const cancel = () => {
+      if (longPressTimer) clearTimeout(longPressTimer);
+      longPressTimer = null;
+    };
+    const end = (e) => {
+      cancel();
+      if (!longPressTriggered) {
+        selectItem(id);
       }
+    };
+    card.addEventListener("touchstart", start, { passive: true });
+    card.addEventListener("touchend", end);
+    card.addEventListener("touchmove", cancel);
+    card.addEventListener("touchcancel", cancel);
+    card.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      start(e);
+    });
+    card.addEventListener("mouseup", end);
+    card.addEventListener("mouseleave", cancel);
+    card.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      openEditor(id);
+    });
+  }
+
+  function selectItem(id) {
+    selectedId = id;
+    renderCards();
+    runPreview();
+  }
+
+  function injectViewport(html, device) {
+    const d = DEVICES[device];
+    // 既存のviewportを差し替え、なければ追加。論理解像度を明示して実機に近い描画に
+    const meta = `<meta name="viewport" content="width=${d.w}, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">`;
+    if (/<meta[^>]+name=["']viewport["']/i.test(html)) {
+      return html.replace(/<meta[^>]+name=["']viewport["'][^>]*>/i, meta);
     }
+    if (/<head[^>]*>/i.test(html)) {
+      return html.replace(/<head[^>]*>/i, m => m + meta);
+    }
+    return meta + html;
+  }
+
+  function runPreview() {
+    const item = getSelected();
+    const html = item ? item.html : "";
+    const injected = injectViewport(html, currentDevice);
+    $("frame").srcdoc = injected || "";
+  }
+
+  function setDevice(type) {
+    currentDevice = type;
+    const d = DEVICES[type];
+    const frame = $("deviceFrame");
+    frame.className = d.frameClass;
+    $("deviceLabel").textContent = d.label;
+    $("btnPhone").classList.toggle("active", type === "phone");
+    $("btnIpad").classList.toggle("active", type === "ipad");
+    runPreview();
+  }
+
+  function openEditor(id) {
+    editingId = id;
+    const item = id ? items.find(i => i.id === id) : null;
+    $("titleInput").value = item ? (item.title || "") : "";
+    $("source").value = item ? (item.html || "") : "";
+    $("editorTitle").textContent = item ? "編集" : "新規";
+    $("btnDelete").style.display = item ? "" : "none";
     updateCount();
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    nameInput.focus();
+    clearSearch();
+    $("editorOverlay").classList.add("show");
+    setTimeout(() => $("titleInput").focus(), 50);
+  }
+
+  function closeEditor() {
+    $("editorOverlay").classList.remove("show");
+    editingId = null;
+    clearSearch();
+  }
+
+  function saveEditor() {
+    const title = $("titleInput").value.trim() || "無題";
+    const html = $("source").value;
+    if (editingId) {
+      const item = items.find(i => i.id === editingId);
+      if (item) {
+        item.title = title;
+        item.html = html;
+        item.updated = Date.now();
+      }
+    } else {
+      const newItem = { id: uid(), title, html, updated: Date.now() };
+      items.push(newItem);
+      selectedId = newItem.id;
+    }
+    saveAll();
+    renderCards();
+    runPreview();
+    closeEditor();
+  }
+
+  function deleteItem() {
+    if (!editingId) return;
+    if (!confirm("このHTMLを削除しますか？")) return;
+    items = items.filter(i => i.id !== editingId);
+    if (selectedId === editingId) {
+      selectedId = items.length ? items[items.length - 1].id : null;
+    }
+    saveAll();
+    renderCards();
+    runPreview();
+    closeEditor();
   }
 
   function updateCount() {
-    $("count").textContent = source.value.length.toLocaleString() + "文字";
+    $("count").textContent = $("source").value.length.toLocaleString() + "文字";
   }
 
-  function saveCurrent() {
-    const name = (nameInput.value || "").trim() || "無題";
-    const html = source.value;
-    if (editingId) {
-      const it = items.find(x => x.id === editingId);
-      if (it) {
-        it.name = name;
-        it.html = html;
-        it.updated = Date.now();
-      }
-      selectedId = editingId;
-    } else {
-      const id = uid();
-      items.push({ id, name, html, updated: Date.now() });
-      selectedId = id;
-    }
-    persist();
-    showList();
+  // 検索：マッチを強調（選択）し、「次へ」で順にジャンプ
+  function clearSearch() {
+    searchMatches = [];
+    searchIndex = -1;
+    $("searchInfo").textContent = "";
+    $("search").value = "";
   }
 
-  function deleteSelected() {
-    if (!selectedId) return;
-    const it = items.find(x => x.id === selectedId);
-    if (!it) return;
-    if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
-    items = items.filter(x => x.id !== selectedId);
-    selectedId = items.length ? items[0].id : null;
-    persist();
-    renderList();
-    updatePreview();
-  }
-
-  // events
-  $("tabList").onclick = showList;
-  $("tabEdit").onclick = () => showEditor(false);
-  $("btnNew").onclick = () => showEditor(true);
-  $("btnEditSelected").onclick = () => {
-    if (!selectedId) {
-      alert("編集する項目を一覧から選んでください");
+  function doSearch(fromStart) {
+    const q = $("search").value;
+    const ta = $("source");
+    const text = ta.value;
+    searchMatches = [];
+    if (!q) {
+      $("searchInfo").textContent = "";
       return;
     }
-    showEditor(false);
-  };
-  $("btnSave").onclick = saveCurrent;
-  $("btnCancel").onclick = showList;
-  $("btnClear").onclick = () => {
-    source.value = "";
-    updateCount();
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    source.focus();
-  };
-  $("btnDelete").onclick = deleteSelected;
+    let pos = 0;
+    while (true) {
+      const i = text.indexOf(q, pos);
+      if (i === -1) break;
+      searchMatches.push(i);
+      pos = i + Math.max(q.length, 1);
+    }
+    if (searchMatches.length === 0) {
+      $("searchInfo").textContent = "0件";
+      searchIndex = -1;
+      return;
+    }
+    if (fromStart || searchIndex < 0) searchIndex = 0;
+    else searchIndex = (searchIndex + 1) % searchMatches.length;
+    const start = searchMatches[searchIndex];
+    const end = start + q.length;
+    ta.focus();
+    ta.setSelectionRange(start, end);
+    // スクロール位置を合わせる（概算）
+    const lineHeight = 18;
+    const lines = text.slice(0, start).split("\n").length;
+    ta.scrollTop = Math.max(0, (lines - 4) * lineHeight);
+    $("searchInfo").textContent = `${searchIndex + 1}/${searchMatches.length}`;
+  }
 
-  $("btnFullPhone").onclick = () => {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) return;
-    fullFrame.srcdoc = it.html || "";
-    $("fullscreen").classList.add("show");
-  };
-  $("btnFullIpad").onclick = () => {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) return;
-    fullFrame.srcdoc = it.html || "";
+  // イベント
+  $("btnPhone").onclick = () => setDevice("phone");
+  $("btnIpad").onclick = () => setDevice("ipad");
+  $("full").onclick = () => {
+    const item = getSelected();
+    const html = item ? injectViewport(item.html, currentDevice) : "";
+    $("fullFrame").srcdoc = html;
     $("fullscreen").classList.add("show");
   };
   $("exit").onclick = () => {
     $("fullscreen").classList.remove("show");
-    fullFrame.srcdoc = "";
+    $("fullFrame").srcdoc = "";
   };
-
-  source.addEventListener("input", updateCount);
+  $("btnBack").onclick = closeEditor;
+  $("btnSave").onclick = saveEditor;
+  $("btnDelete").onclick = deleteItem;
+  $("source").addEventListener("input", updateCount);
+  $("search").addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      doSearch(false);
+    }
+  });
+  $("searchNext").onclick = () => doSearch(false);
   $("search").addEventListener("input", () => {
-    const q = $("search").value;
-    if (!q) {
-      $("searchResult").textContent = "";
-      return;
+    if (!$("search").value) {
+      $("searchInfo").textContent = "";
+      searchMatches = [];
+      searchIndex = -1;
     }
-    let n = 0, pos = 0;
-    while ((pos = source.value.indexOf(q, pos)) !== -1) {
-      n++;
-      pos += Math.max(q.length, 1);
-    }
-    $("searchResult").textContent = n + "件";
   });
 
-  // init
+  // 初期化
   load();
-  showList();
+  if (items.length && !selectedId) selectedId = items[0].id;
+  renderCards();
+  setDevice("phone");
+  runPreview();
 })();
 </script>
 </body>
