@@ -1,618 +1,616 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>iPhone 17 Pro PWA Previewer</title>
-  <style>
-    :root {
-      --bg-main: #000000;
-      --bg-card: #1c1c1e;
-      --bg-input: #2c2c2e;
-      --accent: #0a84ff;
-      --accent-danger: #ff453a;
-      --text-main: #ffffff;
-      --text-sub: #8e8e93;
-      --border-color: #38383a;
-      
-      /* iPhone 17 Pro Display Specs (Scalable Aspect Ratio Approx 19.5:9) */
-      --iphone-width: 402px;
-      --iphone-height: 874px;
-      --iphone-radius: 55px;
-      --safe-top: 59px;
-      --safe-bottom: 34px;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PWA Multi-HTML Previewer</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #000;
+  --panel: #1c1c1e;
+  --panel2: #2c2c2e;
+  --text: #f5f5f7;
+  --muted: #98989f;
+  --accent: #0a84ff;
+  --danger: #ff453a;
+  --border: #38383c;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  overflow: hidden;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+button, input, textarea { font: inherit; }
+button {
+  border: 0;
+  color: var(--text);
+  background: var(--panel2);
+  border-radius: 10px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button.primary { background: var(--accent); }
+button.danger { background: var(--danger); color: #fff; }
+button:active { transform: scale(.97); opacity: .8; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: #111113;
+}
+h1 { font-size: 18px; margin: 0; font-weight: 700; }
 
-    body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px;
-      overflow-x: hidden;
-    }
+.main-layout {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 57px);
+  overflow: hidden;
+}
 
-    header {
-      width: 100%;
-      max-width: 1000px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding: 8px 4px;
-    }
+/* 一覧（サイドバー） */
+.sidebar {
+  width: 320px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-header {
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.html-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.html-item {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--panel2);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+.html-item:hover { background: #3a3a3c; }
+.html-item.active {
+  border-color: var(--accent);
+  background: #2c2c30;
+}
+.html-item .title { font-weight: 600; font-size: 14px; margin-bottom: 4px; word-break: break-all; }
+.html-item .meta { font-size: 11px; color: var(--muted); }
 
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-    }
+/* プレビュー・編集メイン領域 */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0c;
+  overflow: hidden;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #111113;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.name-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 300px;
+}
+.name-input-wrap input {
+  width: 100%;
+  height: 36px;
+  background: #1c1c1e;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #fff;
+  padding: 0 10px;
+  outline: none;
+}
+.name-input-wrap input:focus { border-color: var(--accent); }
 
-    .subtitle {
-      font-size: 12px;
-      color: var(--text-sub);
-    }
+.view-mode-tabs {
+  display: flex;
+  background: #1c1c1e;
+  border-radius: 8px;
+  padding: 2px;
+}
+.view-mode-tabs button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+}
+.view-mode-tabs button.active {
+  background: #3a3a3c;
+  color: #fff;
+}
 
-    /* Main Container Grid */
-    .app-container {
-      width: 100%;
-      max-width: 1000px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-      align-items: start;
-    }
+.device-selector {
+  display: flex;
+  gap: 4px;
+  background: #1c1c1e;
+  border-radius: 8px;
+  padding: 2px;
+}
+.device-selector button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+}
+.device-selector button.active {
+  background: var(--accent);
+  color: #fff;
+}
 
-    @media (min-width: 850px) {
-      .app-container {
-        grid-template-columns: 1fr 420px;
-      }
-    }
+.workspace {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
 
-    /* Editor Section */
-    .editor-section {
-      background: var(--bg-card);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border: 1px solid var(--border-color);
-    }
+/* 編集モード */
+.editor-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.editor-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.search-box input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #111113;
+  color: #fff;
+  padding: 0 10px;
+  outline: none;
+}
+textarea#source {
+  flex: 1;
+  width: 100%;
+  resize: none;
+  background: #111113;
+  color: #f5f5f7;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  outline: none;
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+textarea#source:focus { border-color: var(--accent); }
 
-    .action-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+/* デバイスステージ */
+.stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100%;
+}
 
-    button {
-      background: var(--bg-input);
-      color: var(--accent);
-      border: none;
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 44px;
-    }
+/* iPhone 17 Pro */
+.device-iphone17pro {
+  position: relative;
+  width: 393px;
+  height: 852px;
+  background: #000;
+  border: 7px solid #202023;
+  border-radius: 48px;
+  overflow: hidden;
+  box-shadow: 0 18px 55px rgba(0,0,0,0.8), 0 0 0 1px #444;
+  flex-shrink: 0;
+}
+.device-iphone17pro .island {
+  position: absolute; z-index: 5; top: 11px; left: 50%; transform: translateX(-50%);
+  width: 126px; height: 37px; background: #000; border-radius: 22px; pointer-events: none;
+}
+.device-iphone17pro .homebar {
+  position: absolute; z-index: 6; bottom: 8px; left: 50%; transform: translateX(-50%);
+  width: 125px; height: 5px; border-radius: 5px; background: #fff; pointer-events: none; opacity: 0.95;
+}
 
-    button:active {
-      opacity: 0.7;
-    }
+/* iPad 7th Gen (横固定) */
+.device-ipad7 {
+  position: relative;
+  width: 1080px;
+  height: 810px;
+  background: #000;
+  border: 14px solid #202023;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 18px 55px rgba(0,0,0,0.8), 0 0 0 1px #444;
+  flex-shrink: 0;
+  transform-origin: top center;
+}
+.device-ipad7 .camera {
+  position: absolute; z-index: 5; top: 50%; left: 8px; transform: translateY(-50%);
+  width: 8px; height: 8px; background: #111; border-radius: 50%; pointer-events: none;
+}
+.device-ipad7 .homebutton {
+  position: absolute; z-index: 5; top: 50%; right: 8px; transform: translateY(-50%);
+  width: 16px; height: 16px; border: 1px solid #333; border-radius: 50%; pointer-events: none;
+}
 
-    button.btn-primary {
-      background: var(--accent);
-      color: #fff;
-      flex: 1;
-    }
+.device-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+  color-scheme: dark;
+}
 
-    button.btn-danger {
-      color: var(--accent-danger);
-    }
+/* 全画面表示 Modal */
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  display: none;
+}
+.fullscreen.show { display: block; }
+.fullscreen iframe { width: 100%; height: 100%; border: 0; }
+.fullscreen .exit {
+  position: absolute; z-index: 10; top: max(12px, env(safe-area-inset-top)); right: 14px;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  background: rgba(60,60,65,0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: #fff; font-size: 20px;
+}
 
-    textarea {
-      width: 100%;
-      height: 480px;
-      background: var(--bg-input);
-      color: #fff;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 12px;
-      font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.5;
-      resize: vertical;
-      outline: none;
-    }
-
-    textarea:focus {
-      border-color: var(--accent);
-    }
-
-    /* Device Preview Container */
-    .preview-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-    }
-
-    .device-wrapper {
-      position: relative;
-      width: var(--iphone-width);
-      height: var(--iphone-height);
-      background: #000;
-      border-radius: var(--iphone-radius);
-      box-shadow: 0 0 0 12px #2c2c2e, 0 20px 50px rgba(0, 0, 0, 0.8);
-      overflow: hidden;
-      transform-origin: top center;
-    }
-
-    /* Scaling for mobile screens */
-    @media (max-width: 440px) {
-      .device-wrapper {
-        transform: scale(0.85);
-        margin-bottom: -110px;
-      }
-    }
-
-    @media (max-width: 375px) {
-      .device-wrapper {
-        transform: scale(0.75);
-        margin-bottom: -180px;
-      }
-    }
-
-    /* Hardware Elements */
-    .dynamic-island {
-      position: absolute;
-      top: 11px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 35px;
-      background: #000;
-      border-radius: 20px;
-      z-index: 9999;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 12px;
-    }
-
-    .dynamic-island::before {
-      content: '';
-      width: 12px;
-      height: 12px;
-      background: #111122;
-      border-radius: 50%;
-      box-shadow: inset 0 0 2px rgba(255,255,255,0.2);
-    }
-
-    .status-bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--safe-top);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding: 0 32px 10px 32px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      z-index: 9998;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .status-bar-icons {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      font-size: 12px;
-    }
-
-    .home-indicator-container {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--safe-bottom);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9998;
-      pointer-events: none;
-    }
-
-    .home-indicator {
-      width: 134px;
-      height: 5px;
-      background: #ffffff;
-      border-radius: 3px;
-    }
-
-    /* Iframe Screen */
-    .screen-iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #000;
-      border-radius: var(--iphone-radius);
-    }
-
-    /* Fullscreen Modal Override */
-    .device-wrapper.fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      box-shadow: none;
-      z-index: 10000;
-      transform: none !important;
-      margin: 0 !important;
-    }
-
-    .device-wrapper.fullscreen .screen-iframe {
-      border-radius: 0;
-    }
-
-    .exit-fullscreen-btn {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 10001;
-      background: rgba(44, 44, 46, 0.8);
-      backdrop-filter: blur(10px);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: none;
-    }
-
-    .device-wrapper.fullscreen ~ .exit-fullscreen-btn {
-      display: flex;
-    }
-  </style>
+@media (max-width: 768px) {
+  .main-layout { flex-direction: column; }
+  .sidebar { width: 100%; height: 200px; }
+  .device-ipad7 { transform: scale(0.6); }
+}
+</style>
 </head>
 <body>
 
-  <header>
-    <div>
-      <h1>iPhone 17 Pro PWA Previewer</h1>
-      <div class="subtitle">iOS WebKit Environment Simulator</div>
-    </div>
-  </header>
+<header>
+  <h1>PWA HTML Previewer</h1>
+  <button id="btnFullscreen" class="primary">全画面表示</button>
+</header>
 
-  <div class="app-container">
-    <!-- Editor Control -->
-    <div class="editor-section">
-      <div class="action-toolbar">
-        <button class="btn-primary" id="renderBtn">プレビュー実行</button>
-        <button id="sampleBtn">サンプルHTML</button>
-        <button id="fullscreenBtn">全画面表示</button>
-        <button class="btn-danger" id="clearBtn">クリア</button>
+<div class="main-layout">
+  <!-- 左側：HTML一覧リスト -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span style="font-weight:600; font-size:14px;">HTML一覧</span>
+      <button id="btnNew" class="primary">+ 新規作成</button>
+    </div>
+    <div id="htmlList" class="html-list"></div>
+  </aside>
+
+  <!-- 右側：メイン操作・プレビュー領域 -->
+  <main class="content-area">
+    <div class="toolbar">
+      <div class="name-input-wrap">
+        <input id="docName" type="text" placeholder="HTMLの名前">
       </div>
-      <textarea id="htmlInput" placeholder="ここにPWAのHTMLコードを貼り付けてください..."></textarea>
+
+      <div class="view-mode-tabs">
+        <button id="tabPreview" class="active">プレビュー</button>
+        <button id="tabEdit">編集</button>
+      </div>
+
+      <div id="deviceSelector" class="device-selector">
+        <button id="devIphone" class="active">iPhone 17 Pro</button>
+        <button id="devIpad">iPad 7th (横)</button>
+      </div>
+
+      <div>
+        <button id="btnDuplicate">複製</button>
+        <button id="btnDelete" class="danger">削除</button>
+      </div>
     </div>
 
-    <!-- Device Emulator -->
-    <div class="preview-section">
-      <div class="device-wrapper" id="deviceWrapper">
-        <div class="status-bar">
-          <span id="clock">9:41</span>
-          <div class="status-bar-icons">
-            <span>5G</span>
-            <span>100%</span>
+    <div class="workspace">
+      <!-- エディタ表示領域 -->
+      <div id="editorWrap" class="editor-wrap" style="display:none;">
+        <div class="editor-tools">
+          <span id="charCount" style="font-size:12px; color:var(--muted);">0文字</span>
+          <div class="search-box">
+            <input id="search" type="search" placeholder="コード内検索" autocomplete="off">
+            <span id="searchResult" style="font-size:11px; color:var(--muted);"></span>
           </div>
+          <button id="btnClear">クリア</button>
         </div>
-        <div class="dynamic-island"></div>
-        <iframe id="previewIframe" class="screen-iframe" title="PWA Preview Target"></iframe>
-        <div class="home-indicator-container">
-          <div class="home-indicator"></div>
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html>..."></textarea>
+      </div>
+
+      <!-- プレビュー表示領域（端末枠） -->
+      <div id="stageWrap" class="stage">
+        <!-- iPhone 17 Pro 枠 -->
+        <div id="iphoneFrame" class="device-iphone17pro">
+          <div class="island"></div>
+          <iframe id="frameIphone" class="device-frame" title="iPhone Preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          <div class="homebar"></div>
+        </div>
+
+        <!-- iPad 第7世代 (横向き) 枠 -->
+        <div id="ipadFrame" class="device-ipad7" style="display:none;">
+          <div class="camera"></div>
+          <iframe id="frameIpad" class="device-frame" title="iPad Preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          <div class="homebutton"></div>
         </div>
       </div>
-      <button class="exit-fullscreen-btn" id="exitFullscreenBtn">全画面解除</button>
     </div>
-  </div>
-
-  <script>
-    const STORAGE_KEY = 'pwa_previewer_code';
-
-    const defaultSample = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PWA Test App</title>
-  <style>
-    /* Safe Area Setup for PWA */
-    :root {
-      --sat: env(safe-area-inset-top);
-      --sab: env(safe-area-inset-bottom);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      /* 100dvh verification */
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Fixed Top Header (Accounts for Dynamic Island & Safe Area) */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: calc(44px + var(--sat));
-      padding-top: var(--sat);
-      background: rgba(30, 30, 30, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      border-bottom: 0.5px solid #333;
-      z-index: 100;
-    }
-
-    /* Scrollable Content Area */
-    main {
-      flex: 1;
-      padding-top: calc(50px + var(--sat));
-      padding-bottom: calc(65px + var(--sab));
-      padding-left: 16px;
-      padding-right: 16px;
-      overflow-y: auto;
-    }
-
-    .card {
-      background: #1c1c1e;
-      border-radius: 12px;
-      padding: 16px;
-      margin-vertical: 12px;
-      margin-bottom: 12px;
-      border: 1px solid #2c2c2e;
-    }
-
-    .card h3 {
-      margin-bottom: 8px;
-      color: #0a84ff;
-    }
-
-    .card p {
-      font-size: 14px;
-      color: #aaa;
-      line-height: 1.4;
-    }
-
-    button.interactive-btn {
-      background: #0a84ff;
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-weight: 600;
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    /* Fixed Bottom Tabbar (Accounts for Home Indicator) */
-    nav.tabbar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(50px + var(--sab));
-      padding-bottom: var(--sab);
-      background: rgba(30, 30, 30, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      border-top: 0.5px solid #333;
-      z-index: 100;
-    }
-
-    .tab-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 10px;
-      color: #8e8e93;
-    }
-
-    .tab-item.active {
-      color: #0a84ff;
-    }
-
-    .tab-icon {
-      font-size: 18px;
-      margin-bottom: 2px;
-    }
-  </style>
-</head>
-<body>
-
-  <header>App Header</header>
-
-  <main>
-    <div class="card">
-      <h3>Safe Area Verification</h3>
-      <p>ヘッダーがDynamic Islandに被らず、タブバーがホームインジケータに侵食されていないか確認できます。</p>
-    </div>
-
-    <div class="card">
-      <h3>インタラクティブテスト</h3>
-      <p>JavaScriptの実行やタップレスポンスのテストが可能です。</p>
-      <button class="interactive-btn" onclick="countUp()">カウント: <span id="counter">0</span></button>
-    </div>
-
-    <div class="card">
-      <h3>スクロール動作</h3>
-      <p>コンテンツをスクロールした際の固定ヘッダー・フッターの非透過状態やグラデーションを確認できます。</p>
-    </div>
-    <div class="card"><p>ダミーコンテンツ 1</p></div>
-    <div class="card"><p>ダミーコンテンツ 2</p></div>
-    <div class="card"><p>ダミーコンテンツ 3</p></div>
   </main>
+</div>
 
-  <nav class="tabbar">
-    <div class="tab-item active"><span class="tab-icon">★</span>ホーム</div>
-    <div class="tab-item"><span class="tab-icon">🔍</span>検索</div>
-    <div class="tab-item"><span class="tab-icon">⚙</span>設定</div>
-  </nav>
+<!-- 全画面モーダル -->
+<div id="fullscreen" class="fullscreen">
+  <button class="exit" id="btnExitFull">×</button>
+  <iframe id="frameFull" title="Full Preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+</div>
 
-  <script>
-    let count = 0;
-    function countUp() {
-      count++;
-      document.getElementById('counter').innerText = count;
-    }
-  <\/script>
-</body>
-</html>`;
+<script>
+const STORAGE_KEY = "pwa_multi_html_docs_v1";
 
-    const htmlInput = document.getElementById('htmlInput');
-    const previewIframe = document.getElementById('previewIframe');
-    const renderBtn = document.getElementById('renderBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const sampleBtn = document.getElementById('sampleBtn');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
-    const deviceWrapper = document.getElementById('deviceWrapper');
-    const clockEl = document.getElementById('clock');
+// 初期データ設定
+let docs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
+  {
+    id: "default_1",
+    name: "サンプル HTML",
+    content: "<!doctype html>\n<html>\n<head>\n<style>\n body { font-family: sans-serif; background: #121212; color: #fff; display: grid; place-items: center; height: 100vh; margin: 0; }\n h1 { color: #0a84ff; }\n</style>\n</head>\n<body>\n <div>\n  <h1>Hello World!</h1>\n  <p>一覧から切り替えてサクサク確認できます。</p>\n </div>\n</body>\n</html>",
+    updatedAt: Date.now()
+  }
+];
 
-    // Real-time Clock Sync
-    function updateClock() {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      clockEl.textContent = `${hours}:${minutes}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+let activeId = docs[0]?.id || null;
+let currentMode = "preview"; // "preview" | "edit"
+let currentDevice = "iphone"; // "iphone" | "ipad"
 
-    // Render Logic with iOS WebKit Safe Area Injection
-    function renderPreview() {
-      const userCode = htmlInput.value;
-      localStorage.setItem(STORAGE_KEY, userCode);
+const $ = id => document.getElementById(id);
 
-      // System Injection Code for Safe Area Emulation
-      const injectedStyles = `
-        <style id="__pwa_emulator_css">
-          :root {
-            --sat: 59px !important;
-            --sab: 34px !important;
-            --sal: 0px !important;
-            --sar: 0px !important;
-          }
-          
-          /* Emulate WebKit env() functions inside iframe */
-          @supports (padding: env(safe-area-inset-top)) {
-            :root {
-              --safe-area-inset-top: 59px;
-              --safe-area-inset-bottom: 34px;
-            }
-          }
+// --- ストレージ操作 ---
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+}
 
-          html, body {
-            height: 100%;
-            background-color: #000;
-            color-scheme: dark;
-            -webkit-user-select: none;
-            user-select: none;
-          }
+function getActiveDoc() {
+  return docs.find(d => d.id === activeId);
+}
 
-          /* Handle 100dvh fallback inside fixed emulator iframe */
-          @supports (height: 100dvh) {
-            body { min-height: 100dvh; }
-          }
-        </style>
-      `;
+// --- レンダリング系 ---
+function renderList() {
+  const listEl = $("htmlList");
+  listEl.innerHTML = "";
+  docs.forEach(doc => {
+    const item = document.createElement("div");
+    item.className = `html-item ${doc.id === activeId ? "active" : ""}`;
+    const dateStr = new Date(doc.updatedAt).toLocaleDateString() + " " + new Date(doc.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    item.innerHTML = `
+      <div class="title">${escapeHtml(doc.name || "名称未設定")}</div>
+      <div class="meta">${doc.content.length.toLocaleString()}文字 | ${dateStr}</div>
+    `;
+    item.onclick = () => selectDoc(doc.id);
+    listEl.appendChild(item);
+  });
+}
 
-      // Inject runtime CSS variables replacing raw env() calls
-      let processedCode = userCode.replace(/env\(safe-area-inset-top\)/g, 'var(--sat, 59px)');
-      processedCode = processedCode.replace(/env\(safe-area-inset-bottom\)/g, 'var(--sab, 34px)');
-      processedCode = processedCode.replace(/env\(safe-area-inset-left\)/g, 'var(--sal, 0px)');
-      processedCode = processedCode.replace(/env\(safe-area-inset-right\)/g, 'var(--sar, 0px)');
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
 
-      // Combine and inject into iframe document
-      const doc = previewIframe.contentWindow.document;
-      doc.open();
-      if (processedCode.includes('<head>')) {
-        doc.write(processedCode.replace('<head>', '<head>' + injectedStyles));
-      } else {
-        doc.write(injectedStyles + processedCode);
-      }
-      doc.close();
-    }
+function updateWorkspace() {
+  const doc = getActiveDoc();
+  if (!doc) return;
 
-    // Event Handlers
-    renderBtn.addEventListener('click', renderPreview);
+  $("docName").value = doc.name;
+  $("source").value = doc.content;
+  updateCharCount();
 
-    clearBtn.addEventListener('click', () => {
-      htmlInput.value = '';
-      localStorage.removeItem(STORAGE_KEY);
-      renderPreview();
-    });
+  // プレビューの更新
+  const frame = currentDevice === "iphone" ? $("frameIphone") : $("frameIpad");
+  frame.srcdoc = doc.content;
+}
 
-    sampleBtn.addEventListener('click', () => {
-      htmlInput.value = defaultSample;
-      renderPreview();
-    });
+function updateCharCount() {
+  $("charCount").textContent = $("source").value.length.toLocaleString() + "文字";
+}
 
-    fullscreenBtn.addEventListener('click', () => {
-      deviceWrapper.classList.add('fullscreen');
-    });
+// --- アクション ---
+function selectDoc(id) {
+  activeId = id;
+  renderList();
+  updateWorkspace();
+}
 
-    exitFullscreenBtn.addEventListener('click', () => {
-      deviceWrapper.classList.remove('fullscreen');
-    });
+function createDoc() {
+  const newDoc = {
+    id: "doc_" + Date.now(),
+    name: "新規HTML",
+    content: "<!doctype html>\n<html>\n<head>\n</head>\n<body>\n <h2>新しいファイル</h2>\n</body>\n</html>",
+    updatedAt: Date.now()
+  };
+  docs.unshift(newDoc);
+  activeId = newDoc.id;
+  saveData();
+  renderList();
+  updateWorkspace();
+}
 
-    // Initialize from LocalStorage or Sample
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedCode = localStorage.getItem(STORAGE_KEY);
-      if (savedCode) {
-        htmlInput.value = savedCode;
-      } else {
-        htmlInput.value = defaultSample;
-      }
-      renderPreview();
-    });
-  </script>
+function duplicateDoc() {
+  const doc = getActiveDoc();
+  if (!doc) return;
+  const dup = {
+    id: "doc_" + Date.now(),
+    name: doc.name + " (コピー)",
+    content: doc.content,
+    updatedAt: Date.now()
+  };
+  docs.unshift(dup);
+  activeId = dup.id;
+  saveData();
+  renderList();
+  updateWorkspace();
+}
+
+function deleteDoc() {
+  if (docs.length <= 1) {
+    alert("最低1つのHTMLが必要です。");
+    return;
+  }
+  if (!confirm("本当に削除しますか？")) return;
+  docs = docs.filter(d => d.id !== activeId);
+  activeId = docs[0].id;
+  saveData();
+  renderList();
+  updateWorkspace();
+}
+
+// --- イベントバインド ---
+$("btnNew").onclick = createDoc;
+$("btnDuplicate").onclick = duplicateDoc;
+$("btnDelete").onclick = deleteDoc;
+
+$("docName").oninput = (e) => {
+  const doc = getActiveDoc();
+  if (doc) {
+    doc.name = e.target.value;
+    doc.updatedAt = Date.now();
+    saveData();
+    renderList();
+  }
+};
+
+$("source").oninput = (e) => {
+  const doc = getActiveDoc();
+  if (doc) {
+    doc.content = e.target.value;
+    doc.updatedAt = Date.now();
+    saveData();
+    updateCharCount();
+  }
+};
+
+// タブ切替（プレビュー / 編集）
+$("tabPreview").onclick = () => {
+  currentMode = "preview";
+  $("tabPreview").classList.add("active");
+  $("tabEdit").classList.remove("active");
+  $("editorWrap").style.display = "none";
+  $("stageWrap").style.display = "flex";
+  $("deviceSelector").style.display = "flex";
+  updateWorkspace();
+};
+
+$("tabEdit").onclick = () => {
+  currentMode = "edit";
+  $("tabEdit").classList.add("active");
+  $("tabPreview").classList.remove("active");
+  $("editorWrap").style.display = "flex";
+  $("stageWrap").style.display = "none";
+  $("deviceSelector").style.display = "none";
+};
+
+// デバイス切替
+$("devIphone").onclick = () => {
+  currentDevice = "iphone";
+  $("devIphone").classList.add("active");
+  $("devIpad").classList.remove("active");
+  $("iphoneFrame").style.display = "block";
+  $("ipadFrame").style.display = "none";
+  updateWorkspace();
+};
+
+$("devIpad").onclick = () => {
+  currentDevice = "ipad";
+  $("devIpad").classList.add("active");
+  $("devIphone").classList.remove("active");
+  $("ipadFrame").style.display = "block";
+  $("iphoneFrame").style.display = "none";
+  updateWorkspace();
+};
+
+// 全画面表示
+$("btnFullscreen").onclick = () => {
+  const doc = getActiveDoc();
+  if (doc) {
+    $("frameFull").srcdoc = doc.content;
+    $("fullscreen").classList.add("show");
+  }
+};
+$("btnExitFull").onclick = () => {
+  $("fullscreen").classList.remove("show");
+  $("frameFull").srcdoc = "";
+};
+
+// クリア・検索機能
+$("btnClear").onclick = () => {
+  $("source").value = "";
+  const doc = getActiveDoc();
+  if (doc) {
+    doc.content = "";
+    saveData();
+  }
+  updateCharCount();
+};
+
+$("search").addEventListener("input", () => {
+  const q = $("search").value;
+  if (!q) { $("searchResult").textContent = ""; return; }
+  let n = 0, pos = 0;
+  const src = $("source").value;
+  while ((pos = src.indexOf(q, pos)) !== -1) { n++; pos += Math.max(q.length, 1); }
+  $("searchResult").textContent = n + "件";
+});
+
+// 初期表示実行
+renderList();
+updateWorkspace();
+</script>
 </body>
 </html>
