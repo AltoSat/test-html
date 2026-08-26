@@ -1,862 +1,443 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
-<title>iPhone 17 Pro PWA プレビューア</title>
+<title>PWA Previewer — iPhone 17 Pro / iPad 7</title>
 <style>
-  :root {
-    --bg: #000;
-    --surface: #1c1c1e;
-    --surface2: #2c2c2e;
-    --border: #38383a;
-    --text: #f5f5f7;
-    --text2: #8e8e93;
-    --accent: #0a84ff;
-    --accent-pressed: #0071e3;
-    --danger: #ff453a;
-    --radius: 12px;
-    --phone-w: 402px;
-    --phone-h: 874px;
-    --safe-top: 62px;
-    --safe-bottom: 34px;
-    --island-w: 126px;
-    --island-h: 37px;
-    --corner: 55px;
-    --bezel: 12px;
-  }
+:root{
+  color-scheme:dark;
+  --bg:#000;
+  --panel:#1c1c1e;
+  --panel2:#2c2c2e;
+  --panel3:#3a3a3c;
+  --text:#f5f5f7;
+  --muted:#98989f;
+  --accent:#0a84ff;
+  --danger:#ff453a;
+  --ok:#30d158;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
+body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+button,textarea,input{font:inherit}
+button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer}
+button.primary{background:var(--accent)}
+button.danger{background:var(--danger)}
+button.ghost{background:transparent;border:1px solid #38383c}
+button:active{transform:scale(.97);opacity:.85}
+button:disabled{opacity:.4;pointer-events:none}
+.app{max-width:1100px;margin:auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px 12px}
+h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.02em}
+.header-actions{display:flex;gap:6px;flex-shrink:0}
+.header-actions button{min-height:36px;padding:0 12px;font-size:13px}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* tabs */
+.tabs{display:flex;background:var(--panel);border-radius:12px;padding:3px;margin-bottom:12px}
+.tab{flex:1;min-height:36px;background:transparent;color:var(--muted);font-size:14px}
+.tab.active{background:var(--panel3);color:#fff}
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-    font-size: 16px;
-    line-height: 1.4;
-    overscroll-behavior: none;
-  }
+/* list */
+.list-panel{display:none}
+.list-panel.show{display:block}
+.item-list{display:flex;flex-direction:column;gap:6px;max-height:min(38vh,320px);overflow:auto;padding-right:2px;margin-bottom:14px}
+.item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--panel);border-radius:14px;padding:12px 14px;
+  border:2px solid transparent;cursor:pointer;transition:border-color .15s,background .15s;
+}
+.item:active{background:var(--panel2)}
+.item.active{border-color:var(--accent);background:#0a84ff18}
+.item-name{flex:1;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:11px;color:var(--muted);white-space:nowrap}
+.item-empty{text-align:center;color:var(--muted);padding:28px 12px;font-size:14px}
 
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100dvh;
-    min-height: 100vh;
-  }
+/* device previews */
+.devices{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
+.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.device-label{font-size:12px;color:var(--muted);font-weight:500}
+.phone{
+  position:relative;width:min(280px,42vw);aspect-ratio:393/852;
+  background:#000;border:6px solid #202023;border-radius:40px;overflow:hidden;
+  box-shadow:0 14px 40px #000,0 0 0 1px #444;
+}
+.phone iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;color-scheme:dark}
+.island{
+  position:absolute;z-index:5;top:9px;left:50%;transform:translateX(-50%);
+  width:90px;height:28px;background:#000;border-radius:18px;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03);
+}
+.homebar{
+  position:absolute;z-index:6;bottom:6px;left:50%;transform:translateX(-50%);
+  width:90px;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
+}
+.ipad{
+  position:relative;width:min(420px,92vw);aspect-ratio:4/3;
+  background:#000;border:8px solid #2a2a2e;border-radius:18px;overflow:hidden;
+  box-shadow:0 14px 40px #000,0 0 0 1px #444;
+}
+.ipad iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;color-scheme:dark}
+.ipad-bezel{
+  position:absolute;z-index:5;top:50%;left:6px;transform:translateY(-50%);
+  width:4px;height:28px;background:#1a1a1c;border-radius:2px;pointer-events:none;
+}
 
-  /* ── Header ── */
-  .app-header {
-    flex-shrink: 0;
-    padding: max(12px, env(safe-area-inset-top)) 16px 12px;
-    background: rgba(28,28,30,0.92);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: 0.5px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    z-index: 100;
-  }
-  .app-header h1 {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-  }
-  .header-actions { display: flex; gap: 8px; }
+/* editor */
+.editor-panel{display:none}
+.editor-panel.show{display:block}
+.editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.editor-tools .name-input{
+  flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 12px;outline:none;
+}
+.editor-tools .name-input:focus{border-color:var(--accent)}
+#count{font-size:13px;color:var(--muted);white-space:nowrap}
+.search-box{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.search-box input{
+  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 11px;outline:none;
+}
+#searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
+textarea{
+  width:100%;height:min(42vh,360px);resize:vertical;
+  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
+  padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
+}
+textarea:focus{border-color:var(--accent)}
+.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
+.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.editor-actions button{flex:1;min-width:100px}
 
-  /* ── Buttons ── */
-  .btn {
-    appearance: none;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 15px;
-    font-weight: 500;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background 0.15s, opacity 0.15s, transform 0.1s;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    color: var(--text);
-    background: var(--surface2);
-  }
-  .btn:active { transform: scale(0.97); opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:active { background: var(--accent-pressed); }
-  .btn-ghost { background: transparent; color: var(--accent); padding: 10px 12px; }
-  .btn-danger { background: transparent; color: var(--danger); }
-  .btn-sm { padding: 8px 12px; font-size: 14px; min-height: 36px; border-radius: 8px; }
+/* fullscreen */
+.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none}
+.fullscreen.show{display:block}
+.fullscreen iframe{width:100%;height:100%;border:0}
+.fullscreen .exit{
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
+  width:44px;height:44px;padding:0;border-radius:50%;
+  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:20px;
+}
+.preview-actions{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.preview-actions button{min-height:38px;font-size:13px}
 
-  /* ── Main layout ── */
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* ── Editor panel ── */
-  .editor-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    gap: 12px;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .editor-panel.hidden { display: none; }
-
-  .label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text2);
-    letter-spacing: -0.01em;
-  }
-
-  .html-input {
-    flex: 1;
-    min-height: 200px;
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    padding: 14px;
-    resize: vertical;
-    outline: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .html-input:focus { border-color: var(--accent); }
-
-  .toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .hint {
-    font-size: 12px;
-    color: var(--text2);
-    line-height: 1.45;
-  }
-
-  /* ── Preview panel ── */
-  .preview-panel {
-    flex: 1;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    background: #0a0a0a;
-  }
-  .preview-panel.active { display: flex; }
-
-  .preview-toolbar {
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 430px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    gap: 8px;
-  }
-
-  /* ── Phone frame ── */
-  .phone-scale {
-    transform-origin: top center;
-    /* scale is set by JS if needed */
-  }
-
-  .phone {
-    width: calc(var(--phone-w) + var(--bezel) * 2);
-    height: calc(var(--phone-h) + var(--bezel) * 2);
-    background: #1a1a1a;
-    border-radius: calc(var(--corner) + 4px);
-    padding: var(--bezel);
-    box-shadow:
-      0 0 0 1px #333,
-      0 25px 50px -12px rgba(0,0,0,0.7),
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .phone-screen {
-    width: var(--phone-w);
-    height: var(--phone-h);
-    border-radius: var(--corner);
-    overflow: hidden;
-    position: relative;
-    background: #000;
-    isolation: isolate;
-  }
-
-  /* Dynamic Island */
-  .dynamic-island {
-    position: absolute;
-    top: 11px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: var(--island-w);
-    height: var(--island-h);
-    background: #000;
-    border-radius: 20px;
-    z-index: 30;
-    pointer-events: none;
-    box-shadow: 0 0 0 0.5px rgba(255,255,255,0.08);
-  }
-
-  /* Home indicator */
-  .home-indicator {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 134px;
-    height: 5px;
-    background: rgba(255,255,255,0.3);
-    border-radius: 3px;
-    z-index: 30;
-    pointer-events: none;
-  }
-
-  /* iframe: full screen content area (PWA style) */
-  .pwa-frame {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: #000;
-    border-radius: var(--corner);
-    /* allow touch */
-    touch-action: manipulation;
-  }
-
-  /* ── Fullscreen mode ── */
-  body.fullscreen .app-header,
-  body.fullscreen .preview-toolbar {
-    display: none !important;
-  }
-  body.fullscreen .preview-panel {
-    padding: 0;
-    background: #000;
-  }
-  body.fullscreen .phone {
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-  }
-  body.fullscreen .phone-screen {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-  }
-  body.fullscreen .dynamic-island,
-  body.fullscreen .home-indicator {
-    display: none;
-  }
-  body.fullscreen .phone-scale {
-    transform: none !important;
-    width: 100%;
-    height: 100%;
-  }
-
-  .fs-exit {
-    display: none;
-    position: fixed;
-    top: max(12px, env(safe-area-inset-top));
-    right: 16px;
-    z-index: 200;
-    background: rgba(44,44,46,0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-  body.fullscreen .fs-exit { display: inline-flex; }
-
-  /* ── Empty state ── */
-  .empty-state {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: var(--text2);
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 5;
-    background: #000;
-    border-radius: var(--corner);
-  }
-  .empty-state.hidden { display: none; }
-
-  /* ── Status toast ── */
-  .toast {
-    position: fixed;
-    bottom: max(24px, env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--surface2);
-    color: var(--text);
-    padding: 10px 18px;
-    border-radius: 20px;
-    font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
-    z-index: 300;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+@media(min-width:800px){
+  .item-list{max-height:min(50vh,420px)}
+  .phone{width:min(320px,38vw)}
+  .ipad{width:min(480px,48vw)}
+  textarea{height:min(50vh,420px)}
+}
 </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>iPhone 17 Pro PWA</h1>
+<div class="app">
+  <header>
+    <h1>PWA Previewer</h1>
     <div class="header-actions">
-      <button type="button" class="btn btn-ghost btn-sm" id="btn-toggle-view">プレビュー</button>
+      <button id="btnNew" class="primary">＋ 新規</button>
     </div>
   </header>
 
-  <main class="main">
-    <!-- Editor -->
-    <section class="editor-panel" id="editor-panel">
-      <div class="label">HTML / CSS / JavaScript を貼り付け</div>
-      <textarea class="html-input" id="html-input" spellcheck="false" placeholder="<!DOCTYPE html>
-<html>
-<head>...</head>
-<body>...</body>
-</html>"></textarea>
-      <div class="toolbar">
-        <button type="button" class="btn btn-primary" id="btn-preview">プレビュー</button>
-        <button type="button" class="btn" id="btn-sample">サンプルHTML</button>
-        <button type="button" class="btn btn-danger" id="btn-clear">クリア</button>
-      </div>
-      <p class="hint">
-        LocalStorageに自動保存されます。iframeで完全分離しているため、貼り付けたコードはプレビューア本体に影響しません。<br>
-        PWA想定のため Safari のアドレスバーは表示されません。Safe Area・Dynamic Island・ホームインジケータを確認できます。
-      </p>
-    </section>
+  <nav class="tabs">
+    <button id="tabList" class="tab active">一覧・プレビュー</button>
+    <button id="tabEdit" class="tab">編集</button>
+  </nav>
 
-    <!-- Preview -->
-    <section class="preview-panel" id="preview-panel">
-      <div class="preview-toolbar">
-        <button type="button" class="btn btn-ghost btn-sm" id="btn-back-edit">← 編集</button>
-        <button type="button" class="btn btn-sm" id="btn-fullscreen">全画面プレビュー</button>
-      </div>
+  <!-- LIST + PREVIEW -->
+  <section id="listPanel" class="list-panel show">
+    <div id="itemList" class="item-list"></div>
 
-      <div class="phone-scale" id="phone-scale">
-        <div class="phone">
-          <div class="phone-screen">
-            <div class="dynamic-island" aria-hidden="true"></div>
-            <iframe
-              class="pwa-frame"
-              id="pwa-frame"
-              title="PWA Preview"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"
-              allow="fullscreen"
-            ></iframe>
-            <div class="empty-state" id="empty-state">
-              <span>HTMLを貼り付けて<br>「プレビュー」を押してください</span>
-            </div>
-            <div class="home-indicator" aria-hidden="true"></div>
-          </div>
+    <div class="preview-actions">
+      <button id="btnFullPhone" class="primary">iPhone全画面</button>
+      <button id="btnFullIpad">iPad全画面</button>
+      <button id="btnEditSelected" class="ghost">選択を編集</button>
+      <button id="btnDelete" class="danger">削除</button>
+    </div>
+
+    <div class="devices">
+      <div class="device-wrap">
+        <div class="device-label">iPhone 17 Pro</div>
+        <div class="phone" id="phone">
+          <div class="island"></div>
+          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          <div class="homebar"></div>
         </div>
       </div>
-    </section>
-  </main>
+      <div class="device-wrap">
+        <div class="device-label">iPad 第7世代（横）</div>
+        <div class="ipad" id="ipad">
+          <div class="ipad-bezel"></div>
+          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <button type="button" class="btn fs-exit" id="btn-exit-fs">閉じる</button>
-  <div class="toast" id="toast" role="status"></div>
+  <!-- EDITOR -->
+  <section id="editorPanel" class="editor-panel">
+    <div class="editor-tools">
+      <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
+      <span id="count">0文字</span>
+      <div class="search-box">
+        <input id="search" type="search" placeholder="検索" autocomplete="off">
+        <span id="searchResult"></span>
+      </div>
+    </div>
+    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
+    <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
+    <div class="editor-actions">
+      <button id="btnSave" class="primary">保存して一覧へ</button>
+      <button id="btnClear" class="ghost">クリア</button>
+      <button id="btnCancel" class="ghost">キャンセル</button>
+    </div>
+  </section>
+</div>
+
+<div id="fullscreen" class="fullscreen">
+  <button class="exit" id="exit">×</button>
+  <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+</div>
 
 <script>
-(function () {
-  'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = "pwa-previewer-items-v2";
+  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
 
-  const STORAGE_KEY = 'iphone17pro-pwa-previewer-html';
-  const PHONE_W = 402;
-  const PHONE_H = 874;
-  const SAFE_TOP = 62;
-  const SAFE_BOTTOM = 34;
+  let items = [];
+  let selectedId = null;
+  let editingId = null; // null = new
 
-  const htmlInput = document.getElementById('html-input');
-  const frame = document.getElementById('pwa-frame');
-  const emptyState = document.getElementById('empty-state');
-  const editorPanel = document.getElementById('editor-panel');
-  const previewPanel = document.getElementById('preview-panel');
-  const phoneScale = document.getElementById('phone-scale');
-  const toastEl = document.getElementById('toast');
+  const source = $("source");
+  const nameInput = $("nameInput");
+  const framePhone = $("framePhone");
+  const frameIpad = $("frameIpad");
+  const fullFrame = $("fullFrame");
 
-  /* ── Sample HTML (PWA-like with safe areas, fixed bars, tab bar) ── */
-  const SAMPLE = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
-<title>Sample PWA</title>
-<style>
-  :root {
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    height: 100%;
-    background: #000;
-    color: #f5f5f7;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-  }
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100dvh;
-    min-height: 100vh;
-  }
-  .header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 10;
-    padding: calc(var(--safe-top) + 8px) 16px 12px;
-    background: rgba(28,28,30,0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 0.5px solid #38383a;
-    font-size: 17px;
-    font-weight: 600;
-    text-align: center;
-  }
-  .content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: calc(var(--safe-top) + 56px) 16px calc(var(--safe-bottom) + 64px);
-  }
-  .card {
-    background: #1c1c1e;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .card h2 { font-size: 16px; margin-bottom: 6px; }
-  .card p { font-size: 14px; color: #8e8e93; line-height: 1.5; }
-  .tabbar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 10;
-    display: flex;
-    background: rgba(28,28,30,0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 0.5px solid #38383a;
-    padding-bottom: var(--safe-bottom);
-    height: calc(49px + var(--safe-bottom));
-  }
-  .tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    font-size: 10px;
-    color: #8e8e93;
-    padding-top: 6px;
-    border: none;
-    background: none;
-    font-family: inherit;
-  }
-  .tab.active { color: #0a84ff; }
-  .tab-icon {
-    width: 24px; height: 24px;
-    border-radius: 6px;
-    background: currentColor;
-    opacity: 0.9;
-  }
-  input, button.action {
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid #38383a;
-    background: #2c2c2e;
-    color: #f5f5f7;
-    font-size: 16px;
-    font-family: inherit;
-    margin-top: 8px;
-  }
-  button.action {
-    background: #0a84ff;
-    border: none;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .debug {
-    font-size: 12px;
-    color: #636366;
-    margin-top: 16px;
-    word-break: break-all;
-  }
-</style>
-</head>
-<body>
-  <header class="header">Sample PWA</header>
-  <main class="content" id="content">
-    <div class="card">
-      <h2>Safe Area 確認</h2>
-      <p>上部は Dynamic Island / Safe Area を避け、下部はホームインジケータとタブバーが重ならないようにしています。</p>
-    </div>
-    <div class="card">
-      <h2>入力テスト</h2>
-      <input type="text" placeholder="テキストを入力…" id="inp">
-      <button class="action" type="button" id="btn">送信</button>
-    </div>
-    <div class="card">
-      <h2>スクロール領域</h2>
-      <p>下にスクロールして fixed 要素の位置を確認してください。</p>
-    </div>
-    ${Array.from({length: 12}, (_, i) => `<div class="card"><h2>カード ${i + 1}</h2><p>position: fixed と env(safe-area-inset-*) の挙動確認用です。</p></div>`).join('')}
-    <div class="debug" id="debug"></div>
-  </main>
-  <nav class="tabbar">
-    <button class="tab active" type="button"><span class="tab-icon"></span>ホーム</button>
-    <button class="tab" type="button"><span class="tab-icon"></span>検索</button>
-    <button class="tab" type="button"><span class="tab-icon"></span>通知</button>
-    <button class="tab" type="button"><span class="tab-icon"></span>設定</button>
-  </nav>
-  <script>
-    document.getElementById('btn').onclick = function () {
-      alert('入力: ' + (document.getElementById('inp').value || '(空)'));
-    };
-    document.querySelectorAll('.tab').forEach(function (t) {
-      t.onclick = function () {
-        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
-        t.classList.add('active');
-      };
-    });
-    var d = document.getElementById('debug');
-    function report() {
-      var s = getComputedStyle(document.documentElement);
-      d.textContent =
-        'inner: ' + window.innerWidth + '×' + window.innerHeight +
-        ' | dvh≈' + (window.visualViewport ? window.visualViewport.height : '?') +
-        ' | safe-top: ' + s.getPropertyValue('--safe-top') +
-        ' | safe-bottom: ' + s.getPropertyValue('--safe-bottom');
-    }
-    report();
-    window.addEventListener('resize', report);
-  <\/script>
-</body>
-</html>`;
-
-  /* ── Toast ── */
-  let toastTimer;
-  function toast(msg) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
 
-  /* ── LocalStorage ── */
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, htmlInput.value); } catch (e) {}
-  }
   function load() {
     try {
-      const v = localStorage.getItem(STORAGE_KEY);
-      if (v != null) htmlInput.value = v;
-    } catch (e) {}
-  }
-
-  /* ── Inject safe-area CSS variables into preview document ── */
-  function buildPreviewSrcdoc(userHtml) {
-    // Prepend a base that forces PWA-like viewport and injects measured safe areas
-    // so env(safe-area-inset-*) works even inside iframe (browsers often return 0).
-    const inject = `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<style id="__pwa-preview-inject">
-  /* Force safe-area values matching iPhone 17 Pro PWA (fullscreen) */
-  :root {
-    --safe-area-inset-top: ${SAFE_TOP}px !important;
-    --safe-area-inset-bottom: ${SAFE_BOTTOM}px !important;
-    --safe-area-inset-left: 0px !important;
-    --safe-area-inset-right: 0px !important;
-  }
-  /* Polyfill env() via custom properties for broader support in preview */
-  html {
-    --sat: ${SAFE_TOP}px;
-    --sab: ${SAFE_BOTTOM}px;
-    --sal: 0px;
-    --sar: 0px;
-  }
-</style>
-<script>
-  /* Override env() approximation: rewrite common patterns is hard;
-     instead expose CSS variables that authors can use, and also
-     set constant values that match real device when env returns 0. */
-  (function () {
-    var style = document.createElement('style');
-    style.textContent =
-      ':root{' +
-      '  --safe-area-inset-top:${SAFE_TOP}px;' +
-      '  --safe-area-inset-bottom:${SAFE_BOTTOM}px;' +
-      '}' +
-      /* Make env() work by defining on :root via @supports fallback patterns
-         Authors typically write: padding-top: env(safe-area-inset-top);
-         Inside iframe env is usually 0, so we inject a second layer: */
-      'html{padding:0;margin:0;}' +
-      'body{min-height:100%;}';
-    document.documentElement.appendChild(style);
-
-    /* Monkey-patch: not possible for env(). Instead inject CSS that
-       redefines common utility classes if present is not reliable.
-       Best effort: set CSS variables and document the values. */
-  })();
-<\/script>
-</head>
-<body></body>
-</html>`;
-
-    // If user provided full document, we need to inject into it.
-    // Strategy: parse roughly and inject style + override env via CSS variables
-    // that shadow the usual usage pattern.
-
-    const safePolyfill = `
-<style id="__iphone17pro-safe-polyfill">
-  /* iPhone 17 Pro PWA safe areas (preview polyfill)
-     Real device: top 62 / bottom 34 in portrait PWA */
-  :root {
-    --safe-area-inset-top: ${SAFE_TOP}px;
-    --safe-area-inset-right: 0px;
-    --safe-area-inset-bottom: ${SAFE_BOTTOM}px;
-    --safe-area-inset-left: 0px;
-  }
-</style>
-<script>
-(function(){
-  /* Replace env(safe-area-inset-*) at runtime for stylesheets is impractical.
-     Instead, force the iframe's visual size and tell authors to use the variables,
-     AND inject a CSS layer that approximates by setting padding on html when
-     viewport-fit is used — the reliable way is to redefine env via a hack:
-
-     Modern approach used by many simulators: set the iframe size to the
-     full screen and inject:
-
-     @supports (padding: env(safe-area-inset-top)) is true but value is 0.
-     So we append rules that mirror typical safe-area usage. */
-
-  var css = ''
-    + 'html{height:100%;}'
-    + 'body{min-height:100%;min-height:100dvh;margin:0;}'
-    /* Help fixed headers that use padding-top: env(safe-area-inset-top) —
-       we cannot rewrite env, but we can set constant via custom property
-       and document that sample uses the variables. For pasted code that
-       uses env(), values stay 0 inside iframe — that's a browser limit.
-       Work around: use CSS @property is not enough.
-       Practical fix used here: inject a style that sets the SAME numeric
-       values on a well-known polyfill variable and ALSO try to patch
-       getComputedStyle for demo. */
-    ;
-
-  var s = document.createElement('style');
-  s.id = '__pwa-preview-base';
-  s.textContent = css;
-  (document.head || document.documentElement).appendChild(s);
-
-  /* Critical polyfill: define env() fallbacks by injecting rules that
-     match the most common patterns authors write, using the real px values.
-     This is best-effort for the preview environment. */
-  var poly = document.createElement('style');
-  poly.id = '__safe-area-force';
-  poly.textContent = [
-    /* Many PWAs use: padding-top: env(safe-area-inset-top, 0px) */
-    /* We cannot intercept env, so we expand the visual safe region via
-       a transparent overlay is wrong. Instead set constant on :root and
-       encourage variable usage; for env()-based code, simulate by making
-       the content box the full phone and accepting env=0, OR use a
-       post-process rewrite. */
-  ].join('');
-  (document.head || document.documentElement).appendChild(poly);
-})();
-<\/script>`;
-
-    // Robust approach: rewrite env(safe-area-inset-*) in the user HTML string
-    // to the numeric values so the preview matches real PWA behavior.
-    let html = userHtml;
-    if (!html || !html.trim()) return '';
-
-    // Normalize env() calls to fixed px for this device preview
-    html = html.replace(/env\(\s*safe-area-inset-top\s*(?:,\s*[^)]+)?\s*\)/gi, SAFE_TOP + 'px');
-    html = html.replace(/env\(\s*safe-area-inset-bottom\s*(?:,\s*[^)]+)?\s*\)/gi, SAFE_BOTTOM + 'px');
-    html = html.replace(/env\(\s*safe-area-inset-left\s*(?:,\s*[^)]+)?\s*\)/gi, '0px');
-    html = html.replace(/env\(\s*safe-area-inset-right\s*(?:,\s*[^)]+)?\s*\)/gi, '0px');
-    html = html.replace(/constant\(\s*safe-area-inset-top\s*(?:,\s*[^)]+)?\s*\)/gi, SAFE_TOP + 'px');
-    html = html.replace(/constant\(\s*safe-area-inset-bottom\s*(?:,\s*[^)]+)?\s*\)/gi, SAFE_BOTTOM + 'px');
-    html = html.replace(/constant\(\s*safe-area-inset-left\s*(?:,\s*[^)]+)?\s*\)/gi, '0px');
-    html = html.replace(/constant\(\s*safe-area-inset-right\s*(?:,\s*[^)]+)?\s*\)/gi, '0px');
-
-    // Ensure viewport meta exists for mobile layout
-    if (!/name\s*=\s*["']viewport["']/i.test(html)) {
-      if (/<head[^>]*>/i.test(html)) {
-        html = html.replace(/<head([^>]*)>/i, '<head$1>\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">');
-      } else if (/<html[^>]*>/i.test(html)) {
-        html = html.replace(/<html([^>]*)>/i, '<html$1><head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head>');
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        items = JSON.parse(raw);
+        if (!Array.isArray(items)) items = [];
       } else {
-        html = '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>' + html + '</body></html>';
+        // migrate old single-html storage
+        const old = localStorage.getItem(OLD_KEY);
+        if (old) {
+          items = [{
+            id: uid(),
+            name: "移行したHTML",
+            html: old,
+            updated: Date.now()
+          }];
+          persist();
+        }
+      }
+    } catch (e) {
+      items = [];
+    }
+    if (items.length && !selectedId) selectedId = items[0].id;
+  }
+
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function formatDate(ts) {
+    const d = new Date(ts);
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${m}/${day} ${h}:${min}`;
+  }
+
+  function renderList() {
+    const list = $("itemList");
+    if (!items.length) {
+      list.innerHTML = `<div class="item-empty">まだHTMLがありません。<br>「＋ 新規」から追加してください。</div>`;
+      clearPreviews();
+      return;
+    }
+    list.innerHTML = items
+      .slice()
+      .sort((a, b) => b.updated - a.updated)
+      .map(it => `
+        <div class="item ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
+          <div class="item-name">${escapeHtml(it.name || "無題")}</div>
+          <div class="item-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
+        </div>
+      `).join("");
+    list.querySelectorAll(".item").forEach(el => {
+      el.onclick = () => {
+        selectedId = el.dataset.id;
+        renderList();
+        updatePreview();
+      };
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function clearPreviews() {
+    framePhone.srcdoc = "";
+    frameIpad.srcdoc = "";
+  }
+
+  function updatePreview() {
+    const it = items.find(x => x.id === selectedId);
+    if (!it) {
+      clearPreviews();
+      return;
+    }
+    const html = it.html || "";
+    framePhone.srcdoc = html;
+    frameIpad.srcdoc = html;
+  }
+
+  function showList() {
+    $("listPanel").classList.add("show");
+    $("editorPanel").classList.remove("show");
+    $("tabList").classList.add("active");
+    $("tabEdit").classList.remove("active");
+    renderList();
+    updatePreview();
+  }
+
+  function showEditor(isNew) {
+    $("listPanel").classList.remove("show");
+    $("editorPanel").classList.add("show");
+    $("tabList").classList.remove("active");
+    $("tabEdit").classList.add("active");
+
+    if (isNew) {
+      editingId = null;
+      nameInput.value = "";
+      source.value = "";
+    } else {
+      const it = items.find(x => x.id === selectedId);
+      if (!it) {
+        editingId = null;
+        nameInput.value = "";
+        source.value = "";
+      } else {
+        editingId = it.id;
+        nameInput.value = it.name || "";
+        source.value = it.html || "";
       }
     }
-
-    // Inject base style for height / overflow
-    const baseStyle = `<style id="__pwa-preview-root">
-html, body { margin: 0; }
-html { height: 100%; background: #000; }
-body { min-height: 100%; min-height: 100dvh; }
-</style>`;
-
-    if (/<head[^>]*>/i.test(html)) {
-      html = html.replace(/<head([^>]*)>/i, '<head$1>' + baseStyle);
-    } else {
-      html = baseStyle + html;
-    }
-
-    return html;
+    updateCount();
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    nameInput.focus();
   }
 
-  function runPreview() {
-    const raw = htmlInput.value;
-    save();
-    if (!raw.trim()) {
-      frame.srcdoc = '';
-      emptyState.classList.remove('hidden');
-      toast('HTMLが空です');
+  function updateCount() {
+    $("count").textContent = source.value.length.toLocaleString() + "文字";
+  }
+
+  function saveCurrent() {
+    const name = (nameInput.value || "").trim() || "無題";
+    const html = source.value;
+    if (editingId) {
+      const it = items.find(x => x.id === editingId);
+      if (it) {
+        it.name = name;
+        it.html = html;
+        it.updated = Date.now();
+      }
+      selectedId = editingId;
+    } else {
+      const id = uid();
+      items.push({ id, name, html, updated: Date.now() });
+      selectedId = id;
+    }
+    persist();
+    showList();
+  }
+
+  function deleteSelected() {
+    if (!selectedId) return;
+    const it = items.find(x => x.id === selectedId);
+    if (!it) return;
+    if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
+    items = items.filter(x => x.id !== selectedId);
+    selectedId = items.length ? items[0].id : null;
+    persist();
+    renderList();
+    updatePreview();
+  }
+
+  // events
+  $("tabList").onclick = showList;
+  $("tabEdit").onclick = () => showEditor(false);
+  $("btnNew").onclick = () => showEditor(true);
+  $("btnEditSelected").onclick = () => {
+    if (!selectedId) {
+      alert("編集する項目を一覧から選んでください");
       return;
     }
-    const src = buildPreviewSrcdoc(raw);
-    frame.srcdoc = src;
-    emptyState.classList.add('hidden');
-    showPreview();
-    toast('プレビューを更新しました');
-  }
+    showEditor(false);
+  };
+  $("btnSave").onclick = saveCurrent;
+  $("btnCancel").onclick = showList;
+  $("btnClear").onclick = () => {
+    source.value = "";
+    updateCount();
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    source.focus();
+  };
+  $("btnDelete").onclick = deleteSelected;
 
-  function showEditor() {
-    editorPanel.classList.remove('hidden');
-    previewPanel.classList.remove('active');
-    document.getElementById('btn-toggle-view').textContent = 'プレビュー';
-    document.body.classList.remove('fullscreen');
-  }
+  $("btnFullPhone").onclick = () => {
+    const it = items.find(x => x.id === selectedId);
+    if (!it) return;
+    fullFrame.srcdoc = it.html || "";
+    $("fullscreen").classList.add("show");
+  };
+  $("btnFullIpad").onclick = () => {
+    const it = items.find(x => x.id === selectedId);
+    if (!it) return;
+    fullFrame.srcdoc = it.html || "";
+    $("fullscreen").classList.add("show");
+  };
+  $("exit").onclick = () => {
+    $("fullscreen").classList.remove("show");
+    fullFrame.srcdoc = "";
+  };
 
-  function showPreview() {
-    editorPanel.classList.add('hidden');
-    previewPanel.classList.add('active');
-    document.getElementById('btn-toggle-view').textContent = '編集';
-    requestAnimationFrame(fitPhone);
-  }
-
-  function fitPhone() {
-    if (document.body.classList.contains('fullscreen')) {
-      phoneScale.style.transform = '';
+  source.addEventListener("input", updateCount);
+  $("search").addEventListener("input", () => {
+    const q = $("search").value;
+    if (!q) {
+      $("searchResult").textContent = "";
       return;
     }
-    const panel = previewPanel;
-    const pad = 32;
-    const availW = panel.clientWidth - pad;
-    const availH = panel.clientHeight - 60 - pad; // toolbar approx
-    const phoneTotalW = PHONE_W + 24; // bezel
-    const phoneTotalH = PHONE_H + 24;
-    const scale = Math.min(1, availW / phoneTotalW, availH / phoneTotalH);
-    phoneScale.style.transform = scale < 0.99 ? `scale(${scale})` : '';
-  }
-
-  function enterFullscreen() {
-    document.body.classList.add('fullscreen');
-    phoneScale.style.transform = '';
-  }
-  function exitFullscreen() {
-    document.body.classList.remove('fullscreen');
-    fitPhone();
-  }
-
-  /* ── Events ── */
-  document.getElementById('btn-preview').addEventListener('click', runPreview);
-  document.getElementById('btn-toggle-view').addEventListener('click', function () {
-    if (previewPanel.classList.contains('active')) {
-      showEditor();
-    } else {
-      runPreview();
+    let n = 0, pos = 0;
+    while ((pos = source.value.indexOf(q, pos)) !== -1) {
+      n++;
+      pos += Math.max(q.length, 1);
     }
-  });
-  document.getElementById('btn-back-edit').addEventListener('click', showEditor);
-  document.getElementById('btn-fullscreen').addEventListener('click', enterFullscreen);
-  document.getElementById('btn-exit-fs').addEventListener('click', exitFullscreen);
-
-  document.getElementById('btn-clear').addEventListener('click', function () {
-    htmlInput.value = '';
-    save();
-    frame.srcdoc = '';
-    emptyState.classList.remove('hidden');
-    toast('クリアしました');
+    $("searchResult").textContent = n + "件";
   });
 
-  document.getElementById('btn-sample').addEventListener('click', function () {
-    htmlInput.value = SAMPLE;
-    save();
-    toast('サンプルを挿入しました');
-  });
-
-  htmlInput.addEventListener('input', function () {
-    // debounce save
-    clearTimeout(htmlInput._saveT);
-    htmlInput._saveT = setTimeout(save, 400);
-  });
-
-  window.addEventListener('resize', function () {
-    if (previewPanel.classList.contains('active')) fitPhone();
-  });
-
-  // Escape exits fullscreen
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && document.body.classList.contains('fullscreen')) {
-      exitFullscreen();
-    }
-  });
-
-  /* ── Init ── */
+  // init
   load();
-  if (!htmlInput.value.trim()) {
-    // optional: leave empty
-  }
+  showList();
 })();
 </script>
 </body>
