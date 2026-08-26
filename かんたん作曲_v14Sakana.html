@@ -1,1522 +1,628 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>iPhone 17 Pro PWAプレビューア</title>
+<title>Multi PWA Previewer</title>
 <style>
-/* =============================================
-   Design Tokens
-   ============================================= */
-:root {
-  --bg: #000000;
-  --surface: #0a0a0a;
-  --surface-elevated: #141414;
-  --surface-hover: #1c1c1c;
-  --ink: #ffffff;
-  --ink-secondary: rgba(255,255,255,0.6);
-  --ink-tertiary: rgba(255,255,255,0.35);
-  --accent: #0A84FF;
-  --accent-hover: #3395FF;
-  --danger: #FF453A;
-  --success: #30D158;
-  --line: rgba(255,255,255,0.1);
-  --line-strong: rgba(255,255,255,0.2);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --space-xs: 6px;
-  --space-sm: 10px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --iphone-width: 402px;
-  --iphone-height: 873px;
-  --safe-top: 59px;
-  --safe-bottom: 34px;
-  --dynamic-island-w: 126px;
-  --dynamic-island-h: 37px;
-  --home-indicator-w: 134px;
-  --home-indicator-h: 5px;
-  --shadow: 0 24px 80px rgba(0,0,0,0.6);
-}
-
-/* =============================================
-   Reset & Base
-   ============================================= */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Hiragino Sans", "Noto Sans JP", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior: none;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-button {
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-textarea {
-  font: inherit;
-  color: inherit;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-}
-
-/* =============================================
-   App Shell
-   ============================================= */
-.app-header {
-  flex-shrink: 0;
-  padding: var(--space-md) var(--space-lg);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  z-index: 100;
-}
-
-.app-title {
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-
-.tab-bar {
-  display: flex;
-  gap: var(--space-xs);
-  background: var(--surface-elevated);
-  padding: 4px;
-  border-radius: 10px;
-}
-
-.tab-btn {
-  padding: 7px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-secondary);
-  transition: all 0.2s ease;
-}
-
-.tab-btn.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.tab-btn:not(.active):active {
-  background: var(--surface-hover);
-  color: var(--ink);
-}
-
-.header-actions {
-  display: flex;
-  gap: var(--space-sm);
-  align-items: center;
-}
-
-.icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink-secondary);
-  transition: all 0.2s ease;
-  font-size: 18px;
-}
-
-.icon-btn:active {
-  background: var(--surface-hover);
-  color: var(--ink);
-}
-
-.app-body {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-/* =============================================
-   Editor Panel
-   ============================================= */
-.editor-panel {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-md) var(--space-lg);
-  gap: var(--space-md);
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.25s ease;
-}
-
-.editor-panel.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.editor-toolbar {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.btn {
-  padding: 10px 20px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-
-.btn-primary:active {
-  background: var(--accent-hover);
-  transform: scale(0.97);
-}
-
-.btn-secondary {
-  background: var(--surface-elevated);
-  color: var(--ink);
-  border: 1px solid var(--line);
-}
-
-.btn-secondary:active {
-  background: var(--surface-hover);
-  transform: scale(0.97);
-}
-
-.btn-danger {
-  background: transparent;
-  color: var(--danger);
-  border: 1px solid rgba(255,69,58,0.3);
-}
-
-.btn-danger:active {
-  background: rgba(255,69,58,0.1);
-  transform: scale(0.97);
-}
-
-.editor-wrap {
-  flex: 1;
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-#htmlInput {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: var(--space-md);
-  font-size: 13px;
-  line-height: 1.6;
-  font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--ink);
-  background: var(--surface);
-  tab-size: 2;
-  white-space: pre;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.editor-status {
-  position: absolute;
-  bottom: var(--space-sm);
-  right: var(--space-sm);
-  font-size: 12px;
-  color: var(--ink-tertiary);
-  background: rgba(0,0,0,0.6);
-  padding: 4px 10px;
-  border-radius: 20px;
-  pointer-events: none;
-}
-
-/* =============================================
-   Preview Panel
-   ============================================= */
-.preview-panel {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.preview-panel.active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* =============================================
-   iPhone 17 Pro Frame
-   ============================================= */
-.iphone-frame {
-  position: relative;
-  width: var(--iphone-width);
-  height: var(--iphone-height);
-  background: #000;
-  border-radius: 54px;
-  box-shadow:
-    0 0 0 2px #1a1a1a,
-    0 0 0 4px #0d0d0d,
-    var(--shadow);
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.iphone-bezel {
-  position: absolute;
-  inset: 10px;
-  border-radius: 44px;
-  background: #000;
-  overflow: hidden;
-}
-
-.iphone-screen {
-  position: absolute;
-  inset: 0;
-  border-radius: 44px;
-  overflow: hidden;
-  background: #000;
-}
-
-/* Dynamic Island */
-.dynamic-island {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--dynamic-island-w);
-  height: var(--dynamic-island-h);
-  background: #000;
-  border-radius: 20px;
-  z-index: 50;
-  pointer-events: none;
-}
-
-/* Status bar simulation */
-.status-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--safe-top);
-  z-index: 40;
-  pointer-events: none;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 0 28px 6px;
-}
-
-.status-time {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  letter-spacing: 0.3px;
-}
-
-.status-icons {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.status-signal {
-  display: flex;
-  align-items: flex-end;
-  gap: 1.5px;
-  height: 12px;
-}
-
-.signal-bar {
-  width: 3px;
-  background: #fff;
-  border-radius: 1px;
-}
-
-.signal-bar:nth-child(1) { height: 5px; }
-.signal-bar:nth-child(2) { height: 7px; }
-.signal-bar:nth-child(3) { height: 9px; }
-.signal-bar:nth-child(4) { height: 12px; }
-
-.status-wifi {
-  width: 16px;
-  height: 12px;
-}
-
-.status-battery {
-  width: 25px;
-  height: 12px;
-  border: 1.2px solid rgba(255,255,255,0.4);
-  border-radius: 3px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 1.5px;
-}
-
-.status-battery::after {
-  content: "";
-  position: absolute;
-  right: -3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1.5px;
-  height: 5px;
-  background: rgba(255,255,255,0.4);
-  border-radius: 0 1px 1px 0;
-}
-
-.battery-level {
-  width: 80%;
-  height: 100%;
-  background: #fff;
-  border-radius: 1.5px;
-}
-
-/* Home indicator */
-.home-indicator {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--home-indicator-w);
-  height: var(--home-indicator-h);
-  background: #fff;
-  border-radius: 3px;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.9;
-}
-
-/* Safe area guides (visible in debug mode) */
-.safe-area-guide {
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 45;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.safe-area-guide.show {
-  opacity: 1;
-}
-
-.safe-area-guide.top {
-  top: 0;
-  height: var(--safe-top);
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(10,132,255,0.08),
-    rgba(10,132,255,0.08) 8px,
-    rgba(10,132,255,0.15) 8px,
-    rgba(10,132,255,0.15) 16px
-  );
-  border-bottom: 1px dashed rgba(10,132,255,0.4);
-}
-
-.safe-area-guide.bottom {
-  bottom: 0;
-  height: var(--safe-bottom);
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(10,132,255,0.08),
-    rgba(10,132,255,0.08) 8px,
-    rgba(10,132,255,0.15) 8px,
-    rgba(10,132,255,0.15) 16px
-  );
-  border-top: 1px dashed rgba(10,132,255,0.4);
-}
-
-.safe-area-label {
-  position: absolute;
-  font-size: 9px;
-  color: rgba(10,132,255,0.8);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.safe-area-guide.top .safe-area-label {
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.safe-area-guide.bottom .safe-area-label {
-  top: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* =============================================
-   Preview iframe
-   ============================================= */
-#previewFrame {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-  background: #000;
-}
-
-/* =============================================
-   Scale wrapper for smaller screens
-   ============================================= */
-.scale-wrapper {
-  transform-origin: top center;
-  transition: transform 0.2s ease;
-}
-
-/* =============================================
-   Fullscreen mode
-   ============================================= */
-body.fullscreen .app-header,
-body.fullscreen .editor-panel,
-body.fullscreen .tab-bar {
-  display: none !important;
-}
-
-body.fullscreen .preview-panel {
-  opacity: 1;
-  pointer-events: auto;
-  padding: 0;
-  background: #000;
-}
-
-body.fullscreen .iphone-frame {
-  border-radius: 0;
-  box-shadow: none;
-  width: 100vw;
-  height: 100vh;
-  max-width: none;
-}
-
-body.fullscreen .iphone-bezel {
-  inset: 0;
-  border-radius: 0;
-}
-
-body.fullscreen .iphone-screen {
-  border-radius: 0;
-}
-
-body.fullscreen .dynamic-island,
-body.fullscreen .home-indicator,
-body.fullscreen .status-bar {
-  display: none;
-}
-
-.exit-fs-btn {
-  position: fixed;
-  top: var(--space-md);
-  right: var(--space-md);
-  z-index: 200;
-  background: rgba(30,30,30,0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 10px 18px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-body.fullscreen .exit-fs-btn {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* =============================================
-   Info overlay
-   ============================================= */
-.info-overlay {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.95);
-  background: var(--surface-elevated);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  padding: var(--space-xl);
-  max-width: 420px;
-  width: 90vw;
-  z-index: 300;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.25s ease;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
-}
-
-.info-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.info-overlay h2 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: var(--space-md);
-}
-
-.info-overlay p, .info-overlay li {
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--ink-secondary);
-}
-
-.info-overlay ul {
-  margin: var(--space-sm) 0 var(--space-md);
-  padding-left: 18px;
-}
-
-.info-overlay li {
-  margin-bottom: 4px;
-}
-
-.overlay-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 250;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.overlay-backdrop.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* =============================================
-   Debug toggle
-   ============================================= */
-.debug-bar {
-  position: fixed;
-  bottom: var(--space-lg);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: var(--space-sm);
-  background: rgba(20,20,20,0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 6px;
-  z-index: 150;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.preview-panel.active ~ .debug-bar,
-.preview-panel.active + .debug-bar {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.debug-bar.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.debug-btn {
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-secondary);
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.debug-btn.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.debug-btn:not(.active):active {
-  background: var(--surface-hover);
-  color: var(--ink);
-}
-
-/* =============================================
-   Device info badge
-   ============================================= */
-.device-badge {
-  position: absolute;
-  top: -36px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: var(--ink-tertiary);
-  white-space: nowrap;
-  letter-spacing: 0.3px;
-}
-
-/* =============================================
-   Toast
-   ============================================= */
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--surface-elevated);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  padding: 12px 24px;
-  border-radius: 14px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 400;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* =============================================
-   Responsive
-   ============================================= */
-@media (max-width: 480px) {
-  .app-header {
-    padding: var(--space-sm) var(--space-md);
-  }
-  .app-title {
-    font-size: 16px;
-  }
-  .editor-panel {
-    padding: var(--space-sm) var(--space-md);
-  }
-  .iphone-frame {
-    transform: scale(0.85);
-    transform-origin: top center;
-  }
-}
-
-@media (max-width: 380px) {
-  .iphone-frame {
-    transform: scale(0.75);
-  }
-}
-
-@media (max-height: 700px) {
-  .iphone-frame {
-    transform: scale(0.78);
-  }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-</style>
-</head>
-<body>
-
-<!-- Header -->
-<header class="app-header">
-  <div class="app-title">iPhone 17 Pro PWAプレビューア</div>
-  <nav class="tab-bar" id="tabBar">
-    <button class="tab-btn active" data-tab="editor" id="tabEditor">入力</button>
-    <button class="tab-btn" data-tab="preview" id="tabPreview">プレビュー</button>
-  </nav>
-  <div class="header-actions">
-    <button class="icon-btn" id="btnInfo" title="情報">&#9432;</button>
-    <button class="icon-btn" id="btnFullscreen" title="全画面">&#9974;</button>
-  </div>
-</header>
-
-<!-- Body -->
-<main class="app-body">
-
-  <!-- Editor Panel -->
-  <section class="editor-panel" id="editorPanel">
-    <div class="editor-toolbar">
-      <button class="btn btn-primary" id="btnPreview">&#9658; プレビュー</button>
-      <button class="btn btn-secondary" id="btnSample">サンプルHTML</button>
-      <button class="btn btn-danger" id="btnClear">クリア</button>
-    </div>
-    <div class="editor-wrap">
-      <textarea id="htmlInput" placeholder="&lt;!-- HTMLをここに貼り付けてください --&gt;
-&lt;!-- CSS・JavaScriptも同じく貼り付け可能です --&gt;
-&lt;style&gt;
-  /* PWA用のスタイル */
-&lt;/style&gt;
-&lt;script&gt;
-  // JavaScriptも動作します
-&lt;/script&gt;" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
-      <span class="editor-status" id="editorStatus">0 文字</span>
-    </div>
-  </section>
-
-  <!-- Preview Panel -->
-  <section class="preview-panel" id="previewPanel">
-    <div class="scale-wrapper" id="scaleWrapper">
-      <div class="device-badge">iPhone 17 Pro &middot; 402×873 pt &middot; 縦画面 &middot; Dynamic Island</div>
-      <div class="iphone-frame" id="iphoneFrame">
-        <div class="iphone-bezel">
-          <div class="iphone-screen">
-            <!-- Safe area guides -->
-            <div class="safe-area-guide top" id="safeTop">
-              <span class="safe-area-label">Safe Area Top (59px)</span>
-            </div>
-            <div class="safe-area-guide bottom" id="safeBottom">
-              <span class="safe-area-label">Safe Area Bottom (34px)</span>
-            </div>
-            <!-- Status bar -->
-            <div class="status-bar">
-              <span class="status-time" id="statusTime">9:41</span>
-              <div class="status-icons">
-                <div class="status-signal">
-                  <div class="signal-bar"></div>
-                  <div class="signal-bar"></div>
-                  <div class="signal-bar"></div>
-                  <div class="signal-bar"></div>
-                </div>
-                <svg class="status-wifi" viewBox="0 0 16 12" fill="none"><path d="M8 1.5c2.5 0 4.7.9 6.4 2.4l.8.8-1.4 1.4-.8-.8C12.1 4.2 10.2 3.5 8 3.5s-4.1.7-5.6 1.8l-.8.8L0 4.7l.8-.8C2.3 2.4 4.5 1.5 8 1.5zM3.3 7.1l1.4 1.4.8-.8c.7-.5 1.6-.8 2.5-.8s1.8.3 2.5.8l.8.8 1.4-1.4-.8-.8C10.6 5.7 9.4 5.2 8 5.2s-2.6.5-3.5 1.1l-.8.8zm2.9 2.9L8 11.8l1.8-1.8L8 8.2l-1.8 1.8z" fill="#fff"/></svg>
-                <div class="status-battery"><div class="battery-level"></div></div>
-              </div>
-            </div>
-            <!-- Dynamic Island -->
-            <div class="dynamic-island"></div>
-            <!-- Preview iframe -->
-            <iframe id="previewFrame" sandbox="allow-scripts allow-modals allow-popups allow-forms allow-same-origin allow-downloads" title="PWAプレビュー"></iframe>
-            <!-- Home indicator -->
-            <div class="home-indicator"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<!-- Debug bar -->
-<div class="debug-bar visible" id="debugBar">
-  <button class="debug-btn" id="btnSafeArea">Safe Area</button>
-  <button class="debug-btn" id="btnReload">&#8635; 再読込</button>
-</div>
-
-<!-- Exit fullscreen button -->
-<button class="exit-fs-btn" id="btnExitFs">&#10005; 全画面を終了</button>
-
-<!-- Info overlay -->
-<div class="overlay-backdrop" id="overlayBackdrop"></div>
-<div class="info-overlay" id="infoOverlay">
-  <h2>iPhone 17 Pro PWAプレビューア</h2>
-  <p>iPhone 17 ProでPWAを開いたときの見た目・操作感を確認できるテスト環境です。</p>
-  <ul>
-    <li>画面サイズ：402 × 873 pt（縦画面）</li>
-    <li>Safe Area Top：59px（Dynamic Island対応）</li>
-    <li>Safe Area Bottom：34px（ホームインジケータ）</li>
-    <li>env(safe-area-inset-*) をシミュレート</li>
-    <li>iframe sandbox でプレビューア本体を保護</li>
-    <li>LocalStorage で入力内容を自動保存</li>
-  </ul>
-  <p style="font-size:12px;color:var(--ink-tertiary);margin-top:8px;">HTML/CSS/JavaScriptを1ファイルにまとめて貼り付けて「プレビュー」をタップしてください。</p>
-  <button class="btn btn-primary" style="width:100%;margin-top:var(--space-md);" id="btnCloseInfo">閉じる</button>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<script>
-/* =============================================
-   State
-   ============================================= */
-const STORAGE_KEY = "pwa-previewer-html-v1";
-let safeAreaVisible = false;
-
-/* =============================================
-   Elements
-   ============================================= */
-const els = {
-  htmlInput: document.getElementById("htmlInput"),
-  editorPanel: document.getElementById("editorPanel"),
-  previewPanel: document.getElementById("previewPanel"),
-  previewFrame: document.getElementById("previewFrame"),
-  tabEditor: document.getElementById("tabEditor"),
-  tabPreview: document.getElementById("tabPreview"),
-  btnPreview: document.getElementById("btnPreview"),
-  btnSample: document.getElementById("btnSample"),
-  btnClear: document.getElementById("btnClear"),
-  btnInfo: document.getElementById("btnInfo"),
-  btnFullscreen: document.getElementById("btnFullscreen"),
-  btnExitFs: document.getElementById("btnExitFs"),
-  btnSafeArea: document.getElementById("btnSafeArea"),
-  btnReload: document.getElementById("btnReload"),
-  safeTop: document.getElementById("safeTop"),
-  safeBottom: document.getElementById("safeBottom"),
-  statusTime: document.getElementById("statusTime"),
-  editorStatus: document.getElementById("editorStatus"),
-  toast: document.getElementById("toast"),
-  infoOverlay: document.getElementById("infoOverlay"),
-  overlayBackdrop: document.getElementById("overlayBackdrop"),
-  btnCloseInfo: document.getElementById("btnCloseInfo"),
-  scaleWrapper: document.getElementById("scaleWrapper"),
-  debugBar: document.getElementById("debugBar"),
-};
-
-/* =============================================
-   Sample HTML
-   ============================================= */
-const SAMPLE_HTML = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
-<title>サンプルPWA</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #000;
-  color: #fff;
-  -webkit-font-smoothing: antialiased;
-}
-/* Safe Area対応 */
-.app {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-/* 固定ヘッダー */
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  padding: 14px 20px;
-  padding-top: max(14px, env(safe-area-inset-top));
-  background: rgba(20,20,20,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.header h1 { font-size: 18px; font-weight: 600; }
-.header-icon {
-  width: 32px; height: 32px;
-  background: #0A84FF;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-/* メインコンテンツ */
-.main {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 70px 20px 100px;
-}
-.card {
-  background: #141414;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 14px;
-}
-.card h2 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-.card p {
-  font-size: 15px;
-  line-height: 1.6;
-  color: rgba(255,255,255,0.6);
-}
-.row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.col {
-  flex: 1;
-  background: #141414;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
-  padding: 18px;
-  text-align: center;
-}
-.col .num {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0A84FF;
-}
-.col .label {
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
-  margin-top: 4px;
-}
-/* ボタン */
-.btn {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  background: #0A84FF;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  -webkit-tap-highlight-color: transparent;
-}
-.btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-secondary {
-  background: #1c1c1c;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-/* 入力 */
-.input {
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: #141414;
-  color: #fff;
-  font-size: 16px;
-  margin-bottom: 12px;
-  -webkit-appearance: none;
-}
-.input:focus { outline: none; border-color: #0A84FF; }
-/* リスト */
-.list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.list-item:last-child { border-bottom: none; }
-/* 下部タブバー */
-.tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(20,20,20,0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,0.08);
-  padding-bottom: env(safe-area-inset-bottom);
-  display: flex;
-  justify-content: space-around;
-  padding-top: 8px;
-}
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px 0 10px;
-  color: rgba(255,255,255,0.5);
-  font-size: 10px;
-  -webkit-tap-highlight-color: transparent;
-}
-.tab-item.active { color: #0A84FF; }
-.tab-icon { font-size: 22px; }
-/* Safe Area可視化 */
-.safe-demo {
-  background: rgba(10,132,255,0.08);
-  border: 1px dashed rgba(10,132,255,0.4);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  color: rgba(10,132,255,0.9);
-  text-align: center;
-}
-/* スクロールテスト */
-.scroll-box {
-  height: 200px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  background: #0d0d0d;
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
-}
-.scroll-item {
-  padding: 14px;
-  background: #1c1c1c;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  font-size: 15px;
+:root{
+  color-scheme:dark;
+  --bg:#000;
+  --surface:#0c0c0e;
+  --panel:#1c1c1e;
+  --panel2:#2c2c2e;
+  --text:#f5f5f7;
+  --muted:#98989f;
+  --accent:#0a84ff;
+  --danger:#ff453a;
+  --line:#38383c;
+  --radius:14px;
+  --radius-lg:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Hiragino Sans","Noto Sans JP","Helvetica Neue",sans-serif;overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{border:0;background:var(--panel2);border-radius:var(--radius);min-height:44px;padding:0 14px;font-weight:600;cursor:pointer}
+button.primary{background:var(--accent)}
+button.danger{background:var(--danger)}
+button:active{transform:scale(.97);opacity:.85}
+
+.app{height:100%;display:flex;flex-direction:column}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 14px;border-bottom:1px solid var(--line);flex:0 0 auto;
+  background:linear-gradient(180deg,rgba(28,28,30,.6),rgba(28,28,30,.2) 60%,rgba(0,0,0,0))
+}
+h1{font-size:18px;margin:0;font-weight:700}
+
+.layout{flex:1;display:flex;overflow:hidden}
+
+/* Sidebar */
+.sidebar{
+  width:270px;flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;overflow:hidden
+}
+.sidebar-header{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex:0 0 auto
+}
+.sidebar-search{
+  flex:1;min-width:0;height:36px;border:1px solid var(--line);border-radius:10px;
+  background:#111113;padding:0 10px;color:var(--text);outline:none;font-size:13px
+}
+.sidebar-search:focus{border-color:var(--accent)}
+.sidebar .new-btn{
+  min-height:36px;padding:0 12px;font-size:13px;white-space:nowrap;background:var(--accent)
+}
+.file-list{
+  flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px
+}
+.file-item{
+  position:relative;background:var(--panel);border:1px solid transparent;border-radius:var(--radius);
+  padding:10px 12px;cursor:pointer;transition:background .15s,border-color .15s
+}
+.file-item:hover,.file-item.active{background:var(--panel2)}
+.file-item.active{border-color:var(--accent)}
+.file-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:22px}
+.file-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.file-delete{
+  position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:0;
+  background:var(--danger);color:#fff;font-size:12px;padding:0;display:none;align-items:center;
+  justify-content:center;min-height:auto;cursor:pointer
+}
+.file-item:hover .file-delete,.file-item.active .file-delete{display:flex}
+.empty-state{text-align:center;color:var(--muted);padding:30px 14px;font-size:13px}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.main-toolbar{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);
+  flex:0 0 auto;flex-wrap:wrap
+}
+.file-name-input{
+  flex:1 1 160px;min-width:0;background:transparent;border:1px solid transparent;border-radius:10px;
+  padding:6px 10px;font-size:16px;font-weight:700;color:var(--text);outline:none
+}
+.file-name-input:focus{background:#111113;border-color:var(--accent)}
+.seg-control{
+  display:inline-flex;background:var(--panel);border-radius:10px;padding:2px;flex:0 0 auto
+}
+.seg-btn{
+  border:0;background:transparent;color:var(--muted);padding:6px 14px;border-radius:8px;
+  font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+.seg-btn.active{background:#3a3a3c;color:#fff}
+.main-actions{display:flex;gap:6px;margin-left:auto;flex:0 0 auto}
+.main-actions button{min-height:36px;padding:0 12px;font-size:13px}
+
+/* Tab panels */
+.main-body{flex:1;overflow:hidden;position:relative}
+.tab-panel{
+  position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden
+}
+.tab-panel.active{display:flex}
+
+/* Editor */
+.editor-tools{
+  display:flex;align-items:center;gap:8px;padding:10px 14px 0;flex:0 0 auto;flex-wrap:wrap
+}
+#charCount{font-size:13px;color:var(--muted);white-space:nowrap;min-width:70px}
+.search-box{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
+.search-box input{
+  flex:1;height:36px;border:1px solid var(--line);border-radius:10px;background:#111113;
+  color:var(--text);padding:0 10px;outline:none;font-size:13px;min-width:0
+}
+.search-box input:focus{border-color:var(--accent)}
+#searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
+.editor-tools button{min-height:36px;padding:0 12px;font-size:13px}
+.status{font-size:12px;color:var(--muted);padding:2px 14px 6px;min-height:18px;flex:0 0 auto}
+textarea{
+  flex:1;width:100%;resize:none;background:#111113;color:var(--text);border:1px solid var(--line);
+  border-radius:var(--radius-lg);padding:14px;outline:none;
+  font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;margin:0 14px 14px;width:calc(100% - 28px)
+}
+textarea:focus{border-color:var(--accent)}
+
+/* Preview */
+.preview-toolbar{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;flex:0 0 auto
+}
+.preview-stage{
+  flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px 14px 20px
+}
+.device-scaler{
+  transform-origin:top center;display:inline-block;line-height:0;position:relative
+}
+
+/* iPhone 17 Pro */
+.iphone-device{
+  position:relative;width:413px;height:872px;background:#000;border-radius:48px;
+  padding:10px;box-shadow:0 24px 70px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,255,255,.06)
+}
+.iphone-screen-wrap{width:100%;height:100%;background:#000;border-radius:38px;overflow:hidden;position:relative}
+.iphone-device iframe{width:100%;height:100%;border:0;background:#000}
+.island{
+  position:absolute;z-index:10;top:11px;left:50%;transform:translateX(-50%);
+  width:126px;height:37px;background:#000;border-radius:22px;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04)
+}
+.homebar{
+  position:absolute;z-index:10;bottom:10px;left:50%;transform:translateX(-50%);
+  width:125px;height:5px;border-radius:5px;background:#fff;pointer-events:none;opacity:.92
+}
+
+/* iPad 7th gen landscape */
+.ipad-device{
+  position:relative;width:1128px;height:858px;background:#000;border-radius:32px;
+  padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,255,255,.06)
+}
+.ipad-screen-wrap{width:100%;height:100%;background:#000;border-radius:6px;overflow:hidden;position:relative}
+.ipad-device iframe{width:100%;height:100%;border:0;background:#000}
+.ipad-camera{
+  position:absolute;z-index:10;top:11px;left:50%;transform:translateX(-50%);
+  width:9px;height:9px;background:#1a1a1a;border:1px solid #333;border-radius:50%;pointer-events:none
+}
+.ipad-home{
+  position:absolute;z-index:10;bottom:11px;left:50%;transform:translateX(-50%);
+  width:36px;height:36px;border:2px solid #333;border-radius:50%;pointer-events:none
+}
+
+.phone-label{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+
+/* Fullscreen */
+.fullscreen{
+  position:fixed;inset:0;z-index:100;background:#000;display:none;flex-direction:column
+}
+.fullscreen.show{display:flex}
+.fullscreen iframe{flex:1;width:100%;border:0;background:#000}
+.fullscreen .exit{
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
+  width:44px;height:44px;padding:0;border-radius:50%;background:rgba(60,60,65,.6);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:20px
+}
+.fullscreen .fs-label{
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));left:14px;
+  background:rgba(60,60,65,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:#fff;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600
+}
+
+/* Responsive */
+@media (max-width:800px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;height:auto;max-height:38vh;border-right:none;border-bottom:1px solid var(--line)}
+  .file-list{flex-direction:row;overflow-x:auto;gap:8px;padding:10px}
+  .file-item{flex:0 0 auto;width:160px}
+  .main-actions{margin-left:0}
+  .main-toolbar{padding:8px}
+  textarea{margin:0 8px 8px;width:calc(100% - 16px)}
+}
+@media (max-width:560px){
+  h1{font-size:16px}
+  .seg-btn{padding:6px 10px;font-size:12px}
+  .main-actions button{padding:0 10px;font-size:12px}
 }
 </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- 固定ヘッダー -->
-  <header class="header">
-    <h1>サンプルPWA</h1>
-    <div class="header-icon">&#9733;</div>
+  <header>
+    <h1>Multi PWA Previewer</h1>
+    <span style="font-size:12px;color:var(--muted)">iPhone 17 Pro / iPad 第7世代</span>
   </header>
-
-  <!-- メイン -->
-  <main class="main">
-
-    <div class="safe-demo">
-      env(safe-area-inset-top) / env(safe-area-inset-bottom) が適用されています
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <div class="num">128</div>
-        <div class="label">アイテム</div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <input id="listSearch" class="sidebar-search" type="search" placeholder="ファイルを検索" autocomplete="off" autocorrect="off">
+        <button id="addFileBtn" class="new-btn">＋ 新規</button>
       </div>
-      <div class="col">
-        <div class="num">24</div>
-        <div class="label">通知</div>
+      <div id="fileList" class="file-list"></div>
+    </aside>
+
+    <main class="main">
+      <div class="main-toolbar">
+        <input id="fileName" class="file-name-input" type="text" placeholder="ファイル名" autocomplete="off">
+        <div class="seg-control">
+          <button class="seg-btn active" data-tab="edit">編集</button>
+          <button class="seg-btn" data-tab="iphone">iPhone</button>
+          <button class="seg-btn" data-tab="ipad">iPad</button>
+        </div>
+        <div class="main-actions">
+          <button id="dupFileBtn">複製</button>
+          <button id="delFileBtn" class="danger">削除</button>
+        </div>
       </div>
-      <div class="col">
-        <div class="num">98%</div>
-        <div class="label">進捗</div>
+
+      <div class="main-body">
+        <!-- Edit -->
+        <div id="editPanel" class="tab-panel active">
+          <div class="editor-tools">
+            <span id="charCount">0文字</span>
+            <div class="search-box">
+              <input id="search" type="search" placeholder="検索" autocomplete="off" autocorrect="off">
+              <span id="searchResult"></span>
+            </div>
+            <button id="clearBtn">クリア</button>
+            <button id="updatePreviewBtn" class="primary">プレビュー更新</button>
+          </div>
+          <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。タブ切り替えで即時プレビューされます。</div>
+          <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
+        </div>
+
+        <!-- iPhone -->
+        <div id="iphonePanel" class="tab-panel">
+          <div class="preview-toolbar">
+            <button id="refreshIphone">更新</button>
+            <button id="fullIphone" class="primary">全画面</button>
+          </div>
+          <div class="preview-stage">
+            <div>
+              <div class="device-scaler" id="iphoneScaler">
+                <div class="iphone-device">
+                  <div class="island"></div>
+                  <div class="iphone-screen-wrap">
+                    <iframe id="iphoneFrame" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+                  </div>
+                  <div class="homebar"></div>
+                </div>
+              </div>
+              <div class="phone-label">iPhone 17 Pro（393×852）</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- iPad -->
+        <div id="ipadPanel" class="tab-panel">
+          <div class="preview-toolbar">
+            <button id="refreshIpad">更新</button>
+            <button id="fullIpad" class="primary">全画面</button>
+          </div>
+          <div class="preview-stage">
+            <div>
+              <div class="device-scaler" id="ipadScaler">
+                <div class="ipad-device">
+                  <div class="ipad-camera"></div>
+                  <div class="ipad-screen-wrap">
+                    <iframe id="ipadFrame" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+                  </div>
+                  <div class="ipad-home"></div>
+                </div>
+              </div>
+              <div class="phone-label">iPad 第7世代・横固定（1080×810）</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
+  </div>
+</div>
 
-    <div class="card">
-      <h2>タップ・スワイプ・長押し</h2>
-      <p>このプレビュー内では実際にタップ・スクロール・入力が動作します。下部タブバーはSafe Areaを考慮して配置されています。</p>
-    </div>
-
-    <button class="btn" id="demoBtn">タップテスト</button>
-    <button class="btn btn-secondary" id="demoBtn2">長押しテスト</button>
-
-    <input type="text" class="input" placeholder="テキスト入力テスト">
-
-    <div class="card">
-      <h2>スクロールテスト</h2>
-      <div class="scroll-box" id="scrollBox">
-        <div class="scroll-item">スクロールアイテム 1</div>
-        <div class="scroll-item">スクロールアイテム 2</div>
-        <div class="scroll-item">スクロールアイテム 3</div>
-        <div class="scroll-item">スクロールアイテム 4</div>
-        <div class="scroll-item">スクロールアイテム 5</div>
-        <div class="scroll-item">スクロールアイテム 6</div>
-        <div class="scroll-item">スクロールアイテム 7</div>
-        <div class="scroll-item">スクロールアイテム 8</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>100dvh vs 100vh</h2>
-      <p>このページは min-height: 100dvh を使用しています。Safariのアドレスバーによるレイアウト崩れを防ぎます。</p>
-    </div>
-
-    <div class="card">
-      <div class="list-item">
-        <span>ダークモード</span>
-        <span style="color:#30D158;">ON</span>
-      </div>
-      <div class="list-item">
-        <span>Safe Area</span>
-        <span style="color:#30D158;">適用済み</span>
-      </div>
-      <div class="list-item">
-        <span>Viewport Fit</span>
-        <span style="color:#30D158;">Cover</span>
-      </div>
-    </div>
-
-    <div style="height:40px;"></div>
-  </main>
-
-  <!-- 下部タブバー -->
-  <nav class="tabbar">
-    <div class="tab-item active">
-      <span class="tab-icon">&#8962;</span>
-      <span>ホーム</span>
-    </div>
-    <div class="tab-item">
-      <span class="tab-icon">&#9733;</span>
-      <span>お気に入り</span>
-    </div>
-    <div class="tab-item">
-      <span class="tab-icon">&#9998;</span>
-      <span>メモ</span>
-    </div>
-    <div class="tab-item">
-      <span class="tab-icon">&#9881;</span>
-      <span>設定</span>
-    </div>
-  </nav>
-
+<div id="fullscreen" class="fullscreen">
+  <div class="fs-label" id="fsLabel">プレビュー</div>
+  <button class="exit" id="exitFull">×</button>
+  <iframe id="fullFrame" title="Fullscreen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
 </div>
 
 <script>
-// タップテスト
-let tapCount = 0;
-document.getElementById("demoBtn").addEventListener("click", function() {
-  tapCount++;
-  this.textContent = "タップ " + tapCount + " 回";
-});
+const STORAGE_KEY='multi-pwa-previewer-v1';
 
-// 長押しテスト
-let pressTimer;
-var btn2 = document.getElementById("demoBtn2");
-btn2.addEventListener("touchstart", function(e) {
-  pressTimer = setTimeout(() => {
-    this.textContent = "長押し検出！";
-    this.style.background = "#30D158";
-  }, 500);
-});
-btn2.addEventListener("touchend", function() {
-  clearTimeout(pressTimer);
-});
-btn2.addEventListener("touchcancel", function() {
-  clearTimeout(pressTimer);
-});
-
-// タブ切り替え
-document.querySelectorAll(".tab-item").forEach(function(tab) {
-  tab.addEventListener("click", function() {
-    document.querySelectorAll(".tab-item").forEach(function(t) { t.classList.remove("active"); });
-    this.classList.add("active");
-  });
-});
-` + "<" + "/script>
-</body>
-</html>";
-
-/* =============================================
-   Safe Area simulation CSS for iframe
-   ============================================= */
-const SAFE_AREA_CSS = `
-:root {
-  --sat: 59px;
-  --sab: 34px;
-  --sar: 0px;
-  --sal: 0px;
-}
-@supports (padding-top: env(safe-area-inset-top)) {
-  :root {
-    --sat: env(safe-area-inset-top);
-    --sab: env(safe-area-inset-bottom);
-    --sar: env(safe-area-inset-right);
-    --sal: env(safe-area-inset-left);
-  }
-}
-`;
-
-/* =============================================
-   Utilities
-   ============================================= */
-function showToast(msg) {
-  els.toast.textContent = msg;
-  els.toast.classList.add("show");
-  setTimeout(function() { els.toast.classList.remove("show"); }, 2000);
-}
-
-function updateStatus() {
-  var len = els.htmlInput.value.length;
-  els.editorStatus.textContent = len + " 文字";
-}
-
-function updateTime() {
-  var now = new Date();
-  var h = String(now.getHours()).padStart(2, "0");
-  var m = String(now.getMinutes()).padStart(2, "0");
-  els.statusTime.textContent = h + ":" + m;
-}
-
-/* =============================================
-   LocalStorage
-   ============================================= */
-function saveHTML() {
-  var val = els.htmlInput.value;
-  if (val.trim()) {
-    localStorage.setItem(STORAGE_KEY, val);
-  }
-}
-
-function loadHTML() {
-  var saved = localStorage.getItem(STORAGE_KEY);
-  if (saved && saved.trim()) {
-    els.htmlInput.value = saved;
-    updateStatus();
-    return true;
-  }
-  return false;
-}
-
-/* =============================================
-   Preview
-   ============================================= */
-function runPreview() {
-  var code = els.htmlInput.value.trim();
-  if (!code) {
-    showToast("HTMLを入力してください");
-    return;
-  }
-
-  saveHTML();
-
-  var doc = code;
-
-  if (doc.includes("<html") || doc.includes("<!DOCTYPE")) {
-    var safeStyleTag = "<style>/* PWA Previewer Safe Area */\n" + SAFE_AREA_CSS + "\n</style>";
-    if (doc.includes("</head>")) {
-      doc = doc.replace("</head>", safeStyleTag + "\n</head>");
-    } else if (doc.includes("<head>")) {
-      doc = doc.replace("<head>", "<head>\n" + safeStyleTag);
-    } else {
-      doc = "<head>\n" + safeStyleTag + "\n</head>\n" + doc;
-    }
-  } else {
-    doc = `<!DOCTYPE html>
+// Default HTML template
+function getDefaultHtml(){
+  return `<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
-<style>` + SAFE_AREA_CSS + `</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample</title>
+<style>
+body{
+  background:#000;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  display:grid;
+  place-items:center;
+  height:100vh;
+  margin:0;
+  padding:20px;
+  text-align:center
+}
+h1{font-size:28px;margin:0 0 8px}
+p{color:#aaa;margin:0}
+</style>
 </head>
 <body>
-` + doc + `
+<h1>Hello PWA</h1>
+<p>iPhone / iPad で確認してください</p>
 </body>
 </html>`;
-  }
+}
 
-  if (!doc.includes("viewport-fit=cover")) {
-    doc = doc.replace(
-      /name="viewport" content="([^"]+)"/,
-      function(m, p1) {
-        if (p1.includes("viewport-fit")) return m;
-        return 'name="viewport" content="' + p1 + ', viewport-fit=cover"';
+// Data
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {activeFileId:null,files:[]};
+}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+let data=loadData();
+let currentTab='edit';
+let debounceTimer=null;
+
+// Elements
+const els={
+  fileName:document.getElementById('fileName'),
+  fileList:document.getElementById('fileList'),
+  source:document.getElementById('source'),
+  charCount:document.getElementById('charCount'),
+  search:document.getElementById('search'),
+  searchResult:document.getElementById('searchResult'),
+  listSearch:document.getElementById('listSearch'),
+  iphoneFrame:document.getElementById('iphoneFrame'),
+  ipadFrame:document.getElementById('ipadFrame'),
+  fullFrame:document.getElementById('fullFrame'),
+  fullscreen:document.getElementById('fullscreen'),
+  fsLabel:document.getElementById('fsLabel'),
+  tabPanels:{
+    edit:document.getElementById('editPanel'),
+    iphone:document.getElementById('iphonePanel'),
+    ipad:document.getElementById('ipadPanel')
+  },
+  tabButtons:document.querySelectorAll('[data-tab]')
+};
+
+// Init
+function init(){
+  if(!data.files.length){
+    data.files.push({id:'f_'+Date.now(),name:'サンプル',html:getDefaultHtml(),updated:Date.now()});
+    data.activeFileId=data.files[0].id;
+    saveData();
+  }
+  if(!data.activeFileId||!data.files.find(f=>f.id===data.activeFileId)){
+    data.activeFileId=data.files[0].id;
+    saveData();
+  }
+  renderFileList();
+  renderMain();
+  setupEvents();
+  window.addEventListener('resize',fitScales);
+  window.addEventListener('beforeunload',saveData);
+}
+
+// CRUD
+function addFile(name,html){
+  const id='f_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const file={id,name,html,updated:Date.now()};
+  data.files.push(file);
+  data.activeFileId=id;
+  saveData();
+  renderFileList();
+  renderMain();
+}
+function duplicateFile(id){
+  const file=data.files.find(f=>f.id===id);
+  if(!file)return;
+  addFile(file.name+' のコピー',file.html);
+}
+function deleteFile(id){
+  if(!confirm('このファイルを削除しますか？'))return;
+  data.files=data.files.filter(f=>f.id!==id);
+  if(data.activeFileId===id){
+    data.activeFileId=data.files.length?data.files[0].id:null;
+  }
+  saveData();
+  renderFileList();
+  renderMain();
+}
+function updateActiveFile(updates){
+  const file=data.files.find(f=>f.id===data.activeFileId);
+  if(!file)return;
+  Object.assign(file,updates,{updated:Date.now()});
+  saveData();
+  renderFileList();
+}
+function getActiveFile(){
+  return data.files.find(f=>f.id===data.activeFileId)||null;
+}
+
+// Rendering
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function renderFileList(){
+  const q=els.listSearch.value.trim().toLowerCase();
+  els.fileList.innerHTML='';
+  const items=data.files
+    .filter(f=>f.name.toLowerCase().includes(q))
+    .sort((a,b)=>b.updated-a.updated);
+  if(!items.length){
+    els.fileList.innerHTML='<div class="empty-state">ファイルがありません。<br>「＋ 新規」で作成してください。</div>';
+    return;
+  }
+  items.forEach(file=>{
+    const div=document.createElement('div');
+    div.className='file-item'+(file.id===data.activeFileId?' active':'');
+    div.innerHTML=
+      '<div class="file-name">'+escapeHtml(file.name)+'</div>'+
+      '<div class="file-meta">'+file.html.length.toLocaleString()+'文字 · '+formatDate(file.updated)+'</div>'+
+      '<button class="file-delete" aria-label="削除">×</button>';
+    div.addEventListener('click',(e)=>{
+      if(e.target.closest('.file-delete')){
+        e.stopPropagation();
+        deleteFile(file.id);
+      }else{
+        selectFile(file.id);
       }
-    );
-  }
-
-  var blob = new Blob([doc], { type: "text/html" });
-  var url = URL.createObjectURL(blob);
-  els.previewFrame.src = url;
-
-  switchTab("preview");
-  showToast("プレビューを更新しました");
+    });
+    els.fileList.appendChild(div);
+  });
 }
-
-/* =============================================
-   Tab switching
-   ============================================= */
-function switchTab(tab) {
-  if (tab === "editor") {
-    els.editorPanel.classList.remove("hidden");
-    els.previewPanel.classList.remove("active");
-    els.tabEditor.classList.add("active");
-    els.tabPreview.classList.remove("active");
-    els.debugBar.classList.remove("visible");
-  } else {
-    els.editorPanel.classList.add("hidden");
-    els.previewPanel.classList.add("active");
-    els.tabEditor.classList.remove("active");
-    els.tabPreview.classList.add("active");
-    els.debugBar.classList.add("visible");
+function renderMain(){
+  const file=getActiveFile();
+  if(!file){
+    els.fileName.value='';
+    els.source.value='';
+    updateCount();
+    Object.values(els.tabPanels).forEach(p=>p.classList.remove('active'));
+    els.tabPanels.edit.classList.add('active');
+    currentTab='edit';
+    syncTabButtons();
+    return;
   }
-}
-
-/* =============================================
-   Scale calculation
-   ============================================= */
-function updateScale() {
-  var frameW = 402;
-  var frameH = 873 + 60;
-  var availW = window.innerWidth - 32;
-  var availH = window.innerHeight - (document.body.classList.contains("fullscreen") ? 0 : 140);
-
-  var scaleX = availW / frameW;
-  var scaleY = availH / frameH;
-  var scale = Math.min(scaleX, scaleY, 1);
-
-  if (!document.body.classList.contains("fullscreen")) {
-    els.scaleWrapper.style.transform = "scale(" + scale + ")";
-  } else {
-    els.scaleWrapper.style.transform = "none";
+  els.fileName.value=file.name;
+  els.source.value=file.html;
+  updateCount();
+  syncTabButtons();
+  Object.entries(els.tabPanels).forEach(([key,panel])=>{
+    panel.classList.toggle('active',key===currentTab);
+  });
+  fitScales();
+  if(currentTab!=='edit'){
+    updatePreview(currentTab);
   }
 }
-
-/* =============================================
-   Event listeners
-   ============================================= */
-
-// Tabs
-els.tabEditor.addEventListener("click", function() { switchTab("editor"); });
-els.tabPreview.addEventListener("click", function() { switchTab("preview"); });
-
-// Buttons
-els.btnPreview.addEventListener("click", runPreview);
-els.btnSample.addEventListener("click", function() {
-  if (els.htmlInput.value.trim() && !confirm("現在の内容を上書きしますか？")) return;
-  els.htmlInput.value = SAMPLE_HTML;
-  updateStatus();
-  saveHTML();
-  showToast("サンプルを読み込みました");
-});
-els.btnClear.addEventListener("click", function() {
-  if (!els.htmlInput.value.trim()) return;
-  if (confirm("入力内容をクリアしますか？")) {
-    els.htmlInput.value = "";
-    updateStatus();
-    localStorage.removeItem(STORAGE_KEY);
-    showToast("クリアしました");
-  }
-});
-
-// Info overlay
-els.btnInfo.addEventListener("click", function() {
-  els.infoOverlay.classList.add("show");
-  els.overlayBackdrop.classList.add("show");
-});
-function closeInfo() {
-  els.infoOverlay.classList.remove("show");
-  els.overlayBackdrop.classList.remove("show");
+function syncTabButtons(){
+  els.tabButtons.forEach(btn=>btn.classList.toggle('active',btn.dataset.tab===currentTab));
 }
-els.btnCloseInfo.addEventListener("click", closeInfo);
-els.overlayBackdrop.addEventListener("click", closeInfo);
+function selectFile(id){
+  data.activeFileId=id;
+  saveData();
+  renderFileList();
+  renderMain();
+}
+function switchTab(tab){
+  currentTab=tab;
+  renderMain();
+}
+function updatePreview(device){
+  const file=getActiveFile();
+  if(!file)return;
+  if(device==='iphone') els.iphoneFrame.srcdoc=file.html;
+  if(device==='ipad') els.ipadFrame.srcdoc=file.html;
+}
+function updateCount(){
+  els.charCount.textContent=els.source.value.length.toLocaleString()+'文字';
+}
 
-// Fullscreen
-els.btnFullscreen.addEventListener("click", function() {
-  document.body.classList.add("fullscreen");
-  updateScale();
-});
-els.btnExitFs.addEventListener("click", function() {
-  document.body.classList.remove("fullscreen");
-  updateScale();
-});
+// Scale devices to fit
+function fitScales(){
+  requestAnimationFrame(()=>{
+    const iphonePanel=els.tabPanels.iphone;
+    const iphoneScaler=document.getElementById('iphoneScaler');
+    if(iphonePanel&&iphonePanel.classList.contains('active')&&iphoneScaler){
+      const pw=iphonePanel.clientWidth-28;
+      const scale=Math.min(1,Math.max(0.35,pw/413));
+      iphoneScaler.style.transform='scale('+scale+')';
+      iphoneScaler.parentElement.style.height=(872*scale+40)+'px';
+    }
+    const ipadPanel=els.tabPanels.ipad;
+    const ipadScaler=document.getElementById('ipadScaler');
+    if(ipadPanel&&ipadPanel.classList.contains('active')&&ipadScaler){
+      const pw=ipadPanel.clientWidth-28;
+      const scale=Math.min(1,Math.max(0.25,pw/1128));
+      ipadScaler.style.transform='scale('+scale+')';
+      ipadScaler.parentElement.style.height=(858*scale+40)+'px';
+    }
+  });
+}
 
-// Safe area toggle
-els.btnSafeArea.addEventListener("click", function() {
-  safeAreaVisible = !safeAreaVisible;
-  els.safeTop.classList.toggle("show", safeAreaVisible);
-  els.safeBottom.classList.toggle("show", safeAreaVisible);
-  els.btnSafeArea.classList.toggle("active", safeAreaVisible);
-  showToast(safeAreaVisible ? "Safe Area 表示" : "Safe Area 非表示");
-});
+// Events
+function setupEvents(){
+  // Tabs
+  els.tabButtons.forEach(btn=>{
+    btn.addEventListener('click',()=>switchTab(btn.dataset.tab));
+  });
 
-// Reload
-els.btnReload.addEventListener("click", function() {
-  els.previewFrame.contentWindow.location.reload();
-  showToast("再読込しました");
-});
+  // File name
+  els.fileName.addEventListener('input',()=>{
+    updateActiveFile({name:els.fileName.value});
+  });
 
-// Input events
-els.htmlInput.addEventListener("input", function() {
-  updateStatus();
-  saveHTML();
-});
+  // Textarea
+  els.source.addEventListener('input',()=>{
+    updateCount();
+    updateActiveFile({html:els.source.value});
+    clearTimeout(debounceTimer);
+    debounceTimer=setTimeout(()=>{
+      if(currentTab!=='edit') updatePreview(currentTab);
+    },500);
+  });
 
-// Keyboard shortcuts
-els.htmlInput.addEventListener("keydown", function(e) {
-  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-    e.preventDefault();
-    runPreview();
-  }
-});
+  // Search in editor
+  els.search.addEventListener('input',()=>{
+    const q=els.search.value;
+    if(!q){els.searchResult.textContent='';return}
+    let n=0,pos=0;
+    while((pos=els.source.value.indexOf(q,pos))!==-1){n++;pos+=Math.max(q.length,1)}
+    els.searchResult.textContent=n+'件';
+  });
 
-// Window resize
-window.addEventListener("resize", updateScale);
+  // Clear
+  document.getElementById('clearBtn').addEventListener('click',()=>{
+    els.source.value='';
+    updateActiveFile({html:''});
+    updateCount();
+    els.search.value='';
+    els.searchResult.textContent='';
+    els.source.focus();
+  });
 
-// Time update
-setInterval(updateTime, 1000);
-updateTime();
+  // Update preview manually
+  document.getElementById('updatePreviewBtn').addEventListener('click',()=>{
+    if(currentTab!=='edit') updatePreview(currentTab);
+    else switchTab('iphone');
+  });
 
-/* =============================================
-   Init
-   ============================================= */
-function init() {
-  if (!loadHTML()) {
-    setTimeout(function() {
-      els.infoOverlay.classList.add("show");
-      els.overlayBackdrop.classList.add("show");
-    }, 300);
-  }
-  updateStatus();
-  updateScale();
+  // Add / Dup / Del
+  document.getElementById('addFileBtn').addEventListener('click',()=>{
+    const name=prompt('新規ファイルの名前','新規ファイル');
+    if(!name)return;
+    addFile(name.trim()||'新規ファイル',getDefaultHtml());
+  });
+  document.getElementById('dupFileBtn').addEventListener('click',()=>{
+    duplicateFile(data.activeFileId);
+  });
+  document.getElementById('delFileBtn').addEventListener('click',()=>{
+    deleteFile(data.activeFileId);
+  });
+
+  // Refresh previews
+  document.getElementById('refreshIphone').addEventListener('click',()=>updatePreview('iphone'));
+  document.getElementById('refreshIpad').addEventListener('click',()=>updatePreview('ipad'));
+
+  // Fullscreen
+  document.getElementById('fullIphone').addEventListener('click',()=>openFullscreen('iPhone 17 Pro'));
+  document.getElementById('fullIpad').addEventListener('click',()=>openFullscreen('iPad 第7世代'));
+  document.getElementById('exitFull').addEventListener('click',closeFullscreen);
+
+  // List search
+  els.listSearch.addEventListener('input',renderFileList);
+}
+
+function openFullscreen(label){
+  const file=getActiveFile();
+  if(!file)return;
+  els.fsLabel.textContent=label+' · '+file.name;
+  els.fullFrame.srcdoc=file.html;
+  els.fullscreen.classList.add('show');
+}
+function closeFullscreen(){
+  els.fullscreen.classList.remove('show');
+  els.fullFrame.srcdoc='';
+}
+
+function formatDate(ts){
+  const d=new Date(ts);
+  const mo=(d.getMonth()+1).toString().padStart(2,'0');
+  const da=d.getDate().toString().padStart(2,'0');
+  const h=d.getHours().toString().padStart(2,'0');
+  const m=d.getMinutes().toString().padStart(2,'0');
+  return mo+'/'+da+' '+h+':'+m;
 }
 
 init();
