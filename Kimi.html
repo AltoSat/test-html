@@ -3,198 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>スマート通話使い分けガイド＆料金比較</title>
+  <title>通話料金一覧</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-    body { font-family: 'Noto Sans JP', sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap');
+    body { 
+      font-family: 'Noto Sans JP', sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* A5 印刷用スタイル */
+    @page {
+      size: A5 portrait;
+      margin: 6mm;
+    }
+
+    @media print {
+      body {
+        background-color: white !important;
+        padding: 0 !important;
+      }
+      .a5-container {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+      }
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen py-6 px-4">
+<body class="bg-slate-200 text-slate-900 min-h-screen p-2 sm:p-4 flex justify-center items-start">
 
-  <div class="max-w-4xl mx-auto space-y-6">
+  <!-- A5用紙サイズのコンテナ -->
+  <div class="a5-container bg-white w-full max-w-[148mm] min-h-[205mm] p-3.5 sm:p-4 rounded-xl shadow-lg border border-slate-300 space-y-3">
 
-    <!-- Header -->
-    <div class="text-center space-y-2 bg-gradient-to-r from-slate-900 to-indigo-950 text-white py-8 px-4 rounded-2xl shadow-md">
-      <span class="bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">通話コスト削減術</span>
-      <h1 class="text-2xl sm:text-3xl font-black mt-2">賢い通話の使い分け＆料金比較</h1>
-      <p class="text-slate-300 text-xs sm:text-sm">【優先順位】に沿って選ぶだけで、毎月の通話料を最少に抑えられます</p>
+    <!-- ヘッダー -->
+    <div class="bg-slate-900 text-white p-2.5 rounded-lg text-center">
+      <h1 class="text-xl sm:text-2xl font-black tracking-wider">通話料金一覧</h1>
     </div>
 
-    <!-- 優先順位フローカード -->
-    <div class="space-y-4">
-
-      <!-- 第一優先：無料通話 -->
-      <div class="bg-white rounded-2xl shadow-sm border-2 border-emerald-500 overflow-hidden">
-        <div class="bg-emerald-600 text-white p-4 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center space-x-2">
-            <span class="bg-white text-emerald-700 font-extrabold text-xs px-2.5 py-1 rounded-full">第 1 優先</span>
-            <h2 class="font-bold text-lg">ネット通話（LINE / FaceTime）</h2>
-          </div>
-          <span class="text-2xl font-black bg-emerald-700 text-emerald-100 px-3 py-0.5 rounded-lg">3分：0 円</span>
+    <!-- 第一優先：無料通話 -->
+    <div class="border-2 border-emerald-500 rounded-lg overflow-hidden bg-emerald-50/30">
+      <div class="bg-emerald-600 text-white px-3 py-2 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="bg-white text-emerald-800 font-black text-xs px-2 py-0.5 rounded">第1優先</span>
+          <h2 class="font-bold text-base sm:text-lg">LINE / FaceTime</h2>
         </div>
-
-        <div class="p-5 space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-              <div class="font-bold text-emerald-900 flex items-center gap-2 mb-1">
-                <span class="text-lg">💬</span> LINE 通話
-              </div>
-              <p class="text-xs text-emerald-800">スマホ・PC同士。お互いがLINE友達であれば最優先で利用。</p>
-            </div>
-
-            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-              <div class="font-bold text-emerald-900 flex items-center gap-2 mb-1">
-                <span class="text-lg">📱</span> FaceTime（ビデオ/音声通話）
-              </div>
-              <p class="text-xs text-emerald-800">Apple製品同士（iPhone, iPad, Mac）なら高音質で完全無料。</p>
-            </div>
-          </div>
-
-          <!-- FaceTime判定マニュアル -->
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2 mb-2">
-              <span class="text-indigo-600">💡</span> 相手がFaceTimeを利用できるか判定する方法
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div class="bg-white p-3 rounded-lg border border-slate-200">
-                <span class="font-bold text-indigo-600 block mb-1">1. 連絡先アプリで確認</span>
-                連絡先を開き、相手のカード内に<strong class="text-slate-800">「FaceTime」のビデオ／音声アイコン</strong>が表示されていればiPhoneユーザーです。
-              </div>
-              <div class="bg-white p-3 rounded-lg border border-slate-200">
-                <span class="font-bold text-indigo-600 block mb-1">2. メッセージ(iMessage)の色</span>
-                iMessage送信画面で相手の名前・吹き出しが<strong class="text-blue-600">青色</strong>ならApple製品（緑色は通常のSMS/Android）。
-              </div>
-              <div class="bg-white p-3 rounded-lg border border-slate-200">
-                <span class="font-bold text-indigo-600 block mb-1">3. リンク共有（Android宛て）</span>
-                iPhone側から「リンクを作成」してURLをLINE等で共有すれば、<strong class="text-slate-800">AndroidやWindowsの相手ともFaceTimeが可能</strong>です。
-              </div>
-            </div>
-          </div>
-        </div>
+        <span class="bg-white text-emerald-900 font-black text-sm px-2.5 py-0.5 rounded-full shadow-sm">3分：0円</span>
       </div>
 
-      <!-- 第二優先：固定電話→固定電話 -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="bg-blue-700 text-white p-4 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center space-x-2">
-            <span class="bg-white text-blue-800 font-extrabold text-xs px-2.5 py-1 rounded-full">第 2 優先</span>
-            <h2 class="font-bold text-lg">固定電話 ➡ 固定電話宛て</h2>
-          </div>
-          <div class="text-right">
-            <span class="text-2xl font-black bg-blue-800 text-blue-100 px-3 py-0.5 rounded-lg">3分：8.8 円</span>
-            <span class="text-xs text-blue-200 block mt-0.5">📌3分単位で計算</span>
-          </div>
-        </div>
-        <div class="p-4 text-xs text-slate-600 flex items-center justify-between bg-blue-50/50">
-          <span>お店・会社・役所など固定電話にかける場合の最安ルートです（BBフォン/光電話利用）。</span>
-          <span class="font-bold text-blue-800 shrink-0 ml-2">格安料金</span>
-        </div>
-      </div>
-
-      <!-- 第三優先：固定電話→携帯（0000等プレフィックス） -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="bg-purple-700 text-white p-4 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center space-x-2">
-            <span class="bg-white text-purple-800 font-extrabold text-xs px-2.5 py-1 rounded-full">第 3 優先</span>
-            <h2 class="font-bold text-lg">固定電話 ➡ 携帯電話宛て（光電話・お得番号指定）</h2>
-          </div>
-          <div class="text-right">
-            <span class="text-2xl font-black bg-purple-800 text-purple-100 px-3 py-0.5 rounded-lg">3分：52.8〜82.5 円</span>
-            <span class="text-xs text-purple-200 block mt-0.5">📌1分単位で計算</span>
-          </div>
-        </div>
-        <div class="p-4 space-y-2 text-xs text-slate-600">
-          <p>LINEやFaceTimeが使えない相手のスマホへかける場合、家の固定電話（光電話）から発信します。</p>
-          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-wrap gap-4 justify-between">
-            <div>
-              <span class="font-bold text-slate-800 block">・光電話からそのまま発信：</span>
-              <span>1分 17.6円（<strong class="text-purple-700">3分で52.8円</strong>）</span>
+      <div class="p-2.5 space-y-2">
+        <!-- アプリカード -->
+        <div class="grid grid-cols-2 gap-2">
+          <!-- LINE -->
+          <div class="bg-white p-2 rounded-lg border border-emerald-300 flex items-center space-x-2">
+            <div class="bg-[#06C755] text-white p-1 rounded-md shrink-0 flex items-center justify-center w-7 h-7">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M20 10c0-4.418-4.03-8-9-8s-9 3.582-9 8c0 3.94 3.236 7.238 7.625 7.859.334.072.789.221.904.507.104.257.068.66.033.922l-.146.883c-.045.267-.21 1.043.916.569 1.126-.473 6.082-3.582 8.303-6.133C19.508 13.252 20 11.69 20 10z"/></svg>
             </div>
             <div>
-              <span class="font-bold text-slate-800 block">・BBフォン(8-23時)から発信：</span>
-              <span>1分 27.5円（<strong class="text-purple-700">3分で82.5円</strong>）</span>
+              <div class="font-bold text-slate-900 text-xs sm:text-sm">LINE 通話</div>
+              <div class="text-[11px] text-slate-600 font-medium">友だち同士なら最優先</div>
+            </div>
+          </div>
+
+          <!-- FaceTime -->
+          <div class="bg-white p-2 rounded-lg border border-emerald-300 flex items-center space-x-2">
+            <div class="bg-emerald-500 text-white p-1 rounded-md shrink-0 flex items-center justify-center w-7 h-7">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            </div>
+            <div>
+              <div class="font-bold text-slate-900 text-xs sm:text-sm">FaceTime</div>
+              <div class="text-[11px] text-slate-600 font-medium">iPhone同士なら高音質</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 急ぎ以外使わない：携帯電話発信 -->
-      <div class="bg-white rounded-2xl shadow-sm border-2 border-rose-300 overflow-hidden">
-        <div class="bg-rose-600 text-white p-4 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center space-x-2">
-            <span class="bg-amber-300 text-slate-900 font-extrabold text-xs px-2.5 py-1 rounded-full">⚠️ 急ぎ・最終手段</span>
-            <h2 class="font-bold text-lg">携帯電話（Y!mobile等）から発信</h2>
+        <!-- FaceTime判別方法 -->
+        <div class="bg-white p-2 rounded-lg border border-slate-300 text-xs space-y-1">
+          <div class="font-bold text-indigo-800 text-xs sm:text-sm flex items-center gap-1">
+            <span>💡</span> FaceTimeが利用できる相手か判別する方法
           </div>
-          <div class="text-right">
-            <span class="text-2xl font-black bg-rose-800 text-rose-100 px-3 py-0.5 rounded-lg">3分：132 円</span>
-            <span class="text-xs text-rose-200 block mt-0.5">📌30秒 22円単位（1分換算44円）</span>
+          <div class="text-slate-800 bg-indigo-50/70 p-2 rounded border border-indigo-200 leading-snug">
+            <span class="font-bold text-indigo-900">連絡先アプリ：</span>
+            <span>相手の連絡先を開き、<strong class="text-indigo-950 bg-white px-1.5 py-0.5 rounded border border-indigo-300 font-black">「FaceTime」アイコン</strong>が表示されていれば利用可能です。</span>
           </div>
         </div>
-        <div class="p-4 text-xs text-slate-600 bg-rose-50/30">
-          <p class="font-bold text-rose-800">外出先での緊急時やどうしても固定電話に戻れない場合のみ使用！</p>
-          <p class="mt-1 text-slate-500">※通話定額オプション等に加入していない場合、固定宛て・携帯宛てともに1分44円と高額になります。</p>
-        </div>
       </div>
-
     </div>
 
-    <!-- 3分あたり料金比較まとめ一覧 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="bg-slate-900 text-white p-4">
-        <h3 class="font-bold text-base flex items-center gap-2">
-          <span>📊</span> 【3分通話】料金比較まとめ一覧
-        </h3>
+    <!-- 第二優先：固定電話➔固定電話 -->
+    <div class="border-2 border-blue-400 rounded-lg overflow-hidden bg-blue-50/30">
+      <div class="bg-blue-600 text-white px-3 py-2 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="bg-white text-blue-900 font-black text-xs px-2 py-0.5 rounded">第2優先</span>
+          <h2 class="font-bold text-sm sm:text-base">☎️固定電話 ➔ ☎️固定電話</h2>
+        </div>
+        <span class="bg-white text-blue-950 font-black text-sm px-2.5 py-0.5 rounded-full shadow-sm">3分：8.8円</span>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs sm:text-sm">
-          <thead>
-            <tr class="bg-slate-100 border-b border-slate-200 text-slate-600">
-              <th class="p-3 font-bold">発信方法・ルート</th>
-              <th class="p-3 font-bold">相手（着信先）</th>
-              <th class="p-3 font-bold text-center">課金単位</th>
-              <th class="p-3 font-bold text-center">1分換算</th>
-              <th class="p-3 font-bold text-right text-indigo-600">3分間の料金</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr class="bg-emerald-50/40 font-bold">
-              <td class="p-3 text-emerald-800">① LINE / FaceTime</td>
-              <td class="p-3 text-emerald-800">スマホ・PC</td>
-              <td class="p-3 text-center">-</td>
-              <td class="p-3 text-center">0円</td>
-              <td class="p-3 text-right text-emerald-600 text-base">0円</td>
-            </tr>
-            <tr>
-              <td class="p-3 font-bold text-blue-900">② BBフォン / 光電話</td>
-              <td class="p-3 text-slate-600">固定電話</td>
-              <td class="p-3 text-center">📌 3分ごと</td>
-              <td class="p-3 text-center">約2.9円</td>
-              <td class="p-3 text-right font-bold text-blue-700 text-base">8.8円</td>
-            </tr>
-            <tr>
-              <td class="p-3 font-bold text-purple-900">③ 光電話</td>
-              <td class="p-3 text-slate-600">携帯電話</td>
-              <td class="p-3 text-center">📌 1分ごと</td>
-              <td class="p-3 text-center">17.6円</td>
-              <td class="p-3 text-right font-bold text-purple-700 text-base">52.8円</td>
-            </tr>
-            <tr>
-              <td class="p-3 font-bold text-purple-900">③ BBフォン (8-23時)</td>
-              <td class="p-3 text-slate-600">携帯電話</td>
-              <td class="p-3 text-center">📌 1分ごと</td>
-              <td class="p-3 text-center">27.5円</td>
-              <td class="p-3 text-right font-bold text-purple-700 text-base">82.5円</td>
-            </tr>
-            <tr class="bg-rose-50/40">
-              <td class="p-3 font-bold text-rose-900">④ Y!mobile (携帯発信)</td>
-              <td class="p-3 text-slate-600">固定 / 携帯</td>
-              <td class="p-3 text-center">📌 30秒ごと</td>
-              <td class="p-3 text-center">44.0円</td>
-              <td class="p-3 text-right font-bold text-rose-600 text-base">132.0円</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="p-2.5 space-y-2 text-xs sm:text-sm text-slate-900">
+        <div class="bg-amber-200/90 text-amber-950 border border-amber-400 font-bold px-2.5 py-1.5 rounded-lg text-xs sm:text-sm flex items-center gap-1.5">
+          <span class="text-base">🔔</span>
+          <span>発信時に「プププ」と2回鳴ったら無料通話です！</span>
+        </div>
+        <div class="bg-white p-2 rounded-lg border border-slate-300 space-y-1.5">
+          <div class="flex items-start gap-1">
+            <span class="font-bold text-blue-800 shrink-0">・そのまま発信：</span>
+            <span class="font-bold">BBフォン（050で発信）</span>
+          </div>
+          <div class="flex items-start gap-1">
+            <span class="font-bold text-blue-800 shrink-0">・「0000」をつけて発信：</span>
+            <span class="font-bold">光電話（N）（011で発信）</span>
+          </div>
+          <div class="text-xs text-slate-600 pt-1 border-t border-slate-200">※どちらで発信しても料金は同じ（3分：8.8円）です。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 第三優先：固定電話➔スマホ -->
+    <div class="border-2 border-purple-400 rounded-lg overflow-hidden bg-purple-50/30">
+      <div class="bg-purple-700 text-white px-3 py-2 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="bg-white text-purple-900 font-black text-xs px-2 py-0.5 rounded">第3優先</span>
+          <h2 class="font-bold text-sm sm:text-base">☎️固定電話 ➔ 📱スマホ</h2>
+        </div>
+        <span class="bg-white text-purple-950 font-black text-sm px-2.5 py-0.5 rounded-full shadow-sm">3分：52.8円</span>
+      </div>
+      <div class="p-2.5 text-xs sm:text-sm text-slate-900 space-y-1.5">
+        <p class="font-medium">ネット通話が使えないスマホ宛てにかける場合に使用します。</p>
+        <div class="bg-white p-2 rounded-lg border border-purple-300 font-bold text-purple-950 flex items-center gap-2">
+          <span class="bg-purple-200 text-purple-900 px-2 py-0.5 rounded text-xs shrink-0">かけ方</span>
+          <span class="text-xs sm:text-sm">電話番号の前に「0000」をつけて発信［光電話（N）］</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 第四優先：急ぎ以外NGスマホから発信 -->
+    <div class="border-2 border-rose-400 rounded-lg overflow-hidden bg-rose-50/40">
+      <div class="bg-rose-600 text-white px-3 py-2 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="bg-amber-300 text-slate-950 font-black text-xs px-2 py-0.5 rounded">急ぎ以外NG</span>
+          <h2 class="font-bold text-sm sm:text-base">📱スマホから発信</h2>
+        </div>
+        <span class="bg-white text-rose-950 font-black text-sm px-2.5 py-0.5 rounded-full shadow-sm">3分：132円</span>
+      </div>
+      <div class="px-3 py-2 text-xs sm:text-sm text-slate-800 flex justify-between items-center font-bold">
+        <span>外出先の緊急時・どうしても固定電話に戻れない時のみ使用</span>
+        <span class="text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-xs shrink-0 ml-1 border border-rose-300">高額注意</span>
       </div>
     </div>
 
@@ -202,3 +158,4 @@
 
 </body>
 </html>
+
