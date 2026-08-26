@@ -1,1328 +1,1254 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
-  <meta name="theme-color" content="#0b1020">
-  <title>HTML Device Previewer</title>
-
-  <style>
-    :root {
-      --bg: #f4f6fb;
-      --panel: rgba(255, 255, 255, 0.94);
-      --panel-solid: #ffffff;
-      --text: #192033;
-      --muted: #727b90;
-      --line: #e2e6ef;
-      --accent: #4263eb;
-      --accent-soft: #edf1ff;
-      --danger: #e03131;
-      --shadow: 0 14px 36px rgba(30, 42, 74, 0.10);
-      --sidebar-width: 292px;
-      --header-height: 62px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      width: 100%;
-      min-height: 100%;
-      margin: 0;
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Hiragino Sans",
-        "Hiragino Kaku Gothic ProN",
-        "Yu Gothic",
-        "Meiryo",
-        sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    button,
-    input,
-    textarea,
-    select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .app {
-      min-height: 100dvh;
-      display: grid;
-      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-      overflow: hidden;
-    }
-
-    .sidebar {
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      background: var(--panel-solid);
-      border-right: 1px solid var(--line);
-    }
-
-    .sidebar-header {
-      height: var(--header-height);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 16px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .app-title {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      min-height: 36px;
-      padding: 8px 12px;
-      border: 1px solid transparent;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      transition:
-        background 160ms ease,
-        color 160ms ease,
-        border-color 160ms ease,
-        transform 160ms ease;
-    }
-
-    .button:active {
-      transform: scale(0.97);
-    }
-
-    .button-primary {
-      color: #fff;
-      background: var(--accent);
-    }
-
-    .button-primary:hover {
-      background: #3451d6;
-    }
-
-    .button-secondary {
-      color: var(--text);
-      background: #fff;
-      border-color: var(--line);
-    }
-
-    .button-secondary:hover {
-      background: #f8f9fc;
-      border-color: #cfd6e4;
-    }
-
-    .button-danger {
-      color: var(--danger);
-      background: #fff;
-      border-color: #f2c2c2;
-    }
-
-    .button-danger:hover {
-      background: #fff5f5;
-    }
-
-    .button-icon {
-      width: 36px;
-      min-width: 36px;
-      padding: 0;
-    }
-
-    .document-list {
-      flex: 1;
-      min-height: 0;
-      padding: 10px;
-      overflow-y: auto;
-    }
-
-    .document-item {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      margin-bottom: 6px;
-      text-align: left;
-      color: var(--text);
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 12px;
-    }
-
-    .document-item:hover {
-      background: #f7f8fc;
-    }
-
-    .document-item.is-active {
-      color: #2949cf;
-      background: var(--accent-soft);
-      border-color: #d9e0ff;
-    }
-
-    .document-icon {
-      flex: 0 0 auto;
-      width: 31px;
-      height: 31px;
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-      background: #fff;
-      border: 1px solid #dfe5ff;
-      border-radius: 9px;
-      font-size: 14px;
-      font-weight: 900;
-    }
-
-    .document-item.is-active .document-icon {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    .document-meta {
-      min-width: 0;
-    }
-
-    .document-name {
-      overflow: hidden;
-      font-size: 14px;
-      font-weight: 750;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .document-subtext {
-      margin-top: 3px;
-      overflow: hidden;
-      color: var(--muted);
-      font-size: 11px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .sidebar-footer {
-      padding: 12px 16px 16px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.55;
-    }
-
-    .main {
-      min-width: 0;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .toolbar {
-      min-height: var(--header-height);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 18px;
-      background: rgba(255, 255, 255, 0.8);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(16px);
-    }
-
-    .selected-title {
-      min-width: 0;
-      flex: 1;
-      overflow: hidden;
-      font-size: 14px;
-      font-weight: 800;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .device-switcher {
-      display: flex;
-      align-items: center;
-      padding: 3px;
-      background: #eef1f7;
-      border-radius: 10px;
-    }
-
-    .device-button {
-      min-height: 31px;
-      padding: 5px 10px;
-      color: #6c7588;
-      background: transparent;
-      border: 0;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 750;
-    }
-
-    .device-button.is-active {
-      color: var(--text);
-      background: #fff;
-      box-shadow: 0 1px 4px rgba(24, 32, 56, 0.12);
-    }
-
-    .workspace {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(300px, 0.85fr) minmax(420px, 1.15fr);
-      gap: 16px;
-      padding: 16px;
-      overflow: hidden;
-    }
-
-    .editor-panel,
-    .preview-panel {
-      min-width: 0;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .panel-heading {
-      min-height: 51px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .panel-heading-title {
-      margin: 0;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .character-count {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .editor-body {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      padding: 14px;
-      gap: 12px;
-    }
-
-    .field-label {
-      display: block;
-      margin-bottom: 6px;
-      color: #4d5669;
-      font-size: 12px;
-      font-weight: 750;
-    }
-
-    .name-input {
-      width: 100%;
-      height: 42px;
-      padding: 0 12px;
-      color: var(--text);
-      background: #fff;
-      border: 1px solid #dce1eb;
-      border-radius: 10px;
-      outline: none;
-    }
-
-    .name-input:focus,
-    .html-editor:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(66, 99, 235, 0.14);
-    }
-
-    .editor-wrap {
-      flex: 1;
-      min-height: 200px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .html-editor {
-      width: 100%;
-      height: 100%;
-      min-height: 250px;
-      flex: 1;
-      padding: 13px;
-      resize: none;
-      color: #24304a;
-      background: #fbfcff;
-      border: 1px solid #dce1eb;
-      border-radius: 10px;
-      outline: none;
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        "Liberation Mono",
-        monospace;
-      font-size: 12px;
-      line-height: 1.65;
-      tab-size: 2;
-    }
-
-    .editor-actions {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .editor-actions-right {
-      display: flex;
-      gap: 8px;
-    }
-
-    .preview-panel {
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.95), rgba(242, 244, 250, 0.96));
-    }
-
-    .preview-tools {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .device-label {
-      color: var(--muted);
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .preview-stage {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      overflow: auto;
-    }
-
-    .device-shell {
-      position: relative;
-      flex: 0 0 auto;
-      background: #111521;
-      border: 7px solid #161b28;
-      border-radius: 34px;
-      box-shadow:
-        0 25px 50px rgba(20, 28, 52, 0.24),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-      overflow: hidden;
-    }
-
-    .device-shell::before {
-      content: "";
-      position: absolute;
-      z-index: 2;
-      top: 8px;
-      left: 50%;
-      width: 92px;
-      height: 22px;
-      transform: translateX(-50%);
-      background: #0c0f17;
-      border-radius: 16px;
-      pointer-events: none;
-    }
-
-    .device-shell.ipad::before {
-      top: 50%;
-      left: auto;
-      right: 8px;
-      width: 10px;
-      height: 10px;
-      transform: translateY(-50%);
-      background: #2a3140;
-      border: 1px solid #45506a;
-      border-radius: 50%;
-    }
-
-    .preview-frame {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #fff;
-    }
-
-    .empty-state {
-      height: 100%;
-      display: grid;
-      place-items: center;
-      padding: 30px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .empty-state h2 {
-      margin: 0 0 8px;
-      color: var(--text);
-      font-size: 18px;
-    }
-
-    .empty-state p {
-      max-width: 300px;
-      margin: 0 0 18px;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    dialog {
-      width: min(460px, calc(100vw - 32px));
-      padding: 0;
-      color: var(--text);
-      background: #fff;
-      border: 0;
-      border-radius: 16px;
-      box-shadow: 0 24px 70px rgba(16, 23, 46, 0.28);
-    }
-
-    dialog::backdrop {
-      background: rgba(14, 19, 34, 0.42);
-      backdrop-filter: blur(3px);
-    }
-
-    .dialog-content {
-      padding: 22px;
-    }
-
-    .dialog-title {
-      margin: 0 0 8px;
-      font-size: 18px;
-    }
-
-    .dialog-description {
-      margin: 0 0 18px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.65;
-    }
-
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 18px;
-    }
-
-    .mobile-only {
-      display: none;
-    }
-
-    @media (max-width: 980px) {
-      .workspace {
-        grid-template-columns: minmax(280px, 0.9fr) minmax(350px, 1.1fr);
-      }
-
-      .preview-stage {
-        padding: 14px;
-      }
-    }
-
-    @media (max-width: 760px) {
-      :root {
-        --header-height: 56px;
-      }
-
-      .app {
-        display: block;
-      }
-
-      .sidebar {
-        position: fixed;
-        z-index: 20;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: min(310px, 85vw);
-        min-height: 100dvh;
-        transform: translateX(-104%);
-        transition: transform 200ms ease;
-        box-shadow: 14px 0 35px rgba(24, 33, 58, 0.16);
-      }
-
-      .sidebar.is-open {
-        transform: translateX(0);
-      }
-
-      .sidebar-backdrop {
-        position: fixed;
-        z-index: 15;
-        inset: 0;
-        display: none;
-        background: rgba(11, 16, 32, 0.35);
-      }
-
-      .sidebar-backdrop.is-open {
-        display: block;
-      }
-
-      .mobile-only {
-        display: inline-flex;
-      }
-
-      .toolbar {
-        padding: 8px 12px;
-      }
-
-      .selected-title {
-        font-size: 13px;
-      }
-
-      .device-switcher {
-        margin-left: auto;
-      }
-
-      .device-button {
-        padding: 5px 8px;
-        font-size: 11px;
-      }
-
-      .workspace {
-        display: flex;
-        min-height: calc(100dvh - var(--header-height));
-        flex-direction: column;
-        gap: 12px;
-        padding: 12px;
-        overflow: auto;
-      }
-
-      .editor-panel {
-        min-height: 460px;
-      }
-
-      .preview-panel {
-        min-height: 510px;
-      }
-
-      .editor-actions {
-        flex-direction: column-reverse;
-      }
-
-      .editor-actions-right {
-        width: 100%;
-      }
-
-      .editor-actions-right .button {
-        flex: 1;
-      }
-
-      .button-danger {
-        width: 100%;
-      }
-
-      .preview-stage {
-        min-height: 430px;
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HTML Previewer</title>
+
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#000;
+  --panel:#1c1c1e;
+  --panel2:#2c2c2e;
+  --panel3:#3a3a3c;
+  --text:#f5f5f7;
+  --muted:#98989f;
+  --accent:#0a84ff;
+  --accent-soft:rgba(10,132,255,.16);
+  --danger:#ff453a;
+  --line:#38383c;
+  --code:#111113;
+}
+
+*{box-sizing:border-box}
+
+html,
+body{
+  margin:0;
+  min-height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+}
+
+body{
+  padding:
+    max(10px, env(safe-area-inset-top))
+    12px
+    max(12px, env(safe-area-inset-bottom));
+}
+
+button,
+textarea,
+input{
+  font:inherit;
+}
+
+button{
+  border:0;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:12px;
+  color:var(--text);
+  background:var(--panel2);
+  font-weight:650;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+button.primary{
+  background:var(--accent);
+}
+
+button.danger{
+  background:var(--danger);
+}
+
+button.ghost{
+  background:transparent;
+  border:1px solid var(--line);
+}
+
+button:active{
+  transform:scale(.97);
+  opacity:.86;
+}
+
+button:disabled{
+  opacity:.42;
+  pointer-events:none;
+}
+
+.app{
+  width:100%;
+  max-width:1280px;
+  margin:0 auto;
+}
+
+/* ===== 一覧 ===== */
+
+.list-panel{
+  display:block;
+}
+
+.item-list{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:2px 2px 10px;
+  margin:0 0 8px;
+  scrollbar-width:thin;
+  scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
+}
+
+.item-list::-webkit-scrollbar{
+  height:6px;
+}
+
+.item-list::-webkit-scrollbar-thumb{
+  background:#4a4a4e;
+  border-radius:99px;
+}
+
+.item-card{
+  position:relative;
+  flex:0 0 164px;
+  min-height:100px;
+  padding:14px;
+  border:2px solid transparent;
+  border-radius:16px;
+  background:var(--panel);
+  overflow:hidden;
+  cursor:pointer;
+  scroll-snap-align:start;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  transition:background .15s,border-color .15s,transform .15s;
+}
+
+.item-card:active{
+  background:var(--panel2);
+  transform:scale(.98);
+}
+
+.item-card.active{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+
+.item-card-name{
+  overflow:hidden;
+  font-size:15px;
+  font-weight:700;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.item-card-meta{
+  margin-top:7px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+}
+
+.item-card-hint{
+  position:absolute;
+  right:10px;
+  bottom:9px;
+  color:#77777d;
+  font-size:10px;
+}
+
+.new-card{
+  display:flex;
+  flex:0 0 128px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:100px;
+  border:2px dashed #55555b;
+  border-radius:16px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  scroll-snap-align:start;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.new-card:active{
+  border-color:var(--accent);
+  color:#fff;
+  transform:scale(.98);
+}
+
+.new-card-plus{
+  font-size:28px;
+  font-weight:300;
+  line-height:1;
+}
+
+.new-card-text{
+  font-size:13px;
+  font-weight:650;
+}
+
+.item-empty{
+  display:flex;
+  flex:0 0 calc(100% - 140px);
+  align-items:center;
+  justify-content:center;
+  min-height:100px;
+  padding:12px;
+  border:1px dashed #444449;
+  border-radius:16px;
+  color:var(--muted);
+  text-align:center;
+  font-size:13px;
+}
+
+/* ===== プレビュー ===== */
+
+.preview-actions{
+  display:flex;
+  justify-content:center;
+  margin:0 0 10px;
+}
+
+.preview-actions button{
+  min-height:38px;
+  padding:0 16px;
+  font-size:13px;
+}
+
+.devices{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:center;
+  gap:18px 24px;
+  padding:0 0 18px;
+}
+
+.device-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+}
+
+.device-label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+
+/*
+  iPhone 17 Pro:
+  画面比率 1206 × 2622 = 約 0.460
+  iPad 第7世代（横）:
+  2160 × 1620 = 4:3
+*/
+.phone{
+  position:relative;
+  width:min(360px, 66vw);
+  aspect-ratio:1206 / 2622;
+  overflow:hidden;
+  border:7px solid #202023;
+  border-radius:47px;
+  background:#000;
+  box-shadow:0 16px 42px rgba(0,0,0,.9),0 0 0 1px #4b4b50;
+}
+
+.phone iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#fff;
+  color-scheme:light dark;
+}
+
+.island{
+  position:absolute;
+  z-index:5;
+  top:6px;
+  left:50%;
+  width:31%;
+  height:3.1%;
+  min-width:82px;
+  max-width:118px;
+  min-height:22px;
+  max-height:31px;
+  border-radius:999px;
+  background:#000;
+  pointer-events:none;
+  transform:translateX(-50%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.04);
+}
+
+.homebar{
+  position:absolute;
+  z-index:6;
+  bottom:6px;
+  left:50%;
+  width:28%;
+  min-width:74px;
+  max-width:104px;
+  height:3px;
+  border-radius:99px;
+  background:#fff;
+  opacity:.9;
+  pointer-events:none;
+  transform:translateX(-50%);
+}
+
+.ipad{
+  position:relative;
+  width:min(490px, 94vw);
+  aspect-ratio:4 / 3;
+  overflow:hidden;
+  border:8px solid #29292d;
+  border-radius:18px;
+  background:#000;
+  box-shadow:0 16px 42px rgba(0,0,0,.9),0 0 0 1px #4b4b50;
+}
+
+.ipad iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#fff;
+  color-scheme:light dark;
+}
+
+.ipad-camera{
+  position:absolute;
+  z-index:5;
+  top:50%;
+  left:5px;
+  width:4px;
+  height:22px;
+  border-radius:99px;
+  background:#151518;
+  pointer-events:none;
+  transform:translateY(-50%);
+}
+
+/* ===== 編集画面 ===== */
+
+.editor-panel{
+  display:none;
+}
+
+.editor-panel.show{
+  display:block;
+}
+
+.editor-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin:0 0 10px;
+}
+
+.editor-title{
+  margin:0;
+  font-size:17px;
+  font-weight:750;
+  letter-spacing:-.02em;
+}
+
+.editor-header-actions{
+  display:flex;
+  gap:7px;
+}
+
+.editor-header-actions button{
+  min-height:36px;
+  padding:0 12px;
+  font-size:13px;
+}
+
+.editor-tools{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+
+.name-input,
+.search-box input{
+  height:40px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  outline:none;
+  background:var(--code);
+  color:#fff;
+  padding:0 12px;
+}
+
+.name-input{
+  flex:1 1 180px;
+  min-width:140px;
+}
+
+.search-box{
+  display:flex;
+  flex:1 1 240px;
+  gap:6px;
+  min-width:0;
+}
+
+.search-box input{
+  flex:1;
+  width:100%;
+  min-width:0;
+}
+
+.name-input:focus,
+.search-box input:focus,
+textarea:focus{
+  border-color:var(--accent);
+}
+
+.search-box button{
+  flex:none;
+  min-height:40px;
+  padding:0 12px;
+  font-size:13px;
+}
+
+#count,
+#searchResult{
+  color:var(--muted);
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.status{
+  margin:0 0 8px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+
+/* 検索強調表示用 */
+.code-area{
+  position:relative;
+  height:min(52vh, 500px);
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--code);
+}
+
+.code-highlight,
+textarea{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:14px;
+  overflow:auto;
+  border:0;
+  font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  letter-spacing:normal;
+  tab-size:2;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
+}
+
+.code-highlight{
+  z-index:1;
+  color:#f5f5f7;
+  pointer-events:none;
+  scrollbar-width:none;
+}
+
+.code-highlight::-webkit-scrollbar{
+  display:none;
+}
+
+.code-highlight mark{
+  border-radius:2px;
+  background:#ffd60a;
+  color:#111;
+}
+
+.code-highlight mark.current{
+  outline:2px solid #ff9f0a;
+  background:#ff9f0a;
+  color:#111;
+}
+
+textarea{
+  z-index:2;
+  resize:none;
+  outline:none;
+  background:transparent;
+  color:transparent;
+  caret-color:#fff;
+  -webkit-text-fill-color:transparent;
+}
+
+textarea::selection{
+  background:rgba(10,132,255,.55);
+}
+
+textarea::placeholder{
+  color:#77777d;
+  -webkit-text-fill-color:#77777d;
+}
+
+.editor-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.editor-actions button{
+  flex:1;
+  min-width:105px;
+}
+
+/* ===== 全画面 ===== */
+
+.fullscreen{
+  position:fixed;
+  z-index:100;
+  inset:0;
+  display:none;
+  background:#000;
+}
+
+.fullscreen.show{
+  display:block;
+}
+
+.fullscreen iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  background:#fff;
+}
+
+.fullscreen .exit{
+  position:absolute;
+  z-index:10;
+  top:max(12px, env(safe-area-inset-top));
+  right:14px;
+  width:44px;
+  height:44px;
+  min-height:44px;
+  padding:0;
+  border-radius:50%;
+  background:rgba(60,60,65,.64);
+  color:#fff;
+  font-size:22px;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+
+@media (min-width:800px){
+  .phone{
+    width:min(400px, 37vw);
+  }
+
+  .ipad{
+    width:min(570px, 49vw);
+  }
+
+  .devices{
+    gap:24px 34px;
+  }
+
+  .code-area{
+    height:min(58vh, 570px);
+  }
+}
+
+@media (max-width:460px){
+  .phone{
+    width:min(350px, 78vw);
+  }
+
+  .ipad{
+    width:94vw;
+  }
+
+  .item-card{
+    flex-basis:150px;
+  }
+
+  .editor-header{
+    align-items:flex-start;
+  }
+}
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-header">
-        <h1 class="app-title">HTML Previewer</h1>
-        <button id="addDocumentButton" class="button button-primary" type="button">
-          ＋ 追加
-        </button>
-      </div>
+<div class="app">
 
-      <nav id="documentList" class="document-list" aria-label="HTML一覧"></nav>
+  <!-- 一覧・プレビュー -->
+  <section id="listPanel" class="list-panel">
+    <div id="itemList" class="item-list" aria-label="HTML一覧"></div>
 
-      <div class="sidebar-footer">
-        HTMLはこの端末のブラウザ内に保存されます。<br>
-        一覧を選ぶとプレビューがすぐに切り替わります。
-      </div>
-    </aside>
+    <div class="preview-actions">
+      <button id="btnFullscreen" class="primary">全画面プレビュー</button>
+    </div>
 
-    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
-
-    <main class="main">
-      <header class="toolbar">
-        <button
-          id="menuButton"
-          class="button button-secondary button-icon mobile-only"
-          type="button"
-          aria-label="HTML一覧を開く"
-        >
-          ☰
-        </button>
-
-        <div id="selectedTitle" class="selected-title">HTMLを選択してください</div>
-
-        <div class="device-switcher" aria-label="プレビュー端末">
-          <button
-            class="device-button is-active"
-            type="button"
-            data-device="iphone17pro"
-          >
-            iPhone 17 Pro
-          </button>
-          <button
-            class="device-button"
-            type="button"
-            data-device="ipad7"
-          >
-            iPad 第7世代
-          </button>
+    <div class="devices">
+      <div class="device-wrap">
+        <div class="device-label">iPhone 17 Pro</div>
+        <div id="phone" class="phone">
+          <div class="island"></div>
+          <iframe
+            id="framePhone"
+            title="iPhone 17 Pro preview"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads">
+          </iframe>
+          <div class="homebar"></div>
         </div>
-      </header>
+      </div>
 
-      <section id="workspace" class="workspace"></section>
-    </main>
-  </div>
-
-  <dialog id="deleteDialog">
-    <div class="dialog-content">
-      <h2 class="dialog-title">HTMLを削除しますか？</h2>
-      <p id="deleteDescription" class="dialog-description"></p>
-
-      <div class="dialog-actions">
-        <button id="cancelDeleteButton" class="button button-secondary" type="button">
-          キャンセル
-        </button>
-        <button id="confirmDeleteButton" class="button button-danger" type="button">
-          削除する
-        </button>
+      <div class="device-wrap">
+        <div class="device-label">iPad 第7世代（横）</div>
+        <div id="ipad" class="ipad">
+          <div class="ipad-camera"></div>
+          <iframe
+            id="frameIpad"
+            title="iPad 第7世代 preview"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads">
+          </iframe>
+        </div>
       </div>
     </div>
-  </dialog>
+  </section>
 
-  <script>
-    (() => {
-      "use strict";
+  <!-- 編集 -->
+  <section id="editorPanel" class="editor-panel">
+    <div class="editor-header">
+      <h1 id="editorTitle" class="editor-title">HTMLを編集</h1>
 
-      const STORAGE_KEY = "html-device-previewer-documents-v2";
-      const SELECTED_DOCUMENT_KEY = "html-device-previewer-selected-document-v2";
-      const DEVICE_KEY = "html-device-previewer-device-v2";
+      <div class="editor-header-actions">
+        <button id="btnBack" class="ghost">戻る</button>
+        <button id="btnDelete" class="danger">削除</button>
+      </div>
+    </div>
 
-      const devices = {
-        iphone17pro: {
-          key: "iphone17pro",
-          label: "iPhone 17 Pro",
-          width: 402,
-          height: 874,
-          shellClass: "iphone",
-          scaleLimit: 0.88
-        },
-        ipad7: {
-          key: "ipad7",
-          label: "iPad 第7世代（横向き）",
-          width: 1080,
-          height: 810,
-          shellClass: "ipad",
-          scaleLimit: 0.90
-        }
-      };
+    <div class="editor-tools">
+      <input
+        id="nameInput"
+        class="name-input"
+        type="text"
+        placeholder="名前を入力"
+        maxlength="80"
+        autocomplete="off">
 
-      const defaultHtml = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>サンプルページ</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      color: #1d2740;
-      background: linear-gradient(145deg, #eff3ff, #ffffff);
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-    }
-    main {
-      width: min(88%, 520px);
-      padding: 36px 28px;
-      text-align: center;
-      background: rgba(255, 255, 255, .92);
-      border: 1px solid #e0e6f5;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(45, 67, 120, .13);
-    }
-    h1 { margin: 0 0 12px; font-size: clamp(28px, 7vw, 42px); }
-    p { margin: 0; color: #68728a; line-height: 1.8; }
-    button {
-      margin-top: 24px;
-      padding: 13px 20px;
-      color: white;
-      background: #4263eb;
-      border: 0;
-      border-radius: 12px;
-      font: inherit;
-      font-weight: 700;
-    }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Hello!</h1>
-    <p>このHTMLは端末プレビュー用のサンプルです。<br>左の編集欄で内容を自由に変更できます。</p>
-    <button onclick="alert('プレビュー内のボタンです')">タップする</button>
-  </main>
-</body>
-</html>`;
+      <span id="count">0文字</span>
 
-      const state = {
-        documents: [],
-        selectedId: null,
-        deviceKey: "iphone17pro",
-        deleteTargetId: null,
-        renderTimer: null
-      };
+      <div class="search-box">
+        <input
+          id="search"
+          type="search"
+          placeholder="検索"
+          autocomplete="off">
 
-      const elements = {
-        sidebar: document.getElementById("sidebar"),
-        sidebarBackdrop: document.getElementById("sidebarBackdrop"),
-        menuButton: document.getElementById("menuButton"),
-        addDocumentButton: document.getElementById("addDocumentButton"),
-        documentList: document.getElementById("documentList"),
-        selectedTitle: document.getElementById("selectedTitle"),
-        workspace: document.getElementById("workspace"),
-        deleteDialog: document.getElementById("deleteDialog"),
-        deleteDescription: document.getElementById("deleteDescription"),
-        cancelDeleteButton: document.getElementById("cancelDeleteButton"),
-        confirmDeleteButton: document.getElementById("confirmDeleteButton")
-      };
+        <button id="btnSearch" class="ghost" type="button">次へ</button>
+        <span id="searchResult"></span>
+      </div>
+    </div>
 
-      function createId() {
-        if (window.crypto && typeof window.crypto.randomUUID === "function") {
-          return window.crypto.randomUUID();
-        }
+    <p class="status">
+      HTML・CSS・JavaScriptをそのまま貼り付けてください。検索欄で一致箇所を強調表示し、「次へ」またはEnterで次の結果へ移動できます。
+    </p>
 
-        return `html-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      }
+    <div class="code-area">
+      <pre id="highlight" class="code-highlight" aria-hidden="true"></pre>
+      <textarea
+        id="source"
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder="<!doctype html> ..."></textarea>
+    </div>
 
-      function escapeHtml(value) {
-        return String(value)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
+    <div class="editor-actions">
+      <button id="btnSave" class="primary">保存</button>
+      <button id="btnClear" class="ghost">クリア</button>
+      <button id="btnCancel" class="ghost">キャンセル</button>
+    </div>
+  </section>
+</div>
 
-      function formatUpdatedAt(timestamp) {
-        if (!timestamp) return "未保存";
+<div id="fullscreen" class="fullscreen">
+  <button id="exit" class="exit" aria-label="全画面を閉じる">×</button>
+  <iframe
+    id="fullFrame"
+    title="Full screen preview"
+    sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads">
+  </iframe>
+</div>
 
-        const date = new Date(timestamp);
-        return new Intl.DateTimeFormat("ja-JP", {
-          month: "numeric",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        }).format(date);
-      }
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
 
-      function getSelectedDocument() {
-        return state.documents.find((documentItem) => documentItem.id === state.selectedId) || null;
-      }
+  const STORAGE_KEY = "pwa-previewer-items-v3";
+  const PREVIOUS_KEY = "pwa-previewer-items-v2";
+  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+  const LONG_PRESS_MS = 550;
 
-      function saveState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.documents));
-        localStorage.setItem(SELECTED_DOCUMENT_KEY, state.selectedId || "");
-        localStorage.setItem(DEVICE_KEY, state.deviceKey);
-      }
+  let items = [];
+  let selectedId = null;
+  let editingId = null;
+  let draftBeforeEditing = null;
+  let searchMatches = [];
+  let currentSearchIndex = -1;
+  let longPressTimer = null;
+  let longPressStarted = false;
 
-      function loadState() {
-        try {
-          const savedDocuments = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const source = $("source");
+  const nameInput = $("nameInput");
+  const searchInput = $("search");
+  const highlight = $("highlight");
+  const framePhone = $("framePhone");
+  const frameIpad = $("frameIpad");
+  const fullFrame = $("fullFrame");
 
-          if (Array.isArray(savedDocuments) && savedDocuments.length > 0) {
-            state.documents = savedDocuments
-              .filter((item) => item && typeof item === "object")
-              .map((item) => ({
-                id: item.id || createId(),
-                name: typeof item.name === "string" ? item.name : "名称未設定",
-                content: typeof item.content === "string" ? item.content : "",
-                createdAt: Number(item.createdAt) || Date.now(),
-                updatedAt: Number(item.updatedAt) || Date.now()
-              }));
-          } else {
-            const now = Date.now();
-            state.documents = [{
-              id: createId(),
-              name: "サンプルページ",
-              content: defaultHtml,
-              createdAt: now,
-              updatedAt: now
-            }];
-          }
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
 
-          const savedSelectedId = localStorage.getItem(SELECTED_DOCUMENT_KEY);
-          state.selectedId = state.documents.some((item) => item.id === savedSelectedId)
-            ? savedSelectedId
-            : state.documents[0]?.id || null;
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-          const savedDevice = localStorage.getItem(DEVICE_KEY);
-          state.deviceKey = devices[savedDevice] ? savedDevice : "iphone17pro";
-        } catch {
-          const now = Date.now();
-          state.documents = [{
-            id: createId(),
-            name: "サンプルページ",
-            content: defaultHtml,
-            createdAt: now,
-            updatedAt: now
+  function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    return `${month}/${day} ${hour}:${minute}`;
+  }
+
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function normalizeItems(value) {
+    if (!Array.isArray(value)) return [];
+
+    return value
+      .filter(item => item && typeof item === "object")
+      .map(item => ({
+        id: String(item.id || uid()),
+        name: typeof item.name === "string" ? item.name : "無題",
+        html: typeof item.html === "string" ? item.html : "",
+        updated: Number(item.updated) || Date.now()
+      }));
+  }
+
+  function load() {
+    try {
+      const current = localStorage.getItem(STORAGE_KEY);
+      const previous = localStorage.getItem(PREVIOUS_KEY);
+
+      if (current) {
+        items = normalizeItems(JSON.parse(current));
+      } else if (previous) {
+        items = normalizeItems(JSON.parse(previous));
+        persist();
+      } else {
+        const oldHtml = localStorage.getItem(OLD_KEY);
+
+        if (oldHtml) {
+          items = [{
+            id: uid(),
+            name: "移行したHTML",
+            html: oldHtml,
+            updated: Date.now()
           }];
-          state.selectedId = state.documents[0].id;
-          state.deviceKey = "iphone17pro";
+          persist();
+        }
+      }
+    } catch (error) {
+      items = [];
+    }
+
+    if (items.length) {
+      selectedId = items
+        .slice()
+        .sort((a, b) => b.updated - a.updated)[0].id;
+    }
+  }
+
+  function selectedItem() {
+    return items.find(item => item.id === selectedId) || null;
+  }
+
+  function clearPreviews() {
+    framePhone.srcdoc = "";
+    frameIpad.srcdoc = "";
+  }
+
+  function updatePreview() {
+    const item = selectedItem();
+
+    if (!item) {
+      clearPreviews();
+      $("btnFullscreen").disabled = true;
+      return;
+    }
+
+    $("btnFullscreen").disabled = false;
+
+    framePhone.srcdoc = item.html || "";
+    frameIpad.srcdoc = item.html || "";
+  }
+
+  function renderList() {
+    const list = $("itemList");
+    const sortedItems = items.slice().sort((a, b) => b.updated - a.updated);
+
+    const cards = sortedItems.map(item => `
+      <article
+        class="item-card ${item.id === selectedId ? "active" : ""}"
+        data-id="${escapeHtml(item.id)}"
+        tabindex="0"
+        role="button"
+        aria-label="${escapeHtml(item.name || "無題")}。長押しで編集">
+        <div class="item-card-name">${escapeHtml(item.name || "無題")}</div>
+        <div class="item-card-meta">
+          ${formatDate(item.updated)}<br>
+          ${(item.html || "").length.toLocaleString()}文字
+        </div>
+        <div class="item-card-hint">長押しで編集</div>
+      </article>
+    `).join("");
+
+    const empty = !items.length
+      ? `<div class="item-empty">HTMLがまだありません。<br>右のカードから作成できます。</div>`
+      : "";
+
+    const newCard = `
+      <button id="newCard" class="new-card" type="button" aria-label="新しいHTMLを作成">
+        <span class="new-card-plus">＋</span>
+        <span class="new-card-text">新規作成</span>
+      </button>
+    `;
+
+    list.innerHTML = empty + cards + newCard;
+
+    $("newCard").onclick = () => showEditor(true);
+
+    list.querySelectorAll(".item-card").forEach(card => {
+      bindCardEvents(card);
+    });
+  }
+
+  function bindCardEvents(card) {
+    const id = card.dataset.id;
+
+    const selectCard = () => {
+      if (longPressStarted) return;
+
+      selectedId = id;
+      renderList();
+      updatePreview();
+    };
+
+    const startLongPress = event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+
+      longPressStarted = false;
+      clearTimeout(longPressTimer);
+
+      longPressTimer = setTimeout(() => {
+        longPressStarted = true;
+
+        if (navigator.vibrate) {
+          navigator.vibrate(18);
         }
 
-        saveState();
+        selectedId = id;
+        showEditor(false);
+      }, LONG_PRESS_MS);
+    };
+
+    const stopLongPress = () => {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    };
+
+    card.addEventListener("pointerdown", startLongPress);
+    card.addEventListener("pointerup", stopLongPress);
+    card.addEventListener("pointerleave", stopLongPress);
+    card.addEventListener("pointercancel", stopLongPress);
+
+    card.addEventListener("click", event => {
+      event.preventDefault();
+      selectCard();
+
+      window.setTimeout(() => {
+        longPressStarted = false;
+      }, 0);
+    });
+
+    card.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectedId = id;
+        renderList();
+        updatePreview();
+      }
+    });
+  }
+
+  function showList() {
+    $("editorPanel").classList.remove("show");
+    $("listPanel").style.display = "block";
+
+    editingId = null;
+    draftBeforeEditing = null;
+
+    renderList();
+    updatePreview();
+  }
+
+  function showEditor(isNew) {
+    $("listPanel").style.display = "none";
+    $("editorPanel").classList.add("show");
+
+    searchInput.value = "";
+    searchMatches = [];
+    currentSearchIndex = -1;
+
+    if (isNew) {
+      editingId = null;
+      $("editorTitle").textContent = "新しいHTML";
+      nameInput.value = "";
+      source.value = "";
+      $("btnDelete").style.display = "none";
+      draftBeforeEditing = {
+        name: "",
+        html: ""
+      };
+    } else {
+      const item = selectedItem();
+
+      if (!item) {
+        showEditor(true);
+        return;
       }
 
-      function closeSidebar() {
-        elements.sidebar.classList.remove("is-open");
-        elements.sidebarBackdrop.classList.remove("is-open");
-      }
+      editingId = item.id;
+      $("editorTitle").textContent = "HTMLを編集";
+      nameInput.value = item.name || "";
+      source.value = item.html || "";
+      $("btnDelete").style.display = "inline-flex";
 
-      function openSidebar() {
-        elements.sidebar.classList.add("is-open");
-        elements.sidebarBackdrop.classList.add("is-open");
-      }
+      draftBeforeEditing = {
+        name: item.name || "",
+        html: item.html || ""
+      };
+    }
 
-      function renderDocumentList() {
-        if (state.documents.length === 0) {
-          elements.documentList.innerHTML = `
-            <div class="empty-state">
-              <div>
-                <h2>HTMLがありません</h2>
-                <p>「追加」からHTMLを作成してください。</p>
-              </div>
-            </div>
-          `;
-          return;
-        }
+    updateCount();
+    updateHighlight();
+    updateSearchInfo();
+    nameInput.focus();
+  }
 
-        elements.documentList.innerHTML = state.documents.map((documentItem) => {
-          const isActive = documentItem.id === state.selectedId;
+  function updateCount() {
+    $("count").textContent = `${source.value.length.toLocaleString()}文字`;
+  }
 
-          return `
-            <button
-              class="document-item ${isActive ? "is-active" : ""}"
-              type="button"
-              data-document-id="${escapeHtml(documentItem.id)}"
-              aria-current="${isActive ? "page" : "false"}"
-            >
-              <span class="document-icon">&lt;/&gt;</span>
-              <span class="document-meta">
-                <span class="document-name">${escapeHtml(documentItem.name || "名称未設定")}</span>
-                <span class="document-subtext">更新 ${escapeHtml(formatUpdatedAt(documentItem.updatedAt))}</span>
-              </span>
-            </button>
-          `;
-        }).join("");
+  function getSearchMatches() {
+    const query = searchInput.value;
 
-        elements.documentList.querySelectorAll("[data-document-id]").forEach((button) => {
-          button.addEventListener("click", () => {
-            state.selectedId = button.dataset.documentId;
-            saveState();
-            render();
-            closeSidebar();
-          });
-        });
-      }
+    if (!query) return [];
 
-      function getPreviewScale(device) {
-        const stage = document.querySelector(".preview-stage");
+    const text = source.value;
+    const matches = [];
+    let position = 0;
 
-        if (!stage) return 0.5;
+    while (position <= text.length) {
+      const found = text.indexOf(query, position);
 
-        const stageWidth = Math.max(stage.clientWidth - 40, 180);
-        const stageHeight = Math.max(stage.clientHeight - 40, 180);
-        const shellBorder = 14;
+      if (found === -1) break;
 
-        const widthScale = stageWidth / (device.width + shellBorder);
-        const heightScale = stageHeight / (device.height + shellBorder);
-
-        return Math.min(widthScale, heightScale, device.scaleLimit);
-      }
-
-      function renderWorkspace() {
-        const selected = getSelectedDocument();
-
-        if (!selected) {
-          elements.selectedTitle.textContent = "HTMLを選択してください";
-          elements.workspace.innerHTML = `
-            <section class="editor-panel">
-              <div class="empty-state">
-                <div>
-                  <h2>HTMLを作成しましょう</h2>
-                  <p>左上の「追加」から、新しいHTMLを登録できます。</p>
-                  <button id="emptyAddButton" class="button button-primary" type="button">＋ HTMLを追加</button>
-                </div>
-              </div>
-            </section>
-            <section class="preview-panel">
-              <div class="empty-state">
-                <div>
-                  <h2>プレビュー</h2>
-                  <p>HTMLを選択すると、ここで端末サイズごとに確認できます。</p>
-                </div>
-              </div>
-            </section>
-          `;
-
-          document.getElementById("emptyAddButton")?.addEventListener("click", addDocument);
-          return;
-        }
-
-        const device = devices[state.deviceKey];
-
-        elements.selectedTitle.textContent = selected.name || "名称未設定";
-
-        elements.workspace.innerHTML = `
-          <section class="editor-panel">
-            <div class="panel-heading">
-              <h2 class="panel-heading-title">編集</h2>
-              <span id="characterCount" class="character-count">${selected.content.length.toLocaleString("ja-JP")}文字</span>
-            </div>
-
-            <div class="editor-body">
-              <div>
-                <label class="field-label" for="documentName">HTML名</label>
-                <input
-                  id="documentName"
-                  class="name-input"
-                  type="text"
-                  value="${escapeHtml(selected.name)}"
-                  placeholder="例：ホーム画面"
-                  maxlength="80"
-                >
-              </div>
-
-              <div class="editor-wrap">
-                <label class="field-label" for="htmlEditor">HTML</label>
-                <textarea
-                  id="htmlEditor"
-                  class="html-editor"
-                  spellcheck="false"
-                  placeholder="HTML・CSS・JavaScriptを入力してください"
-                >${escapeHtml(selected.content)}</textarea>
-              </div>
-
-              <div class="editor-actions">
-                <button id="deleteButton" class="button button-danger" type="button">
-                  削除
-                </button>
-
-                <div class="editor-actions-right">
-                  <button id="duplicateButton" class="button button-secondary" type="button">
-                    複製
-                  </button>
-                  <button id="saveButton" class="button button-primary" type="button">
-                    保存
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="preview-panel">
-            <div class="panel-heading">
-              <h2 class="panel-heading-title">プレビュー</h2>
-              <div class="preview-tools">
-                <span id="deviceLabel" class="device-label">${device.label}</span>
-                <button id="fullscreenButton" class="button button-secondary button-icon" type="button" aria-label="全画面プレビュー">
-                  ⛶
-                </button>
-              </div>
-            </div>
-
-            <div class="preview-stage">
-              <div
-                id="deviceShell"
-                class="device-shell ${device.shellClass}"
-                aria-label="${device.label}プレビュー"
-              >
-                <iframe
-                  id="previewFrame"
-                  class="preview-frame"
-                  title="HTMLプレビュー"
-                  sandbox="allow-scripts allow-forms allow-modals allow-popups"
-                ></iframe>
-              </div>
-            </div>
-          </section>
-        `;
-
-        const nameInput = document.getElementById("documentName");
-        const htmlEditor = document.getElementById("htmlEditor");
-        const saveButton = document.getElementById("saveButton");
-        const duplicateButton = document.getElementById("duplicateButton");
-        const deleteButton = document.getElementById("deleteButton");
-        const fullscreenButton = document.getElementById("fullscreenButton");
-        const frame = document.getElementById("previewFrame");
-        const shell = document.getElementById("deviceShell");
-        const characterCount = document.getElementById("characterCount");
-
-        function applyPreview() {
-          const latestDocument = getSelectedDocument();
-          if (!latestDocument) return;
-
-          frame.srcdoc = latestDocument.content || `
-            <!DOCTYPE html>
-            <html lang="ja">
-              <body style="margin:0;display:grid;min-height:100vh;place-items:center;color:#75809a;font-family:sans-serif;">
-                HTMLを入力してください
-              </body>
-            </html>
-          `;
-        }
-
-        function resizePreview() {
-          const currentDevice = devices[state.deviceKey];
-          const scale = getPreviewScale(currentDevice);
-
-          shell.style.width = `${currentDevice.width}px`;
-          shell.style.height = `${currentDevice.height}px`;
-          shell.style.transform = `scale(${scale})`;
-          shell.style.margin = `${-(currentDevice.height * (1 - scale)) / 2}px ${-(currentDevice.width * (1 - scale)) / 2}px`;
-        }
-
-        function updateDocument({ shouldRenderList = true } = {}) {
-          const documentItem = getSelectedDocument();
-
-          if (!documentItem) return;
-
-          documentItem.name = nameInput.value.trim() || "名称未設定";
-          documentItem.content = htmlEditor.value;
-          documentItem.updatedAt = Date.now();
-
-          characterCount.textContent = `${documentItem.content.length.toLocaleString("ja-JP")}文字`;
-          elements.selectedTitle.textContent = documentItem.name;
-
-          saveState();
-
-          if (shouldRenderList) {
-            renderDocumentList();
-          }
-
-          clearTimeout(state.renderTimer);
-          state.renderTimer = setTimeout(applyPreview, 120);
-        }
-
-        nameInput.addEventListener("input", () => updateDocument());
-        htmlEditor.addEventListener("input", () => updateDocument());
-        saveButton.addEventListener("click", () => {
-          updateDocument();
-          saveButton.textContent = "保存しました";
-
-          setTimeout(() => {
-            saveButton.textContent = "保存";
-          }, 1100);
-        });
-
-        htmlEditor.addEventListener("keydown", (event) => {
-          if (event.key === "Tab") {
-            event.preventDefault();
-
-            const start = htmlEditor.selectionStart;
-            const end = htmlEditor.selectionEnd;
-            const value = htmlEditor.value;
-
-            htmlEditor.value = `${value.slice(0, start)}  ${value.slice(end)}`;
-            htmlEditor.selectionStart = htmlEditor.selectionEnd = start + 2;
-            htmlEditor.dispatchEvent(new Event("input"));
-          }
-        });
-
-        duplicateButton.addEventListener("click", () => {
-          const original = getSelectedDocument();
-
-          if (!original) return;
-
-          const now = Date.now();
-          const copy = {
-            id: createId(),
-            name: `${original.name || "名称未設定"} のコピー`,
-            content: original.content,
-            createdAt: now,
-            updatedAt: now
-          };
-
-          state.documents.push(copy);
-          state.selectedId = copy.id;
-          saveState();
-          render();
-        });
-
-        deleteButton.addEventListener("click", () => {
-          state.deleteTargetId = selected.id;
-          elements.deleteDescription.textContent = `「${selected.name || "名称未設定"}」を削除します。この操作は元に戻せません。`;
-          elements.deleteDialog.showModal();
-        });
-
-        fullscreenButton.addEventListener("click", () => {
-          const previewPanel = document.querySelector(".preview-panel");
-
-          if (!document.fullscreenElement) {
-            previewPanel?.requestFullscreen?.();
-          } else {
-            document.exitFullscreen?.();
-          }
-        });
-
-        applyPreview();
-        resizePreview();
-
-        window.requestAnimationFrame(resizePreview);
-      }
-
-      function renderDeviceButtons() {
-        document.querySelectorAll("[data-device]").forEach((button) => {
-          button.classList.toggle("is-active", button.dataset.device === state.deviceKey);
-        });
-      }
-
-      function render() {
-        renderDocumentList();
-        renderWorkspace();
-        renderDeviceButtons();
-      }
-
-      function addDocument() {
-        const now = Date.now();
-
-        const newDocument = {
-          id: createId(),
-          name: `新しいHTML ${state.documents.length + 1}`,
-          content: `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>新しいHTML</title>
-</head>
-<body>
-  <h1>新しいHTML</h1>
-  <p>ここにHTMLを入力してください。</p>
-</body>
-</html>`,
-          createdAt: now,
-          updatedAt: now
-        };
-
-        state.documents.push(newDocument);
-        state.selectedId = newDocument.id;
-        saveState();
-        render();
-        closeSidebar();
-
-        setTimeout(() => {
-          document.getElementById("documentName")?.focus();
-          document.getElementById("documentName")?.select();
-        }, 0);
-      }
-
-      function deleteSelectedDocument() {
-        const targetId = state.deleteTargetId;
-
-        if (!targetId) return;
-
-        const index = state.documents.findIndex((documentItem) => documentItem.id === targetId);
-
-        if (index === -1) return;
-
-        state.documents.splice(index, 1);
-
-        const nextDocument = state.documents[index] || state.documents[index - 1] || null;
-        state.selectedId = nextDocument?.id || null;
-        state.deleteTargetId = null;
-
-        saveState();
-        render();
-      }
-
-      elements.addDocumentButton.addEventListener("click", addDocument);
-
-      elements.menuButton.addEventListener("click", () => {
-        if (elements.sidebar.classList.contains("is-open")) {
-          closeSidebar();
-        } else {
-          openSidebar();
-        }
+      matches.push({
+        start: found,
+        end: found + query.length
       });
 
-      elements.sidebarBackdrop.addEventListener("click", closeSidebar);
+      position = found + Math.max(query.length, 1);
+    }
 
-      elements.cancelDeleteButton.addEventListener("click", () => {
-        state.deleteTargetId = null;
-        elements.deleteDialog.close();
+    return matches;
+  }
+
+  function updateSearchInfo() {
+    searchMatches = getSearchMatches();
+
+    if (!searchInput.value) {
+      $("searchResult").textContent = "";
+      currentSearchIndex = -1;
+      return;
+    }
+
+    if (!searchMatches.length) {
+      $("searchResult").textContent = "0件";
+      currentSearchIndex = -1;
+      return;
+    }
+
+    if (currentSearchIndex >= searchMatches.length) {
+      currentSearchIndex = 0;
+    }
+
+    if (currentSearchIndex < 0) {
+      $("searchResult").textContent = `${searchMatches.length}件`;
+    } else {
+      $("searchResult").textContent =
+        `${currentSearchIndex + 1}/${searchMatches.length}`;
+    }
+  }
+
+  function updateHighlight() {
+    const text = source.value;
+    const query = searchInput.value;
+
+    if (!query) {
+      highlight.innerHTML = escapeHtml(text) + "\n";
+      syncHighlightScroll();
+      return;
+    }
+
+    const matches = getSearchMatches();
+
+    if (!matches.length) {
+      highlight.innerHTML = escapeHtml(text) + "\n";
+      syncHighlightScroll();
+      return;
+    }
+
+    let output = "";
+    let position = 0;
+
+    matches.forEach((match, index) => {
+      output += escapeHtml(text.slice(position, match.start));
+
+      const className = index === currentSearchIndex ? "current" : "";
+      output += `<mark class="${className}">${escapeHtml(text.slice(match.start, match.end))}</mark>`;
+
+      position = match.end;
+    });
+
+    output += escapeHtml(text.slice(position)) + "\n";
+
+    highlight.innerHTML = output;
+    syncHighlightScroll();
+  }
+
+  function syncHighlightScroll() {
+    highlight.scrollTop = source.scrollTop;
+    highlight.scrollLeft = source.scrollLeft;
+  }
+
+  function goToNextSearchResult() {
+    updateSearchInfo();
+
+    if (!searchMatches.length) {
+      updateHighlight();
+      return;
+    }
+
+    currentSearchIndex = (currentSearchIndex + 1) % searchMatches.length;
+
+    updateSearchInfo();
+    updateHighlight();
+
+    const current = searchMatches[currentSearchIndex];
+
+    source.focus();
+    source.setSelectionRange(current.start, current.end);
+
+    const lineHeight = 19.5;
+    const before = source.value.slice(0, current.start);
+    const lineNumber = before.split("\n").length - 1;
+    const targetTop = Math.max(0, lineNumber * lineHeight - source.clientHeight * 0.35);
+
+    source.scrollTop = targetTop;
+    syncHighlightScroll();
+  }
+
+  function saveCurrent() {
+    const name = (nameInput.value || "").trim() || "無題";
+    const html = source.value;
+
+    if (editingId) {
+      const item = items.find(value => value.id === editingId);
+
+      if (item) {
+        item.name = name;
+        item.html = html;
+        item.updated = Date.now();
+        selectedId = item.id;
+      }
+    } else {
+      const id = uid();
+
+      items.push({
+        id,
+        name,
+        html,
+        updated: Date.now()
       });
 
-      elements.confirmDeleteButton.addEventListener("click", () => {
-        elements.deleteDialog.close();
-        deleteSelectedDocument();
-      });
+      selectedId = id;
+    }
 
-      document.querySelectorAll("[data-device]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const deviceKey = button.dataset.device;
+    persist();
+    showList();
+  }
 
-          if (!devices[deviceKey]) return;
+  function deleteCurrent() {
+    if (!editingId) return;
 
-          state.deviceKey = deviceKey;
-          saveState();
-          render();
-        });
-      });
+    const item = items.find(value => value.id === editingId);
 
-      window.addEventListener("resize", () => {
-        const selected = getSelectedDocument();
+    if (!item) {
+      showList();
+      return;
+    }
 
-        if (!selected) return;
+    if (!confirm(`「${item.name || "無題"}」を削除しますか？`)) {
+      return;
+    }
 
-        const shell = document.getElementById("deviceShell");
-        const stage = document.querySelector(".preview-stage");
+    items = items.filter(value => value.id !== editingId);
 
-        if (!shell || !stage) return;
+    const newest = items
+      .slice()
+      .sort((a, b) => b.updated - a.updated)[0];
 
-        const device = devices[state.deviceKey];
-        const scale = getPreviewScale(device);
+    selectedId = newest ? newest.id : null;
 
-        shell.style.width = `${device.width}px`;
-        shell.style.height = `${device.height}px`;
-        shell.style.transform = `scale(${scale})`;
-        shell.style.margin = `${-(device.height * (1 - scale)) / 2}px ${-(device.width * (1 - scale)) / 2}px`;
-      });
+    persist();
+    showList();
+  }
 
-      loadState();
-      render();
-    })();
-  </script>
+  function cancelEdit() {
+    if (!draftBeforeEditing) {
+      showList();
+      return;
+    }
+
+    const changed =
+      nameInput.value !== draftBeforeEditing.name ||
+      source.value !== draftBeforeEditing.html;
+
+    if (changed && !confirm("変更を保存せずに戻りますか？")) {
+      return;
+    }
+
+    showList();
+  }
+
+  function openFullscreen() {
+    const item = selectedItem();
+
+    if (!item) return;
+
+    fullFrame.srcdoc = item.html || "";
+    $("fullscreen").classList.add("show");
+  }
+
+  function closeFullscreen() {
+    $("fullscreen").classList.remove("show");
+    fullFrame.srcdoc = "";
+  }
+
+  $("btnFullscreen").onclick = openFullscreen;
+  $("exit").onclick = closeFullscreen;
+
+  $("btnBack").onclick = cancelEdit;
+  $("btnCancel").onclick = cancelEdit;
+  $("btnSave").onclick = saveCurrent;
+  $("btnDelete").onclick = deleteCurrent;
+
+  $("btnClear").onclick = () => {
+    if (!source.value) return;
+
+    if (!confirm("入力中のHTMLをクリアしますか？")) {
+      return;
+    }
+
+    source.value = "";
+    updateCount();
+    updateSearchInfo();
+    updateHighlight();
+    source.focus();
+  };
+
+  source.addEventListener("input", () => {
+    updateCount();
+    currentSearchIndex = -1;
+    updateSearchInfo();
+    updateHighlight();
+  });
+
+  source.addEventListener("scroll", syncHighlightScroll);
+
+  searchInput.addEventListener("input", () => {
+    currentSearchIndex = -1;
+    updateSearchInfo();
+    updateHighlight();
+  });
+
+  searchInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      goToNextSearchResult();
+    }
+  });
+
+  $("btnSearch").onclick = goToNextSearchResult;
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && $("fullscreen").classList.contains("show")) {
+      closeFullscreen();
+    }
+  });
+
+  load();
+  showList();
+})();
+</script>
 </body>
 </html>
