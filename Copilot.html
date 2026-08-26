@@ -1,711 +1,943 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>iPhone 17 Pro PWAプレビューア</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#05060a">
-  <style>
-    :root {
-      color-scheme: dark;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #05060a;
-      color: #f5f5f7;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>アルトサックス専用チューナー</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --surface2: #0f3460;
+            --accent: #e94560;
+            --accent2: #4ecdc4;
+            --text: #f5f5f7;
+            --text-dim: #a0a0b8;
+            --good: #2ecc71;
+            --warn: #f39c12;
+            --bad: #e74c3c;
+            --needle: #ff6b6b;
+            --dial-bg: #0d1b2a;
+        }
 
-    /* Layout */
-    .app-shell {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 12px 12px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      height: 100%;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 4px;
-    }
-    .app-title {
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-    .segmented {
-      display: inline-flex;
-      background: #111218;
-      border-radius: 999px;
-      padding: 2px;
-      border: 1px solid #262738;
-    }
-    .segmented button {
-      flex: 1;
-      min-width: 72px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: none;
-      background: transparent;
-      color: #c7c7cc;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-    .segmented button.active {
-      background: #2f3244;
-      color: #f5f5f7;
-    }
+        .container {
+            width: 100%;
+            max-width: 520px;
+            padding: 16px 20px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
 
-    .primary-button {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      background: #0a84ff;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      min-width: 110px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 0 0 1px rgba(10,132,255,0.35);
-    }
-    .primary-button span.icon {
-      font-size: 14px;
-    }
+        header {
+            text-align: center;
+            margin-bottom: 2px;
+        }
 
-    .primary-button:active {
-      transform: scale(0.98);
-    }
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            background: linear-gradient(135deg, var(--accent2), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            letter-spacing: 0.2em;
+            margin-top: 2px;
+            font-weight: 400;
+        }
 
-    .app-main {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: 12px;
-      flex: 1;
-      min-height: 0;
-    }
-    @media (max-width: 800px) {
-      .app-main {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
+        .note-display {
+            text-align: center;
+            padding: 10px 0 4px;
+        }
+        .note-display .sax-note {
+            font-size: 4.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: 0.02em;
+            transition: color 0.15s ease;
+            text-shadow: 0 0 30px rgba(78, 205, 196, 0.25);
+        }
+        .note-display .sax-note .octave {
+            font-size: 2rem;
+            font-weight: 500;
+            opacity: 0.7;
+            vertical-align: super;
+            margin-left: 2px;
+        }
+        .note-display .concert-pitch {
+            font-size: 1rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+            letter-spacing: 0.05em;
+            font-weight: 400;
+        }
+        .note-display .concert-pitch span {
+            color: var(--accent2);
+            font-weight: 600;
+        }
 
-    .panel {
-      background: #0b0c12;
-      border-radius: 18px;
-      border: 1px solid #1c1d27;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 2px 8px;
-    }
-    .panel-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: #9fa0a6;
-    }
-    .panel-actions {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
+        .frequency-display {
+            font-size: 1.05rem;
+            color: var(--text-dim);
+            letter-spacing: 0.03em;
+            font-variant-numeric: tabular-nums;
+        }
+        .frequency-display .freq-value {
+            color: var(--text);
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
 
-    .sub-button {
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: none;
-      background: #151623;
-      color: #d1d1d6;
-      font-size: 12px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      min-width: 80px;
-      justify-content: center;
-    }
-    .sub-button:active {
-      transform: scale(0.98);
-    }
+        .meter-container {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            aspect-ratio: 2.1 / 1;
+            margin: 0 auto;
+        }
+        .meter-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 14px;
+        }
 
-    .editor-wrapper {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-    .editor-input {
-      flex: 1;
-      min-height: 0;
-      border-radius: 12px;
-      border: 1px solid #262738;
-      background: #05060a;
-      padding: 10px;
-      color: #f5f5f7;
-      font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      resize: none;
-      outline: none;
-      line-height: 1.4;
-    }
-    .editor-input::placeholder {
-      color: #5c5d66;
-    }
+        .cents-readout {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.04em;
+            transition: color 0.2s ease;
+            min-height: 2.2rem;
+            line-height: 1.3;
+        }
+        .cents-readout .unit {
+            font-size: 1rem;
+            font-weight: 400;
+            opacity: 0.65;
+            margin-left: 2px;
+        }
+        .cents-readout.good {
+            color: var(--good);
+        }
+        .cents-readout.warn {
+            color: var(--warn);
+        }
+        .cents-readout.bad {
+            color: var(--bad);
+        }
+        .cents-readout.idle {
+            color: var(--text-dim);
+            font-weight: 400;
+            font-size: 1.1rem;
+        }
 
-    /* iPhone 17 Pro frame */
-    .phone-panel {
-      align-items: center;
-      justify-content: center;
-    }
-    .phone-shell {
-      position: relative;
-      aspect-ratio: 19.5 / 9;
-      max-width: 420px;
-      width: 100%;
-      margin: 4px auto 0;
-      padding: 10px;
-      border-radius: 40px;
-      background: radial-gradient(circle at 20% 0%, #1b1c26 0, #05060a 55%, #000 100%);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.04),
-        0 18px 40px rgba(0,0,0,0.85);
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
-    }
-    .phone-screen {
-      position: relative;
-      flex: 1;
-      border-radius: 32px;
-      background: #000;
-      overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
-    }
+        .target-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .target-btn {
+            padding: 8px 14px;
+            border-radius: 22px;
+            border: 2px solid var(--surface2);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.04em;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .target-btn:hover {
+            border-color: var(--accent2);
+            background: var(--surface2);
+        }
+        .target-btn.active {
+            border-color: var(--accent2);
+            background: var(--accent2);
+            color: #0d1b2a;
+            box-shadow: 0 0 18px rgba(78, 205, 196, 0.45);
+        }
+        .target-btn .concert-label {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            display: block;
+            font-weight: 400;
+        }
 
-    .dynamic-island {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 40%;
-      max-width: 180px;
-      height: 32px;
-      background: #000;
-      border-radius: 999px;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.06),
-        0 10px 18px rgba(0,0,0,0.9);
-      z-index: 20;
-    }
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--surface);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            flex-shrink: 0;
+            transition: background 0.3s ease;
+        }
+        .status-dot.listening {
+            background: var(--good);
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+        .status-dot.idle-dot {
+            background: var(--text-dim);
+        }
 
-    .screen-inner {
-      position: absolute;
-      inset: 0;
-      padding: 10px 10px 10px;
-      display: flex;
-      flex-direction: column;
-    }
+        @keyframes pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 6px rgba(46, 204, 113, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(46, 204, 113, 0.8);
+            }
+        }
 
-    /* Safe areas (simulated) */
-    .safe-top {
-      flex: 0 0 44px;
-    }
-    .safe-bottom {
-      flex: 0 0 34px;
-    }
+        .start-btn {
+            padding: 14px 36px;
+            border-radius: 32px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent2), #2a9d8f);
+            color: #0d1b2a;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.1em;
+            font-family: inherit;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 24px rgba(78, 205, 196, 0.35);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(78, 205, 196, 0.5);
+        }
+        .start-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 3px 14px rgba(78, 205, 196, 0.3);
+        }
+        .start-btn.running {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 6px 24px rgba(231, 76, 60, 0.35);
+        }
 
-    .pwa-viewport {
-      position: relative;
-      flex: 1 1 auto;
-      border-radius: 24px;
-      overflow: hidden;
-      background: #000;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
-    }
+        .volume-bar-container {
+            width: 100%;
+            max-width: 400px;
+            height: 4px;
+            background: var(--surface);
+            border-radius: 4px;
+            overflow: hidden;
+            opacity: 0.7;
+        }
+        .volume-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent2), var(--good));
+            border-radius: 4px;
+            transition: width 0.06s ease;
+        }
 
-    .pwa-viewport iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #000;
-    }
-
-    .home-indicator {
-      position: absolute;
-      left: 50%;
-      bottom: 10px;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 4px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.75);
-      opacity: 0.9;
-      pointer-events: none;
-    }
-
-    .phone-shell::before {
-      content: "";
-      position: absolute;
-      inset: 6px;
-      border-radius: 34px;
-      border: 1px solid rgba(255,255,255,0.06);
-      pointer-events: none;
-    }
-
-    /* Fullscreen mode */
-    body.fullscreen-mode .app-shell {
-      max-width: none;
-      width: 100%;
-      height: 100vh;
-      padding: 8px 8px 12px;
-    }
-    body.fullscreen-mode .app-main {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    body.fullscreen-mode .editor-panel {
-      display: none;
-    }
-    body.fullscreen-mode .phone-shell {
-      max-width: none;
-      height: calc(100vh - 52px);
-      aspect-ratio: auto;
-      margin: 0 auto;
-    }
-    body.fullscreen-mode .app-header {
-      padding-inline: 4px;
-    }
-
-    /* Utility */
-    .hidden {
-      display: none !important;
-    }
-  </style>
+        @media (max-width: 420px) {
+            .container {
+                padding: 10px 12px 20px;
+                gap: 8px;
+            }
+            .note-display .sax-note {
+                font-size: 3.4rem;
+            }
+            .note-display .sax-note .octave {
+                font-size: 1.4rem;
+            }
+            .target-btn {
+                padding: 6px 10px;
+                font-size: 0.72rem;
+            }
+            .cents-readout {
+                font-size: 1.3rem;
+                min-height: 1.8rem;
+            }
+            header h1 {
+                font-size: 1.2rem;
+            }
+            .start-btn {
+                padding: 12px 28px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="app-title">iPhone 17 Pro PWAプレビューア</div>
-      <div class="header-actions">
-        <div class="segmented" id="modeToggle">
-          <button type="button" data-mode="editor" class="active">HTML入力</button>
-          <button type="button" data-mode="preview">プレビュー</button>
+    <div class="container">
+        <header>
+            <h1>🎷 アルトサックス・チューナー</h1>
+            <div class="subtitle">E♭ ALTO SAXOPHONE TUNER</div>
+        </header>
+
+        <button class="start-btn" id="startBtn">🎤 開始する</button>
+
+        <div class="note-display">
+            <div class="sax-note" id="saxNoteDisplay">--<span class="octave" id="saxOctave"></span></div>
+            <div class="concert-pitch">Concert: <span id="concertNoteDisplay">--</span></div>
         </div>
-        <button class="primary-button" id="fullscreenToggle" type="button">
-          <span class="icon">⤢</span><span id="fullscreenLabel">全画面</span>
-        </button>
-      </div>
-    </header>
 
-    <main class="app-main">
-      <!-- Editor panel -->
-      <section class="panel editor-panel" id="editorPanel">
-        <div class="panel-header">
-          <div class="panel-title">HTML / CSS / JavaScript</div>
-          <div class="panel-actions">
-            <button class="sub-button" type="button" id="sampleButton">サンプルHTML</button>
-            <button class="sub-button" type="button" id="clearButton">クリア</button>
-            <button class="sub-button" type="button" id="previewButton">プレビュー</button>
-          </div>
+        <div class="frequency-display">
+            <span class="freq-value" id="freqDisplay">---.-</span> Hz
         </div>
-        <div class="editor-wrapper">
-          <textarea id="htmlInput" class="editor-input" spellcheck="false" placeholder="ここにPWAのHTMLを貼り付けてください"></textarea>
+
+        <div class="meter-container">
+            <canvas id="meterCanvas"></canvas>
         </div>
-      </section>
 
-      <!-- Phone preview panel -->
-      <section class="panel phone-panel" id="previewPanel">
-        <div class="panel-header">
-          <div class="panel-title">iPhone 17 Pro PWAプレビュー</div>
-          <div class="panel-actions">
-            <button class="sub-button" type="button" id="previewButtonTop">プレビュー</button>
-          </div>
+        <div class="cents-readout idle" id="centsDisplay">音を検出しています...</div>
+
+        <div class="target-buttons" id="targetButtons">
+            <button class="target-btn" data-target="-1">自動
+                <span class="concert-label">Auto</span>
+            </button>
+            <button class="target-btn" data-target="67">サックスG
+                <span class="concert-label">Concert B♭</span>
+            </button>
+            <button class="target-btn" data-target="66">サックスF#
+                <span class="concert-label">Concert A</span>
+            </button>
+            <button class="target-btn" data-target="62">サックスD
+                <span class="concert-label">Concert F</span>
+            </button>
+            <button class="target-btn" data-target="60">サックスC
+                <span class="concert-label">Concert E♭</span>
+            </button>
         </div>
-        <div class="phone-shell">
-          <div class="phone-screen">
-            <div class="dynamic-island"></div>
-            <div class="screen-inner">
-              <div class="safe-top"></div>
-              <div class="pwa-viewport">
-                <iframe id="previewFrame"
-                        title="PWA Preview"
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-pointer-lock">
-                </iframe>
-                <div class="home-indicator"></div>
-              </div>
-              <div class="safe-bottom"></div>
-            </div>
-          </div>
+
+        <div class="volume-bar-container">
+            <div class="volume-bar" id="volumeBar"></div>
         </div>
-      </section>
-    </main>
-  </div>
 
-  <script>
-    (function () {
-      const STORAGE_KEY = "pwaPreviewHtml";
-      const htmlInput = document.getElementById("htmlInput");
-      const previewFrame = document.getElementById("previewFrame");
-      const previewButton = document.getElementById("previewButton");
-      const previewButtonTop = document.getElementById("previewButtonTop");
-      const clearButton = document.getElementById("clearButton");
-      const sampleButton = document.getElementById("sampleButton");
-      const modeToggle = document.getElementById("modeToggle");
-      const editorPanel = document.getElementById("editorPanel");
-      const previewPanel = document.getElementById("previewPanel");
-      const fullscreenToggle = document.getElementById("fullscreenToggle");
-      const fullscreenLabel = document.getElementById("fullscreenLabel");
+        <div class="status-bar">
+            <span class="status-dot idle-dot" id="statusDot"></span>
+            <span id="statusText">マイクの許可が必要です。「開始する」を押してください</span>
+        </div>
+    </div>
 
-      function loadFromStorage() {
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved && saved.trim()) {
-            htmlInput.value = saved;
-          } else {
-            setSampleHtml();
-          }
-        } catch (e) {
-          setSampleHtml();
-        }
-      }
+    <script>
+        (function() {
+            // ==================== 定数とユーティリティ ====================
+            const NOTE_NAMES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const NOTE_NAMES_FLAT = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+            const A4_FREQ = 440.0;
+            const A4_MIDI = 69;
+            const SAX_TRANSPOSE = 9; // アルトサックス: concert音 + 9半音 = サックス記譜音
 
-      function saveToStorage() {
-        try {
-          localStorage.setItem(STORAGE_KEY, htmlInput.value || "");
-        } catch (e) {
-          // ignore
-        }
-      }
+            // 中音萨克斯音域 (concert pitch) 约 D♭3 (138.59Hz) 到 A5 (880Hz)
+            const MIN_FREQ = 110;
+            const MAX_FREQ = 1000;
+            const MIN_LAG = Math.floor(44100 / MAX_FREQ); // 约44
+            const MAX_LAG = Math.floor(44100 / MIN_FREQ); // 约400
 
-      function preprocessHtml(source) {
-        let html = source || "";
-        // env(safe-area-inset-*) を var(--safe-area-inset-*) に置換して擬似的に再現
-        html = html.replace(/env`\(\s*safe-area-inset-top\s*\)`/gi, "var(--safe-area-inset-top)");
-        html = html.replace(/env`\(\s*safe-area-inset-bottom\s*\)`/gi, "var(--safe-area-inset-bottom)");
-        html = html.replace(/env`\(\s*safe-area-inset-left\s*\)`/gi, "var(--safe-area-inset-left)");
-        html = html.replace(/env`\(\s*safe-area-inset-right\s*\)`/gi, "var(--safe-area-inset-right)");
-        return html;
-      }
+            const BUFFER_SIZE = 2048;
+            const RMS_THRESHOLD = 0.008;
+            const AUTOCORR_THRESHOLD = 0.55;
+            const SMOOTHING_ALPHA = 0.35;
 
-      function renderPreview() {
-        const userHtml = htmlInput.value || "";
-        saveToStorage();
+            let audioContext = null;
+            let analyser = null;
+            let mediaStream = null;
+            let isRunning = false;
+            let animationId = null;
+            let audioBuffer = null;
+            let detectedFrequency = null;
+            let smoothedFrequency = null;
+            let currentCents = 0;
+            let currentConcertMidi = -1;
+            let currentSaxMidi = -1;
+            let currentVolume = 0;
+            let targetMidi = -1; // -1 = 自動
+            let lastStableNote = -1;
+            let frameCount = 0;
 
-        const processed = preprocessHtml(userHtml);
+            // DOM要素
+            const startBtn = document.getElementById('startBtn');
+            const saxNoteDisplay = document.getElementById('saxNoteDisplay');
+            const saxOctave = document.getElementById('saxOctave');
+            const concertNoteDisplay = document.getElementById('concertNoteDisplay');
+            const freqDisplay = document.getElementById('freqDisplay');
+            const centsDisplay = document.getElementById('centsDisplay');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const volumeBar = document.getElementById('volumeBar');
+            const meterCanvas = document.getElementById('meterCanvas');
+            const meterCtx = meterCanvas.getContext('2d');
+            const targetButtons = document.querySelectorAll('.target-btn');
 
-        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-        const skeleton = [
-          "<!DOCTYPE html>",
-          "<html lang=\"ja\">",
-          "<head>",
-          "<meta charset=\"utf-8\">",
-          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">",
-          "<style>",
-          "  :root {",
-          "    color-scheme: dark;",
-          "    --safe-area-inset-top: 44px;",
-          "    --safe-area-inset-bottom: 34px;",
-          "    --safe-area-inset-left: 0px;",
-          "    --safe-area-inset-right: 0px;",
-          "  }",
-          "  html, body {",
-          "    margin: 0;",
-          "    padding: 0;",
-          "    background: #000;",
-          "    color: #f5f5f7;",
-          "    font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", system-ui, sans-serif;",
-          "    overscroll-behavior: contain;",
-          "  }",
-          "  body {",
-          "    min-height: 100vh;",
-          "  }",
-          "  ::-webkit-scrollbar {",
-          "    width: 0;",
-          "    height: 0;",
-          "  }",
-          "</style>",
-          "</head>",
-          "<body>",
-          processed,
-          "</body>",
-          "</html>"
-        ].join("\n");
+            // ==================== 音符ユーティリティ ====================
+            function midiToFreq(midi) {
+                return A4_FREQ * Math.pow(2, (midi - A4_MIDI) / 12);
+            }
 
-        doc.open();
-        doc.write(skeleton);
-        doc.close();
-      }
+            function freqToMidi(freq) {
+                return 12 * Math.log2(freq / A4_FREQ) + A4_MIDI;
+            }
 
-      function clearInput() {
-        htmlInput.value = "";
-        saveToStorage();
-      }
+            function midiToNoteName(midi, useFlat = false) {
+                const names = useFlat ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
+                const noteIndex = ((midi % 12) + 12) % 12;
+                const octave = Math.floor(midi / 12) - 1;
+                return { name: names[noteIndex], octave: octave, noteIndex: noteIndex };
+            }
 
-      function setSampleHtml() {
-        const sample = [
-          "<!-- サンプルPWAレイアウト (iPhone 17 Pro Safe Area / タブバー / 固定ヘッダー) -->",
-          "<style>",
-          "  :root {",
-          "    --bg: #000000;",
-          "    --fg: #f5f5f7;",
-          "    --accent: #0a84ff;",
-          "    --surface: #111118;",
-          "    --border: #262738;",
-          "  }",
-          "  body {",
-          "    background: var(--bg);",
-          "    color: var(--fg);",
-          "  }",
-          "  .app {",
-          "    position: fixed;",
-          "    inset: 0;",
-          "    display: flex;",
-          "    flex-direction: column;",
-          "    background: radial-gradient(circle at 0 0, #151522 0, #000 55%, #000 100%);",
-          "  }",
-          "  .status-bar-space {",
-          "    height: var(--safe-area-inset-top);",
-          "  }",
-          "  .header {",
-          "    position: sticky;",
-          "    top: 0;",
-          "    z-index: 10;",
-          "    padding: 10px 16px;",
-          "    padding-top: calc(10px + var(--safe-area-inset-top));",
-          "    background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.6));",
-          "    backdrop-filter: blur(18px);",
-          "    display: flex;",
-          "    align-items: center;",
-          "    justify-content: space-between;",
-          "  }",
-          "  .header-title {",
-          "    font-size: 16px;",
-          "    font-weight: 600;",
-          "  }",
-          "  .header-sub {",
-          "    font-size: 11px;",
-          "    color: #9fa0a6;",
-          "  }",
-          "  .header-actions {",
-          "    display: flex;",
-          "    gap: 8px;",
-          "  }",
-          "  .pill {",
-          "    padding: 6px 10px;",
-          "    border-radius: 999px;",
-          "    border: 1px solid rgba(255,255,255,0.12);",
-          "    font-size: 11px;",
-          "  }",
-          "  .pill-accent {",
-          "    background: var(--accent);",
-          "    border-color: rgba(10,132,255,0.6);",
-          "  }",
-          "  .content {",
-          "    flex: 1 1 auto;",
-          "    overflow-y: auto;",
-          "    padding: 12px 16px 80px;",
-          "  }",
-          "  .card {",
-          "    background: var(--surface);",
-          "    border-radius: 16px;",
-          "    border: 1px solid var(--border);",
-          "    padding: 12px 12px 12px;",
-          "    margin-bottom: 10px;",
-          "  }",
-          "  .card-title {",
-          "    font-size: 13px;",
-          "    font-weight: 500;",
-          "    margin-bottom: 4px;",
-          "  }",
-          "  .card-body {",
-          "    font-size: 12px;",
-          "    color: #d1d1d6;",
-          "  }",
-          "  .tab-bar {",
-          "    position: fixed;",
-          "    left: 0;",
-          "    right: 0;",
-          "    bottom: 0;",
-          "    padding-bottom: var(--safe-area-inset-bottom);",
-          "    padding-top: 6px;",
-          "    background: rgba(0,0,0,0.9);",
-          "    backdrop-filter: blur(20px);",
-          "    border-top: 1px solid rgba(255,255,255,0.08);",
-          "    display: flex;",
-          "    justify-content: space-around;",
-          "    align-items: center;",
-          "  }",
-          "  .tab-item {",
-          "    flex: 1;",
-          "    text-align: center;",
-          "    font-size: 10px;",
-          "    color: #9fa0a6;",
-          "  }",
-          "  .tab-item span.icon {",
-          "    display: block;",
-          "    font-size: 18px;",
-          "    margin-bottom: 2px;",
-          "  }",
-          "  .tab-item.active {",
-          "    color: var(--accent);",
-          "  }",
-          "  .corner-test {",
-          "    position: fixed;",
-          "    top: 0;",
-          "    left: 0;",
-          "    width: 40px;",
-          "    height: 40px;",
-          "    background: rgba(255,0,0,0.4);",
-          "    pointer-events: none;",
-          "  }",
-          "  .vh-test {",
-          "    margin-top: 12px;",
-          "    padding: 10px;",
-          "    border-radius: 12px;",
-          "    border: 1px dashed #3a3b4a;",
-          "    font-size: 11px;",
-          "  }",
-          "  .vh-box {",
-          "    background: rgba(10,132,255,0.18);",
-          "    border-radius: 10px;",
-          "    padding: 6px;",
-          "    margin-top: 6px;",
-          "  }",
-          "</style>",
-          "<div class=\"app\">",
-          "  <div class=\"header\">",
-          "    <div>",
-          "      <div class=\"header-title\">PWA Safe Areaテスト</div>",
-          "      <div class=\"header-sub\">Dynamic Island / Homeインジケータ / タブバー</div>",
-          "    </div>",
-          "    <div class=\"header-actions\">",
-          "      <div class=\"pill\">100vh / 100dvh</div>",
-          "      <div class=\"pill pill-accent\">position: fixed</div>",
-          "    </div>",
-          "  </div>",
-          "  <div class=\"content\">",
-          "    <div class=\"card\">",
-          "      <div class=\"card-title\">スクロールテスト</div>",
-          "      <div class=\"card-body\">",
-          "        下方向にスクロールして、タブバーとの重なりや不要な余白を確認してください。",
-          "      </div>",
-          "    </div>",
-          "    <div class=\"card\">",
-          "      <div class=\"card-title\">Dynamic Island付近</div>",
-          "      <div class=\"card-body\">",
-          "        ステータスバーやDynamic Island付近にコンテンツが入り込んでいないかを確認します。",
-          "      </div>",
-          "    </div>",
-          "    <div class=\"card vh-test\">",
-          "      <div>100vh / 100dvhの違いによるレイアウト崩れを確認するための領域です。</div>",
-          "      <div class=\"vh-box\" style=\"height: 40vh;\">height: 40vh のボックス</div>",
-          "      <div class=\"vh-box\" style=\"height: 40dvh; margin-top: 6px;\">height: 40dvh のボックス</div>",
-          "    </div>",
-          "    <div class=\"card\">",
-          "      <div class=\"card-title\">入力テスト</div>",
-          "      <div class=\"card-body\">",
-          "        <input type=\"text\" placeholder=\"テキスト入力\" style=\"width:100%;padding:8px;border-radius:10px;border:1px solid #3a3b4a;background:#05060a;color:#f5f5f7;\">",
-          "        <button style=\"margin-top:8px;width:100%;padding:10px;border-radius:999px;border:none;background:#0a84ff;color:#fff;font-size:13px;\">ボタン操作テスト</button>",
-          "      </div>",
-          "    </div>",
-          "    <div class=\"card\">",
-          "      <div class=\"card-title\">長押し / タップ / スワイプ</div>",
-          "      <div class=\"card-body\">",
-          "        この領域でタップ・長押し・スワイプなどのジェスチャーを試してください。",
-          "      </div>",
-          "    </div>",
-          "  </div>",
-          "  <div class=\"tab-bar\">",
-          "    <div class=\"tab-item active\">",
-          "      <span class=\"icon\">●</span>",
-          "      Home",
-          "    </div>",
-          "    <div class=\"tab-item\">",
-          "      <span class=\"icon\">★</span>",
-          "      Test",
-          "    </div>",
-          "    <div class=\"tab-item\">",
-          "      <span class=\"icon\">☰</span>",
-          "      Menu",
-          "    </div>",
-          "  </div>",
-          "  <div class=\"corner-test\"></div>",
-          "</div>"
-        ].join("\n");
-        htmlInput.value = sample;
-      }
+            function centsFromFreq(freq, referenceMidi) {
+                const refFreq = midiToFreq(referenceMidi);
+                return 1200 * Math.log2(freq / refFreq);
+            }
 
-      function setMode(mode) {
-        if (mode === "editor") {
-          editorPanel.classList.remove("hidden");
-          previewPanel.classList.remove("hidden");
-        } else if (mode === "preview") {
-          editorPanel.classList.add("hidden");
-          previewPanel.classList.remove("hidden");
-        }
-        Array.prototype.forEach.call(modeToggle.querySelectorAll("button"), function (btn) {
-          btn.classList.toggle("active", btn.dataset.mode === mode);
-        });
-      }
+            // サックス記譜音のMIDIを取得 (concert MIDI + 9)
+            function saxMidiFromConcert(concertMidi) {
+                return concertMidi + SAX_TRANSPOSE;
+            }
 
-      function toggleFullscreen() {
-        const isFull = document.body.classList.toggle("fullscreen-mode");
-        fullscreenLabel.textContent = isFull ? "終了" : "全画面";
-      }
+            function formatNoteDisplay(midi, useFlat = false) {
+                const info = midiToNoteName(midi, useFlat);
+                return { name: info.name, octave: info.octave, noteIndex: info.noteIndex };
+            }
 
-      // Event bindings
-      previewButton.addEventListener("click", renderPreview);
-      previewButtonTop.addEventListener("click", renderPreview);
-      clearButton.addEventListener("click", clearInput);
-      sampleButton.addEventListener("click", function () {
-        setSampleHtml();
-        saveToStorage();
-      });
-      htmlInput.addEventListener("input", saveToStorage);
+            // ==================== オーディオ処理 ====================
+            async function startAudio() {
+                if (isRunning) return;
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false,
+                            channelCount: 1,
+                            sampleRate: 44100,
+                        }
+                    });
+                    audioContext = new(window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
+                    await audioContext.resume();
 
-      modeToggle.addEventListener("click", function (e) {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        setMode(btn.dataset.mode);
-      });
+                    const source = audioContext.createMediaStreamSource(mediaStream);
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = BUFFER_SIZE * 2;
+                    analyser.smoothingTimeConstant = 0;
+                    source.connect(analyser);
 
-      fullscreenToggle.addEventListener("click", toggleFullscreen);
+                    audioBuffer = new Float32Array(BUFFER_SIZE);
+                    isRunning = true;
+                    startBtn.textContent = '⏹ 停止する';
+                    startBtn.classList.add('running');
+                    statusDot.className = 'status-dot listening';
+                    statusText.textContent = '音を検出中... サックスを吹いてください';
+                    updateTargetButtons();
 
-      // Init
-      loadFromStorage();
-      renderPreview();
-    })();
-  </script>
+                    if (!animationId) {
+                        animationId = requestAnimationFrame(processLoop);
+                    }
+                } catch (err) {
+                    console.error('マイクアクセスエラー:', err);
+                    statusDot.className = 'status-dot idle-dot';
+                    statusText.textContent = '⚠️ マイクへのアクセスが拒否されました。ブラウザの設定を確認してください。';
+                    startBtn.textContent = '🎤 再試行する';
+                }
+            }
+
+            function stopAudio() {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+                if (audioContext) {
+                    audioContext.close().catch(() => {});
+                    audioContext = null;
+                }
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                isRunning = false;
+                startBtn.textContent = '🎤 開始する';
+                startBtn.classList.remove('running');
+                statusDot.className = 'status-dot idle-dot';
+                statusText.textContent = '停止しました。「開始する」で再開できます';
+                centsDisplay.textContent = '音を検出しています...';
+                centsDisplay.className = 'cents-readout idle';
+                saxNoteDisplay.textContent = '--';
+                saxOctave.textContent = '';
+                concertNoteDisplay.textContent = '--';
+                freqDisplay.textContent = '---.-';
+                volumeBar.style.width = '0%';
+                detectedFrequency = null;
+                smoothedFrequency = null;
+                currentCents = 0;
+                currentConcertMidi = -1;
+                currentSaxMidi = -1;
+                drawMeter(0, false);
+            }
+
+            // ==================== 音高検出 (自己相関法) ====================
+            function autoCorrelate(buf, sampleRate) {
+                const n = buf.length;
+                let mean = 0;
+                for (let i = 0; i < n; i++) mean += buf[i];
+                mean /= n;
+
+                // 去直流
+                let rms = 0;
+                for (let i = 0; i < n; i++) {
+                    const v = buf[i] - mean;
+                    buf[i] = v;
+                    rms += v * v;
+                }
+                rms = Math.sqrt(rms / n);
+                if (rms < RMS_THRESHOLD) return { freq: null, rms: rms, confidence: 0 };
+
+                const minLag = MIN_LAG;
+                const maxLag = Math.min(MAX_LAG, Math.floor(n / 2));
+
+                let bestLag = -1;
+                let bestCorr = -Infinity;
+                let bestNormCorr = -Infinity;
+
+                // エネルギー計算
+                let energy0 = 0;
+                for (let i = 0; i < n - minLag; i++) {
+                    energy0 += buf[i] * buf[i];
+                }
+                if (energy0 < 1e-10) return { freq: null, rms: rms, confidence: 0 };
+
+                // 自己相関計算（正規化つき）
+                for (let lag = minLag; lag <= maxLag; lag++) {
+                    let corr = 0;
+                    const len = n - lag;
+                    for (let i = 0; i < len; i++) {
+                        corr += buf[i] * buf[i + lag];
+                    }
+                    let energy1 = 0;
+                    for (let i = lag; i < n; i++) {
+                        energy1 += buf[i] * buf[i];
+                    }
+                    const normCorr = corr / Math.sqrt(energy0 * energy1 + 1e-12);
+                    if (normCorr > bestNormCorr) {
+                        bestNormCorr = normCorr;
+                        bestCorr = corr;
+                        bestLag = lag;
+                    }
+                }
+
+                if (bestNormCorr < AUTOCORR_THRESHOLD) {
+                    return { freq: null, rms: rms, confidence: bestNormCorr };
+                }
+
+                // 放物線補間で精度向上
+                let refinedLag = bestLag;
+                if (bestLag > minLag && bestLag < maxLag) {
+                    const c0 = bestNormCorr;
+                    let corrL = 0,
+                        corrR = 0;
+                    const lenL = n - (bestLag - 1);
+                    for (let i = 0; i < lenL; i++) corrL += buf[i] * buf[i + bestLag - 1];
+                    const lenR = n - (bestLag + 1);
+                    for (let i = 0; i < lenR; i++) corrR += buf[i] * buf[i + bestLag + 1];
+                    let energyL = 0,
+                        energyR = 0;
+                    for (let i = bestLag - 1; i < n; i++) energyL += buf[i] * buf[i];
+                    for (let i = bestLag + 1; i < n; i++) energyR += buf[i] * buf[i];
+                    const cL = corrL / Math.sqrt(energy0 * energyL + 1e-12);
+                    const cR = corrR / Math.sqrt(energy0 * energyR + 1e-12);
+                    const denom = cL - 2 * c0 + cR;
+                    if (Math.abs(denom) > 1e-12) {
+                        const delta = 0.5 * (cL - cR) / denom;
+                        if (delta > -1 && delta < 1) {
+                            refinedLag = bestLag + delta;
+                        }
+                    }
+                }
+
+                const freq = sampleRate / refinedLag;
+                return { freq: freq, rms: rms, confidence: bestNormCorr };
+            }
+
+            // ==================== メイン処理ループ ====================
+            function processLoop() {
+                if (!isRunning) return;
+
+                if (analyser && audioBuffer) {
+                    analyser.getFloatTimeDomainData(audioBuffer);
+                    const result = autoCorrelate(audioBuffer, audioContext ? audioContext.sampleRate : 44100);
+
+                    currentVolume = result.rms;
+                    volumeBar.style.width = Math.min(100, result.rms * 120) + '%';
+
+                    if (result.freq !== null && result.freq >= MIN_FREQ && result.freq <= MAX_FREQ) {
+                        if (smoothedFrequency === null || Math.abs(result.freq - smoothedFrequency) > 30) {
+                            smoothedFrequency = result.freq;
+                        } else {
+                            smoothedFrequency = SMOOTHING_ALPHA * result.freq + (1 - SMOOTHING_ALPHA) *
+                                smoothedFrequency;
+                        }
+                        detectedFrequency = smoothedFrequency;
+
+                        const midiFloat = freqToMidi(detectedFrequency);
+                        currentConcertMidi = Math.round(midiFloat);
+                        currentSaxMidi = saxMidiFromConcert(currentConcertMidi);
+                        currentCents = (midiFloat - currentConcertMidi) * 100;
+
+                        // 安定検出
+                        if (currentConcertMidi === lastStableNote) {
+                            frameCount++;
+                        } else {
+                            lastStableNote = currentConcertMidi;
+                            frameCount = 0;
+                        }
+                        const isStable = frameCount > 6;
+
+                        updateDisplay(detectedFrequency, currentConcertMidi, currentSaxMidi, currentCents,
+                            isStable);
+                        drawMeter(currentCents, isStable);
+                    } else {
+                        if (result.rms >= RMS_THRESHOLD && result.confidence > 0.4) {
+                            // 有信号但音高检测不可靠
+                            drawMeter(currentCents, false);
+                            if (currentConcertMidi === -1) {
+                                centsDisplay.textContent = '音を検出中...';
+                                centsDisplay.className = 'cents-readout idle';
+                            }
+                        } else {
+                            // 無信号
+                            drawMeter(0, false);
+                            if (smoothedFrequency !== null) {
+                                smoothedFrequency = null;
+                            }
+                            if (currentConcertMidi === -1) {
+                                centsDisplay.textContent = '音を検出しています...';
+                                centsDisplay.className = 'cents-readout idle';
+                            }
+                        }
+                    }
+                }
+
+                animationId = requestAnimationFrame(processLoop);
+            }
+
+            // ==================== 表示更新 ====================
+            function updateDisplay(freq, concertMidi, saxMidi, cents, isStable) {
+                // 周波数表示
+                freqDisplay.textContent = freq.toFixed(1);
+
+                // サックス記譜音
+                const saxInfo = formatNoteDisplay(saxMidi, false);
+                saxNoteDisplay.textContent = saxInfo.name;
+                saxOctave.textContent = saxInfo.octave;
+
+                // Concert pitch
+                const concertInfo = formatNoteDisplay(concertMidi, false);
+                concertNoteDisplay.textContent = concertInfo.name + concertInfo.octave;
+
+                // 音分偏差表示
+                const absCents = Math.abs(cents);
+                const centsStr = (cents > 0 ? '+' : '') + cents.toFixed(1);
+                const formattedCents = centsStr + ' セント';
+
+                if (absCents < 5) {
+                    centsDisplay.textContent = '✓ ' + formattedCents;
+                    centsDisplay.className = 'cents-readout good';
+                } else if (absCents < 12) {
+                    centsDisplay.textContent = (cents > 0 ? '▲ ' : '▼ ') + formattedCents;
+                    centsDisplay.className = 'cents-readout warn';
+                } else {
+                    centsDisplay.textContent = (cents > 0 ? '▲▲ ' : '▼▼ ') + formattedCents;
+                    centsDisplay.className = 'cents-readout bad';
+                }
+
+                // 目标音符匹配检查
+                if (targetMidi >= 0) {
+                    const targetSaxMidi = saxMidiFromConcert(targetMidi);
+                    if (saxMidi === targetSaxMidi && absCents < 8) {
+                        centsDisplay.textContent = '🎯 目標に一致！ ' + formattedCents;
+                        centsDisplay.className = 'cents-readout good';
+                    }
+                }
+
+                if (isStable && absCents < 5) {
+                    statusText.textContent = '✓ 安定しています - 音程良好';
+                } else if (isStable) {
+                    statusText.textContent = '音は安定 - ピッチを調整してください';
+                } else {
+                    statusText.textContent = '音を検出中... サックスを吹いてください';
+                }
+            }
+
+            // ==================== メーター描画 ====================
+            function drawMeter(cents, isStable) {
+                const canvas = meterCanvas;
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+
+                if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+                    canvas.width = w * dpr;
+                    canvas.height = h * dpr;
+                    meterCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+
+                const ctx = meterCtx;
+                ctx.clearRect(0, 0, w, h);
+
+                const cx = w / 2;
+                const cy = h * 0.88;
+                const radius = Math.min(w * 0.42, h * 0.75);
+                const startAngle = Math.PI;
+                const endAngle = 0;
+                const totalAngle = Math.PI; // 180度
+                const minCents = -50;
+                const maxCents = 50;
+                const centsRange = maxCents - minCents;
+
+                // 背景弧
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, startAngle, endAngle);
+                ctx.lineCap = 'round';
+                ctx.lineWidth = radius * 0.28;
+                ctx.strokeStyle = '#1e2a3a';
+                ctx.stroke();
+
+                // 色域（绿色区域 ±5音分）
+                const greenStartAngle = startAngle + (5 - minCents) / centsRange * totalAngle;
+                const greenEndAngle = startAngle + (55 - minCents) / centsRange * totalAngle;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, greenStartAngle, greenEndAngle);
+                ctx.lineWidth = radius * 0.28;
+                ctx.strokeStyle = 'rgba(46, 204, 113, 0.65)';
+                ctx.lineCap = 'butt';
+                ctx.stroke();
+
+                // 黄色区域 ±5〜±12音分
+                const yellowStartAngle1 = startAngle + (12 - minCents) / centsRange * totalAngle;
+                const yellowEndAngle1 = greenStartAngle;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, yellowStartAngle1, yellowEndAngle1);
+                ctx.lineWidth = radius * 0.28;
+                ctx.strokeStyle = 'rgba(243, 156, 18, 0.55)';
+                ctx.lineCap = 'butt';
+                ctx.stroke();
+
+                const yellowStartAngle2 = greenEndAngle;
+                const yellowEndAngle2 = startAngle + (88 - minCents) / centsRange * totalAngle;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, yellowStartAngle2, yellowEndAngle2);
+                ctx.lineWidth = radius * 0.28;
+                ctx.strokeStyle = 'rgba(243, 156, 18, 0.55)';
+                ctx.lineCap = 'butt';
+                ctx.stroke();
+
+                // 刻度标记
+                const tickMarks = [-40, -30, -20, -10, 0, 10, 20, 30, 40];
+                for (const tick of tickMarks) {
+                    const angle = startAngle + (tick - minCents) / centsRange * totalAngle;
+                    const innerR = radius - radius * 0.22;
+                    const outerR = radius + radius * 0.18;
+                    const innerX = cx + Math.cos(angle) * innerR;
+                    const innerY = cy - Math.sin(angle) * innerR;
+                    const outerX = cx + Math.cos(angle) * outerR;
+                    const outerY = cy - Math.sin(angle) * outerR;
+                    ctx.beginPath();
+                    ctx.moveTo(innerX, innerY);
+                    ctx.lineTo(outerX, outerY);
+                    ctx.lineWidth = tick === 0 ? 3 : 1.5;
+                    ctx.strokeStyle = tick === 0 ? '#ffffff' : 'rgba(200, 210, 230, 0.6)';
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+
+                    // 标签
+                    const labelR = radius + radius * 0.32;
+                    const labelX = cx + Math.cos(angle) * labelR;
+                    const labelY = cy - Math.sin(angle) * labelR;
+                    ctx.fillStyle = tick === 0 ? '#ffffff' : 'rgba(180, 190, 210, 0.7)';
+                    ctx.font = `${Math.max(9, radius * 0.12)}px 'Segoe UI', sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(Math.abs(tick).toString(), labelX, labelY);
+                }
+
+                // 中央标签 "0"
+                const centerAngle = startAngle + (0 - minCents) / centsRange * totalAngle;
+                const centerLabelX = cx + Math.cos(centerAngle) * (radius + radius * 0.5);
+                const centerLabelY = cy - Math.sin(centerAngle) * (radius + radius * 0.5);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${Math.max(11, radius * 0.16)}px 'Segoe UI', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('0', centerLabelX, centerLabelY);
+
+                // 指针
+                const clampedCents = Math.max(minCents, Math.min(maxCents, cents));
+                const needleAngle = startAngle + (clampedCents - minCents) / centsRange * totalAngle;
+                const needleLength = radius * 0.82;
+                const needleX = cx + Math.cos(needleAngle) * needleLength;
+                const needleY = cy - Math.sin(needleAngle) * needleLength;
+
+                ctx.beginPath();
+                ctx.moveTo(cx - Math.cos(needleAngle) * radius * 0.1, cy + Math.sin(needleAngle) * radius * 0.1);
+                ctx.lineTo(needleX, needleY);
+                ctx.lineTo(cx + Math.cos(needleAngle) * radius * 0.1, cy - Math.sin(needleAngle) * radius * 0.1);
+                ctx.closePath();
+                const needleColor = isStable ? (Math.abs(cents) < 5 ? '#2ecc71' : Math.abs(cents) < 12 ? '#f39c12' :
+                    '#e74c3c') : '#ff6b6b';
+                ctx.fillStyle = needleColor;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // 中心圆点
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 0.09, 0, Math.PI * 2);
+                ctx.fillStyle = '#e0e0e8';
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // 中央音分数字
+                const displayCents = Math.abs(cents);
+                const centsStr = (cents > 0 ? '+' : '') + cents.toFixed(1);
+                ctx.fillStyle = Math.abs(cents) < 5 ? '#2ecc71' : Math.abs(cents) < 12 ? '#f39c12' : '#e74c3c';
+                ctx.font = `bold ${Math.max(16, radius * 0.22)}px 'Segoe UI', monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(centsStr, cx, cy - radius * 0.25);
+                ctx.font = `${Math.max(8, radius * 0.1)}px 'Segoe UI', sans-serif`;
+                ctx.fillStyle = 'rgba(180,190,210,0.7)';
+                ctx.fillText('セント', cx, cy - radius * 0.08);
+
+                // "FLAT" / "SHARP" 标签
+                ctx.font = `${Math.max(9, radius * 0.11)}px 'Segoe UI', sans-serif`;
+                ctx.fillStyle = 'rgba(180,190,210,0.7)';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('♭ FLAT', cx - radius * 0.95, cy + radius * 0.55);
+                ctx.textAlign = 'right';
+                ctx.fillText('SHARP ♯', cx + radius * 0.95, cy + radius * 0.55);
+            }
+
+            // ==================== 目标音符按钮 ====================
+            function updateTargetButtons() {
+                targetButtons.forEach(btn => {
+                    const target = parseInt(btn.dataset.target, 10);
+                    if (target === targetMidi) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            targetButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    targetMidi = parseInt(btn.dataset.target, 10);
+                    updateTargetButtons();
+                    if (targetMidi >= 0) {
+                        const targetSaxMidi = saxMidiFromConcert(targetMidi);
+                        const saxInfo = formatNoteDisplay(targetSaxMidi, false);
+                        statusText.textContent =
+                            `目標: サックス${saxInfo.name}${saxInfo.octave} (Concert ${midiToNoteName(targetMidi,false).name}${midiToNoteName(targetMidi,false).octave}) に合わせてください`;
+                    } else {
+                        statusText.textContent = '自動モード: 検出した音を表示します';
+                    }
+                });
+            });
+
+            // ==================== 開始/停止ボタン ====================
+            startBtn.addEventListener('click', async () => {
+                if (isRunning) {
+                    stopAudio();
+                } else {
+                    await startAudio();
+                }
+            });
+
+            // ==================== 初期描画 ====================
+            function initMeter() {
+                drawMeter(0, false);
+                statusDot.className = 'status-dot idle-dot';
+                statusText.textContent = 'マイクの許可が必要です。「開始する」を押してください';
+            }
+
+            // ウィンドウリサイズでメーター再描画
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    drawMeter(currentCents, frameCount > 6);
+                }, 100);
+            });
+
+            // ==================== 初期化 ====================
+            initMeter();
+            updateTargetButtons();
+
+            // 初期の音符表示
+            saxNoteDisplay.textContent = '--';
+            saxOctave.textContent = '';
+            concertNoteDisplay.textContent = '--';
+            freqDisplay.textContent = '---.-';
+            centsDisplay.textContent = '音を検出しています...';
+            centsDisplay.className = 'cents-readout idle';
+            volumeBar.style.width = '0%';
+
+            console.log('🎷 アルトサックス専用チューナーを読み込みました');
+            console.log('   - Concert音 + 9半音 = サックス記譜音');
+            console.log('   - 周波数範囲: ' + MIN_FREQ + '〜' + MAX_FREQ + ' Hz');
+            console.log('   - 自己相関法によるピッチ検出');
+            console.log('   - A4 = ' + A4_FREQ + ' Hz 基準');
+        })();
+    </script>
 </body>
 </html>
