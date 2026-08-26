@@ -1,1747 +1,204 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
-<title>iPhone 17 Pro PWA プレビューア</title>
-<style>
-/* ============================================
-   iPhone 17 Pro PWA プレビューア
-   ============================================ */
-
-/* ---- CSS Variables ---- */
-:root {
-  /* iPhone 17 Pro specs (points, @3x = pixels) */
-  --iphone-w: 402px;
-  --iphone-h: 874px;
-  --iphone-px-w: 1206px;
-  --iphone-px-h: 2622px;
-  --iphone-scale: 0.42;
-  
-  /* Safe Area Insets (portrait) */
-  --safe-top: 62px;
-  --safe-bottom: 34px;
-  --safe-left: 0px;
-  --safe-right: 0px;
-  
-  /* Status bar */
-  --status-bar-h: 54px;
-  
-  /* Dynamic Island */
-  --di-w: 126px;
-  --di-h: 37px;
-  --di-radius: 18.5px;
-  
-  /* Home Indicator */
-  --home-ind-w: 134px;
-  --home-ind-h: 5px;
-  --home-ind-radius: 2.5px;
-  
-  /* iPhone corner radius */
-  --iphone-radius: 55px;
-  
-  /* Colors */
-  --bg-body: #0a0a0f;
-  --bg-surface: #14141a;
-  --bg-surface-2: #1c1c24;
-  --bg-surface-3: #252530;
-  --text-primary: #f5f5f7;
-  --text-secondary: #8e8e93;
-  --text-tertiary: #636366;
-  --accent: #0a84ff;
-  --accent-hover: #0070e0;
-  --accent-pressed: #005bb5;
-  --border: rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.15);
-  --danger: #ff453a;
-  --success: #30d158;
-  --warning: #ff9f0a;
-  
-  /* iOS 26-like spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 20px;
-  --space-2xl: 24px;
-  --space-3xl: 32px;
-  
-  /* iOS 26-like radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
-}
-
-/* ---- Reset ---- */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-  background: var(--bg-body);
-  color: var(--text-primary);
-  min-height: 100dvh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* ---- App Shell ---- */
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  max-width: 100vw;
-  overflow: hidden;
-}
-
-/* ---- Header ---- */
-.app-header {
-  flex-shrink: 0;
-  background: rgba(10, 10, 15, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid var(--border);
-  padding: env(safe-area-inset-top) var(--space-lg) var(--space-md);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.app-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.app-title .icon {
-  width: 28px;
-  height: 28px;
-  background: var(--accent);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-.header-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-/* ---- Main Content ---- */
-.app-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-lg);
-  gap: var(--space-lg);
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* ---- Tab Bar ---- */
-.tab-bar {
-  display: flex;
-  gap: var(--space-xs);
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xs);
-  border: 1px solid var(--border);
-}
-
-.tab-btn {
-  flex: 1;
-  padding: var(--space-md) var(--space-lg);
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  min-height: 44px;
-}
-
-.tab-btn:hover {
-  color: var(--text-primary);
-}
-
-.tab-btn.active {
-  background: var(--bg-surface-3);
-  color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-.tab-btn:active {
-  transform: scale(0.97);
-}
-
-/* ---- Panel ---- */
-.panel {
-  display: none;
-  flex-direction: column;
-  gap: var(--space-lg);
-  animation: fadeIn 0.25s ease-out;
-}
-
-.panel.active {
-  display: flex;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ---- Editor Section ---- */
-.editor-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.editor-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.code-editor {
-  width: 100%;
-  min-height: 280px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  color: var(--text-primary);
-  font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-  tab-size: 2;
-}
-
-.code-editor:focus {
-  border-color: var(--accent);
-}
-
-.code-editor::placeholder {
-  color: var(--text-tertiary);
-}
-
-/* ---- Button Group ---- */
-.btn-group {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.btn {
-  padding: var(--space-md) var(--space-xl);
-  border: none;
-  border-radius: var(--radius-lg);
-  font-family: inherit;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  min-height: 48px;
-  min-width: 120px;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-}
-
-.btn-primary:active {
-  background: var(--accent-pressed);
-}
-
-.btn-secondary {
-  background: var(--bg-surface-2);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  background: var(--bg-surface-3);
-}
-
-.btn-danger {
-  background: rgba(255, 69, 58, 0.15);
-  color: var(--danger);
-  border: 1px solid rgba(255, 69, 58, 0.2);
-}
-
-.btn-danger:hover {
-  background: rgba(255, 69, 58, 0.25);
-}
-
-.btn-success {
-  background: rgba(48, 209, 88, 0.15);
-  color: var(--success);
-  border: 1px solid rgba(48, 209, 88, 0.2);
-}
-
-.btn-success:hover {
-  background: rgba(48, 209, 88, 0.25);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-
-.btn-ghost:hover {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-}
-
-/* ---- Preview Section ---- */
-.preview-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 420px;
-}
-
-.preview-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.preview-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-/* ---- iPhone 17 Pro Frame ---- */
-.iphone-frame {
-  position: relative;
-  width: calc(var(--iphone-w) * var(--iphone-scale));
-  height: calc(var(--iphone-h) * var(--iphone-scale));
-  background: #1a1a1f;
-  border-radius: calc(var(--iphone-radius) * var(--iphone-scale));
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.06),
-    0 0 0 3px rgba(255,255,255,0.03),
-    0 25px 60px rgba(0,0,0,0.6),
-    0 8px 20px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    inset 0 -1px 0 rgba(0,0,0,0.3);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-/* iPhone bezel inner shadow */
-.iphone-frame::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* ---- iPhone Screen ---- */
-.iphone-screen {
-  position: absolute;
-  inset: calc(3px * var(--iphone-scale));
-  background: #000;
-  border-radius: calc((var(--iphone-radius) - 3px) * var(--iphone-scale));
-  overflow: hidden;
-}
-
-/* ---- Dynamic Island ---- */
-.dynamic-island {
-  position: absolute;
-  top: calc(11px * var(--iphone-scale));
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(var(--di-w) * var(--iphone-scale));
-  height: calc(var(--di-h) * var(--iphone-scale));
-  background: #000;
-  border-radius: calc(var(--di-radius) * var(--iphone-scale));
-  z-index: 1000;
-  box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-/* Dynamic Island inner detail */
-.dynamic-island::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(8px * var(--iphone-scale));
-  height: calc(8px * var(--iphone-scale));
-  background: rgba(20, 20, 30, 0.9);
-  border-radius: 50%;
-}
-
-/* ---- Status Bar Area ---- */
-.status-bar-area {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: calc(var(--status-bar-h) * var(--iphone-scale));
-  z-index: 100;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 calc(28px * var(--iphone-scale));
-  font-size: calc(14px * var(--iphone-scale));
-  font-weight: 600;
-  color: #fff;
-}
-
-.status-time {
-  font-variant-numeric: tabular-nums;
-}
-
-.status-icons {
-  display: flex;
-  align-items: center;
-  gap: calc(4px * var(--iphone-scale));
-}
-
-.status-icon {
-  width: calc(16px * var(--iphone-scale));
-  height: calc(16px * var(--iphone-scale));
-}
-
-/* ---- PWA Content Area (iframe) ---- */
-.pwa-content {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #000;
-  overflow: hidden;
-}
-
-/* ---- Home Indicator ---- */
-.home-indicator {
-  position: absolute;
-  bottom: calc(8px * var(--iphone-scale));
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(var(--home-ind-w) * var(--iphone-scale));
-  height: calc(var(--home-ind-h) * var(--iphone-scale));
-  background: rgba(255,255,255,0.5);
-  border-radius: calc(var(--home-ind-radius) * var(--iphone-scale));
-  z-index: 1000;
-  pointer-events: none;
-}
-
-/* ---- Safe Area Overlay (for debugging) ---- */
-.safe-area-overlay {
-  position: absolute;
-  top: calc(var(--safe-top) * var(--iphone-scale));
-  bottom: calc(var(--safe-bottom) * var(--iphone-scale));
-  left: calc(var(--safe-left) * var(--iphone-scale));
-  right: calc(var(--safe-right) * var(--iphone-scale));
-  border: 1px dashed rgba(10, 132, 255, 0.4);
-  border-radius: calc(8px * var(--iphone-scale));
-  z-index: 999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.safe-area-overlay.show {
-  opacity: 1;
-}
-
-.safe-area-label {
-  position: absolute;
-  top: 2px;
-  left: 4px;
-  font-size: calc(8px * var(--iphone-scale));
-  color: rgba(10, 132, 255, 0.7);
-  font-family: monospace;
-}
-
-/* ---- Info Panel ---- */
-.info-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-}
-
-.info-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  margin-bottom: var(--space-md);
-  color: var(--text-primary);
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-md);
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.info-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.info-value {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: "SF Mono", monospace;
-}
-
-/* ---- Toggle Switch ---- */
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.toggle-row:last-child {
-  border-bottom: none;
-}
-
-.toggle-label {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.toggle-desc {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  margin-top: var(--space-xs);
-}
-
-.toggle-switch {
-  position: relative;
-  width: 51px;
-  height: 31px;
-  background: var(--bg-surface-3);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.toggle-switch.active {
-  background: var(--accent);
-}
-
-.toggle-switch::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 27px;
-  height: 27px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.toggle-switch.active::after {
-  transform: translateX(20px);
-}
-
-/* ---- Fullscreen Preview ---- */
-.fullscreen-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-body);
-  z-index: 10000;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-lg);
-}
-
-.fullscreen-overlay.active {
-  display: flex;
-}
-
-.fullscreen-close {
-  position: absolute;
-  top: calc(env(safe-area-inset-top) + var(--space-lg));
-  right: var(--space-lg);
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
-  background: var(--bg-surface-2);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-size: 1.25rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10001;
-}
-
-.fullscreen-close:active {
-  transform: scale(0.92);
-}
-
-.fullscreen-iphone {
-  --fs-scale: min(
-    calc((100vw - 40px) / var(--iphone-w)),
-    calc((100dvh - 80px) / var(--iphone-h))
-  );
-  width: calc(var(--iphone-w) * var(--fs-scale));
-  height: calc(var(--iphone-h) * var(--fs-scale));
-}
-
-.fullscreen-iphone .dynamic-island {
-  width: calc(var(--di-w) * var(--fs-scale));
-  height: calc(var(--di-h) * var(--fs-scale));
-  border-radius: calc(var(--di-radius) * var(--fs-scale));
-  top: calc(11px * var(--fs-scale));
-}
-
-.fullscreen-iphone .dynamic-island::after {
-  width: calc(8px * var(--fs-scale));
-  height: calc(8px * var(--fs-scale));
-}
-
-.fullscreen-iphone .iphone-screen {
-  inset: calc(3px * var(--fs-scale));
-  border-radius: calc((var(--iphone-radius) - 3px) * var(--fs-scale));
-}
-
-.fullscreen-iphone .status-bar-area {
-  height: calc(var(--status-bar-h) * var(--fs-scale));
-  padding: 0 calc(28px * var(--fs-scale));
-  font-size: calc(14px * var(--fs-scale));
-}
-
-.fullscreen-iphone .status-icon {
-  width: calc(16px * var(--fs-scale));
-  height: calc(16px * var(--fs-scale));
-}
-
-.fullscreen-iphone .home-indicator {
-  width: calc(var(--home-ind-w) * var(--fs-scale));
-  height: calc(var(--home-ind-h) * var(--fs-scale));
-  border-radius: calc(var(--home-ind-radius) * var(--fs-scale));
-  bottom: calc(8px * var(--fs-scale));
-}
-
-.fullscreen-iphone .safe-area-overlay {
-  top: calc(var(--safe-top) * var(--fs-scale));
-  bottom: calc(var(--safe-bottom) * var(--fs-scale));
-  left: calc(var(--safe-left) * var(--fs-scale));
-  right: calc(var(--safe-right) * var(--fs-scale));
-  border-radius: calc(8px * var(--fs-scale));
-}
-
-.fullscreen-iphone .safe-area-label {
-  font-size: calc(8px * var(--fs-scale));
-}
-
-/* ---- Toast Notification ---- */
-.toast {
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + var(--space-xl));
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--bg-surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-md) var(--space-xl);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  z-index: 10002;
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-.toast.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-
-.toast.success { border-color: rgba(48, 209, 88, 0.3); }
-.toast.error { border-color: rgba(255, 69, 58, 0.3); }
-
-/* ---- Responsive ---- */
-@media (min-width: 768px) {
-  .app-main {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: var(--space-3xl);
-  }
-  
-  .editor-col {
-    flex: 1;
-    min-width: 0;
-  }
-  
-  .preview-col {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: sticky;
-    top: calc(env(safe-area-inset-top) + 60px);
-  }
-}
-
-@media (max-width: 767px) {
-  .app-main {
-    padding: var(--space-md);
-  }
-  
-  .iphone-frame {
-    --iphone-scale: 0.38;
-  }
-  
-  .btn-group {
-    justify-content: center;
-  }
-  
-  .btn {
-    flex: 1;
-    min-width: 0;
-  }
-}
-
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.25);
-}
-
-/* ---- Selection ---- */
-::selection {
-  background: rgba(10, 132, 255, 0.3);
-  color: #fff;
-}
-</style>
-</head>
-<body>
-<div class="app-shell">
-  <!-- Header -->
-  <header class="app-header">
-    <div class="header-content">
-      <div class="app-title">
-        <span class="icon">📱</span>
-        iPhone 17 Pro PWA プレビューア
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-ghost" id="btnFullscreen" title="全画面プレビュー">
-          ⛶
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <main class="app-main">
-    <!-- Editor Column -->
-    <div class="editor-col">
-      <!-- Tab Bar -->
-      <div class="tab-bar">
-        <button class="tab-btn active" data-tab="editor">📝 エディタ</button>
-        <button class="tab-btn" data-tab="settings">⚙️ 設定</button>
-        <button class="tab-btn" data-tab="info">ℹ️ 情報</button>
-      </div>
-
-      <!-- Editor Panel -->
-      <div class="panel active" id="panel-editor">
-        <div class="editor-section">
-          <div class="editor-label">HTML / CSS / JavaScript</div>
-          <textarea class="code-editor" id="htmlInput" placeholder="ここにHTMLを貼り付けてください...
-
-<!-- PWAテスト用のHTMLを入力 -->
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, viewport-fit=cover&quot;>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スマート通話使い分けガイド＆料金比較</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { margin: 0; background: #000; color: #fff; }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+    body { font-family: 'Noto Sans JP', sans-serif; }
   </style>
 </head>
-<body>
-  <h1>Hello PWA!</h1>
-</body>
-</html>"></textarea>
+<body class="bg-slate-100 text-slate-800 min-h-screen py-6 px-4">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="text-center space-y-2 bg-gradient-to-r from-slate-900 to-indigo-950 text-white py-8 px-4 rounded-2xl shadow-md">
+      <span class="bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">通話コスト削減術</span>
+      <h1 class="text-2xl sm:text-3xl font-black mt-2">賢い通話の使い分け＆料金比較</h1>
+      <p class="text-slate-300 text-xs sm:text-sm">【優先順位】に沿って選ぶだけで、毎月の通話料を最少に抑えられます</p>
+    </div>
+
+    <!-- 優先順位フローカード -->
+    <div class="space-y-4">
+
+      <!-- 第一優先：無料通話 -->
+      <div class="bg-white rounded-2xl shadow-sm border-2 border-emerald-500 overflow-hidden">
+        <div class="bg-emerald-600 text-white p-4 flex justify-between items-center flex-wrap gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="bg-white text-emerald-700 font-extrabold text-xs px-2.5 py-1 rounded-full">第 1 優先</span>
+            <h2 class="font-bold text-lg">ネット通話（LINE / FaceTime）</h2>
+          </div>
+          <span class="text-2xl font-black bg-emerald-700 text-emerald-100 px-3 py-0.5 rounded-lg">3分：0 円</span>
         </div>
-        <div class="btn-group">
-          <button class="btn btn-primary" id="btnPreview">▶ プレビュー</button>
-          <button class="btn btn-secondary" id="btnSample">📋 サンプル</button>
-          <button class="btn btn-danger" id="btnClear">🗑 クリア</button>
+
+        <div class="p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+              <div class="font-bold text-emerald-900 flex items-center gap-2 mb-1">
+                <span class="text-lg">💬</span> LINE 通話
+              </div>
+              <p class="text-xs text-emerald-800">スマホ・PC同士。お互いがLINE友達であれば最優先で利用。</p>
+            </div>
+
+            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+              <div class="font-bold text-emerald-900 flex items-center gap-2 mb-1">
+                <span class="text-lg">📱</span> FaceTime（ビデオ/音声通話）
+              </div>
+              <p class="text-xs text-emerald-800">Apple製品同士（iPhone, iPad, Mac）なら高音質で完全無料。</p>
+            </div>
+          </div>
+
+          <!-- FaceTime判定マニュアル -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2 mb-2">
+              <span class="text-indigo-600">💡</span> 相手がFaceTimeを利用できるか判定する方法
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div class="bg-white p-3 rounded-lg border border-slate-200">
+                <span class="font-bold text-indigo-600 block mb-1">1. 連絡先アプリで確認</span>
+                連絡先を開き、相手のカード内に<strong class="text-slate-800">「FaceTime」のビデオ／音声アイコン</strong>が表示されていればiPhoneユーザーです。
+              </div>
+              <div class="bg-white p-3 rounded-lg border border-slate-200">
+                <span class="font-bold text-indigo-600 block mb-1">2. メッセージ(iMessage)の色</span>
+                iMessage送信画面で相手の名前・吹き出しが<strong class="text-blue-600">青色</strong>ならApple製品（緑色は通常のSMS/Android）。
+              </div>
+              <div class="bg-white p-3 rounded-lg border border-slate-200">
+                <span class="font-bold text-indigo-600 block mb-1">3. リンク共有（Android宛て）</span>
+                iPhone側から「リンクを作成」してURLをLINE等で共有すれば、<strong class="text-slate-800">AndroidやWindowsの相手ともFaceTimeが可能</strong>です。
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Settings Panel -->
-      <div class="panel" id="panel-settings">
-        <div class="info-panel">
-          <div class="info-title">表示設定</div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Safe Area ガイド</div>
-              <div class="toggle-desc">Safe Areaの境界線を表示</div>
-            </div>
-            <div class="toggle-switch" id="toggleSafeArea"></div>
+      <!-- 第二優先：固定電話→固定電話 -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-blue-700 text-white p-4 flex justify-between items-center flex-wrap gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="bg-white text-blue-800 font-extrabold text-xs px-2.5 py-1 rounded-full">第 2 優先</span>
+            <h2 class="font-bold text-lg">固定電話 ➡ 固定電話宛て</h2>
           </div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Dynamic Island</div>
-              <div class="toggle-desc">Dynamic Islandを表示</div>
-            </div>
-            <div class="toggle-switch active" id="toggleDI"></div>
+          <div class="text-right">
+            <span class="text-2xl font-black bg-blue-800 text-blue-100 px-3 py-0.5 rounded-lg">3分：8.8 円</span>
+            <span class="text-xs text-blue-200 block mt-0.5">📌3分単位で計算</span>
           </div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">ホームインジケータ</div>
-              <div class="toggle-desc">下部のホームバーを表示</div>
-            </div>
-            <div class="toggle-switch active" id="toggleHome"></div>
+        </div>
+        <div class="p-4 text-xs text-slate-600 flex items-center justify-between bg-blue-50/50">
+          <span>お店・会社・役所など固定電話にかける場合の最安ルートです（BBフォン/光電話利用）。</span>
+          <span class="font-bold text-blue-800 shrink-0 ml-2">格安料金</span>
+        </div>
+      </div>
+
+      <!-- 第三優先：固定電話→携帯（0000等プレフィックス） -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-purple-700 text-white p-4 flex justify-between items-center flex-wrap gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="bg-white text-purple-800 font-extrabold text-xs px-2.5 py-1 rounded-full">第 3 優先</span>
+            <h2 class="font-bold text-lg">固定電話 ➡ 携帯電話宛て（光電話・お得番号指定）</h2>
           </div>
-          <div class="toggle-row">
+          <div class="text-right">
+            <span class="text-2xl font-black bg-purple-800 text-purple-100 px-3 py-0.5 rounded-lg">3分：52.8〜82.5 円</span>
+            <span class="text-xs text-purple-200 block mt-0.5">📌1分単位で計算</span>
+          </div>
+        </div>
+        <div class="p-4 space-y-2 text-xs text-slate-600">
+          <p>LINEやFaceTimeが使えない相手のスマホへかける場合、家の固定電話（光電話）から発信します。</p>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-wrap gap-4 justify-between">
             <div>
-              <div class="toggle-label">ステータスバー</div>
-              <div class="toggle-desc">画面上部の時計・アイコンを表示</div>
+              <span class="font-bold text-slate-800 block">・光電話からそのまま発信：</span>
+              <span>1分 17.6円（<strong class="text-purple-700">3分で52.8円</strong>）</span>
             </div>
-            <div class="toggle-switch active" id="toggleStatus"></div>
+            <div>
+              <span class="font-bold text-slate-800 block">・BBフォン(8-23時)から発信：</span>
+              <span>1分 27.5円（<strong class="text-purple-700">3分で82.5円</strong>）</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Info Panel -->
-      <div class="panel" id="panel-info">
-        <div class="info-panel">
-          <div class="info-title">iPhone 17 Pro 仕様</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">画面サイズ</div>
-              <div class="info-value">6.3"</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">解像度</div>
-              <div class="info-value">1206 × 2622</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">ピクセル密度</div>
-              <div class="info-value">460 ppi</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">スケール</div>
-              <div class="info-value">@3x</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Safe Area Top</div>
-              <div class="info-value">62pt</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Safe Area Bottom</div>
-              <div class="info-value">34pt</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">ステータスバー</div>
-              <div class="info-value">54pt</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Dynamic Island</div>
-              <div class="info-value">126 × 37pt</div>
-            </div>
+      <!-- 急ぎ以外使わない：携帯電話発信 -->
+      <div class="bg-white rounded-2xl shadow-sm border-2 border-rose-300 overflow-hidden">
+        <div class="bg-rose-600 text-white p-4 flex justify-between items-center flex-wrap gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="bg-amber-300 text-slate-900 font-extrabold text-xs px-2.5 py-1 rounded-full">⚠️ 急ぎ・最終手段</span>
+            <h2 class="font-bold text-lg">携帯電話（Y!mobile等）から発信</h2>
+          </div>
+          <div class="text-right">
+            <span class="text-2xl font-black bg-rose-800 text-rose-100 px-3 py-0.5 rounded-lg">3分：132 円</span>
+            <span class="text-xs text-rose-200 block mt-0.5">📌30秒 22円単位（1分換算44円）</span>
           </div>
         </div>
-        <div class="info-panel" style="margin-top: var(--space-lg);">
-          <div class="info-title">PWA チェックリスト</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">viewport-fit</div>
-              <div class="info-value">cover</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">apple-mobile-web-app-capable</div>
-              <div class="info-value">yes</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">status-bar-style</div>
-              <div class="info-value">black-translucent</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">display</div>
-              <div class="info-value">standalone</div>
-            </div>
-          </div>
+        <div class="p-4 text-xs text-slate-600 bg-rose-50/30">
+          <p class="font-bold text-rose-800">外出先での緊急時やどうしても固定電話に戻れない場合のみ使用！</p>
+          <p class="mt-1 text-slate-500">※通話定額オプション等に加入していない場合、固定宛て・携帯宛てともに1分44円と高額になります。</p>
         </div>
+      </div>
+
+    </div>
+
+    <!-- 3分あたり料金比較まとめ一覧 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-900 text-white p-4">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <span>📊</span> 【3分通話】料金比較まとめ一覧
+        </h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-200 text-slate-600">
+              <th class="p-3 font-bold">発信方法・ルート</th>
+              <th class="p-3 font-bold">相手（着信先）</th>
+              <th class="p-3 font-bold text-center">課金単位</th>
+              <th class="p-3 font-bold text-center">1分換算</th>
+              <th class="p-3 font-bold text-right text-indigo-600">3分間の料金</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="bg-emerald-50/40 font-bold">
+              <td class="p-3 text-emerald-800">① LINE / FaceTime</td>
+              <td class="p-3 text-emerald-800">スマホ・PC</td>
+              <td class="p-3 text-center">-</td>
+              <td class="p-3 text-center">0円</td>
+              <td class="p-3 text-right text-emerald-600 text-base">0円</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-bold text-blue-900">② BBフォン / 光電話</td>
+              <td class="p-3 text-slate-600">固定電話</td>
+              <td class="p-3 text-center">📌 3分ごと</td>
+              <td class="p-3 text-center">約2.9円</td>
+              <td class="p-3 text-right font-bold text-blue-700 text-base">8.8円</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-bold text-purple-900">③ 光電話</td>
+              <td class="p-3 text-slate-600">携帯電話</td>
+              <td class="p-3 text-center">📌 1分ごと</td>
+              <td class="p-3 text-center">17.6円</td>
+              <td class="p-3 text-right font-bold text-purple-700 text-base">52.8円</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-bold text-purple-900">③ BBフォン (8-23時)</td>
+              <td class="p-3 text-slate-600">携帯電話</td>
+              <td class="p-3 text-center">📌 1分ごと</td>
+              <td class="p-3 text-center">27.5円</td>
+              <td class="p-3 text-right font-bold text-purple-700 text-base">82.5円</td>
+            </tr>
+            <tr class="bg-rose-50/40">
+              <td class="p-3 font-bold text-rose-900">④ Y!mobile (携帯発信)</td>
+              <td class="p-3 text-slate-600">固定 / 携帯</td>
+              <td class="p-3 text-center">📌 30秒ごと</td>
+              <td class="p-3 text-center">44.0円</td>
+              <td class="p-3 text-right font-bold text-rose-600 text-base">132.0円</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Preview Column -->
-    <div class="preview-col">
-      <div class="preview-header">
-        <span class="preview-title">プレビュー</span>
-        <div class="preview-actions">
-          <button class="btn btn-ghost" id="btnRotate" title="回転" style="min-width: auto; min-height: 36px; padding: var(--space-sm) var(--space-md);">
-            🔄
-          </button>
-        </div>
-      </div>
-      
-      <!-- iPhone 17 Pro Frame -->
-      <div class="iphone-frame" id="iphoneFrame">
-        <div class="iphone-screen">
-          <!-- Status Bar -->
-          <div class="status-bar-area" id="statusBarArea">
-            <span class="status-time" id="statusTime">9:41</span>
-            <div class="status-icons">
-              <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3C7.46 3 3.34 4.78.29 7.67c-.18.18-.29.43-.29.71 0 .28.11.53.29.71l11 11c.39.39 1.02.39 1.41 0l11-11c.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71C20.66 4.78 16.54 3 12 3z"/>
-              </svg>
-              <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
-              </svg>
-            </div>
-          </div>
-          
-          <!-- Dynamic Island -->
-          <div class="dynamic-island" id="dynamicIsland"></div>
-          
-          <!-- PWA Content (iframe) -->
-          <iframe class="pwa-content" id="pwaFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals" title="PWA Preview"></iframe>
-          
-          <!-- Safe Area Overlay -->
-          <div class="safe-area-overlay" id="safeAreaOverlay">
-            <span class="safe-area-label">SAFE AREA</span>
-          </div>
-          
-          <!-- Home Indicator -->
-          <div class="home-indicator" id="homeIndicator"></div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<!-- Fullscreen Overlay -->
-<div class="fullscreen-overlay" id="fullscreenOverlay">
-  <button class="fullscreen-close" id="btnFullscreenClose">✕</button>
-  <div class="iphone-frame fullscreen-iphone" id="fullscreenFrame">
-    <div class="iphone-screen">
-      <div class="status-bar-area" id="fsStatusBar">
-        <span class="status-time" id="fsStatusTime">9:41</span>
-        <div class="status-icons">
-          <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 3C7.46 3 3.34 4.78.29 7.67c-.18.18-.29.43-.29.71 0 .28.11.53.29.71l11 11c.39.39 1.02.39 1.41 0l11-11c.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71C20.66 4.78 16.54 3 12 3z"/>
-          </svg>
-          <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="dynamic-island" id="fsDynamicIsland"></div>
-      <iframe class="pwa-content" id="fsPwaFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals" title="PWA Preview Fullscreen"></iframe>
-      <div class="safe-area-overlay" id="fsSafeAreaOverlay">
-        <span class="safe-area-label">SAFE AREA</span>
-      </div>
-      <div class="home-indicator" id="fsHomeIndicator"></div>
-    </div>
   </div>
-</div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<script>
-/* ============================================
-   iPhone 17 Pro PWA プレビューア - JavaScript
-   ============================================ */
-
-(function() {
-  'use strict';
-
-  // ---- DOM Elements ----
-  const htmlInput = document.getElementById('htmlInput');
-  const pwaFrame = document.getElementById('pwaFrame');
-  const fsPwaFrame = document.getElementById('fsPwaFrame');
-  const btnPreview = document.getElementById('btnPreview');
-  const btnSample = document.getElementById('btnSample');
-  const btnClear = document.getElementById('btnClear');
-  const btnFullscreen = document.getElementById('btnFullscreen');
-  const btnFullscreenClose = document.getElementById('btnFullscreenClose');
-  const fullscreenOverlay = document.getElementById('fullscreenOverlay');
-  const toast = document.getElementById('toast');
-  const statusTime = document.getElementById('statusTime');
-  const fsStatusTime = document.getElementById('fsStatusTime');
-  
-  // Toggle elements
-  const toggleSafeArea = document.getElementById('toggleSafeArea');
-  const toggleDI = document.getElementById('toggleDI');
-  const toggleHome = document.getElementById('toggleHome');
-  const toggleStatus = document.getElementById('toggleStatus');
-  
-  // Overlay elements
-  const safeAreaOverlay = document.getElementById('safeAreaOverlay');
-  const fsSafeAreaOverlay = document.getElementById('fsSafeAreaOverlay');
-  const dynamicIsland = document.getElementById('dynamicIsland');
-  const fsDynamicIsland = document.getElementById('fsDynamicIsland');
-  const homeIndicator = document.getElementById('homeIndicator');
-  const fsHomeIndicator = document.getElementById('fsHomeIndicator');
-  const statusBarArea = document.getElementById('statusBarArea');
-  const fsStatusBar = document.getElementById('fsStatusBar');
-
-  // Tab elements
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const panels = document.querySelectorAll('.panel');
-
-  // ---- Constants ----
-  const STORAGE_KEY = 'iphone17pwa_preview_html';
-  
-  // iPhone 17 Pro specs (injected into iframe)
-  const IPHONE_SPECS = {
-    width: 402,
-    height: 874,
-    safeTop: 62,
-    safeBottom: 34,
-    safeLeft: 0,
-    safeRight: 0,
-    statusBarHeight: 54,
-    diWidth: 126,
-    diHeight: 37,
-    homeIndicatorWidth: 134,
-    homeIndicatorHeight: 5,
-    cornerRadius: 55,
-    scale: 3
-  };
-
-  // ---- Sample HTML ----
-  const SAMPLE_HTML = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
-<title>PWA テスト</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  background: #000;
-  color: #fff;
-  overflow: hidden;
-}
-
-/* 画面いっぱいのレイアウト */
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  height: 100vh; /* fallback */
-}
-
-/* 固定ヘッダー - Safe Area対応 */
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(20, 20, 30, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding-top: env(safe-area-inset-top);
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-.header h1 {
-  font-size: 1.125rem;
-  font-weight: 700;
-}
-
-.header p {
-  font-size: 0.75rem;
-  color: #8e8e93;
-  margin-top: 2px;
-}
-
-/* スクロール可能なコンテンツ */
-.content {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-top: calc(env(safe-area-inset-top) + 60px);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
-}
-
-.card {
-  background: #1c1c24;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(255,255,255,0.06);
-}
-
-.card h2 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.card p {
-  font-size: 0.875rem;
-  color: #8e8e93;
-  line-height: 1.5;
-}
-
-.btn {
-  display: inline-block;
-  padding: 12px 24px;
-  background: #0a84ff;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  margin-top: 12px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.btn:active {
-  opacity: 0.8;
-  transform: scale(0.97);
-}
-
-.input-field {
-  width: 100%;
-  padding: 14px 16px;
-  background: #252530;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  color: #fff;
-  font-size: 1rem;
-  margin-top: 12px;
-  -webkit-appearance: none;
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: #0a84ff;
-}
-
-/* 固定フッタータブバー - Safe Area対応 */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  background: rgba(20, 20, 30, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,0.08);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 0;
-  color: #636366;
-  font-size: 0.625rem;
-  font-weight: 500;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.tab-item.active {
-  color: #0a84ff;
-}
-
-.tab-icon {
-  font-size: 1.5rem;
-  margin-bottom: 2px;
-}
-
-/* Safe Area デバッグ表示 */
-.safe-debug {
-  position: fixed;
-  top: env(safe-area-inset-top);
-  left: env(safe-area-inset-left);
-  right: env(safe-area-inset-right);
-  bottom: env(safe-area-inset-bottom);
-  border: 2px dashed rgba(10, 132, 255, 0.5);
-  border-radius: 8px;
-  pointer-events: none;
-  z-index: 50;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.safe-debug.show {
-  opacity: 1;
-}
-
-.debug-btn {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 8px);
-  right: max(8px, env(safe-area-inset-right));
-  z-index: 200;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(10, 132, 255, 0.2);
-  border: 1px solid rgba(10, 132, 255, 0.3);
-  color: #0a84ff;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* 角丸コンテンテスト */
-.rounded-test {
-  background: linear-gradient(135deg, #0a84ff, #5856d6);
-  border-radius: 20px;
-  padding: 24px;
-  margin: 16px 0;
-  text-align: center;
-}
-
-/* 100vh vs 100dvh テスト */
-.vh-test {
-  height: 100vh;
-  background: rgba(255, 69, 58, 0.1);
-  border: 2px dashed #ff453a;
-  border-radius: 12px;
-  padding: 16px;
-  margin: 16px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  color: #ff453a;
-}
-
-.dvh-test {
-  height: 100dvh;
-  background: rgba(48, 209, 88, 0.1);
-  border: 2px dashed #30d158;
-  border-radius: 12px;
-  padding: 16px;
-  margin: 16px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  color: #30d158;
-}
-
-/* スクロールテスト用の長いコンテンツ */
-.scroll-item {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  font-size: 0.9375rem;
-}
-
-.scroll-item:active {
-  background: rgba(255,255,255,0.05);
-}
-</style>
-</head>
-<body>
-<div class="app">
-  <header class="header">
-    <h1>PWA プレビューテスト</h1>
-    <p>iPhone 17 Pro - Safe Area & Dynamic Island</p>
-  </header>
-  
-  <button class="debug-btn" onclick="document.querySelector('.safe-debug').classList.toggle('show')" title="Safe Area表示切替">👁</button>
-  <div class="safe-debug"></div>
-  
-  <main class="content">
-    <div class="card">
-      <h2>🎯 Safe Area テスト</h2>
-      <p>このカードはSafe Areaの内側に表示されています。上部のヘッダーは safe-area-inset-top を使用しています。</p>
-      <button class="btn" onclick="alert('タップ成功！')">タップテスト</button>
-    </div>
-    
-    <div class="card">
-      <h2>⌨️ 入力テスト</h2>
-      <p>テキスト入力時のキーボード表示をテストします。</p>
-      <input type="text" class="input-field" placeholder="ここに入力...">
-    </div>
-    
-    <div class="card">
-      <h2>📐 100vh vs 100dvh</h2>
-      <p>viewport単位の違いによるレイアウト崩れを確認できます。</p>
-      <div class="vh-test">100vh（アドレスバーありで崩れる）</div>
-      <div class="dvh-test">100dvh（正しく画面いっぱい）</div>
-    </div>
-    
-    <div class="card">
-      <h2>🔘 角丸テスト</h2>
-      <p>画面の角丸部分にコンテンツが隠れないか確認します。</p>
-      <div class="rounded-test">
-        <h3 style="margin:0 0 8px;font-size:1.125rem;">角丸コンテンツ</h3>
-        <p style="color:rgba(255,255,255,0.8);margin:0;">画面端まで広がる要素のテスト</p>
-      </div>
-    </div>
-    
-    <div class="card">
-      <h2>📜 スクロールテスト</h2>
-      <p>下部タブバーとホームインジケータの重なりを確認します。</p>
-      <div class="scroll-list">
-        <div class="scroll-item">スクロール項目 1</div>
-        <div class="scroll-item">スクロール項目 2</div>
-        <div class="scroll-item">スクロール項目 3</div>
-        <div class="scroll-item">スクロール項目 4</div>
-        <div class="scroll-item">スクロール項目 5</div>
-        <div class="scroll-item">スクロール項目 6</div>
-        <div class="scroll-item">スクロール項目 7</div>
-        <div class="scroll-item">スクロール項目 8</div>
-        <div class="scroll-item">スクロール項目 9</div>
-        <div class="scroll-item">スクロール項目 10</div>
-        <div class="scroll-item">スクロール項目 11</div>
-        <div class="scroll-item">スクロール項目 12</div>
-        <div class="scroll-item">スクロール項目 13</div>
-        <div class="scroll-item">スクロール項目 14</div>
-        <div class="scroll-item">スクロール項目 15</div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <h2>👆 ジェスチャーテスト</h2>
-      <p>長押し、ダブルタップ、スワイプなどの操作をテストできます。</p>
-      <button class="btn" 
-        ontouchstart="this.style.transform='scale(0.95)'" 
-        ontouchend="this.style.transform='scale(1)'"
-        onclick="this.textContent='タップ済み: ' + new Date().toLocaleTimeString()">
-        タップして時刻を表示
-      </button>
-    </div>
-    
-    <div style="height: 40px;"></div>
-  </main>
-  
-  <nav class="tab-bar">
-    <div class="tab-item active" onclick="setTab(this)">
-      <span class="tab-icon">🏠</span>
-      <span>ホーム</span>
-    </div>
-    <div class="tab-item" onclick="setTab(this)">
-      <span class="tab-icon">🔍</span>
-      <span>検索</span>
-    </div>
-    <div class="tab-item" onclick="setTab(this)">
-      <span class="tab-icon">⭐</span>
-      <span>お気に入り</span>
-    </div>
-    <div class="tab-item" onclick="setTab(this)">
-      <span class="tab-icon">⚙️</span>
-      <span>設定</span>
-    </div>
-  </nav>
-</div>
-
-<script>
-function setTab(el) {
-  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-}
-
-// Safe Area値をコンソールに出力
-document.addEventListener('DOMContentLoaded', function() {
-  const style = getComputedStyle(document.documentElement);
-  console.log('Safe Area Insets:');
-  console.log('  top:', style.getPropertyValue('--sat') || 'use env()');
-  console.log('  viewport height (vh):', window.innerHeight);
-  console.log('  viewport height (dvh):', document.documentElement.clientHeight);
-});
-<\/script>
-</body>
-</html>`;
-
-  // ---- Utility Functions ----
-  function showToast(message, type = 'success') {
-    toast.textContent = message;
-    toast.className = 'toast ' + type;
-    requestAnimationFrame(() => {
-      toast.classList.add('show');
-    });
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 2500);
-  }
-
-  function updateTime() {
-    const now = new Date();
-    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
-                    now.getMinutes().toString().padStart(2, '0');
-    statusTime.textContent = timeStr;
-    fsStatusTime.textContent = timeStr;
-  }
-
-  function saveToStorage() {
-    try {
-      localStorage.setItem(STORAGE_KEY, htmlInput.value);
-    } catch (e) {
-      console.warn('LocalStorage unavailable');
-    }
-  }
-
-  function loadFromStorage() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        htmlInput.value = saved;
-        return true;
-      }
-    } catch (e) {
-      console.warn('LocalStorage unavailable');
-    }
-    return false;
-  }
-
-  // ---- Preview Function ----
-  function updatePreview(targetFrame) {
-    const html = htmlInput.value.trim();
-    if (!html) {
-      showToast('HTMLが入力されていません', 'error');
-      return;
-    }
-
-    // Inject iPhone 17 Pro environment simulation
-    const enhancedHtml = injectEnvironment(html);
-    
-    const blob = new Blob([enhancedHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    
-    targetFrame.src = url;
-    
-    // Clean up old blob URL after load
-    targetFrame.onload = function() {
-      if (targetFrame.dataset.prevUrl) {
-        URL.revokeObjectURL(targetFrame.dataset.prevUrl);
-      }
-      targetFrame.dataset.prevUrl = url;
-    };
-    
-    saveToStorage();
-  }
-
-  function injectEnvironment(html) {
-    // Ensure viewport-fit=cover is present
-    if (!html.includes('viewport-fit=cover')) {
-      html = html.replace(
-        /<meta[^>]*viewport[^>]*>/i,
-        '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">'
-      );
-    }
-    
-    // Ensure PWA meta tags
-    if (!html.includes('apple-mobile-web-app-capable')) {
-      const headEnd = html.indexOf('</head>');
-      if (headEnd !== -1) {
-        const pwaMeta = `
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#000000">`;
-        html = html.slice(0, headEnd) + pwaMeta + '\n' + html.slice(headEnd);
-      }
-    }
-
-    // Inject CSS custom properties for safe area simulation
-    const safeAreaCSS = `
-  <style>
-    /* iPhone 17 Pro Safe Area Simulation */
-    :root {
-      --safe-area-inset-top: ${IPHONE_SPECS.safeTop}px;
-      --safe-area-inset-bottom: ${IPHONE_SPECS.safeBottom}px;
-      --safe-area-inset-left: ${IPHONE_SPECS.safeLeft}px;
-      --safe-area-inset-right: ${IPHONE_SPECS.safeRight}px;
-    }
-    /* Ensure env() works by setting CSS vars */
-    @supports not (padding-top: env(safe-area-inset-top)) {
-      body {
-        padding-top: ${IPHONE_SPECS.safeTop}px !important;
-        padding-bottom: ${IPHONE_SPECS.safeBottom}px !important;
-      }
-    }
-  </style>`;
-
-    const headEnd = html.indexOf('</head>');
-    if (headEnd !== -1) {
-      html = html.slice(0, headEnd) + safeAreaCSS + '\n' + html.slice(headEnd);
-    }
-
-    return html;
-  }
-
-  // ---- Tab Switching ----
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      panels.forEach(p => p.classList.remove('active'));
-      document.getElementById('panel-' + tab).classList.add('active');
-    });
-  });
-
-  // ---- Button Handlers ----
-  btnPreview.addEventListener('click', () => {
-    updatePreview(pwaFrame);
-    updatePreview(fsPwaFrame);
-    showToast('プレビューを更新しました');
-    
-    // Switch to preview view on mobile
-    if (window.innerWidth < 768) {
-      // Scroll to preview
-      document.querySelector('.preview-col').scrollIntoView({ behavior: 'smooth' });
-    }
-  });
-
-  btnSample.addEventListener('click', () => {
-    htmlInput.value = SAMPLE_HTML;
-    saveToStorage();
-    showToast('サンプルHTMLを読み込みました');
-    updatePreview(pwaFrame);
-    updatePreview(fsPwaFrame);
-  });
-
-  btnClear.addEventListener('click', () => {
-    if (htmlInput.value.trim() && !confirm('入力内容をクリアしますか？')) return;
-    htmlInput.value = '';
-    pwaFrame.src = 'about:blank';
-    fsPwaFrame.src = 'about:blank';
-    saveToStorage();
-    showToast('クリアしました');
-  });
-
-  // ---- Fullscreen ----
-  btnFullscreen.addEventListener('click', () => {
-    fullscreenOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    // Sync preview
-    if (pwaFrame.src && pwaFrame.src !== 'about:blank') {
-      fsPwaFrame.src = pwaFrame.src;
-    }
-  });
-
-  btnFullscreenClose.addEventListener('click', () => {
-    fullscreenOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-  });
-
-  fullscreenOverlay.addEventListener('click', (e) => {
-    if (e.target === fullscreenOverlay) {
-      fullscreenOverlay.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // ---- Toggles ----
-  function toggleElement(toggle, elements, showClass) {
-    const isActive = toggle.classList.toggle('active');
-    elements.forEach(el => {
-      if (isActive) {
-        el.style.display = '';
-        if (showClass) el.classList.add(showClass);
-      } else {
-        el.style.display = 'none';
-        if (showClass) el.classList.remove(showClass);
-      }
-    });
-  }
-
-  toggleSafeArea.addEventListener('click', () => {
-    toggleElement(toggleSafeArea, [safeAreaOverlay, fsSafeAreaOverlay], 'show');
-  });
-
-  toggleDI.addEventListener('click', () => {
-    toggleElement(toggleDI, [dynamicIsland, fsDynamicIsland]);
-  });
-
-  toggleHome.addEventListener('click', () => {
-    toggleElement(toggleHome, [homeIndicator, fsHomeIndicator]);
-  });
-
-  toggleStatus.addEventListener('click', () => {
-    toggleElement(toggleStatus, [statusBarArea, fsStatusBar]);
-  });
-
-  // ---- Auto-save on input ----
-  let saveTimeout;
-  htmlInput.addEventListener('input', () => {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveToStorage, 1000);
-  });
-
-  // ---- Keyboard shortcuts ----
-  htmlInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = htmlInput.selectionStart;
-      const end = htmlInput.selectionEnd;
-      htmlInput.value = htmlInput.value.substring(0, start) + '  ' + htmlInput.value.substring(end);
-      htmlInput.selectionStart = htmlInput.selectionEnd = start + 2;
-    }
-    // Cmd/Ctrl + Enter to preview
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      btnPreview.click();
-    }
-  });
-
-  // ---- Rotation ----
-  let isLandscape = false;
-  document.getElementById('btnRotate').addEventListener('click', () => {
-    isLandscape = !isLandscape;
-    const frame = document.getElementById('iphoneFrame');
-    if (isLandscape) {
-      frame.style.transform = 'rotate(90deg)';
-      frame.style.marginTop = '40px';
-      frame.style.marginBottom = '40px';
-    } else {
-      frame.style.transform = '';
-      frame.style.marginTop = '';
-      frame.style.marginBottom = '';
-    }
-  });
-
-  // ---- Initialize ----
-  function init() {
-    updateTime();
-    setInterval(updateTime, 1000);
-    
-    const hasSaved = loadFromStorage();
-    if (hasSaved) {
-      updatePreview(pwaFrame);
-      updatePreview(fsPwaFrame);
-    }
-    
-    // Show initial hint
-    if (!hasSaved) {
-      showToast('サンプルHTMLボタンでテストできます');
-    }
-  }
-
-  init();
-
-})();
-</script>
 </body>
 </html>
