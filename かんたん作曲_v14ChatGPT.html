@@ -36,30 +36,23 @@ textarea:focus{border-color:var(--accent)}
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none}
 .fullscreen.show{display:block}
 .fullscreen iframe{width:100%;height:100%;border:0}
-.fullscreen .exit{position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;width:44px;height:44px;padding:0;border-radius:50%;background:#222;color:#fff}
+.fullscreen .exit{position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;width:44px;height:44px;padding:0;border-radius:50%;background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff}
 .status{font-size:12px;color:var(--muted);padding:2px 4px 10px;min-height:18px}
 @media(min-width:700px){body{padding-left:24px;padding-right:24px}.editor textarea{height:300px}}
-</style>
+.tabs{display:flex;background:#1c1c1e;border-radius:13px;padding:2px;margin-bottom:14px}.tab{flex:1;min-height:38px;background:transparent;color:#98989f}.tab.active{background:#3a3a3c;color:#fff}.editor-tools,.preview-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px}.editor-tools #count{font-size:13px;color:#98989f;white-space:nowrap}.search-box{display:flex;align-items:center;gap:5px;flex:1;min-width:0}.search-box input{width:100%;height:40px;border:1px solid #38383c;border-radius:12px;background:#111113;color:#fff;padding:0 11px;outline:none}#searchResult{font-size:11px;color:#98989f;white-space:nowrap}''</style>
 </head>
 <body>
 <div class="app">
-<header>
-<h1>iPhone 17 Pro PWAプレビュー</h1>
-<div class="actions">
-<button id="sample">サンプル</button>
-<button id="clear">クリア</button>
-<button id="preview" class="primary">プレビュー</button>
-</div>
-</header>
+<header><h1>iPhone 17 Pro PWAプレビュー</h1></header>
+<nav class="tabs"><button id="editTab" class="tab active">編集</button><button id="previewTab" class="tab">プレビュー</button></nav>
 
-<section id="editor" class="editor">
+<section id="editor" class="editor"><div class="editor-tools"><span id="count">0文字</span><div class="search-box"><input id="search" type="search" placeholder="検索" autocomplete="off"><span id="searchResult"></span></div><button id="clear">クリア</button></div>
 <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください</div>
 <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
 </section>
 
 <section id="previewWrap" class="preview-wrap">
 <div class="actions" style="margin-bottom:10px">
-<button id="edit">編集に戻る</button>
 <button id="full" class="primary">全画面プレビュー</button>
 </div>
 <div class="phone-stage">
@@ -68,7 +61,7 @@ textarea:focus{border-color:var(--accent)}
 <iframe id="frame" title="PWA preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
 <div class="homebar"></div>
 </div>
-<div class="phone-label">393 × 852 CSS px / iPhone 17 Pro 想定</div>
+
 </div>
 </section>
 </div>
@@ -80,59 +73,21 @@ textarea:focus{border-color:var(--accent)}
 
 <script>
 const $=id=>document.getElementById(id);
-const source=$("source"), frame=$("frame"), fullFrame=$("fullFrame");
+const source=$("source"),frame=$("frame"),fullFrame=$("fullFrame");
 const KEY="iphone17pro-pwa-preview-html-v1";
-
-const sample=`<!doctype html>
-<html lang="ja">
-<head>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>
-*{box-sizing:border-box}html,body{margin:0;background:#000;color:#fff;font-family:-apple-system,sans-serif}
-body{padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 80px)}
-header{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;background:#111d;backdrop-filter:blur(18px);z-index:10}
-h1{font-size:20px;margin:0}.content{padding-top:70px}
-.card{background:#1c1c1e;border-radius:18px;padding:18px;margin:12px 0}
-button{font:inherit;border:0;border-radius:14px;padding:12px 18px;background:#0a84ff;color:#fff}
-.footer{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 10px);height:58px;background:#222e;border-radius:18px;display:flex;justify-content:space-around;align-items:center;backdrop-filter:blur(20px)}
-</style>
-</head>
-<body>
-<header><h1>サンプルPWA</h1></header>
-<main class="content">
-<div class="card"><b>Safe Area テスト</b><p>上部・下部の余白、固定要素、スクロールを確認できます。</p><button onclick="this.textContent='タップしました ✓'">タップ</button></div>
-<div class="card">スクロールしてみてください。<br><br>Dynamic Island付近に内容が入り込んでいないか確認できます。</div>
-<div class="card">position: fixed のヘッダーとフッターを確認できます。</div>
-<div class="card">100vh / 100dvh の違いを確認するにはCSSを書き換えてテストしてください。</div>
-<div class="card">長押し・入力・JavaScriptなど、貼り付けたHTML自身の操作も実行されます。</div>
-</main>
-<nav class="footer"><span>⌂ ホーム</span><span>★ 保存</span><span>⚙ 設定</span></nav>
-</body></html>`;
-
 source.value=localStorage.getItem(KEY)||"";
-function save(){localStorage.setItem(KEY,source.value)}
-function run(target=frame){
-  save();
-  target.srcdoc=source.value;
-}
-$("sample").onclick=()=>{source.value=sample;save();};
-$("clear").onclick=()=>{source.value="";save();source.focus();};
-$("preview").onclick=()=>{
-  if(!source.value.trim()) source.value=sample;
-  run();$("editor").classList.add("hide");$("previewWrap").classList.add("show");
-};
-$("edit").onclick=()=>{
-  $("previewWrap").classList.remove("show");$("editor").classList.remove("hide");
-};
-$("full").onclick=()=>{
-  fullFrame.srcdoc=source.value; $("fullscreen").classList.add("show");
-};
-$("exit").onclick=()=>{
-  $("fullscreen").classList.remove("show");fullFrame.srcdoc="";
-};
+function updateCount(){$("count").textContent=source.value.length.toLocaleString()+"文字"}
+function save(){localStorage.setItem(KEY,source.value);updateCount()}
+function run(){save();frame.srcdoc=source.value}
+function showEditor(){$("editor").classList.remove("hide");$("previewWrap").classList.remove("show");$("editTab").classList.add("active");$("previewTab").classList.remove("active")}
+function showPreview(){run();$("editor").classList.add("hide");$("previewWrap").classList.add("show");$("editTab").classList.remove("active");$("previewTab").classList.add("active")}
+$("editTab").onclick=showEditor;$("previewTab").onclick=showPreview;
+$("clear").onclick=()=>{source.value="";save();$("search").value="";$("searchResult").textContent="";source.focus()};
+$("full").onclick=()=>{fullFrame.srcdoc=source.value;$("fullscreen").classList.add("show")};
+$("exit").onclick=()=>{$("fullscreen").classList.remove("show");fullFrame.srcdoc=""};
 source.addEventListener("input",save);
-
-window.addEventListener("beforeunload",save);
+$("search").addEventListener("input",()=>{const q=$("search").value;if(!q){$("searchResult").textContent="";return}let n=0,pos=0;while((pos=source.value.indexOf(q,pos))!==-1){n++;pos+=Math.max(q.length,1)}$("searchResult").textContent=n+"件"});
+window.addEventListener("beforeunload",save);updateCount();
 </script>
 </body>
 </html>
