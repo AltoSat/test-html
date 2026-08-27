@@ -46,9 +46,9 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-row::-webkit-scrollbar{height:0}
 .card{
   scroll-snap-align:start;
-  flex:0 0 auto;width:132px;height:112px;
-  background:var(--panel);border-radius:16px;padding:10px 12px;
-  display:flex;flex-direction:column;justify-content:flex-start;gap:3px;
+  flex:0 0 auto;width:132px;height:98px;
+  background:var(--panel);border-radius:16px;padding:8px 10px;
+  display:flex;flex-direction:column;justify-content:flex-start;gap:2px;
   border:2px solid transparent;cursor:pointer;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   transition:border-color .15s,background .15s;
@@ -72,7 +72,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-toast{
   position:absolute;
   left:50%;
-  bottom:10px;
+  bottom:6px;
   transform:translateX(-50%);
   z-index:50;
   background:rgba(48,48,52,.95);
@@ -195,17 +195,34 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 
 /* textarea - word wrap instead of horizontal scroll */
+.editor-textwrap{
+  overflow:hidden;
+  border-radius:14px;
+}
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:hidden;
   -webkit-user-select:text;user-select:text;
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
 }
-textarea:focus{border-color:var(--accent)}
+textarea:focus{
+  border-color:var(--accent);
+  overflow:auto;
+}
+textarea:not(:focus){
+  caret-color:transparent;
+}
 
 /* editor actions - single row */
-.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.editor-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
 .editor-actions button{flex:1;min-width:80px;white-space:nowrap}
 
 /* search section at bottom */
@@ -307,6 +324,13 @@ textarea:focus{border-color:var(--accent)}
     <div class="editor-scroll">
       <div class="sheet-handle"></div>
 
+      <div class="editor-actions">
+        <button id="btnCancel" class="ghost">キャンセル</button>
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnCopy" class="ghost">コピー</button>
+        <button id="btnSave" class="primary">保存</button>
+      </div>
+
       <div class="editor-title-row">
         <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
         <button id="btnDelete" class="btn-delete danger">削除</button>
@@ -314,13 +338,6 @@ textarea:focus{border-color:var(--accent)}
 
       <div class="editor-textwrap">
         <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-      </div>
-
-      <div class="editor-actions">
-        <button id="btnCancel" class="ghost">キャンセル</button>
-        <button id="btnClear" class="ghost">クリア</button>
-        <button id="btnCopy" class="ghost">コピー</button>
-        <button id="btnSave" class="primary">保存</button>
       </div>
     </div>
 
