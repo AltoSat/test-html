@@ -19,78 +19,128 @@
   --accent:#0a84ff;
   --danger:#ff453a;
   --ok:#30d158;
+  --mark:#ffd60a;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
 body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
 button,textarea,input{font:inherit}
-button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer}
+button{
+  border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;text-align:center;
+}
 button.primary{background:var(--accent)}
 button.danger{background:var(--danger)}
 button.ghost{background:transparent;border:1px solid #38383c}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1200px;margin:auto}
+.app{max-width:1100px;margin:auto}
 
-/* card list */
-.card-list{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:10px 2px 14px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-.card-list::-webkit-scrollbar{height:6px}
-.card-list::-webkit-scrollbar-thumb{background:#3a3a3c;border-radius:3px}
-.card{
-  flex:0 0 auto;width:150px;background:var(--panel);border-radius:16px;padding:14px;border:2px solid transparent;
-  cursor:pointer;scroll-snap-align:start;display:flex;flex-direction:column;gap:6px;
-  user-select:none;-webkit-user-select:none;touch-action:manipulation;transition:border-color .15s,background .15s,transform .1s;
+/* card row (horizontal scroll) */
+.card-row{
+  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
+  padding:0 4px 14px;margin:0 -4px 6px;
+  scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
 }
-.card:active{transform:scale(.96);opacity:.85}
+.card-row::-webkit-scrollbar{height:0}
+.card{
+  scroll-snap-align:start;
+  flex:0 0 auto;width:132px;height:96px;
+  background:var(--panel);border-radius:16px;padding:12px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  border:2px solid transparent;cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  transition:border-color .15s,background .15s;
+  position:relative;
+}
+.card:active{background:var(--panel2)}
 .card.active{border-color:var(--accent);background:#0a84ff18}
-.card-name{font-weight:600;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-meta{font-size:11px;color:var(--muted);margin-top:auto}
-.card.new-card{align-items:center;justify-content:center;min-height:96px;border-style:dashed;border-color:#38383c;color:var(--muted);font-weight:600;font-size:15px}
-.card-hint{text-align:center;color:var(--muted);padding:18px 0 4px;font-size:13px}
-
-/* preview actions */
-.preview-actions{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
-.preview-actions button{min-height:38px;font-size:13px}
+.card-name{font-weight:600;font-size:14px;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-meta{font-size:10.5px;color:var(--muted)}
+.card-new{
+  align-items:center;justify-content:center;color:var(--muted);
+  border:2px dashed #3a3a3c;background:transparent;
+}
+.card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
+.card-new .label{font-size:12px;margin-top:4px}
+.card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
 /* device previews */
-.devices{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
-.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.device-label{font-size:12px;color:var(--muted);font-weight:500}
+.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
+.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 
+/* iPhone 17 Pro: 402x874 CSS pt @3x (real device point size) */
 .phone{
-  position:relative;width:min(380px,52vw);aspect-ratio:393/852;
-  background:#000;border:6px solid #202023;border-radius:48px;overflow:hidden;
+  position:relative;
+  width:min(300px,86vw);
+  aspect-ratio:402/874;
+  background:#000;border:6px solid #202023;border-radius:52px;overflow:hidden;
   box-shadow:0 14px 40px #000,0 0 0 1px #444;
 }
-.phone-inner{position:absolute;top:0;left:0;width:393px;height:852px;transform-origin:top left}
-.phone iframe{position:absolute;top:0;left:0;width:393px;height:852px;border:0;background:#000;color-scheme:dark}
+.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px}
+.phone-viewport iframe{
+  position:absolute;top:50%;left:50%;
+  width:402px;height:874px;border:0;background:#000;color-scheme:dark;
+  transform-origin:center center;
+  margin-left:-201px;margin-top:-437px;
+}
 .island{
   position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
-  width:126px;height:37px;background:#000;border-radius:20px;pointer-events:none;
-  box-shadow:0 0 0 1px rgba(255,255,255,.04);
+  width:33.5%;
+  height:calc(9.5% * 0.75);
+  max-height:calc(34px * 0.75);
+  background:#000;border-radius:100px;pointer-events:none;
 }
 .homebar{
   position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
-  width:134px;height:5px;border-radius:3px;background:#fff;pointer-events:none;opacity:.9;
+  width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
 }
 
+/* iPad 7th gen: 810x1080 CSS pt landscape */
 .ipad{
-  position:relative;width:min(600px,82vw);aspect-ratio:1080/810;
-  background:#000;border:8px solid #2a2a2e;border-radius:20px;overflow:hidden;
+  position:relative;
+  width:min(460px,92vw);
+  aspect-ratio:1080/810;
+  background:#000;border:10px solid #2a2a2e;border-radius:22px;overflow:hidden;
   box-shadow:0 14px 40px #000,0 0 0 1px #444;
 }
-.ipad-inner{position:absolute;top:0;left:0;width:1080px;height:810px;transform-origin:top left}
-.ipad iframe{position:absolute;top:0;left:0;width:1080px;height:810px;border:0;background:#000;color-scheme:dark}
-.ipad-bezel{
-  position:absolute;z-index:5;top:50%;left:8px;transform:translateY(-50%);
-  width:4px;height:32px;background:#1a1a1c;border-radius:2px;pointer-events:none;
+.ipad-viewport{position:absolute;inset:0;overflow:hidden}
+.ipad-viewport iframe{
+  position:absolute;top:50%;left:50%;
+  width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
+  transform-origin:center center;
+  margin-left:-540px;margin-top:-405px;
 }
 
-/* editor */
-#mainView{}
-#mainView.hidden{display:none}
-.editor-panel{display:none}
-.editor-panel.show{display:block}
+/* fullscreen action icon */
+.fs-icon-btn{
+  position:absolute;
+  left:calc(100% + 8px);
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;height:40px;border-radius:12px;padding:0;
+  background:var(--panel2);border:1px solid #38383c;color:var(--text);
+}
+.fs-icon-btn.primary{background:var(--accent);border-color:transparent}
+.fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
+
+/* editor (opened via long-press) */
+.editor-overlay{
+  position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
+  display:none;align-items:flex-end;justify-content:center;
+  overscroll-behavior:none;
+}
+.editor-overlay.show{display:flex}
+.editor-sheet{
+  width:100%;max-width:900px;max-height:92vh;overflow:auto;
+  background:var(--bg);border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 40px #000;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 .editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .editor-tools .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
@@ -98,127 +148,155 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .editor-tools .name-input:focus{border-color:var(--accent)}
 #count{font-size:13px;color:var(--muted);white-space:nowrap}
-.search-box{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.search-box{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
 .search-box input{
   width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
   background:#111113;color:#fff;padding:0 11px;outline:none;
 }
+.search-box button{min-height:40px;padding:0 12px;font-size:13px}
 #searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
+.editor-textwrap{position:relative}
 textarea{
-  width:100%;height:min(58vh,520px);resize:vertical;
+  width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
+  white-space:pre;overflow:auto;
 }
 textarea:focus{border-color:var(--accent)}
+mark.hit{background:var(--mark);color:#000;border-radius:2px}
+mark.hit.current{background:var(--accent);color:#fff}
 .status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .editor-actions button{flex:1;min-width:100px}
+.editor-actions .row2{display:flex;gap:8px;width:100%}
+.editor-actions .row2 button{flex:1}
 
 /* fullscreen */
-.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none}
+.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
 .fullscreen.show{display:block}
-.fullscreen iframe{width:100%;height:100%;border:0}
+.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
+.fullscreen iframe{border:0;background:#000;color-scheme:dark}
+.fs-controls{
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));left:0;right:0;
+  display:flex;justify-content:center;gap:8px;
+}
+.fs-controls button{
+  min-height:36px;padding:0 14px;font-size:13px;border-radius:18px;
+  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;
+}
+.fs-controls button.on{background:rgba(10,132,255,.85)}
 .fullscreen .exit{
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
-  width:44px;height:44px;padding:0;border-radius:50%;
-  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:20px;
+  width:40px;height:40px;padding:0;border-radius:50%;
+  background:rgba(0,0,0,.40);color:#fff;font-size:19px;
 }
 
-@media(max-width:640px){
-  .card{width:130px;padding:12px}
-  .phone{width:min(340px,58vw);border-radius:44px;border-width:5px}
-  .ipad{width:min(480px,90vw)}
-  textarea{height:min(54vh,420px)}
+/* toast hint */
+#toast{
+  position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--panel2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;
+  z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
+  display:none;
 }
-@media(min-width:900px){
-  .phone{width:min(420px,44vw)}
-  .ipad{width:min(640px,56vw)}
-  textarea{height:min(62vh,580px)}
+
+@media(min-width:800px){
+  .phone{width:min(330px,32vw)}
+  .ipad{width:min(520px,46vw)}
 }
 </style>
 </head>
 <body>
 <div class="app">
-  <div id="mainView">
-    <div id="cardList" class="card-list"></div>
-    <div id="emptyHint" class="card-hint" style="display:none">カードを長押しで編集できます</div>
 
-    <div class="preview-actions">
-      <button id="btnFull" class="primary">全画面</button>
-    </div>
+  <div id="cardRow" class="card-row"></div>
+  <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
 
-    <div class="devices">
-      <div class="device-wrap">
-        <div class="device-label">iPhone 17 Pro</div>
-        <div class="phone" id="phone">
-          <div class="phone-inner" id="phoneInner">
-            <div class="island"></div>
-            <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-            <div class="homebar"></div>
-          </div>
+  <div class="devices">
+    <div class="device-wrap">
+      <div class="phone" id="phone">
+        <div class="island"></div>
+        <div class="phone-viewport">
+          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
         </div>
+        <div class="homebar"></div>
       </div>
-      <div class="device-wrap">
-        <div class="device-label">iPad 第7世代（横）</div>
-        <div class="ipad" id="ipad">
-          <div class="ipad-inner" id="ipadInner">
-            <div class="ipad-bezel"></div>
-            <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-          </div>
+      <button id="btnFullscreen" class="fs-icon-btn primary" aria-label="全画面プレビュー">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
+    </div>
+    <div class="device-wrap">
+      <div class="ipad" id="ipad">
+        <div class="ipad-viewport">
+          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- EDITOR -->
-  <section id="editorPanel" class="editor-panel">
+</div>
+
+<!-- EDITOR SHEET (opened by long-press on a card) -->
+<div id="editorOverlay" class="editor-overlay">
+  <div class="editor-sheet">
+    <div class="sheet-handle"></div>
     <div class="editor-tools">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
       <span id="count">0文字</span>
+    </div>
+    <div class="editor-tools">
       <div class="search-box">
         <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <button id="btnSearchNext" class="ghost" style="min-height:36px;padding:0 12px;font-size:13px;">次へ</button>
+        <button id="btnSearchNext" class="ghost">次へ</button>
         <span id="searchResult"></span>
       </div>
     </div>
-    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映さます。</div>
-    <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-    <div class="editor-actions">
-      <button id="btnSave" class="primary">保存して一覧へ</button>
-      <button id="btnDeleteEditor" class="danger">削除</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCancel" class="ghost">キャンセル</button>
+    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
+    <div class="editor-textwrap">
+      <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
-  </section>
+    <div class="editor-actions">
+      <div class="row2">
+        <button id="btnSave" class="primary">保存</button>
+        <button id="btnCancel" class="ghost">キャンセル</button>
+      </div>
+      <div class="row2">
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnDelete" class="danger">削除</button>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- FULLSCREEN PREVIEW -->
 <div id="fullscreen" class="fullscreen">
   <button class="exit" id="exit">×</button>
-  <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+  <div class="fullscreen-stage" id="fsStage">
+    <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+  </div>
 </div>
+
+<div id="toast">長押しで編集</div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const STORAGE_KEY = "pwa-previewer-items-v3";
-  const OLD_KEY = "pwa-previewer-items-v2";
-  const OLD_KEY2 = "iphone17pro-pwa-preview-html-v1";
+  const STORAGE_KEY = "pwa-previewer-items-v2";
+  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+
+  const PHONE_W = 402, PHONE_H = 874;
+  const IPAD_W = 1080, IPAD_H = 810;
 
   let items = [];
   let selectedId = null;
   let editingId = null;
-  let searchMatches = [];
-  let currentMatchIndex = -1;
-  let longPressTimer = null;
-  let lastLongPressTime = 0;
 
   const source = $("source");
   const nameInput = $("nameInput");
   const framePhone = $("framePhone");
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
-  const phoneInner = $("phoneInner");
-  const ipadInner = $("ipadInner");
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -231,18 +309,9 @@ textarea:focus{border-color:var(--accent)}
         items = JSON.parse(raw);
         if (!Array.isArray(items)) items = [];
       } else {
-        const old = localStorage.getItem(OLD_KEY) || localStorage.getItem(OLD_KEY2);
+        const old = localStorage.getItem(OLD_KEY);
         if (old) {
-          try {
-            const parsed = JSON.parse(old);
-            if (Array.isArray(parsed)) {
-              items = parsed;
-            } else if (typeof parsed === "string") {
-              items = [{ id: uid(), name: "移行したHTML", html: parsed, updated: Date.now() }];
-            }
-          } catch (e) {
-            items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
-          }
+          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
           persist();
         }
       }
@@ -258,11 +327,7 @@ textarea:focus{border-color:var(--accent)}
 
   function formatDate(ts) {
     const d = new Date(ts);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `${m}/${day} ${h}:${min}`;
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   }
 
   function escapeHtml(s) {
@@ -273,6 +338,79 @@ textarea:focus{border-color:var(--accent)}
       .replace(/"/g, "&quot;");
   }
 
+  function fitIframe(iframe, wrapEl, deviceW, deviceH) {
+    const rect = wrapEl.getBoundingClientRect();
+    const scale = Math.max(rect.width / deviceW, rect.height / deviceH);
+    iframe.style.transform = `scale(${scale})`;
+  }
+
+  function resizeAllPreviews() {
+    fitIframe(framePhone, document.querySelector(".phone-viewport"), PHONE_W, PHONE_H);
+    fitIframe(frameIpad, document.querySelector(".ipad-viewport"), IPAD_W, IPAD_H);
+  }
+
+  function resizeFullscreen() {
+    if (!$("fullscreen").classList.contains("show")) return;
+    const stage = $("fsStage");
+    const dW = PHONE_W;
+    const dH = PHONE_H;
+    const availW = stage.clientWidth;
+    const availH = stage.clientHeight;
+    const scale = Math.min(availW / dW, availH / dH);
+    fullFrame.style.width = dW + "px";
+    fullFrame.style.height = dH + "px";
+    fullFrame.style.transform = `scale(${scale})`;
+    fullFrame.style.transformOrigin = "center center";
+  }
+
+  window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
+
+  function renderCards() {
+    const row = $("cardRow");
+    const sorted = items.slice().sort((a, b) => b.updated - a.updated);
+    $("emptyHint").style.display = items.length ? "none" : "block";
+
+    const cardsHtml = sorted.map(it => `
+      <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
+        <div class="card-name">${escapeHtml(it.name || "無題")}</div>
+        <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
+      </div>
+    `).join("");
+
+    const newCard = `<div class="card card-new" id="cardNew"><div class="plus">＋</div><div class="label">新規</div></div>`;
+
+    row.innerHTML = cardsHtml + newCard;
+
+    row.querySelectorAll(".card[data-id]").forEach(el => {
+      let pressTimer = null;
+      let longPressed = false;
+
+      const startPress = () => {
+        longPressed = false;
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          openEditor(el.dataset.id, false);
+        }, 480);
+      };
+      const cancelPress = () => { clearTimeout(pressTimer); };
+
+      el.addEventListener("pointerdown", startPress);
+      el.addEventListener("pointerup", cancelPress);
+      el.addEventListener("pointerleave", cancelPress);
+      el.addEventListener("pointercancel", cancelPress);
+      el.addEventListener("click", () => {
+        if (longPressed) return;
+        selectedId = el.dataset.id;
+        renderCards();
+        updatePreview();
+        showToast("長押しで編集");
+      });
+      el.addEventListener("contextmenu", e => e.preventDefault());
+    });
+
+    $("cardNew").onclick = () => openEditor(null, true);
+  }
+
   function clearPreviews() {
     framePhone.srcdoc = "";
     frameIpad.srcdoc = "";
@@ -280,138 +418,39 @@ textarea:focus{border-color:var(--accent)}
 
   function updatePreview() {
     const it = items.find(x => x.id === selectedId);
-    if (!it) {
-      clearPreviews();
-      return;
-    }
+    if (!it) { clearPreviews(); return; }
     const html = it.html || "";
     framePhone.srcdoc = html;
     frameIpad.srcdoc = html;
+    requestAnimationFrame(resizeAllPreviews);
   }
 
-  function updateScales() {
-    const phoneW = $("phone").clientWidth;
-    const ipadW = $("ipad").clientWidth;
-    phoneInner.style.transform = `scale(${phoneW / 393})`;
-    ipadInner.style.transform = `scale(${ipadW / 1080})`;
-  }
+  let searchMatches = [];
+  let searchIndex = -1;
 
-  function renderList() {
-    const list = $("cardList");
-    const hint = $("emptyHint");
-    if (!items.length) {
-      hint.style.display = "";
-    } else {
-      hint.style.display = "none";
-    }
-
-    let html = items
-      .slice()
-      .sort((a, b) => b.updated - a.updated)
-      .map(it => `
-        <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
-          <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-          <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
-        </div>
-      `).join("");
-
-    html += `<div class="card new-card" data-action="new"><div>＋ 新規</div></div>`;
-    list.innerHTML = html;
-
-    list.querySelectorAll(".card").forEach(el => {
-      const action = el.dataset.action;
-      const id = el.dataset.id;
-
-      // long press
-      let startX = 0, startY = 0;
-      const start = (e) => {
-        const point = e.touches ? e.touches[0] : e;
-        startX = point.clientX;
-        startY = point.clientY;
-        longPressTimer = setTimeout(() => {
-          longPressTimer = null;
-          lastLongPressTime = Date.now();
-          if (action === "new") {
-            showEditor(true);
-          } else {
-            selectedId = id;
-            showEditor(false);
-          }
-        }, 600);
-      };
-      const cancel = () => {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-      };
-      const move = (e) => {
-        const point = e.touches ? e.touches[0] : e;
-        const dx = point.clientX - startX;
-        const dy = point.clientY - startY;
-        if (Math.sqrt(dx * dx + dy * dy) > 10) cancel();
-      };
-
-      el.addEventListener("touchstart", start, { passive: true });
-      el.addEventListener("touchend", cancel);
-      el.addEventListener("touchmove", move, { passive: true });
-      el.addEventListener("touchcancel", cancel);
-      el.addEventListener("mousedown", start);
-      el.addEventListener("mouseup", cancel);
-      el.addEventListener("mouseleave", cancel);
-      el.addEventListener("mousemove", move);
-      el.addEventListener("contextmenu", e => e.preventDefault());
-
-      el.addEventListener("click", () => {
-        if (Date.now() - lastLongPressTime < 500) return;
-        if (action === "new") {
-          showEditor(true);
-        } else {
-          selectedId = id;
-          renderList();
-          updatePreview();
-        }
-      });
-    });
-  }
-
-  function showList() {
-    $("mainView").classList.remove("hidden");
-    $("editorPanel").classList.remove("show");
-    renderList();
-    updatePreview();
-    requestAnimationFrame(updateScales);
-  }
-
-  function showEditor(isNew) {
-    $("mainView").classList.add("hidden");
-    $("editorPanel").classList.add("show");
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    searchMatches = [];
-    currentMatchIndex = -1;
-
+  function openEditor(id, isNew) {
+    editingId = isNew ? null : id;
     if (isNew) {
-      editingId = null;
       nameInput.value = "";
       source.value = "";
-      $("btnDeleteEditor").textContent = "クリア";
     } else {
-      const it = items.find(x => x.id === selectedId);
-      if (!it) {
-        editingId = null;
-        nameInput.value = "";
-        source.value = "";
-        $("btnDeleteEditor").textContent = "クリア";
-      } else {
-        editingId = it.id;
-        nameInput.value = it.name || "";
-        source.value = it.html || "";
-        $("btnDeleteEditor").textContent = "削除";
-      }
+      const it = items.find(x => x.id === id);
+      nameInput.value = it ? (it.name || "") : "";
+      source.value = it ? (it.html || "") : "";
     }
+    $("btnDelete").style.display = isNew ? "none" : "flex";
     updateCount();
-    nameInput.focus();
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    clearSearchHighlight();
+    $("editorOverlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+    setTimeout(() => nameInput.focus(), 50);
+  }
+
+  function closeEditor() {
+    $("editorOverlay").classList.remove("show");
+    document.body.style.overflow = "";
   }
 
   function updateCount() {
@@ -423,11 +462,7 @@ textarea:focus{border-color:var(--accent)}
     const html = source.value;
     if (editingId) {
       const it = items.find(x => x.id === editingId);
-      if (it) {
-        it.name = name;
-        it.html = html;
-        it.updated = Date.now();
-      }
+      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
       selectedId = editingId;
     } else {
       const id = uid();
@@ -435,105 +470,133 @@ textarea:focus{border-color:var(--accent)}
       selectedId = id;
     }
     persist();
-    showList();
+    closeEditor();
+    renderCards();
+    updatePreview();
   }
 
   function deleteCurrent() {
-    if (!editingId) {
-      if (confirm("内容をクリアしますか？")) {
-        source.value = "";
-        updateCount();
-      }
-      return;
-    }
+    if (!editingId) return;
     const it = items.find(x => x.id === editingId);
     if (!it) return;
     if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
     items = items.filter(x => x.id !== editingId);
-    selectedId = items.length ? items[0].id : null;
-    editingId = null;
+    if (selectedId === editingId) selectedId = items.length ? items[0].id : null;
     persist();
-    showList();
+    closeEditor();
+    renderCards();
+    updatePreview();
   }
 
-  function updateSearch() {
+  function clearSearchHighlight() {
+    searchMatches = [];
+    searchIndex = -1;
+  }
+
+  function runSearch(advance) {
     const q = $("search").value;
     if (!q) {
-      searchMatches = [];
-      currentMatchIndex = -1;
       $("searchResult").textContent = "";
+      clearSearchHighlight();
       return;
     }
-    searchMatches = [];
-    let pos = 0;
     const text = source.value;
-    while ((pos = text.indexOf(q, pos)) !== -1) {
-      searchMatches.push({ start: pos, end: pos + q.length });
-      pos += Math.max(q.length, 1);
+    const matches = [];
+    let pos = 0;
+    while (true) {
+      const idx = text.indexOf(q, pos);
+      if (idx === -1) break;
+      matches.push(idx);
+      pos = idx + Math.max(q.length, 1);
     }
-    if (searchMatches.length) {
-      currentMatchIndex = 0;
-      goToMatch(0);
-    } else {
-      currentMatchIndex = -1;
+    searchMatches = matches;
+
+    if (!matches.length) {
       $("searchResult").textContent = "0件";
+      searchIndex = -1;
+      return;
     }
+
+    if (advance) {
+      if (searchIndex === -1) searchIndex = 0;
+      else searchIndex = (searchIndex + 1) % matches.length;
+    } else {
+      $("searchResult").textContent = `${matches.length}件`;
+      searchIndex = -1;
+      return;
+    }
+
+    const start = matches[searchIndex];
+    const end = start + q.length;
+    source.focus({ preventScroll: true });
+    source.setSelectionRange(start, end);
+    scrollTextareaToSelection(start);
+    $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
   }
 
-  function goToMatch(idx) {
-    if (!searchMatches.length) return;
-    currentMatchIndex = ((idx % searchMatches.length) + searchMatches.length) % searchMatches.length;
-    const m = searchMatches[currentMatchIndex];
-    source.focus();
-    source.setSelectionRange(m.start, m.end);
-    $("searchResult").textContent = `${currentMatchIndex + 1}/${searchMatches.length}件`;
+  function scrollTextareaToSelection(charIndex) {
+    const text = source.value.slice(0, charIndex);
+    const lineNumber = text.split("\n").length - 1;
+    const style = getComputedStyle(source);
+    const lineHeight = parseFloat(style.lineHeight) || 18;
+    const paddingTop = parseFloat(style.paddingTop) || 14;
+    const paddingBottom = parseFloat(style.paddingBottom) || 14;
+    const targetTop = lineNumber * lineHeight;
+    const visibleHeight = source.clientHeight - paddingTop - paddingBottom;
+    source.scrollTop = Math.max(0, targetTop - visibleHeight / 2);
   }
 
-  // events
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
+  $("search").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); runSearch(true); }
+  });
+  $("btnSearchNext").onclick = () => runSearch(true);
+  $("search").addEventListener("focus", () => source.blur());
+
+  function openFullscreen() {
+    const it = items.find(x => x.id === selectedId);
+    if (!it) { alert("表示する項目を一覧から選んでください"); return; }
+    fullFrame.srcdoc = it.html || "";
+    $("fullscreen").classList.add("show");
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(resizeFullscreen);
+  }
+
+  $("btnFullscreen").onclick = openFullscreen;
+  $("exit").onclick = () => {
+    $("fullscreen").classList.remove("show");
+    fullFrame.srcdoc = "";
+    document.body.style.overflow = "";
+  };
+
   $("btnSave").onclick = saveCurrent;
-  $("btnCancel").onclick = showList;
+  $("btnCancel").onclick = closeEditor;
+  $("btnDelete").onclick = deleteCurrent;
   $("btnClear").onclick = () => {
     source.value = "";
     updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
-    searchMatches = [];
-    currentMatchIndex = -1;
+    clearSearchHighlight();
     source.focus();
   };
-  $("btnDeleteEditor").onclick = deleteCurrent;
-
-  $("btnFull").onclick = () => {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) return;
-    fullFrame.srcdoc = it.html || "";
-    $("fullscreen").classList.add("show");
-  };
-  $("exit").onclick = () => {
-    $("fullscreen").classList.remove("show");
-    fullFrame.srcdoc = "";
-  };
-
   source.addEventListener("input", updateCount);
-
-  $("search").addEventListener("input", updateSearch);
-  $("btnSearchNext").addEventListener("click", () => {
-    if (!searchMatches.length) updateSearch();
-    else goToMatch(currentMatchIndex + 1);
-  });
-  $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (!searchMatches.length) updateSearch();
-      else goToMatch(currentMatchIndex + 1);
-    }
+  $("editorOverlay").addEventListener("click", (e) => {
+    if (e.target === $("editorOverlay")) closeEditor();
   });
 
-  window.addEventListener("resize", updateScales);
+  function showToast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => { t.style.display = "none"; }, 1400);
+  }
 
-  // init
   load();
-  showList();
+  renderCards();
+  updatePreview();
+  requestAnimationFrame(resizeAllPreviews);
 })();
 </script>
 </body>
