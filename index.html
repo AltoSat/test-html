@@ -31,7 +31,7 @@ button.danger{background:var(--danger)}
 button.ghost{background:transparent;border:1px solid #38383c}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto;padding-top:10px}
+.app{max-width:1100px;margin:auto;padding-top:0}  /* 修正: padding-top 0に変更 */
 
 /* card row (horizontal scroll) */
 .card-row{
@@ -68,7 +68,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .preview-actions button{min-height:38px;font-size:13.5px;padding:0 22px}
 
 /* device previews */
-.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
+.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px;position:relative} /* 修正: relative追加 */
 .device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
 .device-label{font-size:12px;color:var(--muted);font-weight:500}
 
@@ -88,7 +88,7 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .island{
   position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
-  width:33.5%;height:9.5%;max-height:34px;background:#000;border-radius:100px;pointer-events:none;
+  width:33.5%;height:7.125%;max-height:25.5px;background:#000;border-radius:100px;pointer-events:none;  /* 修正: 高さを4分の3に */
 }
 .homebar{
   position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
@@ -110,10 +110,34 @@ button:disabled{opacity:.4;pointer-events:none}
   transform-origin:top left;
 }
 
+/* 全画面プレビューボタン（アイコン）を絶対配置 */
+#btnFullscreenIcon{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:44px;
+  height:44px;
+  padding:0;
+  border-radius:50%;
+  background:var(--panel2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #38383c;
+  z-index:10;
+}
+#btnFullscreenIcon svg{
+  width:20px;
+  height:20px;
+  fill:var(--text);
+}
+#btnFullscreenIcon:active{background:var(--panel3)}
+
 /* editor (opened via long-press) */
 .editor-overlay{
   position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
   display:none;align-items:flex-end;justify-content:center;
+  overflow:hidden; /* 修正: 背面スクロール防止 */
 }
 .editor-overlay.show{display:flex}
 .editor-sheet{
@@ -153,7 +177,10 @@ mark.hit.current{background:var(--accent);color:#fff}
 .editor-actions .row2 button{flex:1}
 
 /* fullscreen */
-.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none}
+.fullscreen{
+  position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;
+  overflow:hidden; /* 修正: 背面スクロール防止 */
+}
 .fullscreen.show{display:block}
 .fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .fullscreen iframe{border:0;background:#000;color-scheme:dark}
@@ -169,7 +196,10 @@ mark.hit.current{background:var(--accent);color:#fff}
 .fullscreen .exit{
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
   width:40px;height:40px;padding:0;border-radius:50%;
-  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:19px;
+  background:rgba(60,60,65,0.3); /* 修正: 透明度を上げ、ぼかし除去 */
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  color:#fff;font-size:19px;
 }
 
 @media(min-width:800px){
@@ -184,10 +214,7 @@ mark.hit.current{background:var(--accent);color:#fff}
   <div id="cardRow" class="card-row"></div>
   <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
 
-  <div class="preview-actions">
-    <button id="btnFullscreen" class="primary">全画面プレビュー</button>
-  </div>
-
+  <!-- プレビューアクションは廃止し、フルスクリーンボタンをデバイス領域内に配置 -->
   <div class="devices">
     <div class="device-wrap">
       <div class="device-label">iPhone 17 Pro</div>
@@ -199,6 +226,12 @@ mark.hit.current{background:var(--accent);color:#fff}
         <div class="homebar"></div>
       </div>
     </div>
+    <!-- 全画面プレビューアイコンボタン（iPhoneの右側に絶対配置） -->
+    <button id="btnFullscreenIcon" title="全画面プレビュー" aria-label="全画面プレビュー">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+      </svg>
+    </button>
     <div class="device-wrap">
       <div class="device-label">iPad 第7世代（横）</div>
       <div class="ipad" id="ipad">
@@ -319,7 +352,8 @@ mark.hit.current{background:var(--accent);color:#fff}
   // ---------- device scaling ----------
   function fitIframe(iframe, wrapEl, deviceW, deviceH) {
     const rect = wrapEl.getBoundingClientRect();
-    const scale = rect.width / deviceW;
+    // 修正: 幅と高さの両方を考慮してスケールし、余白が出ないようにする
+    const scale = Math.min(rect.width / deviceW, rect.height / deviceH);
     iframe.style.width = deviceW + "px";
     iframe.style.height = deviceH + "px";
     iframe.style.transform = `scale(${scale})`;
@@ -427,11 +461,15 @@ mark.hit.current{background:var(--accent);color:#fff}
     $("searchResult").textContent = "";
     clearSearchHighlight();
     $("editorOverlay").classList.add("show");
+    // 背景スクロール固定
+    document.body.style.overflow = 'hidden';
     setTimeout(() => nameInput.focus(), 50);
   }
 
   function closeEditor() {
     $("editorOverlay").classList.remove("show");
+    // 背景スクロール解除
+    document.body.style.overflow = '';
   }
 
   function updateCount() {
@@ -507,10 +545,14 @@ mark.hit.current{background:var(--accent);color:#fff}
 
     const start = matches[searchIndex];
     const end = start + q.length;
-    source.focus();
+    // 修正: フォーカスを移して選択範囲を表示、ただし検索ボックスにフォーカスを戻す
+    source.focus({ preventScroll: true });
     source.setSelectionRange(start, end);
+    // スクロールを実行
     scrollTextareaToSelection(start);
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
+    // フォーカスを検索ボックスに戻す（入力継続のため）
+    $("search").focus({ preventScroll: true });
   }
 
   // scroll a plain textarea so the given char offset is roughly centered
@@ -521,6 +563,11 @@ mark.hit.current{background:var(--accent);color:#fff}
     const targetTop = lineNumber * lineHeight;
     source.scrollTop = Math.max(0, targetTop - source.clientHeight / 2);
   }
+
+  // 検索欄のフォーカス時に確実にテキストエリアからフォーカスを外す
+  $("search").addEventListener("focus", () => {
+    source.blur();
+  });
 
   $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
   $("search").addEventListener("keydown", (e) => {
@@ -534,13 +581,17 @@ mark.hit.current{background:var(--accent);color:#fff}
     if (!it) { alert("表示する項目を一覧から選んでください"); return; }
     fullFrame.srcdoc = it.html || "";
     $("fullscreen").classList.add("show");
+    // 背景スクロール固定
+    document.body.style.overflow = 'hidden';
     requestAnimationFrame(resizeFullscreen);
   }
 
-  $("btnFullscreen").onclick = openFullscreen;
+  $("btnFullscreenIcon").onclick = openFullscreen; // アイコンボタンにイベント割り当て
   $("exit").onclick = () => {
     $("fullscreen").classList.remove("show");
     fullFrame.srcdoc = "";
+    // 背景スクロール解除
+    document.body.style.overflow = '';
   };
   $("fsPhoneBtn").onclick = () => {
     $("fsPhoneBtn").classList.add("on");
