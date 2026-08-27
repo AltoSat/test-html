@@ -28,7 +28,6 @@ button,textarea,input{font:inherit}
 button{
   border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;text-align:center;
-  white-space:nowrap;
 }
 button.primary{background:var(--accent)}
 button.danger{background:var(--danger)}
@@ -57,8 +56,12 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .card:active{background:var(--panel2)}
 .card.active{border-color:var(--accent);background:#0a84ff18}
-.card-name{font-weight:600;font-size:14px;line-height:1.25;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-name{
+  font-weight:600;font-size:14px;line-height:1.25;
+  height:35px; /* 常に2行分の高さを確保 */
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  align-self:flex-start;
+}
 .card-meta{font-size:10.5px;color:var(--muted)}
 .card-new{
   align-items:center;justify-content:center;color:var(--muted);
@@ -68,17 +71,17 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-new .label{font-size:12px;margin-top:4px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
-/* card toast (slide up from below tapped card) */
+/* card toast (slide up from below tapped card, now on lower half of card) */
 .card-toast{
   position:absolute;
   z-index:50;
   background:var(--panel2);
   color:var(--text);
-  padding:8px 14px;
-  border-radius:12px;
-  font-size:12.5px;
+  padding:6px 12px;
+  border-radius:10px;
+  font-size:11.5px;
   border:1px solid #38383c;
-  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  box-shadow:0 2px 10px rgba(0,0,0,.5);
   pointer-events:none;
   opacity:0;
   transform:translateY(10px);
@@ -156,12 +159,16 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .editor-overlay.show{display:flex}
 .editor-sheet{
-  width:100%;max-width:900px;max-height:92vh;overflow:auto;
-  background:var(--bg);border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  width:100%;max-width:900px;max-height:92vh;
+  background:var(--bg);border-radius:20px 20px 0 0;
   box-shadow:0 -10px 40px #000;
+  display:flex;flex-direction:column;overflow:hidden;
   overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
   -webkit-user-select:none;user-select:none;
+}
+.sheet-scroll{
+  flex:1;overflow-y:auto;padding:14px 14px 10px;
+  -webkit-overflow-scrolling:touch;
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 
@@ -177,7 +184,6 @@ button:disabled{opacity:.4;pointer-events:none}
 .editor-title-row .name-input:focus{border-color:var(--accent)}
 .editor-title-row .btn-delete{
   min-height:40px;padding:0 14px;font-size:13px;
-  flex-shrink:0;
 }
 
 /* textarea - word wrap instead of horizontal scroll */
@@ -190,15 +196,16 @@ textarea{
 }
 textarea:focus{border-color:var(--accent)}
 
-/* editor actions - single row, buttons never wrap */
+/* editor actions - single row */
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .editor-actions button{flex:1;min-width:80px;white-space:nowrap}
 
-/* search section at bottom */
+/* search section at bottom - fixed in sheet */
 .search-section{
-  margin-top:12px;
-  padding-top:12px;
+  flex-shrink:0;
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid #38383c;
+  background:var(--bg);
 }
 .search-box{
   position:relative;
@@ -206,30 +213,27 @@ textarea:focus{border-color:var(--accent)}
 }
 .search-box input{
   flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 104px 0 11px;outline:none;
+  background:#111113;color:#fff;padding:0 96px 0 11px;outline:none;
   -webkit-user-select:text;user-select:text;
 }
 .search-box input:focus{border-color:var(--accent)}
 .search-box .search-count{
   position:absolute;
-  right:100px;
+  right:104px;
   top:50%;
   transform:translateY(-50%);
   font-size:12px;
   color:var(--muted);
   pointer-events:none;
-  white-space:nowrap;
 }
 .search-box .search-nav{
   display:flex;gap:4px;
-  flex-shrink:0;
 }
 .search-box button{
   min-height:36px;
   min-width:40px;
   padding:0 8px;
   font-size:16px;
-  white-space:nowrap;
 }
 
 /* fullscreen */
@@ -244,14 +248,12 @@ textarea:focus{border-color:var(--accent)}
 .fs-controls button{
   min-height:36px;padding:0 14px;font-size:13px;border-radius:18px;
   background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;
-  white-space:nowrap;
 }
 .fs-controls button.on{background:rgba(10,132,255,.85)}
 .fullscreen .exit{
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
   width:40px;height:40px;padding:0;border-radius:50%;
   background:rgba(0,0,0,.40);color:#fff;font-size:19px;
-  white-space:nowrap;
 }
 
 @media(min-width:800px){
@@ -295,22 +297,24 @@ textarea:focus{border-color:var(--accent)}
 <!-- EDITOR SHEET (opened by long-press on a card) -->
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
-    <div class="sheet-handle"></div>
+    <div class="sheet-scroll">
+      <div class="sheet-handle"></div>
 
-    <div class="editor-title-row">
-      <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <button id="btnDelete" class="btn-delete danger">削除</button>
-    </div>
+      <div class="editor-title-row">
+        <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
+        <button id="btnDelete" class="btn-delete danger">削除</button>
+      </div>
 
-    <div class="editor-textwrap">
-      <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-    </div>
+      <div class="editor-textwrap">
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
+      </div>
 
-    <div class="editor-actions">
-      <button id="btnCancel" class="ghost">キャンセル</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCopy" class="ghost">コピー</button>
-      <button id="btnSave" class="primary">保存</button>
+      <div class="editor-actions">
+        <button id="btnCancel" class="ghost">キャンセル</button>
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnCopy" class="ghost">コピー</button>
+        <button id="btnSave" class="primary">保存</button>
+      </div>
     </div>
 
     <div class="search-section">
@@ -360,37 +364,12 @@ textarea:focus{border-color:var(--accent)}
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
 
-  // Normalize `updated` to a timestamp number (handles Date objects, strings, numbers)
-  function normalizeUpdated(v) {
-    if (typeof v === 'number') return v;
-    if (v instanceof Date) return v.getTime();
-    if (typeof v === 'string') {
-      const num = Number(v);
-      if (!isNaN(num)) return num;
-      const parsed = new Date(v).getTime();
-      if (!isNaN(parsed)) return parsed;
-      // Try removing Japanese timezone suffix if present
-      const cleaned = v.replace(/（日本標準時）/g, '').replace(/\(Japan Standard Time\)/gi, '').trim();
-      const parsed2 = new Date(cleaned).getTime();
-      if (!isNaN(parsed2)) return parsed2;
-    }
-    return Date.now();
-  }
-
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         items = JSON.parse(raw);
         if (!Array.isArray(items)) items = [];
-        // Normalize all updated fields to timestamps
-        items.forEach(it => {
-          if (it && typeof it === 'object') {
-            it.updated = normalizeUpdated(it.updated);
-            if (typeof it.html !== 'string') it.html = '';
-            if (typeof it.name !== 'string') it.name = '無題';
-          }
-        });
       } else {
         const old = localStorage.getItem(OLD_KEY);
         if (old) {
@@ -405,38 +384,16 @@ textarea:focus{border-color:var(--accent)}
   }
 
   function persist() {
-    // Store only plain serializable data
-    const clean = items.map(it => ({
-      id: it.id,
-      name: it.name || '無題',
-      html: it.html || '',
-      updated: typeof it.updated === 'number' ? it.updated : Date.now()
-    }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
 
   function formatDate(ts) {
-    let d;
-    if (typeof ts === 'number') {
-      d = new Date(ts);
-    } else if (ts instanceof Date) {
-      d = ts;
-    } else if (typeof ts === 'string') {
-      const num = Number(ts);
-      if (!isNaN(num)) {
-        d = new Date(num);
-      } else {
-        d = new Date(ts);
-      }
-    } else {
-      d = new Date();
-    }
-    if (isNaN(d.getTime())) return "不明";
+    const d = new Date(ts);
     const m = d.getMonth() + 1;
     const day = d.getDate();
     const w = WEEKDAYS[d.getDay()];
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2,"0");
+    const min = String(d.getMinutes()).padStart(2,"0");
     return `${m}/${day}（${w}）${h}:${min}`;
   }
 
@@ -523,6 +480,7 @@ textarea:focus{border-color:var(--accent)}
   }
 
   function showCardToast(cardEl, msg) {
+    // remove existing toast
     const existing = document.querySelector(".card-toast");
     if (existing) existing.remove();
 
@@ -532,11 +490,17 @@ textarea:focus{border-color:var(--accent)}
     document.body.appendChild(toast);
 
     const rect = cardEl.getBoundingClientRect();
-    const toastRect = toast.getBoundingClientRect();
-    let left = rect.left + rect.width/2 - toast.offsetWidth/2;
-    let top = rect.bottom + 8;
-    left = Math.max(8, Math.min(left, window.innerWidth - toast.offsetWidth - 8));
-    top = Math.max(8, Math.min(top, window.innerHeight - toast.offsetHeight - 8));
+    const toastWidth = toast.offsetWidth;
+    const toastHeight = toast.offsetHeight;
+
+    // カードの下半分に配置（垂直位置はカードの75%あたり）
+    let left = rect.left + rect.width / 2 - toastWidth / 2;
+    let top = rect.top + rect.height * 0.75 - toastHeight / 2;
+
+    // ビューポート内に収まるように調整
+    left = Math.max(8, Math.min(left, window.innerWidth - toastWidth - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - toastHeight - 8));
+
     toast.style.left = left + "px";
     toast.style.top = top + "px";
 
@@ -580,25 +544,30 @@ textarea:focus{border-color:var(--accent)}
     clearSearchHighlight();
     $("editorOverlay").classList.add("show");
     document.body.style.overflow = "hidden";
+
+    // キーボード調整をリセット
+    adjustEditorForKeyboard();
+
     setTimeout(() => nameInput.focus(), 50);
   }
 
   function closeEditor() {
     $("editorOverlay").classList.remove("show");
     document.body.style.overflow = "";
+    // ボトム位置をリセット
+    $("editorOverlay").style.bottom = "";
   }
 
   function saveCurrent() {
     const name = (nameInput.value || "").trim() || "無題";
     const html = source.value;
-    const ts = Date.now();
     if (editingId) {
       const it = items.find(x => x.id === editingId);
-      if (it) { it.name = name; it.html = html; it.updated = ts; }
+      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
       selectedId = editingId;
     } else {
       const id = uid();
-      items.push({ id, name, html, updated: ts });
+      items.push({ id, name, html, updated: Date.now() });
       selectedId = id;
     }
     persist();
@@ -663,14 +632,53 @@ textarea:focus{border-color:var(--accent)}
 
     const start = matches[searchIndex];
     const end = start + q.length;
-    // Set selection first, then focus will scroll to it naturally
+    source.focus({ preventScroll: true });
     source.setSelectionRange(start, end);
-    // Use focus without preventScroll to allow browser to scroll to selection
-    source.focus();
-    // Force a re-focus to ensure the scroll happens
-    source.blur();
-    source.focus();
+    scrollTextareaToSelection(start);
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
+  }
+
+  function scrollTextareaToSelection(charIndex) {
+    const ta = source;
+    const text = ta.value;
+    const before = text.slice(0, charIndex);
+
+    const mirror = document.createElement('div');
+    const style = getComputedStyle(ta);
+
+    mirror.style.font = style.font;
+    mirror.style.padding = style.padding;
+    mirror.style.letterSpacing = style.letterSpacing;
+    mirror.style.lineHeight = style.lineHeight;
+    mirror.style.whiteSpace = 'pre-wrap';
+    mirror.style.wordBreak = 'break-all';
+    mirror.style.overflowWrap = 'anywhere';
+    mirror.style.boxSizing = 'border-box';
+    mirror.style.border = 'none';
+    mirror.style.width = ta.clientWidth + 'px';
+    mirror.style.position = 'absolute';
+    mirror.style.top = '-9999px';
+    mirror.style.left = '-9999px';
+    mirror.style.visibility = 'hidden';
+
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    mirror.innerHTML = esc(before) + '<span>&#x200b;</span>' + esc(text.slice(charIndex));
+
+    document.body.appendChild(mirror);
+
+    const span = mirror.querySelector('span');
+    const spanRect = span.getBoundingClientRect();
+    const mirrorRect = mirror.getBoundingClientRect();
+
+    const relTop = spanRect.top - mirrorRect.top;
+    const lineHeight = parseFloat(style.lineHeight) || 18;
+    const paddingTop = parseFloat(style.paddingTop) || 14;
+    const paddingBottom = parseFloat(style.paddingBottom) || 14;
+    const visibleHeight = ta.clientHeight - paddingTop - paddingBottom;
+
+    ta.scrollTop = Math.max(0, relTop - visibleHeight / 2 + lineHeight / 2);
+
+    document.body.removeChild(mirror);
   }
 
   $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
@@ -721,6 +729,23 @@ textarea:focus{border-color:var(--accent)}
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
+
+  // キーボード対応：visualViewport を使用してエディタの検索バーをキーボード上部に固定
+  function adjustEditorForKeyboard() {
+    if (!$("editorOverlay").classList.contains("show")) return;
+    if (window.visualViewport) {
+      const vv = window.visualViewport;
+      const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+      $("editorOverlay").style.bottom = Math.max(0, keyboardHeight) + "px";
+    } else {
+      $("editorOverlay").style.bottom = "";
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjustEditorForKeyboard);
+    window.visualViewport.addEventListener('scroll', adjustEditorForKeyboard);
+  }
 
   load();
   renderCards();
