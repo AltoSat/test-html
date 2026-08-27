@@ -67,6 +67,28 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-new .label{font-size:12px;margin-top:4px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
+/* card toast (slide up from below tapped card) */
+.card-toast{
+  position:absolute;
+  z-index:50;
+  background:var(--panel2);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:12px;
+  font-size:12.5px;
+  border:1px solid #38383c;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .22s, transform .22s;
+  white-space:nowrap;
+}
+.card-toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
 /* device previews */
 .devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
 .device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
@@ -114,7 +136,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-/* fullscreen action icon */
+/* fullscreen action icon - gray instead of primary */
 .fs-icon-btn{
   position:absolute;
   left:calc(100% + 8px);
@@ -123,7 +145,6 @@ button:disabled{opacity:.4;pointer-events:none}
   width:40px;height:40px;border-radius:12px;padding:0;
   background:var(--panel2);border:1px solid #38383c;color:var(--text);
 }
-.fs-icon-btn.primary{background:var(--accent);border-color:transparent}
 .fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
 
 /* editor (opened via long-press) */
@@ -139,37 +160,76 @@ button:disabled{opacity:.4;pointer-events:none}
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
+  /* prevent text selection in editor UI */
+  -webkit-user-select:none;user-select:none;
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
-.editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.editor-tools .name-input{
+
+/* title row with delete button */
+.editor-title-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.editor-title-row .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
+  /* allow text selection inside input */
+  -webkit-user-select:text;user-select:text;
 }
-.editor-tools .name-input:focus{border-color:var(--accent)}
-#count{font-size:13px;color:var(--muted);white-space:nowrap}
-.search-box{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.search-box input{
-  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 11px;outline:none;
+.editor-title-row .name-input:focus{border-color:var(--accent)}
+.editor-title-row .btn-delete{
+  min-height:40px;padding:0 14px;font-size:13px;
 }
-.search-box button{min-height:40px;padding:0 12px;font-size:13px}
-#searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
-.editor-textwrap{position:relative}
+
+/* textarea - word wrap instead of horizontal scroll */
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre;overflow:auto;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
+  /* allow text selection inside textarea */
+  -webkit-user-select:text;user-select:text;
 }
 textarea:focus{border-color:var(--accent)}
-mark.hit{background:var(--mark);color:#000;border-radius:2px}
-mark.hit.current{background:var(--accent);color:#fff}
-.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
+
+/* editor actions - single row */
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.editor-actions button{flex:1;min-width:100px}
-.editor-actions .row2{display:flex;gap:8px;width:100%}
-.editor-actions .row2 button{flex:1}
+.editor-actions button{flex:1;min-width:80px}
+
+/* search section at bottom */
+.search-section{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid #38383c;
+}
+.search-box{
+  position:relative;
+  display:flex;align-items:center;gap:6px;
+}
+.search-box input{
+  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 80px 0 11px;outline:none;
+  /* allow text selection inside input */
+  -webkit-user-select:text;user-select:text;
+}
+.search-box input:focus{border-color:var(--accent)}
+.search-box .search-count{
+  position:absolute;
+  right:90px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  color:var(--muted);
+  pointer-events:none;
+}
+.search-box .search-nav{
+  display:flex;gap:4px;
+}
+.search-box button{
+  min-height:36px;
+  min-width:40px;
+  padding:0 8px;
+  font-size:16px;
+}
 
 /* fullscreen */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
@@ -189,14 +249,6 @@ mark.hit.current{background:var(--accent);color:#fff}
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
   width:40px;height:40px;padding:0;border-radius:50%;
   background:rgba(0,0,0,.40);color:#fff;font-size:19px;
-}
-
-/* toast hint */
-#toast{
-  position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-  background:var(--panel2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;
-  z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
-  display:none;
 }
 
 @media(min-width:800px){
@@ -220,7 +272,7 @@ mark.hit.current{background:var(--accent);color:#fff}
         </div>
         <div class="homebar"></div>
       </div>
-      <button id="btnFullscreen" class="fs-icon-btn primary" aria-label="全画面プレビュー">
+      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
@@ -241,31 +293,34 @@ mark.hit.current{background:var(--accent);color:#fff}
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="sheet-handle"></div>
-    <div class="editor-tools">
+
+    <div class="editor-title-row">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <span id="count">0文字</span>
+      <button id="btnDelete" class="btn-delete danger">削除</button>
     </div>
-    <div class="editor-tools">
-      <div class="search-box">
-        <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <button id="btnSearchNext" class="ghost">次へ</button>
-        <span id="searchResult"></span>
-      </div>
-    </div>
-    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
+
     <div class="editor-textwrap">
       <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
+
     <div class="editor-actions">
-      <div class="row2">
-        <button id="btnSave" class="primary">保存</button>
-        <button id="btnCancel" class="ghost">キャンセル</button>
-      </div>
-      <div class="row2">
-        <button id="btnClear" class="ghost">クリア</button>
-        <button id="btnDelete" class="danger">削除</button>
+      <button id="btnCancel" class="ghost">キャンセル</button>
+      <button id="btnClear" class="ghost">クリア</button>
+      <button id="btnCopy" class="ghost">コピー</button>
+      <button id="btnSave" class="primary">保存</button>
+    </div>
+
+    <div class="search-section">
+      <div class="search-box">
+        <input id="search" type="search" placeholder="検索" autocomplete="off">
+        <span id="searchResult" class="search-count"></span>
+        <div class="search-nav">
+          <button id="btnSearchPrev" class="ghost">▲</button>
+          <button id="btnSearchNext" class="ghost">▼</button>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -276,8 +331,6 @@ mark.hit.current{background:var(--accent);color:#fff}
     <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
   </div>
 </div>
-
-<div id="toast">長押しで編集</div>
 
 <script>
 (() => {
@@ -297,6 +350,8 @@ mark.hit.current{background:var(--accent);color:#fff}
   const framePhone = $("framePhone");
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
+
+  const WEEKDAYS = ["日","月","火","水","木","金","土"];
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -327,7 +382,12 @@ mark.hit.current{background:var(--accent);color:#fff}
 
   function formatDate(ts) {
     const d = new Date(ts);
-    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const w = WEEKDAYS[d.getDay()];
+    const h = String(d.getHours()).padStart(2,"0");
+    const min = String(d.getMinutes()).padStart(2,"0");
+    return `${m}/${d}（${w}）${h}:${min}`;
   }
 
   function escapeHtml(s) {
@@ -373,7 +433,8 @@ mark.hit.current{background:var(--accent);color:#fff}
     const cardsHtml = sorted.map(it => `
       <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
         <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
+        <div class="card-meta">${formatDate(it.updated)}</div>
+        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
       </div>
     `).join("");
 
@@ -403,12 +464,40 @@ mark.hit.current{background:var(--accent);color:#fff}
         selectedId = el.dataset.id;
         renderCards();
         updatePreview();
-        showToast("長押しで編集");
+        showCardToast(el, "長押しで編集");
       });
       el.addEventListener("contextmenu", e => e.preventDefault());
     });
 
     $("cardNew").onclick = () => openEditor(null, true);
+  }
+
+  function showCardToast(cardEl, msg) {
+    // remove existing toast
+    const existing = document.querySelector(".card-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "card-toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    const rect = cardEl.getBoundingClientRect();
+    const toastRect = toast.getBoundingClientRect();
+    // center horizontally under the card, place just below it
+    let left = rect.left + rect.width/2 - toast.offsetWidth/2;
+    let top = rect.bottom + 8;
+    // clamp to viewport
+    left = Math.max(8, Math.min(left, window.innerWidth - toast.offsetWidth - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - toast.offsetHeight - 8));
+    toast.style.left = left + "px";
+    toast.style.top = top + "px";
+
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 250);
+    }, 1400);
   }
 
   function clearPreviews() {
@@ -439,7 +528,6 @@ mark.hit.current{background:var(--accent);color:#fff}
       source.value = it ? (it.html || "") : "";
     }
     $("btnDelete").style.display = isNew ? "none" : "flex";
-    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
@@ -451,10 +539,6 @@ mark.hit.current{background:var(--accent);color:#fff}
   function closeEditor() {
     $("editorOverlay").classList.remove("show");
     document.body.style.overflow = "";
-  }
-
-  function updateCount() {
-    $("count").textContent = source.value.length.toLocaleString() + "文字";
   }
 
   function saveCurrent() {
@@ -493,7 +577,7 @@ mark.hit.current{background:var(--accent);color:#fff}
     searchIndex = -1;
   }
 
-  function runSearch(advance) {
+  function runSearch(direction) {
     const q = $("search").value;
     if (!q) {
       $("searchResult").textContent = "";
@@ -517,9 +601,12 @@ mark.hit.current{background:var(--accent);color:#fff}
       return;
     }
 
-    if (advance) {
+    if (direction === "next") {
       if (searchIndex === -1) searchIndex = 0;
       else searchIndex = (searchIndex + 1) % matches.length;
+    } else if (direction === "prev") {
+      if (searchIndex === -1) searchIndex = matches.length - 1;
+      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
     } else {
       $("searchResult").textContent = `${matches.length}件`;
       searchIndex = -1;
@@ -546,12 +633,12 @@ mark.hit.current{background:var(--accent);color:#fff}
     source.scrollTop = Math.max(0, targetTop - visibleHeight / 2);
   }
 
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
   $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch(true); }
+    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
   });
-  $("btnSearchNext").onclick = () => runSearch(true);
-  $("search").addEventListener("focus", () => source.blur());
+  $("btnSearchNext").onclick = () => runSearch("next");
+  $("btnSearchPrev").onclick = () => runSearch("prev");
 
   function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
@@ -574,24 +661,26 @@ mark.hit.current{background:var(--accent);color:#fff}
   $("btnDelete").onclick = deleteCurrent;
   $("btnClear").onclick = () => {
     source.value = "";
-    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
     source.focus();
   };
-  source.addEventListener("input", updateCount);
+  $("btnCopy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(source.value);
+      const btn = $("btnCopy");
+      const old = btn.textContent;
+      btn.textContent = "コピー済";
+      setTimeout(() => btn.textContent = old, 1200);
+    } catch (e) {
+      alert("コピーに失敗しました");
+    }
+  };
+
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
-
-  function showToast(msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.style.display = "block";
-    clearTimeout(t._hideTimer);
-    t._hideTimer = setTimeout(() => { t.style.display = "none"; }, 1400);
-  }
 
   load();
   renderCards();
