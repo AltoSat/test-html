@@ -19,314 +19,279 @@
   --accent:#0a84ff;
   --danger:#ff453a;
   --ok:#30d158;
+  --mark:#ffd60a;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
-body{padding:calc(env(safe-area-inset-top) + 8px) 12px calc(env(safe-area-inset-bottom) + 12px)}
+body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
 button,textarea,input{font:inherit}
-button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:38px;padding:0 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 button.primary{background:var(--accent)}
 button.danger{background:var(--danger)}
 button.ghost{background:transparent;border:1px solid #38383c}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto}
+.app{max-width:1100px;margin:auto;padding-top:0}
 
-/* Horizontal Scroll Cards */
-.card-slider{
-  display:flex;
-  gap:10px;
-  overflow-x:auto;
-  padding:4px 2px 12px;
-  margin-bottom:12px;
-  scroll-snap-type:x mandatory;
+/* Toast Notification */
+.toast{
+  position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-20px);
+  background:rgba(50,50,54,0.9);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;
+  pointer-events:none;opacity:0;transition:opacity .25s, transform .25s;z-index:200;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* card row (horizontal scroll) */
+.card-row{
+  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
+  padding:0 4px 14px 4px;margin:0 -4px 6px;
+  scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch;
+  user-select:none;-webkit-user-select:none;
+  -webkit-touch-callout:none;
 }
-.card-slider::-webkit-scrollbar{height:4px}
-.card-slider::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:4px}
-
+.card-row::-webkit-scrollbar{height:0}
 .card{
-  flex:0 0 140px;
-  height:76px;
-  background:var(--panel);
-  border-radius:14px;
-  padding:10px 12px;
-  border:2px solid transparent;
-  cursor:pointer;
-  transition:border-color .15s, background .15s, transform .1s;
   scroll-snap-align:start;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  user-select:none;
-  -webkit-user-select:none;
+  flex:0 0 auto;width:132px;height:96px;
+  background:var(--panel);border-radius:16px;padding:12px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  border:2px solid transparent;cursor:pointer;
+  transition:border-color .15s,background .15s;
+  position:relative;
 }
-.card:active{transform:scale(.96);background:var(--panel2)}
+.card:active{background:var(--panel2)}
 .card.active{border-color:var(--accent);background:#0a84ff18}
-.card-title{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-.card-meta{font-size:10px;color:var(--muted);white-space:nowrap}
-
+.card-name{font-weight:600;font-size:14px;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-meta{font-size:10.5px;color:var(--muted)}
 .card-new{
-  flex:0 0 100px;
-  height:76px;
-  background:transparent;
-  border:2px dashed var(--panel3);
-  border-radius:14px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  color:var(--accent);
-  font-weight:600;
-  font-size:12px;
-  cursor:pointer;
-  scroll-snap-align:start;
+  align-items:center;justify-content:center;color:var(--muted);
+  border:2px dashed #3a3a3c;background:transparent;
 }
-.card-new:active{background:#0a84ff10;transform:scale(.96)}
-.card-new .plus{font-size:18px;line-height:1}
+.card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
+.card-new .label{font-size:12px;margin-top:4px}
+.card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
-/* Toolbar Controls */
-.preview-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-bottom:12px}
+/* device previews wrapper */
+.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:center;padding:4px 0 24px}
+.phone-container{
+  display:grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items:center;
+  width:100%;
+}
+.phone-center{
+  grid-column: 2;
+  display:flex;
+  justify-content:center;
+}
+.phone-actions-right{
+  grid-column: 3;
+  display:flex;
+  justify-content:flex-start;
+  padding-left:12px;
+}
+.icon-btn{
+  width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;
+  background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;border:1px solid #38383c;
+}
+.icon-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* Device Previews Layout */
-.devices{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding:4px 0 12px}
-.device-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
-.device-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.03em}
-
-/* iPhone 17 Pro Frame */
-/* 402x874 (Physical Aspect Ratio approx 1:2.17) */
+/* iPhone 17 Pro: 402x874 CSS pt @3x */
 .phone{
   position:relative;
-  width:min(360px, 46vw);
+  width:min(300px,86vw);
   aspect-ratio:402/874;
-  background:#000;
-  border:7px solid #28282b;
-  border-radius:48px;
-  overflow:hidden;
-  box-shadow:0 16px 48px rgba(0,0,0,0.8), 0 0 0 1px #444;
+  background:#000;border:6px solid #202023;border-radius:52px;overflow:hidden;
+  box-shadow:0 14px 40px #000,0 0 0 1px #444;
 }
-.phone iframe{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
-  background:#000;
-  color-scheme:dark;
+.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px;background:#000}
+.phone-viewport iframe{
+  position:absolute;top:0;left:0;
+  width:402px;height:874px;border:0;background:#000;color-scheme:dark;
+  transform-origin:top left;
 }
-/* Dynamic Island (Pro-scaled proportion) */
+/* Dynamic Island: height reduced to 75% (9.5% * 0.75 = 7.125%) */
 .island{
-  position:absolute;
-  z-index:5;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  width:28%;
-  height:3.2%;
-  min-height:22px;
-  max-height:28px;
-  background:#000;
-  border-radius:20px;
-  pointer-events:none;
-  box-shadow:0 0 0 0.5px rgba(255,255,255,.08);
+  position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
+  width:33.5%;height:7.125%;max-height:25.5px;background:#000;border-radius:100px;pointer-events:none;
 }
-/* Home Bar */
 .homebar{
-  position:absolute;
-  z-index:6;
-  bottom:7px;
-  left:50%;
-  transform:translateX(-50%);
-  width:34%;
-  height:4px;
-  border-radius:4px;
-  background:#fff;
-  pointer-events:none;
-  opacity:.85;
+  position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
+  width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
 }
 
-/* iPad Gen 7 Frame (10.2 inch / 1080x810 resolution scaled) */
+/* iPad 7th gen: 1080x810 CSS pt landscape */
 .ipad{
   position:relative;
-  width:min(440px, 92vw);
+  width:min(460px,92vw);
   aspect-ratio:1080/810;
-  background:#000;
-  border:10px solid #2a2a2e;
-  border-radius:24px;
-  overflow:hidden;
-  box-shadow:0 16px 48px rgba(0,0,0,0.8), 0 0 0 1px #444;
+  background:#000;border:10px solid #2a2a2e;border-radius:22px;overflow:hidden;
+  box-shadow:0 14px 40px #000,0 0 0 1px #444;
 }
-.ipad iframe{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
-  background:#000;
-  color-scheme:dark;
+/* iPad inner viewport corners: no radius */
+.ipad-viewport{position:absolute;inset:0;overflow:hidden;border-radius:0;background:#000}
+.ipad-viewport iframe{
+  position:absolute;top:0;left:0;
+  width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
+  transform-origin:top left;
 }
 
-/* Panels switch */
-.list-panel{display:none}
-.list-panel.show{display:block}
-.editor-panel{display:none}
-.editor-panel.show{display:block}
-
-/* Editor Style */
+/* editor (opened via long-press) */
+.editor-overlay{
+  position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
+  display:none;align-items:flex-end;justify-content:center;
+  overscroll-behavior:contain;
+}
+.editor-overlay.show{display:flex}
+.editor-sheet{
+  width:100%;max-width:900px;max-height:92vh;overflow:auto;
+  background:var(--bg);border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 40px #000;
+  overscroll-behavior:contain;
+}
+.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 .editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .editor-tools .name-input{
-  flex:1;
-  min-width:140px;
-  height:38px;
-  border:1px solid #38383c;
-  border-radius:10px;
-  background:#111113;
-  color:#fff;
-  padding:0 12px;
-  outline:none;
-  font-size:14px;
+  flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 12px;outline:none;
 }
 .editor-tools .name-input:focus{border-color:var(--accent)}
-#count{font-size:12px;color:var(--muted);white-space:nowrap}
-
-.search-box{display:flex;align-items:center;gap:4px;flex:1.5;min-width:220px}
+#count{font-size:13px;color:var(--muted);white-space:nowrap}
+.search-box{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
 .search-box input{
-  flex:1;
-  height:38px;
-  border:1px solid #38383c;
-  border-radius:10px;
-  background:#111113;
-  color:#fff;
-  padding:0 10px;
-  outline:none;
-  font-size:13px;
+  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 11px;outline:none;
 }
-.search-box button{
-  min-height:38px;
-  padding:0 10px;
-  font-size:12px;
-  border-radius:10px;
-}
-#searchResult{font-size:11px;color:var(--muted);white-space:nowrap;min-width:40px}
-
+.search-box button{min-height:40px;padding:0 12px;font-size:13px}
+#searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
+.editor-textwrap{position:relative}
 textarea{
-  width:100%;
-  height:min(55vh, 480px);
-  resize:vertical;
-  background:#111113;
-  color:#f5f5f7;
-  border:1px solid #38383c;
-  border-radius:12px;
-  padding:12px;
-  outline:none;
-  font:13px ui-monospace,SFMono-Regular,Menlo,monospace;
-  line-height:1.5;
+  width:100%;height:min(42vh,360px);resize:vertical;
+  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
+  padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
+  white-space:pre;overflow:auto;
 }
 textarea:focus{border-color:var(--accent)}
-.status{font-size:11px;color:var(--muted);padding:0 2px 6px}
+.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.editor-actions button{flex:1;min-width:90px}
+.editor-actions button{flex:1;min-width:100px;text-align:center;justify-content:center}
+.editor-actions .row2{display:flex;gap:8px;width:100%}
+.editor-actions .row2 button{flex:1;text-align:center;justify-content:center}
 
-/* Fullscreen View */
-.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none}
+/* fullscreen */
+.fullscreen{
+  position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;
+  overscroll-behavior:contain;
+}
 .fullscreen.show{display:block}
-.fullscreen iframe{width:100%;height:100%;border:0}
+.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.fullscreen iframe{border:0;background:#000;color-scheme:dark}
 .fullscreen .exit{
-  position:absolute;
-  z-index:10;
-  top:max(12px,env(safe-area-inset-top));
-  right:14px;
-  width:40px;
-  height:40px;
-  padding:0;
-  border-radius:50%;
-  background:rgba(60,60,65,.65);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  color:#fff;
-  font-size:20px;
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
+  width:40px;height:40px;padding:0;border-radius:50%;
+  background:rgba(255,255,255,0.25);color:#fff;font-size:22px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  border:none;
 }
 
 @media(min-width:800px){
-  .phone{width:min(380px, 36vw)}
-  .ipad{width:min(540px, 52vw)}
-  textarea{height:min(60vh, 560px)}
+  .phone{width:min(330px,32vw)}
+  .ipad{width:min(520px,46vw)}
 }
 </style>
 </head>
 <body>
+<div id="toast" class="toast">長押しで編集できます</div>
+
 <div class="app">
 
-  <!-- MAIN LIST & PREVIEW -->
-  <section id="listPanel" class="list-panel show">
-    <!-- Horizontal Scroll Cards -->
-    <div id="cardSlider" class="card-slider"></div>
+  <div id="cardRow" class="card-row"></div>
+  <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
 
-    <div class="preview-actions">
-      <button id="btnFullscreen" class="primary">全画面</button>
-    </div>
-
-    <!-- Devices Viewport -->
-    <div class="devices">
-      <div class="device-wrap">
-        <div class="device-label">iPhone 17 Pro</div>
+  <div class="devices">
+    <div class="phone-container">
+      <div class="phone-center">
         <div class="phone" id="phone">
           <div class="island"></div>
-          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          <div class="phone-viewport">
+            <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          </div>
           <div class="homebar"></div>
         </div>
       </div>
-      <div class="device-wrap">
-        <div class="device-label">iPad 第7世代（横）</div>
-        <div class="ipad" id="ipad">
-          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-        </div>
+      <div class="phone-actions-right">
+        <button id="btnFullscreen" class="icon-btn" title="全画面プレビュー">
+          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
       </div>
     </div>
-  </section>
 
-  <!-- EDITOR PANEL -->
-  <section id="editorPanel" class="editor-panel">
+    <div class="ipad" id="ipad">
+      <div class="ipad-viewport">
+        <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EDITOR SHEET (opened by long-press on a card) -->
+<div id="editorOverlay" class="editor-overlay">
+  <div class="editor-sheet">
+    <div class="sheet-handle"></div>
     <div class="editor-tools">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
       <span id="count">0文字</span>
+    </div>
+    <div class="editor-tools">
       <div class="search-box">
         <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <button id="btnSearchPrev" class="ghost">▲</button>
-        <button id="btnSearchNext" class="ghost">▼</button>
+        <button id="btnSearchNext" class="ghost">次へ</button>
         <span id="searchResult"></span>
       </div>
     </div>
-    <div class="status">長押しで編集が開きました。変更後「保存」で反映されます。</div>
-    <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-    <div class="editor-actions">
-      <button id="btnSave" class="primary">保存</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCancel" class="ghost">キャンセル</button>
-      <button id="btnDelete" class="danger">削除</button>
+    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
+    <div class="editor-textwrap">
+      <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
-  </section>
+    <div class="editor-actions">
+      <div class="row2">
+        <button id="btnSave" class="primary">保存</button>
+        <button id="btnCancel" class="ghost">キャンセル</button>
+      </div>
+      <div class="row2">
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnDelete" class="danger">削除</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- FULLSCREEN OVERLAY -->
+<!-- FULLSCREEN PREVIEW -->
 <div id="fullscreen" class="fullscreen">
   <button class="exit" id="exit">×</button>
-  <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+  <div class="fullscreen-stage" id="fsStage">
+    <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+  </div>
 </div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const STORAGE_KEY = "pwa-previewer-items-v3";
+  const STORAGE_KEY = "pwa-previewer-items-v2";
+  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+
+  // real device CSS-point sizes
+  const PHONE_W = 402, PHONE_H = 874;   // iPhone 17 Pro
+  const IPAD_W = 1080, IPAD_H = 810;    // iPad 7th gen
 
   let items = [];
   let selectedId = null;
-  let editingId = null; // null = new
-
-  // Search state
-  let searchMatches = [];
-  let currentMatchIndex = -1;
+  let editingId = null;
 
   const source = $("source");
   const nameInput = $("nameInput");
@@ -334,6 +299,19 @@ textarea:focus{border-color:var(--accent)}
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
 
+  // ---------- Toast Notification ----------
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      t.classList.remove("show");
+    }, 2000);
+  }
+
+  // ---------- storage ----------
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
@@ -345,14 +323,11 @@ textarea:focus{border-color:var(--accent)}
         items = JSON.parse(raw);
         if (!Array.isArray(items)) items = [];
       } else {
-        // Fallback for demo or initial state
-        items = [{
-          id: uid(),
-          name: "サンプル HTML",
-          html: `<!DOCTYPE html>\n<html>\n<head>\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<style>\n  body { font-family: -apple-system, sans-serif; background: #121212; color: #fff; padding: 20px; }\n  .card { background: #1e1e1e; padding: 16px; border-radius: 12px; border: 1px solid #333; margin-top: 15px; }\n  button { background: #0a84ff; color: #fff; border: 0; padding: 10px 16px; border-radius: 8px; font-weight: bold; width: 100%; }\n</style>\n</head>\n<body>\n  <h2>Hello World</h2>\n  <p>PWA Previewerへようこそ！</p>\n  <div class="card">\n    <h3>カードコンポーネント</h3>\n    <p>iPhone17 Pro / iPad 第7世代の見た目を正確に再現します。</p>\n    <button>アクション</button>\n  </div>\n</body>\n</html>`,
-          updated: Date.now()
-        }];
-        persist();
+        const old = localStorage.getItem(OLD_KEY);
+        if (old) {
+          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
+          persist();
+        }
       }
     } catch (e) {
       items = [];
@@ -366,71 +341,7 @@ textarea:focus{border-color:var(--accent)}
 
   function formatDate(ts) {
     const d = new Date(ts);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `${m}/${day} ${h}:${min}`;
-  }
-
-  function renderList() {
-    const slider = $("cardSlider");
-    let html = items
-      .slice()
-      .sort((a, b) => b.updated - a.updated)
-      .map(it => `
-        <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
-          <div class="card-title">${escapeHtml(it.name || "無題")}</div>
-          <div class="card-meta">${formatDate(it.updated)}<br>${(it.html || "").length.toLocaleString()}字</div>
-        </div>
-      `).join("");
-
-    // Append "New" card at the end
-    html += `
-      <div class="card-new" id="cardNew">
-        <span class="plus">＋</span>
-        <span>新規作成</span>
-      </div>
-    `;
-
-    slider.innerHTML = html;
-
-    // Attach click & long-press events
-    slider.querySelectorAll(".card").forEach(el => {
-      let pressTimer = null;
-
-      const startPress = () => {
-        pressTimer = setTimeout(() => {
-          // Long press triggered -> open editor
-          selectedId = el.dataset.id;
-          showEditor(false);
-        }, 500);
-      };
-
-      const cancelPress = () => {
-        if (pressTimer) clearTimeout(pressTimer);
-      };
-
-      el.addEventListener("touchstart", startPress, {passive: true});
-      el.addEventListener("touchend", cancelPress);
-      el.addEventListener("touchmove", cancelPress);
-      el.addEventListener("mousedown", startPress);
-      el.addEventListener("mouseup", cancelPress);
-      el.addEventListener("mouseleave", cancelPress);
-
-      el.onclick = (e) => {
-        if (selectedId !== el.dataset.id) {
-          selectedId = el.dataset.id;
-          renderList();
-          updatePreview();
-        }
-      };
-    });
-
-    const btnNew = $("cardNew");
-    if (btnNew) {
-      btnNew.onclick = () => showEditor(true);
-    }
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   }
 
   function escapeHtml(s) {
@@ -441,75 +352,120 @@ textarea:focus{border-color:var(--accent)}
       .replace(/"/g, "&quot;");
   }
 
+  // ---------- device scaling ----------
+  function fitIframe(iframe, wrapEl, deviceW, deviceH) {
+    const rect = wrapEl.getBoundingClientRect();
+    const scale = rect.width / deviceW;
+    iframe.style.width = deviceW + "px";
+    iframe.style.height = deviceH + "px";
+    iframe.style.transform = `scale(${scale})`;
+  }
+
+  function resizeAllPreviews() {
+    fitIframe(framePhone, document.querySelector(".phone-viewport"), PHONE_W, PHONE_H);
+    fitIframe(frameIpad, document.querySelector(".ipad-viewport"), IPAD_W, IPAD_H);
+  }
+
+  function resizeFullscreen() {
+    if (!$("fullscreen").classList.contains("show")) return;
+    const stage = $("fsStage");
+    const availW = stage.clientWidth;
+    const availH = stage.clientHeight;
+    const scale = Math.min(availW / PHONE_W, availH / PHONE_H);
+    fullFrame.style.width = PHONE_W + "px";
+    fullFrame.style.height = PHONE_H + "px";
+    fullFrame.style.transform = `scale(${scale})`;
+    fullFrame.style.transformOrigin = "center center";
+  }
+
+  window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
+
+  // ---------- list rendering ----------
+  function renderCards() {
+    const row = $("cardRow");
+    const sorted = items.slice().sort((a, b) => b.updated - a.updated);
+    $("emptyHint").style.display = items.length ? "none" : "block";
+
+    const cardsHtml = sorted.map(it => `
+      <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
+        <div class="card-name">${escapeHtml(it.name || "無題")}</div>
+        <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
+      </div>
+    `).join("");
+
+    const newCard = `<div class="card card-new" id="cardNew"><div class="plus">＋</div><div class="label">新規</div></div>`;
+
+    row.innerHTML = cardsHtml + newCard;
+
+    row.querySelectorAll(".card[data-id]").forEach(el => {
+      let pressTimer = null;
+      let longPressed = false;
+
+      const startPress = () => {
+        longPressed = false;
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          openEditor(el.dataset.id, false);
+        }, 480);
+      };
+      const cancelPress = () => { clearTimeout(pressTimer); };
+
+      el.addEventListener("pointerdown", startPress);
+      el.addEventListener("pointerup", cancelPress);
+      el.addEventListener("pointerleave", cancelPress);
+      el.addEventListener("pointercancel", cancelPress);
+      el.addEventListener("click", () => {
+        if (longPressed) return;
+        selectedId = el.dataset.id;
+        renderCards();
+        updatePreview();
+        showToast("長押しで編集できます");
+      });
+      el.addEventListener("contextmenu", e => e.preventDefault());
+    });
+
+    $("cardNew").onclick = () => openEditor(null, true);
+  }
+
   function clearPreviews() {
     framePhone.srcdoc = "";
     frameIpad.srcdoc = "";
   }
 
-  /* HTML injection wrapper to enforce high-DPI viewport rendering matching real devices */
-  function buildDeviceHtml(userHtml, deviceType) {
-    if (!userHtml) return "";
-
-    let viewportMeta = `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">`;
-    if (deviceType === 'iphone') {
-      // iPhone 17 Pro Logical Viewport (402 x 874)
-      viewportMeta = `<meta name="viewport" content="width=402, initial-scale=1.0, user-scalable=no">`;
-    } else if (deviceType === 'ipad') {
-      // iPad Gen 7 Logical Viewport Landscape (1080 x 810)
-      viewportMeta = `<meta name="viewport" content="width=1080, initial-scale=1.0, user-scalable=no">`;
-    }
-
-    if (userHtml.includes('<head>')) {
-      return userHtml.replace('<head>', `<head>${viewportMeta}`);
-    } else {
-      return `${viewportMeta}${userHtml}`;
-    }
-  }
-
   function updatePreview() {
     const it = items.find(x => x.id === selectedId);
-    if (!it) {
-      clearPreviews();
-      return;
-    }
-    const rawHtml = it.html || "";
-    framePhone.srcdoc = buildDeviceHtml(rawHtml, 'iphone');
-    frameIpad.srcdoc = buildDeviceHtml(rawHtml, 'ipad');
+    if (!it) { clearPreviews(); return; }
+    const html = it.html || "";
+    framePhone.srcdoc = html;
+    frameIpad.srcdoc = html;
+    requestAnimationFrame(resizeAllPreviews);
   }
 
-  function showList() {
-    $("listPanel").classList.add("show");
-    $("editorPanel").classList.remove("show");
-    renderList();
-    updatePreview();
-  }
+  // ---------- editor sheet ----------
+  let searchMatches = [];
+  let searchIndex = -1;
 
-  function showEditor(isNew) {
-    $("listPanel").classList.remove("show");
-    $("editorPanel").classList.add("show");
-
+  function openEditor(id, isNew) {
+    editingId = isNew ? null : id;
     if (isNew) {
-      editingId = null;
       nameInput.value = "";
       source.value = "";
-      $("btnDelete").style.display = "none";
     } else {
-      const it = items.find(x => x.id === selectedId);
-      if (!it) {
-        editingId = null;
-        nameInput.value = "";
-        source.value = "";
-        $("btnDelete").style.display = "none";
-      } else {
-        editingId = it.id;
-        nameInput.value = it.name || "";
-        source.value = it.html || "";
-        $("btnDelete").style.display = "inline-flex";
-      }
+      const it = items.find(x => x.id === id);
+      nameInput.value = it ? (it.name || "") : "";
+      source.value = it ? (it.html || "") : "";
     }
+    $("btnDelete").style.display = isNew ? "none" : "flex";
     updateCount();
-    clearSearch();
-    nameInput.focus();
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    clearSearchHighlight();
+    $("editorOverlay").classList.add("show");
+    setTimeout(() => nameInput.focus(), 50);
+  }
+
+  function closeEditor() {
+    $("editorOverlay").classList.remove("show");
   }
 
   function updateCount() {
@@ -521,11 +477,7 @@ textarea:focus{border-color:var(--accent)}
     const html = source.value;
     if (editingId) {
       const it = items.find(x => x.id === editingId);
-      if (it) {
-        it.name = name;
-        it.html = html;
-        it.updated = Date.now();
-      }
+      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
       selectedId = editingId;
     } else {
       const id = uid();
@@ -533,7 +485,9 @@ textarea:focus{border-color:var(--accent)}
       selectedId = id;
     }
     persist();
-    showList();
+    closeEditor();
+    renderCards();
+    updatePreview();
   }
 
   function deleteCurrent() {
@@ -542,117 +496,120 @@ textarea:focus{border-color:var(--accent)}
     if (!it) return;
     if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
     items = items.filter(x => x.id !== editingId);
-    selectedId = items.length ? items[0].id : null;
+    if (selectedId === editingId) selectedId = items.length ? items[0].id : null;
     persist();
-    showList();
+    closeEditor();
+    renderCards();
+    updatePreview();
   }
 
-  // --- Search & Highlight Logic ---
-  function clearSearch() {
-    $("search").value = "";
-    $("searchResult").textContent = "";
+  // plain textarea search with highlight & scroll
+  function clearSearchHighlight() {
     searchMatches = [];
-    currentMatchIndex = -1;
+    searchIndex = -1;
   }
 
-  function executeSearch() {
+  function runSearch(advance) {
     const q = $("search").value;
-    searchMatches = [];
-    currentMatchIndex = -1;
-
     if (!q) {
       $("searchResult").textContent = "";
+      clearSearchHighlight();
       return;
     }
-
-    const val = source.value;
+    const text = source.value;
+    const matches = [];
     let pos = 0;
-    while ((pos = val.indexOf(q, pos)) !== -1) {
-      searchMatches.push(pos);
-      pos += Math.max(q.length, 1);
+    while (true) {
+      const idx = text.indexOf(q, pos);
+      if (idx === -1) break;
+      matches.push(idx);
+      pos = idx + Math.max(q.length, 1);
     }
+    searchMatches = matches;
 
-    if (searchMatches.length > 0) {
-      currentMatchIndex = 0;
-      highlightMatch();
-    } else {
+    if (!matches.length) {
       $("searchResult").textContent = "0件";
-    }
-  }
-
-  function highlightMatch() {
-    if (currentMatchIndex < 0 || currentMatchIndex >= searchMatches.length) return;
-    const q = $("search").value;
-    const startPos = searchMatches[currentMatchIndex];
-    const endPos = startPos + q.length;
-
-    source.focus();
-    source.setSelectionRange(startPos, endPos);
-
-    // Scroll textarea to selection
-    const lineHeight = 19.5; // estimated line height
-    const lines = source.value.substr(0, startPos).split("\n").length;
-    source.scrollTop = (lines - 3) * lineHeight;
-
-    $("searchResult").textContent = `${currentMatchIndex + 1}/${searchMatches.length}`;
-  }
-
-  function nextMatch() {
-    if (searchMatches.length === 0) {
-      executeSearch();
+      searchIndex = -1;
       return;
     }
-    currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
-    highlightMatch();
-  }
 
-  function prevMatch() {
-    if (searchMatches.length === 0) {
-      executeSearch();
-      return;
+    if (advance) {
+      searchIndex = (searchIndex + 1) % matches.length;
+    } else if (searchIndex === -1 || searchIndex >= matches.length) {
+      searchIndex = 0;
     }
-    currentMatchIndex = (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
-    highlightMatch();
+
+    const start = matches[searchIndex];
+    const end = start + q.length;
+    
+    // Select text in textarea
+    source.focus();
+    source.setSelectionRange(start, end);
+    scrollTextareaToSelection(start);
+    $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
   }
 
-  // Event Listeners
-  $("btnSave").onclick = saveCurrent;
-  $("btnCancel").onclick = showList;
-  $("btnClear").onclick = () => {
-    source.value = "";
-    updateCount();
-    clearSearch();
-    source.focus();
+  function scrollTextareaToSelection(charIndex) {
+    const text = source.value.slice(0, charIndex);
+    const lineNumber = text.split("\n").length - 1;
+    const lineHeight = parseFloat(getComputedStyle(source).lineHeight) || 18;
+    const targetTop = lineNumber * lineHeight;
+    source.scrollTop = Math.max(0, targetTop - source.clientHeight / 2);
+  }
+
+  // Prevent search input from shifting focus or entering text to textarea
+  $("search").addEventListener("focus", (e) => {
+    e.stopPropagation();
+  });
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
+  $("search").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { 
+      e.preventDefault(); 
+      runSearch(true); 
+    }
+  });
+  $("btnSearchNext").onclick = (e) => {
+    e.preventDefault();
+    runSearch(true);
   };
-  $("btnDelete").onclick = deleteCurrent;
 
-  $("btnFullscreen").onclick = () => {
+  // ---------- fullscreen ----------
+  function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
-    if (!it) return;
+    if (!it) { alert("表示する項目を一覧から選んでください"); return; }
     fullFrame.srcdoc = it.html || "";
     $("fullscreen").classList.add("show");
-  };
+    requestAnimationFrame(resizeFullscreen);
+  }
 
+  $("btnFullscreen").onclick = openFullscreen;
   $("exit").onclick = () => {
     $("fullscreen").classList.remove("show");
     fullFrame.srcdoc = "";
   };
 
+  // ---------- editor events ----------
+  $("btnSave").onclick = saveCurrent;
+  $("btnCancel").onclick = closeEditor;
+  $("btnDelete").onclick = deleteCurrent;
+  $("btnClear").onclick = () => {
+    source.value = "";
+    updateCount();
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    clearSearchHighlight();
+    source.focus();
+  };
   source.addEventListener("input", updateCount);
-
-  $("search").addEventListener("input", executeSearch);
-  $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      nextMatch();
-    }
+  $("editorOverlay").addEventListener("click", (e) => {
+    if (e.target === $("editorOverlay")) closeEditor();
   });
-  $("btnSearchNext").onclick = nextMatch;
-  $("btnSearchPrev").onclick = prevMatch;
 
-  // Initialize
+  // ---------- init ----------
   load();
-  showList();
+  renderCards();
+  updatePreview();
+  requestAnimationFrame(resizeAllPreviews);
 })();
 </script>
 </body>
