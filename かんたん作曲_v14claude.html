@@ -46,7 +46,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-row::-webkit-scrollbar{height:0}
 .card{
   scroll-snap-align:start;
-  flex:0 0 auto;width:132px;height:104px;
+  flex:0 0 auto;width:132px;height:96px;
   background:var(--panel);border-radius:16px;padding:12px;
   display:flex;flex-direction:column;justify-content:space-between;
   border:2px solid transparent;cursor:pointer;
@@ -58,8 +58,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .card.active{border-color:var(--accent);background:#0a84ff18}
 .card-name{font-weight:600;font-size:14px;line-height:1.25;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-meta{font-size:10.5px;color:var(--muted);line-height:1.35}
-.card-meta .meta-line{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-meta{font-size:10.5px;color:var(--muted)}
 .card-new{
   align-items:center;justify-content:center;color:var(--muted);
   border:2px dashed #3a3a3c;background:transparent;
@@ -67,6 +66,28 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
 .card-new .label{font-size:12px;margin-top:4px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
+
+/* card toast (slide up from below tapped card) */
+.card-toast{
+  position:absolute;
+  z-index:50;
+  background:var(--panel2);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:12px;
+  font-size:12.5px;
+  border:1px solid #38383c;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .22s, transform .22s;
+  white-space:nowrap;
+}
+.card-toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
 
 /* device previews */
 .devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
@@ -115,14 +136,14 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-/* fullscreen action icon */
+/* fullscreen action icon - gray instead of primary */
 .fs-icon-btn{
   position:absolute;
   left:calc(100% + 8px);
   top:50%;
   transform:translateY(-50%);
   width:40px;height:40px;border-radius:12px;padding:0;
-  background:#2c2c2e;border:1px solid #38383c;color:var(--muted);
+  background:var(--panel2);border:1px solid #38383c;color:var(--text);
 }
 .fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
 
@@ -139,43 +160,76 @@ button:disabled{opacity:.4;pointer-events:none}
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
+  /* prevent text selection in editor UI */
+  -webkit-user-select:none;user-select:none;
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
-.editor-sheet{-webkit-user-select:none;user-select:none}
-.editor-sheet input,.editor-sheet textarea{-webkit-user-select:text;user-select:text}
-.editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.editor-tools .name-input{
+
+/* title row with delete button */
+.editor-title-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.editor-title-row .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
+  /* allow text selection inside input */
+  -webkit-user-select:text;user-select:text;
 }
-.editor-tools .name-input:focus{border-color:var(--accent)}
-#btnDelete{flex:0 0 auto;min-height:40px;padding:0 14px}
-.search-box{display:flex;align-items:center;gap:0;flex:1;min-width:0;border:1px solid #38383c;border-radius:12px;background:#111113;height:40px;overflow:hidden}
-.search-box input{
-  flex:1;min-width:0;height:100%;border:0;
-  background:transparent;color:#fff;padding:0 10px;outline:none;
+.editor-title-row .name-input:focus{border-color:var(--accent)}
+.editor-title-row .btn-delete{
+  min-height:40px;padding:0 14px;font-size:13px;
 }
-#searchResult{font-size:11.5px;color:var(--muted);white-space:nowrap;padding-right:10px;pointer-events:none}
-.search-nav{display:flex;flex-direction:column;border-left:1px solid #38383c;height:100%}
-.search-nav button{
-  flex:1;min-width:34px;width:34px;min-height:0;height:50%;padding:0;border-radius:0;
-  background:transparent;color:var(--text);font-size:10px;line-height:1;
-}
-.search-nav button:first-child{border-bottom:1px solid #38383c}
-.search-nav button:active{background:var(--panel3)}
-.editor-textwrap{position:relative}
+
+/* textarea - word wrap instead of horizontal scroll */
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre-wrap;word-break:break-all;overflow-x:hidden;overflow-y:auto;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
+  /* allow text selection inside textarea */
+  -webkit-user-select:text;user-select:text;
 }
 textarea:focus{border-color:var(--accent)}
-mark.hit{background:var(--mark);color:#000;border-radius:2px}
-mark.hit.current{background:var(--accent);color:#fff}
-.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
-.editor-actions{display:flex;gap:8px;margin-top:10px}
-.editor-actions button{flex:1;min-width:0;padding:0 6px}
+
+/* editor actions - single row */
+.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.editor-actions button{flex:1;min-width:80px;white-space:nowrap;padding:0 8px}
+
+/* search section at bottom */
+.search-section{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid #38383c;
+}
+.search-box{
+  position:relative;
+  display:flex;align-items:center;gap:6px;
+}
+.search-box input{
+  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 92px 0 11px;outline:none;
+  /* allow text selection inside input */
+  -webkit-user-select:text;user-select:text;
+}
+.search-box input:focus{border-color:var(--accent)}
+.search-box .search-count{
+  position:absolute;
+  right:100px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  color:var(--muted);
+  pointer-events:none;
+}
+.search-box .search-nav{
+  display:flex;gap:4px;
+}
+.search-box button{
+  min-height:36px;
+  min-width:40px;
+  padding:0 8px;
+  font-size:16px;
+}
 
 /* fullscreen */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
@@ -196,17 +250,6 @@ mark.hit.current{background:var(--accent);color:#fff}
   width:40px;height:40px;padding:0;border-radius:50%;
   background:rgba(0,0,0,.40);color:#fff;font-size:19px;
 }
-
-/* toast hint: slides down from under the tapped card */
-#toast{
-  position:fixed;left:0;top:0;
-  background:var(--panel2);color:var(--text);padding:8px 14px;border-radius:10px;font-size:12.5px;
-  z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
-  opacity:0;transform:translateY(-6px);
-  transition:opacity .18s ease,transform .18s ease;
-  white-space:nowrap;
-}
-#toast.show{opacity:1;transform:translateY(0)}
 
 @media(min-width:800px){
   .phone{width:min(330px,32vw)}
@@ -229,7 +272,7 @@ mark.hit.current{background:var(--accent);color:#fff}
         </div>
         <div class="homebar"></div>
       </div>
-      <button id="btnFullscreen" class="fs-icon-btn primary" aria-label="全画面プレビュー">
+      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
@@ -250,29 +293,34 @@ mark.hit.current{background:var(--accent);color:#fff}
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="sheet-handle"></div>
-    <div class="editor-tools">
+
+    <div class="editor-title-row">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <button id="btnDelete" class="danger">削除</button>
+      <button id="btnDelete" class="btn-delete danger">削除</button>
     </div>
+
     <div class="editor-textwrap">
       <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
+
     <div class="editor-actions">
       <button id="btnCancel" class="ghost">キャンセル</button>
       <button id="btnClear" class="ghost">クリア</button>
       <button id="btnCopy" class="ghost">コピー</button>
       <button id="btnSave" class="primary">保存</button>
     </div>
-    <div class="editor-tools" style="margin-top:8px">
+
+    <div class="search-section">
       <div class="search-box">
         <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <span id="searchResult"></span>
+        <span id="searchResult" class="search-count"></span>
         <div class="search-nav">
-          <button id="btnSearchPrev" aria-label="前へ">▲</button>
-          <button id="btnSearchNext" aria-label="次へ">▼</button>
+          <button id="btnSearchPrev" class="ghost">▲</button>
+          <button id="btnSearchNext" class="ghost">▼</button>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -283,8 +331,6 @@ mark.hit.current{background:var(--accent);color:#fff}
     <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
   </div>
 </div>
-
-<div id="toast" style="display:none"></div>
 
 <script>
 (() => {
@@ -304,6 +350,8 @@ mark.hit.current{background:var(--accent);color:#fff}
   const framePhone = $("framePhone");
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
+
+  const WEEKDAYS = ["日","月","火","水","木","金","土"];
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -332,11 +380,14 @@ mark.hit.current{background:var(--accent);color:#fff}
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
 
-  const WEEKDAY_JA = ["日","月","火","水","木","金","土"];
   function formatDate(ts) {
     const d = new Date(ts);
-    const wd = WEEKDAY_JA[d.getDay()];
-    return `${d.getMonth() + 1}/${d.getDate()}（${wd}）${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const w = WEEKDAYS[d.getDay()];
+    const h = String(d.getHours()).padStart(2,"0");
+    const min = String(d.getMinutes()).padStart(2,"0");
+    return `${m}/${day}（${w}）${h}:${min}`;
   }
 
   function escapeHtml(s) {
@@ -382,7 +433,8 @@ mark.hit.current{background:var(--accent);color:#fff}
     const cardsHtml = sorted.map(it => `
       <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
         <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta"><span class="meta-line">${formatDate(it.updated)}</span><span class="meta-line">${(it.html || "").length.toLocaleString()}文字</span></div>
+        <div class="card-meta">${formatDate(it.updated)}</div>
+        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
       </div>
     `).join("");
 
@@ -412,12 +464,40 @@ mark.hit.current{background:var(--accent);color:#fff}
         selectedId = el.dataset.id;
         renderCards();
         updatePreview();
-        showToastNear(el, "長押しで編集");
+        showCardToast(el, "長押しで編集");
       });
       el.addEventListener("contextmenu", e => e.preventDefault());
     });
 
     $("cardNew").onclick = () => openEditor(null, true);
+  }
+
+  function showCardToast(cardEl, msg) {
+    // remove existing toast
+    const existing = document.querySelector(".card-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "card-toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    const rect = cardEl.getBoundingClientRect();
+    const toastRect = toast.getBoundingClientRect();
+    // center horizontally under the card, place just below it
+    let left = rect.left + rect.width/2 - toast.offsetWidth/2;
+    let top = rect.bottom + 8;
+    // clamp to viewport
+    left = Math.max(8, Math.min(left, window.innerWidth - toast.offsetWidth - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - toast.offsetHeight - 8));
+    toast.style.left = left + "px";
+    toast.style.top = top + "px";
+
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 250);
+    }, 1400);
   }
 
   function clearPreviews() {
@@ -497,8 +577,7 @@ mark.hit.current{background:var(--accent);color:#fff}
     searchIndex = -1;
   }
 
-  function runSearch(step) {
-    // step: 0 = just recompute matches (no move), 1 = next, -1 = prev
+  function runSearch(direction) {
     const q = $("search").value;
     if (!q) {
       $("searchResult").textContent = "";
@@ -522,45 +601,79 @@ mark.hit.current{background:var(--accent);color:#fff}
       return;
     }
 
-    if (step === 0) {
+    if (direction === "next") {
+      if (searchIndex === -1) searchIndex = 0;
+      else searchIndex = (searchIndex + 1) % matches.length;
+    } else if (direction === "prev") {
+      if (searchIndex === -1) searchIndex = matches.length - 1;
+      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
+    } else {
       $("searchResult").textContent = `${matches.length}件`;
       searchIndex = -1;
       return;
-    }
-
-    if (searchIndex === -1) {
-      searchIndex = step > 0 ? 0 : matches.length - 1;
-    } else {
-      searchIndex = (searchIndex + step + matches.length) % matches.length;
     }
 
     const start = matches[searchIndex];
     const end = start + q.length;
     source.focus({ preventScroll: true });
     source.setSelectionRange(start, end);
-    scrollTextareaToSelection(start);
+    scrollTextareaToSelection(start, end);
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
   }
 
-  function scrollTextareaToSelection(charIndex) {
-    const text = source.value.slice(0, charIndex);
-    const lineNumber = text.split("\n").length - 1;
+  // hidden mirror div used to measure the exact pixel offset of a
+  // character index inside the textarea, accounting for wrapped lines
+  let mirrorEl = null;
+  function getMirror() {
+    if (mirrorEl) return mirrorEl;
+    mirrorEl = document.createElement("div");
     const style = getComputedStyle(source);
-    const lineHeight = parseFloat(style.lineHeight) || 18;
-    const paddingTop = parseFloat(style.paddingTop) || 14;
-    const paddingBottom = parseFloat(style.paddingBottom) || 14;
-    const targetTop = lineNumber * lineHeight;
-    const visibleHeight = source.clientHeight - paddingTop - paddingBottom;
-    source.scrollTop = Math.max(0, targetTop - visibleHeight / 2);
+    const props = [
+      "boxSizing","width","paddingTop","paddingRight","paddingBottom","paddingLeft",
+      "borderTopWidth","borderRightWidth","borderBottomWidth","borderLeftWidth",
+      "fontFamily","fontSize","fontWeight","lineHeight","letterSpacing",
+      "whiteSpace","wordBreak","overflowWrap","tabSize"
+    ];
+    props.forEach(p => { mirrorEl.style[p] = style[p]; });
+    mirrorEl.style.position = "absolute";
+    mirrorEl.style.visibility = "hidden";
+    mirrorEl.style.height = "auto";
+    mirrorEl.style.top = "0";
+    mirrorEl.style.left = "-9999px";
+    document.body.appendChild(mirrorEl);
+    return mirrorEl;
   }
 
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(0); });
+  function scrollTextareaToSelection(startIdx, endIdx) {
+    const mirror = getMirror();
+    mirror.style.width = source.clientWidth + "px";
+
+    const before = source.value.slice(0, startIdx);
+    const match = source.value.slice(startIdx, endIdx) || "\u200b";
+
+    mirror.textContent = "";
+    const beforeNode = document.createTextNode(before);
+    const markNode = document.createElement("span");
+    markNode.textContent = match;
+    mirror.appendChild(beforeNode);
+    mirror.appendChild(markNode);
+    // ensure trailing content so final-line offsets measure correctly
+    mirror.appendChild(document.createTextNode("\u200b"));
+
+    const markTop = markNode.offsetTop;
+    const markHeight = markNode.offsetHeight || parseFloat(getComputedStyle(source).lineHeight) || 18;
+
+    const visibleHeight = source.clientHeight;
+    const targetScroll = markTop - (visibleHeight / 2) + (markHeight / 2);
+    source.scrollTop = Math.max(0, targetScroll);
+  }
+
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
   $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch(e.shiftKey ? -1 : 1); }
+    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
   });
-  $("btnSearchNext").onclick = () => runSearch(1);
-  $("btnSearchPrev").onclick = () => runSearch(-1);
-  $("search").addEventListener("focus", () => source.blur());
+  $("btnSearchNext").onclick = () => runSearch("next");
+  $("btnSearchPrev").onclick = () => runSearch("prev");
 
   function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
@@ -589,41 +702,20 @@ mark.hit.current{background:var(--accent);color:#fff}
     source.focus();
   };
   $("btnCopy").onclick = async () => {
-    const btn = $("btnCopy");
     try {
       await navigator.clipboard.writeText(source.value);
+      const btn = $("btnCopy");
+      const old = btn.textContent;
+      btn.textContent = "コピー済";
+      setTimeout(() => btn.textContent = old, 1200);
     } catch (e) {
-      source.focus();
-      source.select();
-      try { document.execCommand("copy"); } catch (e2) {}
-      source.setSelectionRange(source.value.length, source.value.length);
+      alert("コピーに失敗しました");
     }
-    const orig = btn.textContent;
-    btn.textContent = "コピーしました";
-    setTimeout(() => { btn.textContent = orig; }, 1200);
   };
+
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
-
-  function showToastNear(el, msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    const rect = el.getBoundingClientRect();
-    t.style.display = "block";
-    // measure before positioning precisely
-    const tw = t.offsetWidth || 100;
-    let left = rect.left + rect.width / 2 - tw / 2;
-    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
-    t.style.left = `${left}px`;
-    t.style.top = `${rect.bottom + 8}px`;
-    requestAnimationFrame(() => t.classList.add("show"));
-    clearTimeout(t._hideTimer);
-    t._hideTimer = setTimeout(() => {
-      t.classList.remove("show");
-      setTimeout(() => { t.style.display = "none"; }, 200);
-    }, 1400);
-  }
 
   load();
   renderCards();
