@@ -28,6 +28,7 @@ button,textarea,input{font:inherit}
 button{
   border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;text-align:center;
+  white-space:nowrap;
 }
 button.primary{background:var(--accent)}
 button.danger{background:var(--danger)}
@@ -58,8 +59,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .card.active{border-color:var(--accent);background:#0a84ff18}
 .card-name{font-weight:600;font-size:14px;line-height:1.25;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-date{font-size:10.5px;color:var(--muted);line-height:1.3}
-.card-count{font-size:10.5px;color:var(--muted);line-height:1.3}
+.card-meta{font-size:10.5px;color:var(--muted)}
 .card-new{
   align-items:center;justify-content:center;color:var(--muted);
   border:2px dashed #3a3a3c;background:transparent;
@@ -124,6 +124,7 @@ button:disabled{opacity:.4;pointer-events:none}
   width:40px;height:40px;border-radius:12px;padding:0;
   background:var(--panel2);border:1px solid #38383c;color:var(--text);
 }
+.fs-icon-btn.primary{background:var(--accent);border-color:transparent}
 .fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
 
 /* editor (opened via long-press) */
@@ -147,36 +148,29 @@ button:disabled{opacity:.4;pointer-events:none}
   background:#111113;color:#fff;padding:0 12px;outline:none;
 }
 .editor-tools .name-input:focus{border-color:var(--accent)}
-.editor-tools .btn-delete-wrap{flex-shrink:0}
+#count{font-size:13px;color:var(--muted);white-space:nowrap}
 .search-box{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
 .search-box input{
   width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 11px;padding-right:50px;outline:none;
-  box-sizing:border-box;
+  background:#111113;color:#fff;padding:0 11px;outline:none;
 }
-.search-box input:focus{border-color:var(--accent)}
-.search-box button{min-height:40px;padding:0 12px;font-size:13px}
-.search-box .search-result{
-  position:absolute;right:10px;top:50%;transform:translateY(-50%);
-  font-size:11px;color:var(--muted);pointer-events:none;
-}
-.search-input-wrap{position:relative;flex:1;min-width:0;display:flex}
-.search-input-wrap input{flex:1;min-width:0}
+.search-box button{min-height:40px;padding:0 12px;font-size:13px;white-space:nowrap}
+#searchResult{font-size:11px;color:var(--muted);white-space:nowrap;padding-right:6px}
 .editor-textwrap{position:relative}
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre-wrap;overflow-x:hidden;overflow-y:auto;
+  white-space:pre;overflow:auto;
 }
 textarea:focus{border-color:var(--accent)}
 mark.hit{background:var(--mark);color:#000;border-radius:2px}
 mark.hit.current{background:var(--accent);color:#fff}
 .status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
-.editor-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:nowrap;overflow-x:auto}
-.editor-actions button{flex:1;min-width:0;white-space:nowrap}
-.editor-actions button:not(:last-child){margin-right:0}
-.editor-actions .spacer{flex:0 0 8px}
+.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.editor-actions button{flex:1;min-width:100px;white-space:nowrap}
+.editor-actions .row2{display:flex;gap:8px;width:100%}
+.editor-actions .row2 button{flex:1;white-space:nowrap}
 
 /* fullscreen */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
@@ -204,13 +198,6 @@ mark.hit.current{background:var(--accent);color:#fff}
   background:var(--panel2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;
   z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
   display:none;
-  transition:opacity .2s ease, transform .2s ease;
-  opacity:0;
-  transform:translateX(-50%) translateY(10px);
-}
-#toast.show{
-  opacity:1;
-  transform:translateX(-50%) translateY(0);
 }
 
 @media(min-width:800px){
@@ -234,7 +221,7 @@ mark.hit.current{background:var(--accent);color:#fff}
         </div>
         <div class="homebar"></div>
       </div>
-      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
+      <button id="btnFullscreen" class="fs-icon-btn primary" aria-label="全画面プレビュー">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
@@ -257,27 +244,27 @@ mark.hit.current{background:var(--accent);color:#fff}
     <div class="sheet-handle"></div>
     <div class="editor-tools">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <div class="btn-delete-wrap">
-        <button id="btnDelete" class="danger" style="display:none;">削除</button>
+      <span id="count">0文字</span>
+    </div>
+    <div class="editor-tools">
+      <div class="search-box">
+        <input id="search" type="search" placeholder="検索" autocomplete="off">
+        <button id="btnSearchNext" class="ghost">次へ</button>
+        <span id="searchResult"></span>
       </div>
     </div>
+    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
     <div class="editor-textwrap">
       <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
     <div class="editor-actions">
-      <button id="btnCancel" class="ghost">キャンセル</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCopy" class="ghost">コピー</button>
-      <button id="btnSave" class="primary">保存</button>
-    </div>
-    <div class="editor-tools" style="margin-top:12px;">
-      <div class="search-box">
-        <div class="search-input-wrap">
-          <input id="search" type="search" placeholder="検索" autocomplete="off">
-          <span id="searchResult" class="search-result"></span>
-        </div>
-        <button id="btnSearchPrev" class="ghost" aria-label="前へ">▲</button>
-        <button id="btnSearchNext" class="ghost" aria-label="次へ">▼</button>
+      <div class="row2">
+        <button id="btnSave" class="primary">保存</button>
+        <button id="btnCancel" class="ghost">キャンセル</button>
+      </div>
+      <div class="row2">
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnDelete" class="danger">削除</button>
       </div>
     </div>
   </div>
@@ -342,8 +329,12 @@ mark.hit.current{background:var(--accent);color:#fff}
   function formatDate(ts) {
     const d = new Date(ts);
     const days = ["日", "月", "火", "水", "木", "金", "土"];
-    const dayOfWeek = days[d.getDay()];
-    return `${d.getMonth() + 1}/${d.getDate()}（${dayOfWeek}）${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const month = d.getMonth() + 1;
+    const date = d.getDate();
+    const day = days[d.getDay()];
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${month}/${date}（${day}）${hours}:${minutes}`;
   }
 
   function escapeHtml(s) {
@@ -389,8 +380,7 @@ mark.hit.current{background:var(--accent);color:#fff}
     const cardsHtml = sorted.map(it => `
       <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
         <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-date">${formatDate(it.updated)}</div>
-        <div class="card-count">${(it.html || "").length.toLocaleString()}字</div>
+        <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
       </div>
     `).join("");
 
@@ -406,8 +396,6 @@ mark.hit.current{background:var(--accent);color:#fff}
         longPressed = false;
         pressTimer = setTimeout(() => {
           longPressed = true;
-          // テキスト選択を解除
-          if (window.getSelection) window.getSelection().removeAllRanges();
           openEditor(el.dataset.id, false);
         }, 480);
       };
@@ -422,7 +410,7 @@ mark.hit.current{background:var(--accent);color:#fff}
         selectedId = el.dataset.id;
         renderCards();
         updatePreview();
-        showToast("長押しで編集", el);
+        showToast("長押しで編集");
       });
       el.addEventListener("contextmenu", e => e.preventDefault());
     });
@@ -458,6 +446,7 @@ mark.hit.current{background:var(--accent);color:#fff}
       source.value = it ? (it.html || "") : "";
     }
     $("btnDelete").style.display = isNew ? "none" : "flex";
+    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
@@ -469,6 +458,10 @@ mark.hit.current{background:var(--accent);color:#fff}
   function closeEditor() {
     $("editorOverlay").classList.remove("show");
     document.body.style.overflow = "";
+  }
+
+  function updateCount() {
+    $("count").textContent = source.value.length.toLocaleString() + "文字";
   }
 
   function saveCurrent() {
@@ -507,7 +500,7 @@ mark.hit.current{background:var(--accent);color:#fff}
     searchIndex = -1;
   }
 
-  function runSearch(advance, direction = 1) {
+  function runSearch(advance) {
     const q = $("search").value;
     if (!q) {
       $("searchResult").textContent = "";
@@ -532,11 +525,8 @@ mark.hit.current{background:var(--accent);color:#fff}
     }
 
     if (advance) {
-      if (searchIndex === -1) {
-        searchIndex = direction === 1 ? 0 : matches.length - 1;
-      } else {
-        searchIndex = (searchIndex + direction + matches.length) % matches.length;
-      }
+      if (searchIndex === -1) searchIndex = 0;
+      else searchIndex = (searchIndex + 1) % matches.length;
     } else {
       $("searchResult").textContent = `${matches.length}件`;
       searchIndex = -1;
@@ -545,50 +535,17 @@ mark.hit.current{background:var(--accent);color:#fff}
 
     const start = matches[searchIndex];
     const end = start + q.length;
-    source.focus({ preventScroll: true });
+    source.focus();
     source.setSelectionRange(start, end);
-    scrollTextareaToSelection(start);
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
-  }
-
-  function scrollTextareaToSelection(charIndex) {
-    const text = source.value.slice(0, charIndex);
-    const lineNumber = text.split("\n").length - 1;
-    const style = getComputedStyle(source);
-    const lineHeight = parseFloat(style.lineHeight) || 18;
-    const paddingTop = parseFloat(style.paddingTop) || 14;
-    const paddingBottom = parseFloat(style.paddingBottom) || 14;
-    const targetTop = lineNumber * lineHeight;
-    const visibleHeight = source.clientHeight - paddingTop - paddingBottom;
-    source.scrollTop = Math.max(0, targetTop - visibleHeight / 2);
   }
 
   $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
   $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch(true, 1); }
+    if (e.key === "Enter") { e.preventDefault(); runSearch(true); }
   });
-  $("btnSearchNext").onclick = () => runSearch(true, 1);
-  $("btnSearchPrev").onclick = () => runSearch(true, -1);
+  $("btnSearchNext").onclick = () => runSearch(true);
   $("search").addEventListener("focus", () => source.blur());
-
-  function copySource() {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(source.value).then(() => {
-        showToast("コピーしました");
-      }).catch(() => {
-        fallbackCopy();
-      });
-    } else {
-      fallbackCopy();
-    }
-  }
-
-  function fallbackCopy() {
-    source.select();
-    source.setSelectionRange(0, source.value.length);
-    document.execCommand("copy");
-    showToast("コピーしました");
-  }
 
   function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
@@ -611,48 +568,25 @@ mark.hit.current{background:var(--accent);color:#fff}
   $("btnDelete").onclick = deleteCurrent;
   $("btnClear").onclick = () => {
     source.value = "";
+    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
     source.focus();
   };
-  $("btnCopy").onclick = copySource;
-  source.addEventListener("input", () => {
-    // 文字数は表示しないため何もしない
-  });
+  source.addEventListener("input", updateCount);
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
 
-  function showToast(msg, anchorEl) {
+  function showToast(msg) {
     const t = $("toast");
     t.textContent = msg;
-    t.classList.add("show");
     t.style.display = "block";
-
-    if (anchorEl) {
-      const rect = anchorEl.getBoundingClientRect();
-      // トーストをカードの下中央に配置
-      t.style.left = (rect.left + rect.width / 2) + "px";
-      t.style.bottom = "auto";
-      t.style.top = (rect.bottom + 8) + "px";
-      t.style.transform = "translateX(-50%) translateY(0)";
-    } else {
-      // デフォルトは画面下部中央
-      t.style.left = "50%";
-      t.style.bottom = "max(24px, env(safe-area-inset-bottom))";
-      t.style.top = "auto";
-      t.style.transform = "translateX(-50%) translateY(0)";
-    }
-
     clearTimeout(t._hideTimer);
-    t._hideTimer = setTimeout(() => {
-      t.classList.remove("show");
-      setTimeout(() => { t.style.display = "none"; }, 200);
-    }, 1400);
+    t._hideTimer = setTimeout(() => { t.style.display = "none"; }, 1400);
   }
 
-  // 初期化
   load();
   renderCards();
   updatePreview();
