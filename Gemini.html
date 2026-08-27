@@ -25,31 +25,23 @@
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
 body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
 button,textarea,input{font:inherit}
-button{border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+button{
+  border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;text-align:center;
+}
 button.primary{background:var(--accent)}
 button.danger{background:var(--danger)}
 button.ghost{background:transparent;border:1px solid #38383c}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto;padding-top:0}
-
-/* Toast Notification */
-.toast{
-  position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-20px);
-  background:rgba(50,50,54,0.9);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;
-  pointer-events:none;opacity:0;transition:opacity .25s, transform .25s;z-index:200;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.app{max-width:1100px;margin:auto}
 
 /* card row (horizontal scroll) */
 .card-row{
   display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
-  padding:0 4px 14px 4px;margin:0 -4px 6px;
+  padding:0 4px 14px;margin:0 -4px 6px;
   scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch;
-  user-select:none;-webkit-user-select:none;
-  -webkit-touch-callout:none;
 }
 .card-row::-webkit-scrollbar{height:0}
 .card{
@@ -58,6 +50,7 @@ button:disabled{opacity:.4;pointer-events:none}
   background:var(--panel);border-radius:16px;padding:12px;
   display:flex;flex-direction:column;justify-content:space-between;
   border:2px solid transparent;cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   transition:border-color .15s,background .15s;
   position:relative;
 }
@@ -65,7 +58,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .card.active{border-color:var(--accent);background:#0a84ff18}
 .card-name{font-weight:600;font-size:14px;line-height:1.25;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-meta{font-size:10.5px;color:var(--muted)}
+.card-meta{font-size:10.5px;color:var(--muted);line-height:1.4}
 .card-new{
   align-items:center;justify-content:center;color:var(--muted);
   border:2px dashed #3a3a3c;background:transparent;
@@ -74,31 +67,9 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-new .label{font-size:12px;margin-top:4px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
-/* device previews wrapper */
-.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:center;padding:4px 0 24px}
-.phone-container{
-  display:grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items:center;
-  width:100%;
-}
-.phone-center{
-  grid-column: 2;
-  display:flex;
-  justify-content:center;
-}
-.phone-actions-right{
-  grid-column: 3;
-  display:flex;
-  justify-content:flex-start;
-  padding-left:12px;
-}
-.icon-btn{
-  width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;
-  background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;
-  cursor:pointer;border:1px solid #38383c;
-}
-.icon-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* device previews */
+.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
+.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 
 /* iPhone 17 Pro: 402x874 CSS pt @3x */
 .phone{
@@ -108,23 +79,26 @@ button:disabled{opacity:.4;pointer-events:none}
   background:#000;border:6px solid #202023;border-radius:52px;overflow:hidden;
   box-shadow:0 14px 40px #000,0 0 0 1px #444;
 }
-.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px;background:#000}
+.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px}
 .phone-viewport iframe{
-  position:absolute;top:0;left:0;
+  position:absolute;top:50%;left:50%;
   width:402px;height:874px;border:0;background:#000;color-scheme:dark;
-  transform-origin:top left;
+  transform-origin:center center;
+  margin-left:-201px;margin-top:-437px;
 }
-/* Dynamic Island: height reduced to 75% (9.5% * 0.75 = 7.125%) */
 .island{
   position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
-  width:33.5%;height:7.125%;max-height:25.5px;background:#000;border-radius:100px;pointer-events:none;
+  width:33.5%;
+  height:calc(9.5% * 0.75);
+  max-height:calc(34px * 0.75);
+  background:#000;border-radius:100px;pointer-events:none;
 }
 .homebar{
   position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
   width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
 }
 
-/* iPad 7th gen: 1080x810 CSS pt landscape */
+/* iPad 7th gen: 810x1080 CSS pt landscape */
 .ipad{
   position:relative;
   width:min(460px,92vw);
@@ -132,19 +106,30 @@ button:disabled{opacity:.4;pointer-events:none}
   background:#000;border:10px solid #2a2a2e;border-radius:22px;overflow:hidden;
   box-shadow:0 14px 40px #000,0 0 0 1px #444;
 }
-/* iPad inner viewport corners: no radius */
-.ipad-viewport{position:absolute;inset:0;overflow:hidden;border-radius:0;background:#000}
+.ipad-viewport{position:absolute;inset:0;overflow:hidden}
 .ipad-viewport iframe{
-  position:absolute;top:0;left:0;
+  position:absolute;top:50%;left:50%;
   width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
-  transform-origin:top left;
+  transform-origin:center center;
+  margin-left:-540px;margin-top:-405px;
 }
+
+/* fullscreen action icon (changed to gray/ghost default) */
+.fs-icon-btn{
+  position:absolute;
+  left:calc(100% + 8px);
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;height:40px;border-radius:12px;padding:0;
+  background:var(--panel2);border:1px solid #38383c;color:var(--text);
+}
+.fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
 
 /* editor (opened via long-press) */
 .editor-overlay{
   position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
   display:none;align-items:flex-end;justify-content:center;
-  overscroll-behavior:contain;
+  overscroll-behavior:none;
 }
 .editor-overlay.show{display:flex}
 .editor-sheet{
@@ -152,50 +137,101 @@ button:disabled{opacity:.4;pointer-events:none}
   background:var(--bg);border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
-.editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.editor-tools .name-input{
+
+/* header tools (名前と削除) 文字選択無効 */
+.header-tools {
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+  -webkit-user-select:none;user-select:none;
+}
+.header-tools .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
 }
-.editor-tools .name-input:focus{border-color:var(--accent)}
-#count{font-size:13px;color:var(--muted);white-space:nowrap}
-.search-box{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.search-box input{
-  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 11px;outline:none;
+.header-tools .name-input:focus{border-color:var(--accent)}
+.header-tools .danger {
+  min-width: 60px; height: 40px; padding: 0 14px;
 }
-.search-box button{min-height:40px;padding:0 12px;font-size:13px}
-#searchResult{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* search */
+.search-tools {
+  display: flex; align-items: center; margin-top: 12px;
+  -webkit-user-select:none;user-select:none;
+}
+.search-input-wrap {
+  position: relative; flex: 1; display: flex; align-items: center;
+}
+.search-input-wrap input {
+  width: 100%; height: 40px; border: 1px solid #38383c; border-radius: 12px;
+  background: #111113; color: #fff; padding: 0 70px 0 11px; outline: none;
+}
+.search-input-wrap input:focus { border-color: var(--accent); }
+#searchResult {
+  position: absolute; right: 12px; font-size: 11px; color: var(--muted); pointer-events: none;
+}
+.search-nav {
+  display: flex; gap: 6px; margin-left: 8px;
+}
+.search-nav button {
+  width: 40px; min-height: 40px; padding: 0; font-size: 14px;
+}
+
 .editor-textwrap{position:relative}
+/* 折り返し表示に変更 */
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre;overflow:auto;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 textarea:focus{border-color:var(--accent)}
-.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
-.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.editor-actions button{flex:1;min-width:100px;text-align:center;justify-content:center}
-.editor-actions .row2{display:flex;gap:8px;width:100%}
-.editor-actions .row2 button{flex:1;text-align:center;justify-content:center}
+mark.hit{background:var(--mark);color:#000;border-radius:2px}
+mark.hit.current{background:var(--accent);color:#fff}
+
+/* editor-actions: 1列配置 */
+.editor-actions{display:flex;gap:8px;margin-top:10px}
+.editor-actions button{flex:1;min-width:0;padding:0;font-size:13px;}
 
 /* fullscreen */
-.fullscreen{
-  position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;
-  overscroll-behavior:contain;
-}
+.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
 .fullscreen.show{display:block}
-.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
 .fullscreen iframe{border:0;background:#000;color-scheme:dark}
+.fs-controls{
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));left:0;right:0;
+  display:flex;justify-content:center;gap:8px;
+}
+.fs-controls button{
+  min-height:36px;padding:0 14px;font-size:13px;border-radius:18px;
+  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;
+}
+.fs-controls button.on{background:rgba(10,132,255,.85)}
 .fullscreen .exit{
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
   width:40px;height:40px;padding:0;border-radius:50%;
-  background:rgba(255,255,255,0.25);color:#fff;font-size:22px;line-height:1;
-  display:flex;align-items:center;justify-content:center;
-  border:none;
+  background:rgba(0,0,0,.40);color:#fff;font-size:19px;
+}
+
+/* toast hint (スライド表示) */
+#toast{
+  position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;
+  background:var(--panel2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;
+  z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
+  transform:translate(-50%, 80px);
+  opacity:0;
+  visibility:hidden;
+  transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out, visibility 0.3s;
+}
+#toast.show {
+  transform:translate(-50%, 0);
+  opacity:1;
+  visibility:visible;
+  transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out, visibility 0s;
 }
 
 @media(min-width:800px){
@@ -205,67 +241,63 @@ textarea:focus{border-color:var(--accent)}
 </style>
 </head>
 <body>
-<div id="toast" class="toast">長押しで編集できます</div>
-
 <div class="app">
 
   <div id="cardRow" class="card-row"></div>
   <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
 
   <div class="devices">
-    <div class="phone-container">
-      <div class="phone-center">
-        <div class="phone" id="phone">
-          <div class="island"></div>
-          <div class="phone-viewport">
-            <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-          </div>
-          <div class="homebar"></div>
+    <div class="device-wrap">
+      <div class="phone" id="phone">
+        <div class="island"></div>
+        <div class="phone-viewport">
+          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
         </div>
+        <div class="homebar"></div>
       </div>
-      <div class="phone-actions-right">
-        <button id="btnFullscreen" class="icon-btn" title="全画面プレビュー">
-          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-        </button>
-      </div>
+      <!-- グレー化するため .primary を外しました -->
+      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
     </div>
-
-    <div class="ipad" id="ipad">
-      <div class="ipad-viewport">
-        <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+    <div class="device-wrap">
+      <div class="ipad" id="ipad">
+        <div class="ipad-viewport">
+          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+        </div>
       </div>
     </div>
   </div>
 
 </div>
 
-<!-- EDITOR SHEET (opened by long-press on a card) -->
+<!-- EDITOR SHEET -->
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="sheet-handle"></div>
-    <div class="editor-tools">
+    <div class="editor-tools header-tools">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <span id="count">0文字</span>
+      <button id="btnDelete" class="danger">削除</button>
     </div>
-    <div class="editor-tools">
-      <div class="search-box">
-        <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <button id="btnSearchNext" class="ghost">次へ</button>
-        <span id="searchResult"></span>
-      </div>
-    </div>
-    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
     <div class="editor-textwrap">
       <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
     <div class="editor-actions">
-      <div class="row2">
-        <button id="btnSave" class="primary">保存</button>
-        <button id="btnCancel" class="ghost">キャンセル</button>
+      <button id="btnCancel" class="ghost">キャンセル</button>
+      <button id="btnClear" class="ghost">クリア</button>
+      <button id="btnCopy" class="ghost">コピー</button>
+      <button id="btnSave" class="primary">保存</button>
+    </div>
+    <div class="editor-tools search-tools">
+      <div class="search-input-wrap">
+        <input id="search" type="search" placeholder="検索" autocomplete="off">
+        <span id="searchResult"></span>
       </div>
-      <div class="row2">
-        <button id="btnClear" class="ghost">クリア</button>
-        <button id="btnDelete" class="danger">削除</button>
+      <div class="search-nav">
+        <button id="btnSearchPrev" class="ghost">▲</button>
+        <button id="btnSearchNext" class="ghost">▼</button>
       </div>
     </div>
   </div>
@@ -279,15 +311,16 @@ textarea:focus{border-color:var(--accent)}
   </div>
 </div>
 
+<div id="toast">長押しで編集</div>
+
 <script>
 (() => {
   const $ = id => document.getElementById(id);
   const STORAGE_KEY = "pwa-previewer-items-v2";
   const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
 
-  // real device CSS-point sizes
-  const PHONE_W = 402, PHONE_H = 874;   // iPhone 17 Pro
-  const IPAD_W = 1080, IPAD_H = 810;    // iPad 7th gen
+  const PHONE_W = 402, PHONE_H = 874;
+  const IPAD_W = 1080, IPAD_H = 810;
 
   let items = [];
   let selectedId = null;
@@ -299,19 +332,6 @@ textarea:focus{border-color:var(--accent)}
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
 
-  // ---------- Toast Notification ----------
-  let toastTimer = null;
-  function showToast(msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      t.classList.remove("show");
-    }, 2000);
-  }
-
-  // ---------- storage ----------
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
@@ -341,7 +361,8 @@ textarea:focus{border-color:var(--accent)}
 
   function formatDate(ts) {
     const d = new Date(ts);
-    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const dayStr = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
+    return `${d.getMonth() + 1}/${d.getDate()}（${dayStr}） ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   }
 
   function escapeHtml(s) {
@@ -352,12 +373,9 @@ textarea:focus{border-color:var(--accent)}
       .replace(/"/g, "&quot;");
   }
 
-  // ---------- device scaling ----------
   function fitIframe(iframe, wrapEl, deviceW, deviceH) {
     const rect = wrapEl.getBoundingClientRect();
-    const scale = rect.width / deviceW;
-    iframe.style.width = deviceW + "px";
-    iframe.style.height = deviceH + "px";
+    const scale = Math.max(rect.width / deviceW, rect.height / deviceH);
     iframe.style.transform = `scale(${scale})`;
   }
 
@@ -369,18 +387,19 @@ textarea:focus{border-color:var(--accent)}
   function resizeFullscreen() {
     if (!$("fullscreen").classList.contains("show")) return;
     const stage = $("fsStage");
+    const dW = PHONE_W;
+    const dH = PHONE_H;
     const availW = stage.clientWidth;
     const availH = stage.clientHeight;
-    const scale = Math.min(availW / PHONE_W, availH / PHONE_H);
-    fullFrame.style.width = PHONE_W + "px";
-    fullFrame.style.height = PHONE_H + "px";
+    const scale = Math.min(availW / dW, availH / dH);
+    fullFrame.style.width = dW + "px";
+    fullFrame.style.height = dH + "px";
     fullFrame.style.transform = `scale(${scale})`;
     fullFrame.style.transformOrigin = "center center";
   }
 
   window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
 
-  // ---------- list rendering ----------
   function renderCards() {
     const row = $("cardRow");
     const sorted = items.slice().sort((a, b) => b.updated - a.updated);
@@ -389,7 +408,7 @@ textarea:focus{border-color:var(--accent)}
     const cardsHtml = sorted.map(it => `
       <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
         <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
+        <div class="card-meta">${formatDate(it.updated)}<br>${(it.html || "").length.toLocaleString()}文字</div>
       </div>
     `).join("");
 
@@ -419,7 +438,7 @@ textarea:focus{border-color:var(--accent)}
         selectedId = el.dataset.id;
         renderCards();
         updatePreview();
-        showToast("長押しで編集できます");
+        showToast("長押しで編集");
       });
       el.addEventListener("contextmenu", e => e.preventDefault());
     });
@@ -441,7 +460,6 @@ textarea:focus{border-color:var(--accent)}
     requestAnimationFrame(resizeAllPreviews);
   }
 
-  // ---------- editor sheet ----------
   let searchMatches = [];
   let searchIndex = -1;
 
@@ -455,21 +473,18 @@ textarea:focus{border-color:var(--accent)}
       nameInput.value = it ? (it.name || "") : "";
       source.value = it ? (it.html || "") : "";
     }
-    $("btnDelete").style.display = isNew ? "none" : "flex";
-    updateCount();
+    $("btnDelete").style.display = isNew ? "none" : "block";
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
     $("editorOverlay").classList.add("show");
+    document.body.style.overflow = "hidden";
     setTimeout(() => nameInput.focus(), 50);
   }
 
   function closeEditor() {
     $("editorOverlay").classList.remove("show");
-  }
-
-  function updateCount() {
-    $("count").textContent = source.value.length.toLocaleString() + "文字";
+    document.body.style.overflow = "";
   }
 
   function saveCurrent() {
@@ -503,13 +518,12 @@ textarea:focus{border-color:var(--accent)}
     updatePreview();
   }
 
-  // plain textarea search with highlight & scroll
   function clearSearchHighlight() {
     searchMatches = [];
     searchIndex = -1;
   }
 
-  function runSearch(advance) {
+  function runSearch(dir) { // dir: 1 (next), -1 (prev), 0 (initial)
     const q = $("search").value;
     if (!q) {
       $("searchResult").textContent = "";
@@ -533,17 +547,21 @@ textarea:focus{border-color:var(--accent)}
       return;
     }
 
-    if (advance) {
-      searchIndex = (searchIndex + 1) % matches.length;
-    } else if (searchIndex === -1 || searchIndex >= matches.length) {
-      searchIndex = 0;
+    if (dir !== 0) {
+      if (searchIndex === -1) {
+        searchIndex = dir === 1 ? 0 : matches.length - 1;
+      } else {
+        searchIndex = (searchIndex + dir + matches.length) % matches.length;
+      }
+    } else {
+      $("searchResult").textContent = `${matches.length}件`;
+      searchIndex = -1;
+      return;
     }
 
     const start = matches[searchIndex];
     const end = start + q.length;
-    
-    // Select text in textarea
-    source.focus();
+    source.focus({ preventScroll: true });
     source.setSelectionRange(start, end);
     scrollTextareaToSelection(start);
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
@@ -552,33 +570,32 @@ textarea:focus{border-color:var(--accent)}
   function scrollTextareaToSelection(charIndex) {
     const text = source.value.slice(0, charIndex);
     const lineNumber = text.split("\n").length - 1;
-    const lineHeight = parseFloat(getComputedStyle(source).lineHeight) || 18;
+    const style = getComputedStyle(source);
+    const lineHeight = parseFloat(style.lineHeight) || 18;
+    const paddingTop = parseFloat(style.paddingTop) || 14;
+    const paddingBottom = parseFloat(style.paddingBottom) || 14;
     const targetTop = lineNumber * lineHeight;
-    source.scrollTop = Math.max(0, targetTop - source.clientHeight / 2);
+    const visibleHeight = source.clientHeight - paddingTop - paddingBottom;
+    source.scrollTop = Math.max(0, targetTop - visibleHeight / 2);
   }
 
-  // Prevent search input from shifting focus or entering text to textarea
-  $("search").addEventListener("focus", (e) => {
-    e.stopPropagation();
-  });
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(0); });
   $("search").addEventListener("keydown", (e) => {
     if (e.key === "Enter") { 
       e.preventDefault(); 
-      runSearch(true); 
+      runSearch(e.shiftKey ? -1 : 1); 
     }
   });
-  $("btnSearchNext").onclick = (e) => {
-    e.preventDefault();
-    runSearch(true);
-  };
+  $("btnSearchNext").onclick = () => runSearch(1);
+  $("btnSearchPrev").onclick = () => runSearch(-1);
+  $("search").addEventListener("focus", () => source.blur());
 
-  // ---------- fullscreen ----------
   function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
     if (!it) { alert("表示する項目を一覧から選んでください"); return; }
     fullFrame.srcdoc = it.html || "";
     $("fullscreen").classList.add("show");
+    document.body.style.overflow = "hidden";
     requestAnimationFrame(resizeFullscreen);
   }
 
@@ -586,26 +603,40 @@ textarea:focus{border-color:var(--accent)}
   $("exit").onclick = () => {
     $("fullscreen").classList.remove("show");
     fullFrame.srcdoc = "";
+    document.body.style.overflow = "";
   };
 
-  // ---------- editor events ----------
   $("btnSave").onclick = saveCurrent;
   $("btnCancel").onclick = closeEditor;
   $("btnDelete").onclick = deleteCurrent;
   $("btnClear").onclick = () => {
     source.value = "";
-    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
     source.focus();
   };
-  source.addEventListener("input", updateCount);
+  
+  $("btnCopy").onclick = () => {
+    navigator.clipboard.writeText(source.value).then(() => {
+      showToast("コードをコピーしました");
+    }).catch(() => {
+      showToast("コピーに失敗しました");
+    });
+  };
+
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
 
-  // ---------- init ----------
+  function showToast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => { t.classList.remove("show"); }, 2000);
+  }
+
   load();
   renderCards();
   updatePreview();
