@@ -46,64 +46,56 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-row::-webkit-scrollbar{height:0}
 .card{
   scroll-snap-align:start;
-  flex:0 0 auto;width:138px;height:104px;
-  background:var(--panel);border-radius:16px;padding:10px 12px;
-  display:flex;flex-direction:column;justify-content:space-between;
+  flex:0 0 auto;width:132px;height:82px;
+  background:var(--panel);border-radius:16px;padding:8px 10px;
+  display:flex;flex-direction:column;justify-content:flex-start;gap:2px;
   border:2px solid transparent;cursor:pointer;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   transition:border-color .15s,background .15s;
   position:relative;
+  overflow:hidden;
 }
 .card:active{background:var(--panel2)}
 .card.active{border-color:var(--accent);background:#0a84ff18}
-
-/* Always 4 lines: Title occupies exactly 2 lines height */
-.card-name{
-  font-weight:600;font-size:13.5px;line-height:1.3;
-  height:calc(13.5px * 1.3 * 2);
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-  overflow:hidden;word-break:break-all;
-}
-.card-meta{font-size:10.5px;color:var(--muted);line-height:1.2}
-
+.card-name{font-weight:600;font-size:13px;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  min-height:31px;max-height:31px;}
+.card-meta{font-size:10px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card-new{
   align-items:center;justify-content:center;color:var(--muted);
   border:2px dashed #3a3a3c;background:transparent;
 }
-.card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
-.card-new .label{font-size:12px;margin-top:4px}
+.card-new .plus{font-size:22px;font-weight:300;color:var(--muted);line-height:1}
+.card-new .label{font-size:11px;margin-top:2px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
-/* card toast (inside bottom half of tapped card) */
+/* card toast (inside card, bottom half) */
 .card-toast{
-  position:fixed;
-  z-index:100;
-  background:rgba(44,44,46,0.92);
+  position:absolute;
+  left:50%;
+  bottom:6px;
+  transform:translateX(-50%);
+  z-index:50;
+  background:rgba(48,48,52,.95);
   color:var(--text);
-  padding:4px 8px;
-  border-radius:8px;
-  font-size:11px;
-  font-weight:500;
-  border:1px solid rgba(255,255,255,0.15);
-  box-shadow:0 4px 12px rgba(0,0,0,.4);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
+  padding:3px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:600;
+  border:1px solid #48484a;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
   pointer-events:none;
   opacity:0;
-  transform:translateY(4px);
-  transition:opacity .18s, transform .18s;
+  transition:opacity .22s;
   white-space:nowrap;
 }
-.card-toast.show{
-  opacity:1;
-  transform:translateY(0);
-}
+.card-toast.show{opacity:1}
 
 /* device previews */
 .devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
 .device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 
-/* iPhone 17 Pro */
+/* iPhone 17 Pro: 402x874 CSS pt @3x */
 .phone{
   position:relative;
   width:min(300px,86vw);
@@ -130,7 +122,7 @@ button:disabled{opacity:.4;pointer-events:none}
   width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
 }
 
-/* iPad 7th gen */
+/* iPad 7th gen: 810x1080 CSS pt landscape */
 .ipad{
   position:relative;
   width:min(460px,92vw);
@@ -165,20 +157,37 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .editor-overlay.show{display:flex}
 .editor-sheet{
-  width:100%;max-width:900px;height:92vh;
+  width:100%;max-width:900px;max-height:92vh;
   background:var(--bg);border-radius:20px 20px 0 0;
-  padding:14px 14px 0;
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
   -webkit-user-select:none;user-select:none;
-  display:flex;flex-direction:column;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
-.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px;flex-shrink:0}
+.editor-scroll{
+  flex:1;
+  overflow:auto;
+  min-height:0;
+  padding:14px 14px 0;
+}
+.editor-search-wrap{
+  flex-shrink:0;
+  background:var(--bg);
+  border-top:1px solid #38383c;
+  padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+}
+.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
+
+/* editor actions - single row */
+.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.editor-actions button{flex:1;min-width:80px;white-space:nowrap}
 
 /* title row with delete button */
 .editor-title-row{
-  display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-shrink:0;
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
 }
 .editor-title-row .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
@@ -190,15 +199,9 @@ button:disabled{opacity:.4;pointer-events:none}
   min-height:40px;padding:0 14px;font-size:13px;
 }
 
-/* textarea container - takes remaining vertical space */
-.editor-textwrap{
-  flex:1;
-  min-height:120px;
-  display:flex;
-  margin-bottom:10px;
-}
+/* textarea */
 textarea{
-  width:100%;height:100%;resize:none;
+  width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
   white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
@@ -206,41 +209,39 @@ textarea{
 }
 textarea:focus{border-color:var(--accent)}
 
-/* editor action buttons */
-.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;flex-shrink:0}
-.editor-actions button{flex:1;min-width:80px;white-space:nowrap}
-
-/* search section pinned at bottom & keyboard sticky */
+/* search section at bottom */
 .search-section{
-  flex-shrink:0;
-  padding:10px 0 calc(12px + env(safe-area-inset-bottom));
-  border-top:1px solid #38383c;
-  background:var(--bg);
+  margin-top:0;
+  padding-top:0;
+  border-top:none;
 }
 .search-box{
+  display:flex;align-items:center;gap:8px;
+}
+.search-input-wrap{
   position:relative;
-  display:flex;align-items:center;gap:6px;
+  flex:1;
+  display:flex;
+  align-items:center;
 }
 .search-box input{
-  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 96px 0 11px;outline:none;
+  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 50px 0 11px;outline:none;
   -webkit-user-select:text;user-select:text;
 }
 .search-box input:focus{border-color:var(--accent)}
 .search-box .search-count{
   position:absolute;
-  right:104px;
-  top:50%;
-  transform:translateY(-50%);
+  right:10px;
   font-size:12px;
   color:var(--muted);
   pointer-events:none;
 }
 .search-box .search-nav{
-  display:flex;gap:4px;
+  display:flex;gap:4px;flex-shrink:0;
 }
 .search-box button{
-  min-height:36px;
+  min-height:40px;
   min-width:40px;
   padding:0 8px;
   font-size:16px;
@@ -304,38 +305,44 @@ textarea:focus{border-color:var(--accent)}
 
 </div>
 
-<!-- EDITOR SHEET (opened by long-press on a card) -->
+<!-- EDITOR SHEET (opened by long-press) -->
 <div id="editorOverlay" class="editor-overlay">
-  <div class="editor-sheet" id="editorSheet">
-    <div class="sheet-handle"></div>
+  <div class="editor-sheet">
+    <div class="editor-scroll">
+      <div class="sheet-handle"></div>
 
-    <div class="editor-title-row">
-      <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <button id="btnDelete" class="btn-delete danger">削除</button>
-    </div>
+      <!-- アクションボタンを上部に移動 -->
+      <div class="editor-actions">
+        <button id="btnCancel" class="ghost">キャンセル</button>
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnCopy" class="ghost">コピー</button>
+        <button id="btnSave" class="primary">保存</button>
+      </div>
 
-    <div class="editor-textwrap">
-      <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-    </div>
+      <div class="editor-title-row">
+        <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
+        <button id="btnDelete" class="btn-delete danger">削除</button>
+      </div>
 
-    <div class="editor-actions">
-      <button id="btnCancel" class="ghost">キャンセル</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCopy" class="ghost">コピー</button>
-      <button id="btnSave" class="primary">保存</button>
-    </div>
-
-    <div class="search-section" id="searchSection">
-      <div class="search-box">
-        <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <span id="searchResult" class="search-count"></span>
-        <div class="search-nav">
-          <button id="btnSearchPrev" class="ghost">▲</button>
-          <button id="btnSearchNext" class="ghost">▼</button>
-        </div>
+      <div class="editor-textwrap">
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
       </div>
     </div>
 
+    <div class="editor-search-wrap">
+      <div class="search-section">
+        <div class="search-box">
+          <div class="search-input-wrap">
+            <input id="search" type="search" placeholder="検索" autocomplete="off">
+            <span id="searchResult" class="search-count"></span>
+          </div>
+          <div class="search-nav">
+            <button id="btnSearchPrev" class="ghost">▲</button>
+            <button id="btnSearchNext" class="ghost">▼</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -488,36 +495,18 @@ textarea:focus{border-color:var(--accent)}
   }
 
   function showCardToast(cardEl, msg) {
-    // remove existing toast
-    const existing = document.querySelector(".card-toast");
+    const existing = cardEl.querySelector(".card-toast");
     if (existing) existing.remove();
 
     const toast = document.createElement("div");
     toast.className = "card-toast";
     toast.textContent = msg;
-    document.body.appendChild(toast);
+    cardEl.appendChild(toast);
 
-    const rect = cardEl.getBoundingClientRect();
-
-    // Position in the bottom half of the card
-    requestAnimationFrame(() => {
-      const toastRect = toast.getBoundingClientRect();
-      let left = rect.left + (rect.width / 2) - (toastRect.width / 2);
-      let top = rect.bottom - (rect.height * 0.35) - (toastRect.height / 2);
-
-      // Clamp inside screen bounds
-      left = Math.max(6, Math.min(left, window.innerWidth - toastRect.width - 6));
-      top = Math.max(6, Math.min(top, window.innerHeight - toastRect.height - 6));
-
-      toast.style.left = left + "px";
-      toast.style.top = top + "px";
-
-      toast.classList.add("show");
-    });
-
+    requestAnimationFrame(() => toast.classList.add("show"));
     setTimeout(() => {
       toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 200);
+      setTimeout(() => toast.remove(), 1200);
     }, 1200);
   }
 
@@ -554,28 +543,14 @@ textarea:focus{border-color:var(--accent)}
     clearSearchHighlight();
     $("editorOverlay").classList.add("show");
     document.body.style.overflow = "hidden";
+    adjustEditorForKeyboard();
     setTimeout(() => nameInput.focus(), 50);
   }
 
   function closeEditor() {
     $("editorOverlay").classList.remove("show");
     document.body.style.overflow = "";
-    $("editorSheet").style.height = "";
-  }
-
-  /* Handle iOS VisualViewport to sticky bottom search bar over keyboard */
-  if (window.visualViewport) {
-    const onViewportResize = () => {
-      const overlay = $("editorOverlay");
-      if (!overlay.classList.contains("show")) return;
-      const vv = window.visualViewport;
-      const sheet = $("editorSheet");
-      // Set sheet height dynamically based on visualViewport
-      sheet.style.height = `${vv.height}px`;
-      window.scrollTo(0, 0);
-    };
-    window.visualViewport.addEventListener("resize", onViewportResize);
-    window.visualViewport.addEventListener("scroll", onViewportResize);
+    document.querySelector(".editor-sheet").style.maxHeight = "";
   }
 
   function saveCurrent() {
@@ -749,6 +724,17 @@ textarea:focus{border-color:var(--accent)}
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
+
+  function adjustEditorForKeyboard() {
+    if (!window.visualViewport) return;
+    const vv = window.visualViewport;
+    const sheet = document.querySelector(".editor-sheet");
+    if ($("editorOverlay").classList.contains("show")) {
+      sheet.style.maxHeight = (vv.height - 16) + "px";
+    }
+  }
+  window.visualViewport?.addEventListener("resize", adjustEditorForKeyboard);
+  window.visualViewport?.addEventListener("scroll", adjustEditorForKeyboard);
 
   load();
   renderCards();
