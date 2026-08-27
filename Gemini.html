@@ -58,7 +58,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .card.active{border-color:var(--accent);background:#0a84ff18}
 .card-name{font-weight:600;font-size:14px;line-height:1.25;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-meta{font-size:10.5px;color:var(--muted);line-height:1.4}
+.card-meta{font-size:10.5px;color:var(--muted)}
 .card-new{
   align-items:center;justify-content:center;color:var(--muted);
   border:2px dashed #3a3a3c;background:transparent;
@@ -67,11 +67,33 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-new .label{font-size:12px;margin-top:4px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
+/* card toast (slide up from below tapped card) */
+.card-toast{
+  position:absolute;
+  z-index:50;
+  background:var(--panel2);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:12px;
+  font-size:12.5px;
+  border:1px solid #38383c;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .22s, transform .22s;
+  white-space:nowrap;
+}
+.card-toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
 /* device previews */
 .devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
 .device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 
-/* iPhone 17 Pro: 402x874 CSS pt @3x */
+/* iPhone 17 Pro: 402x874 CSS pt @3x (real device point size) */
 .phone{
   position:relative;
   width:min(300px,86vw);
@@ -114,7 +136,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-/* fullscreen action icon (changed to gray/ghost default) */
+/* fullscreen action icon - gray instead of primary */
 .fs-icon-btn{
   position:absolute;
   left:calc(100% + 8px);
@@ -138,64 +160,77 @@ button:disabled{opacity:.4;pointer-events:none}
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
+  /* prevent text selection in editor UI */
+  -webkit-user-select:none;user-select:none;
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 
-/* header tools (名前と削除) 文字選択無効 */
-.header-tools {
-  display:flex;align-items:center;gap:8px;margin-bottom:12px;
-  -webkit-user-select:none;user-select:none;
+/* title row with delete button */
+.editor-title-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
 }
-.header-tools .name-input{
+.editor-title-row .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
+  /* allow text selection inside input */
+  -webkit-user-select:text;user-select:text;
 }
-.header-tools .name-input:focus{border-color:var(--accent)}
-.header-tools .danger {
-  min-width: 60px; height: 40px; padding: 0 14px;
-}
-
-/* search */
-.search-tools {
-  display: flex; align-items: center; margin-top: 12px;
-  -webkit-user-select:none;user-select:none;
-}
-.search-input-wrap {
-  position: relative; flex: 1; display: flex; align-items: center;
-}
-.search-input-wrap input {
-  width: 100%; height: 40px; border: 1px solid #38383c; border-radius: 12px;
-  background: #111113; color: #fff; padding: 0 70px 0 11px; outline: none;
-}
-.search-input-wrap input:focus { border-color: var(--accent); }
-#searchResult {
-  position: absolute; right: 12px; font-size: 11px; color: var(--muted); pointer-events: none;
-}
-.search-nav {
-  display: flex; gap: 6px; margin-left: 8px;
-}
-.search-nav button {
-  width: 40px; min-height: 40px; padding: 0; font-size: 14px;
+.editor-title-row .name-input:focus{border-color:var(--accent)}
+.editor-title-row .btn-delete{
+  min-height:40px;padding:0 14px;font-size:13px;
 }
 
-.editor-textwrap{position:relative}
-/* 折り返し表示に変更 */
+/* textarea - word wrap instead of horizontal scroll */
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre-wrap;
-  word-wrap:break-word;
-  overflow-y:auto;
-  overflow-x:hidden;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
+  /* allow text selection inside textarea */
+  -webkit-user-select:text;user-select:text;
 }
 textarea:focus{border-color:var(--accent)}
-mark.hit{background:var(--mark);color:#000;border-radius:2px}
-mark.hit.current{background:var(--accent);color:#fff}
 
-/* editor-actions: 1列配置 */
-.editor-actions{display:flex;gap:8px;margin-top:10px}
-.editor-actions button{flex:1;min-width:0;padding:0;font-size:13px;}
+/* editor actions - single row */
+.editor-actions{display:flex;gap:8px;flex-wrap:nowrap;margin-top:10px}
+.editor-actions button{flex:1;min-width:0;white-space:nowrap;}
+
+/* search section at bottom */
+.search-section{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid #38383c;
+}
+.search-box{
+  position:relative;
+  display:flex;align-items:center;gap:6px;
+}
+.search-box input{
+  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 180px 0 11px;outline:none;
+  /* allow text selection inside input */
+  -webkit-user-select:text;user-select:text;
+}
+.search-box input:focus{border-color:var(--accent)}
+.search-box .search-count{
+  position:absolute;
+  right:100px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  color:var(--muted);
+  pointer-events:none;
+  white-space:nowrap;
+}
+.search-box .search-nav{
+  display:flex;gap:4px;width:88px;
+}
+.search-box button{
+  min-height:36px;
+  min-width:40px;
+  padding:0 8px;
+  font-size:16px;
+}
 
 /* fullscreen */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
@@ -215,23 +250,6 @@ mark.hit.current{background:var(--accent);color:#fff}
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
   width:40px;height:40px;padding:0;border-radius:50%;
   background:rgba(0,0,0,.40);color:#fff;font-size:19px;
-}
-
-/* toast hint (スライド表示) */
-#toast{
-  position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;
-  background:var(--panel2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;
-  z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
-  transform:translate(-50%, 80px);
-  opacity:0;
-  visibility:hidden;
-  transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out, visibility 0.3s;
-}
-#toast.show {
-  transform:translate(-50%, 0);
-  opacity:1;
-  visibility:visible;
-  transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out, visibility 0s;
 }
 
 @media(min-width:800px){
@@ -255,7 +273,6 @@ mark.hit.current{background:var(--accent);color:#fff}
         </div>
         <div class="homebar"></div>
       </div>
-      <!-- グレー化するため .primary を外しました -->
       <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -273,33 +290,38 @@ mark.hit.current{background:var(--accent);color:#fff}
 
 </div>
 
-<!-- EDITOR SHEET -->
+<!-- EDITOR SHEET (opened by long-press on a card) -->
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="sheet-handle"></div>
-    <div class="editor-tools header-tools">
+
+    <div class="editor-title-row">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <button id="btnDelete" class="danger">削除</button>
+      <button id="btnDelete" class="btn-delete danger">削除</button>
     </div>
+
     <div class="editor-textwrap">
       <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
+
     <div class="editor-actions">
       <button id="btnCancel" class="ghost">キャンセル</button>
       <button id="btnClear" class="ghost">クリア</button>
       <button id="btnCopy" class="ghost">コピー</button>
       <button id="btnSave" class="primary">保存</button>
     </div>
-    <div class="editor-tools search-tools">
-      <div class="search-input-wrap">
+
+    <div class="search-section">
+      <div class="search-box">
         <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <span id="searchResult"></span>
-      </div>
-      <div class="search-nav">
-        <button id="btnSearchPrev" class="ghost">▲</button>
-        <button id="btnSearchNext" class="ghost">▼</button>
+        <span id="searchResult" class="search-count"></span>
+        <div class="search-nav">
+          <button id="btnSearchPrev" class="ghost">▲</button>
+          <button id="btnSearchNext" class="ghost">▼</button>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -310,8 +332,6 @@ mark.hit.current{background:var(--accent);color:#fff}
     <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
   </div>
 </div>
-
-<div id="toast">長押しで編集</div>
 
 <script>
 (() => {
@@ -331,6 +351,8 @@ mark.hit.current{background:var(--accent);color:#fff}
   const framePhone = $("framePhone");
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
+
+  const WEEKDAYS = ["日","月","火","水","木","金","土"];
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -360,9 +382,14 @@ mark.hit.current{background:var(--accent);color:#fff}
   }
 
   function formatDate(ts) {
+    if (!ts) return "";
     const d = new Date(ts);
-    const dayStr = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
-    return `${d.getMonth() + 1}/${d.getDate()}（${dayStr}） ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const w = WEEKDAYS[d.getDay()];
+    const h = String(d.getHours()).padStart(2,"0");
+    const min = String(d.getMinutes()).padStart(2,"0");
+    return `${m}/${day}（${w}）${h}:${min}`;
   }
 
   function escapeHtml(s) {
@@ -408,7 +435,8 @@ mark.hit.current{background:var(--accent);color:#fff}
     const cardsHtml = sorted.map(it => `
       <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
         <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)}<br>${(it.html || "").length.toLocaleString()}文字</div>
+        <div class="card-meta">${formatDate(it.updated)}</div>
+        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
       </div>
     `).join("");
 
@@ -438,12 +466,36 @@ mark.hit.current{background:var(--accent);color:#fff}
         selectedId = el.dataset.id;
         renderCards();
         updatePreview();
-        showToast("長押しで編集");
+        showCardToast(el, "長押しで編集");
       });
       el.addEventListener("contextmenu", e => e.preventDefault());
     });
 
     $("cardNew").onclick = () => openEditor(null, true);
+  }
+
+  function showCardToast(cardEl, msg) {
+    const existing = document.querySelector(".card-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "card-toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    const rect = cardEl.getBoundingClientRect();
+    let left = rect.left + rect.width/2 - toast.offsetWidth/2;
+    let top = rect.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - toast.offsetWidth - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - toast.offsetHeight - 8));
+    toast.style.left = left + "px";
+    toast.style.top = top + "px";
+
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 250);
+    }, 1400);
   }
 
   function clearPreviews() {
@@ -473,7 +525,7 @@ mark.hit.current{background:var(--accent);color:#fff}
       nameInput.value = it ? (it.name || "") : "";
       source.value = it ? (it.html || "") : "";
     }
-    $("btnDelete").style.display = isNew ? "none" : "block";
+    $("btnDelete").style.display = isNew ? "none" : "flex";
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
@@ -523,7 +575,7 @@ mark.hit.current{background:var(--accent);color:#fff}
     searchIndex = -1;
   }
 
-  function runSearch(dir) { // dir: 1 (next), -1 (prev), 0 (initial)
+  function runSearch(direction) {
     const q = $("search").value;
     if (!q) {
       $("searchResult").textContent = "";
@@ -547,16 +599,14 @@ mark.hit.current{background:var(--accent);color:#fff}
       return;
     }
 
-    if (dir !== 0) {
-      if (searchIndex === -1) {
-        searchIndex = dir === 1 ? 0 : matches.length - 1;
-      } else {
-        searchIndex = (searchIndex + dir + matches.length) % matches.length;
-      }
+    if (direction === "next") {
+      if (searchIndex === -1) searchIndex = 0;
+      else searchIndex = (searchIndex + 1) % matches.length;
+    } else if (direction === "prev") {
+      if (searchIndex === -1) searchIndex = matches.length - 1;
+      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
     } else {
-      $("searchResult").textContent = `${matches.length}件`;
-      searchIndex = -1;
-      return;
+      searchIndex = 0;
     }
 
     const start = matches[searchIndex];
@@ -568,27 +618,45 @@ mark.hit.current{background:var(--accent);color:#fff}
   }
 
   function scrollTextareaToSelection(charIndex) {
-    const text = source.value.slice(0, charIndex);
-    const lineNumber = text.split("\n").length - 1;
     const style = getComputedStyle(source);
-    const lineHeight = parseFloat(style.lineHeight) || 18;
-    const paddingTop = parseFloat(style.paddingTop) || 14;
-    const paddingBottom = parseFloat(style.paddingBottom) || 14;
-    const targetTop = lineNumber * lineHeight;
+    const mirror = document.createElement("div");
+    mirror.style.position = "absolute";
+    mirror.style.visibility = "hidden";
+    mirror.style.height = "auto";
+    mirror.style.width = source.clientWidth + "px";
+    mirror.style.font = style.font;
+    mirror.style.lineHeight = style.lineHeight;
+    mirror.style.padding = style.padding;
+    mirror.style.border = style.border;
+    mirror.style.boxSizing = style.boxSizing;
+    mirror.style.whiteSpace = "pre-wrap";
+    mirror.style.wordBreak = "break-all";
+    mirror.style.overflowWrap = "anywhere";
+
+    const textBefore = source.value.slice(0, charIndex);
+    mirror.textContent = textBefore;
+
+    const span = document.createElement("span");
+    span.textContent = "|";
+    mirror.appendChild(span);
+
+    document.body.appendChild(mirror);
+    const targetTop = span.offsetTop;
+    document.body.removeChild(mirror);
+
+    const paddingTop = parseFloat(style.paddingTop) || 0;
+    const paddingBottom = parseFloat(style.paddingBottom) || 0;
     const visibleHeight = source.clientHeight - paddingTop - paddingBottom;
+    
     source.scrollTop = Math.max(0, targetTop - visibleHeight / 2);
   }
 
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(0); });
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
   $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { 
-      e.preventDefault(); 
-      runSearch(e.shiftKey ? -1 : 1); 
-    }
+    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
   });
-  $("btnSearchNext").onclick = () => runSearch(1);
-  $("btnSearchPrev").onclick = () => runSearch(-1);
-  $("search").addEventListener("focus", () => source.blur());
+  $("btnSearchNext").onclick = () => runSearch("next");
+  $("btnSearchPrev").onclick = () => runSearch("prev");
 
   function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
@@ -616,26 +684,21 @@ mark.hit.current{background:var(--accent);color:#fff}
     clearSearchHighlight();
     source.focus();
   };
-  
-  $("btnCopy").onclick = () => {
-    navigator.clipboard.writeText(source.value).then(() => {
-      showToast("コードをコピーしました");
-    }).catch(() => {
-      showToast("コピーに失敗しました");
-    });
+  $("btnCopy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(source.value);
+      const btn = $("btnCopy");
+      const old = btn.textContent;
+      btn.textContent = "コピー済";
+      setTimeout(() => btn.textContent = old, 1200);
+    } catch (e) {
+      alert("コピーに失敗しました");
+    }
   };
 
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
-
-  function showToast(msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(t._hideTimer);
-    t._hideTimer = setTimeout(() => { t.classList.remove("show"); }, 2000);
-  }
 
   load();
   renderCards();
