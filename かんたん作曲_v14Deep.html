@@ -68,6 +68,28 @@ button:disabled{opacity:.4;pointer-events:none}
 .card-new .label{font-size:12px;margin-top:4px}
 .card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
 
+/* card toast (slide up from below tapped card) */
+.card-toast{
+  position:absolute;
+  z-index:50;
+  background:var(--panel2);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:12px;
+  font-size:12.5px;
+  border:1px solid #38383c;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .22s, transform .22s;
+  white-space:nowrap;
+}
+.card-toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
 /* device previews */
 .devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
 .device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
@@ -115,7 +137,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-/* fullscreen action icon */
+/* fullscreen action icon - gray instead of primary */
 .fs-icon-btn{
   position:absolute;
   left:calc(100% + 8px);
@@ -124,7 +146,6 @@ button:disabled{opacity:.4;pointer-events:none}
   width:40px;height:40px;border-radius:12px;padding:0;
   background:var(--panel2);border:1px solid #38383c;color:var(--text);
 }
-.fs-icon-btn.primary{background:var(--accent);border-color:transparent}
 .fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
 
 /* editor (opened via long-press) */
@@ -140,37 +161,76 @@ button:disabled{opacity:.4;pointer-events:none}
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
+  -webkit-user-select:none;user-select:none;
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
-.editor-tools{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.editor-tools .name-input{
+
+/* title row with delete button */
+.editor-title-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.editor-title-row .name-input{
   flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
+  -webkit-user-select:text;user-select:text;
 }
-.editor-tools .name-input:focus{border-color:var(--accent)}
-#count{font-size:13px;color:var(--muted);white-space:nowrap}
-.search-box{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.search-box input{
-  width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 11px;outline:none;
+.editor-title-row .name-input:focus{border-color:var(--accent)}
+.editor-title-row .btn-delete{
+  min-height:40px;padding:0 14px;font-size:13px;
+  flex-shrink:0;
 }
-.search-box button{min-height:40px;padding:0 12px;font-size:13px;white-space:nowrap}
-#searchResult{font-size:11px;color:var(--muted);white-space:nowrap;padding-right:6px}
-.editor-textwrap{position:relative}
+
+/* textarea - word wrap instead of horizontal scroll */
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
   background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre;overflow:auto;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
+  -webkit-user-select:text;user-select:text;
 }
 textarea:focus{border-color:var(--accent)}
-mark.hit{background:var(--mark);color:#000;border-radius:2px}
-mark.hit.current{background:var(--accent);color:#fff}
-.status{font-size:12px;color:var(--muted);padding:2px 4px 8px}
+
+/* editor actions - single row, buttons never wrap */
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.editor-actions button{flex:1;min-width:100px;white-space:nowrap}
-.editor-actions .row2{display:flex;gap:8px;width:100%}
-.editor-actions .row2 button{flex:1;white-space:nowrap}
+.editor-actions button{flex:1;min-width:80px;white-space:nowrap}
+
+/* search section at bottom */
+.search-section{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid #38383c;
+}
+.search-box{
+  position:relative;
+  display:flex;align-items:center;gap:6px;
+}
+.search-box input{
+  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  background:#111113;color:#fff;padding:0 104px 0 11px;outline:none;
+  -webkit-user-select:text;user-select:text;
+}
+.search-box input:focus{border-color:var(--accent)}
+.search-box .search-count{
+  position:absolute;
+  right:100px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  color:var(--muted);
+  pointer-events:none;
+  white-space:nowrap;
+}
+.search-box .search-nav{
+  display:flex;gap:4px;
+  flex-shrink:0;
+}
+.search-box button{
+  min-height:36px;
+  min-width:40px;
+  padding:0 8px;
+  font-size:16px;
+  white-space:nowrap;
+}
 
 /* fullscreen */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
@@ -184,20 +244,14 @@ mark.hit.current{background:var(--accent);color:#fff}
 .fs-controls button{
   min-height:36px;padding:0 14px;font-size:13px;border-radius:18px;
   background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;
+  white-space:nowrap;
 }
 .fs-controls button.on{background:rgba(10,132,255,.85)}
 .fullscreen .exit{
   position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
   width:40px;height:40px;padding:0;border-radius:50%;
   background:rgba(0,0,0,.40);color:#fff;font-size:19px;
-}
-
-/* toast hint */
-#toast{
-  position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-  background:var(--panel2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;
-  z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;border:1px solid #38383c;
-  display:none;
+  white-space:nowrap;
 }
 
 @media(min-width:800px){
@@ -221,7 +275,7 @@ mark.hit.current{background:var(--accent);color:#fff}
         </div>
         <div class="homebar"></div>
       </div>
-      <button id="btnFullscreen" class="fs-icon-btn primary" aria-label="全画面プレビュー">
+      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
@@ -242,31 +296,34 @@ mark.hit.current{background:var(--accent);color:#fff}
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="sheet-handle"></div>
-    <div class="editor-tools">
+
+    <div class="editor-title-row">
       <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <span id="count">0文字</span>
+      <button id="btnDelete" class="btn-delete danger">削除</button>
     </div>
-    <div class="editor-tools">
-      <div class="search-box">
-        <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <button id="btnSearchNext" class="ghost">次へ</button>
-        <span id="searchResult"></span>
-      </div>
-    </div>
-    <div class="status">HTML・CSS・JavaScriptをそのまま貼り付けてください。保存すると一覧に反映されます。</div>
+
     <div class="editor-textwrap">
       <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
     </div>
+
     <div class="editor-actions">
-      <div class="row2">
-        <button id="btnSave" class="primary">保存</button>
-        <button id="btnCancel" class="ghost">キャンセル</button>
-      </div>
-      <div class="row2">
-        <button id="btnClear" class="ghost">クリア</button>
-        <button id="btnDelete" class="danger">削除</button>
+      <button id="btnCancel" class="ghost">キャンセル</button>
+      <button id="btnClear" class="ghost">クリア</button>
+      <button id="btnCopy" class="ghost">コピー</button>
+      <button id="btnSave" class="primary">保存</button>
+    </div>
+
+    <div class="search-section">
+      <div class="search-box">
+        <input id="search" type="search" placeholder="検索" autocomplete="off">
+        <span id="searchResult" class="search-count"></span>
+        <div class="search-nav">
+          <button id="btnSearchPrev" class="ghost">▲</button>
+          <button id="btnSearchNext" class="ghost">▼</button>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -277,8 +334,6 @@ mark.hit.current{background:var(--accent);color:#fff}
     <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
   </div>
 </div>
-
-<div id="toast">長押しで編集</div>
 
 <script>
 (() => {
@@ -299,8 +354,27 @@ mark.hit.current{background:var(--accent);color:#fff}
   const frameIpad = $("frameIpad");
   const fullFrame = $("fullFrame");
 
+  const WEEKDAYS = ["日","月","火","水","木","金","土"];
+
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  // Normalize `updated` to a timestamp number (handles Date objects, strings, numbers)
+  function normalizeUpdated(v) {
+    if (typeof v === 'number') return v;
+    if (v instanceof Date) return v.getTime();
+    if (typeof v === 'string') {
+      const num = Number(v);
+      if (!isNaN(num)) return num;
+      const parsed = new Date(v).getTime();
+      if (!isNaN(parsed)) return parsed;
+      // Try removing Japanese timezone suffix if present
+      const cleaned = v.replace(/（日本標準時）/g, '').replace(/\(Japan Standard Time\)/gi, '').trim();
+      const parsed2 = new Date(cleaned).getTime();
+      if (!isNaN(parsed2)) return parsed2;
+    }
+    return Date.now();
   }
 
   function load() {
@@ -309,6 +383,14 @@ mark.hit.current{background:var(--accent);color:#fff}
       if (raw) {
         items = JSON.parse(raw);
         if (!Array.isArray(items)) items = [];
+        // Normalize all updated fields to timestamps
+        items.forEach(it => {
+          if (it && typeof it === 'object') {
+            it.updated = normalizeUpdated(it.updated);
+            if (typeof it.html !== 'string') it.html = '';
+            if (typeof it.name !== 'string') it.name = '無題';
+          }
+        });
       } else {
         const old = localStorage.getItem(OLD_KEY);
         if (old) {
@@ -323,18 +405,39 @@ mark.hit.current{background:var(--accent);color:#fff}
   }
 
   function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    // Store only plain serializable data
+    const clean = items.map(it => ({
+      id: it.id,
+      name: it.name || '無題',
+      html: it.html || '',
+      updated: typeof it.updated === 'number' ? it.updated : Date.now()
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
   }
 
   function formatDate(ts) {
-    const d = new Date(ts);
-    const days = ["日", "月", "火", "水", "木", "金", "土"];
-    const month = d.getMonth() + 1;
-    const date = d.getDate();
-    const day = days[d.getDay()];
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    return `${month}/${date}（${day}）${hours}:${minutes}`;
+    let d;
+    if (typeof ts === 'number') {
+      d = new Date(ts);
+    } else if (ts instanceof Date) {
+      d = ts;
+    } else if (typeof ts === 'string') {
+      const num = Number(ts);
+      if (!isNaN(num)) {
+        d = new Date(num);
+      } else {
+        d = new Date(ts);
+      }
+    } else {
+      d = new Date();
+    }
+    if (isNaN(d.getTime())) return "不明";
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const w = WEEKDAYS[d.getDay()];
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${m}/${day}（${w}）${h}:${min}`;
   }
 
   function escapeHtml(s) {
@@ -380,7 +483,8 @@ mark.hit.current{background:var(--accent);color:#fff}
     const cardsHtml = sorted.map(it => `
       <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
         <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)} · ${(it.html || "").length.toLocaleString()}字</div>
+        <div class="card-meta">${formatDate(it.updated)}</div>
+        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
       </div>
     `).join("");
 
@@ -410,12 +514,37 @@ mark.hit.current{background:var(--accent);color:#fff}
         selectedId = el.dataset.id;
         renderCards();
         updatePreview();
-        showToast("長押しで編集");
+        showCardToast(el, "長押しで編集");
       });
       el.addEventListener("contextmenu", e => e.preventDefault());
     });
 
     $("cardNew").onclick = () => openEditor(null, true);
+  }
+
+  function showCardToast(cardEl, msg) {
+    const existing = document.querySelector(".card-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "card-toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    const rect = cardEl.getBoundingClientRect();
+    const toastRect = toast.getBoundingClientRect();
+    let left = rect.left + rect.width/2 - toast.offsetWidth/2;
+    let top = rect.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - toast.offsetWidth - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - toast.offsetHeight - 8));
+    toast.style.left = left + "px";
+    toast.style.top = top + "px";
+
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 250);
+    }, 1400);
   }
 
   function clearPreviews() {
@@ -446,7 +575,6 @@ mark.hit.current{background:var(--accent);color:#fff}
       source.value = it ? (it.html || "") : "";
     }
     $("btnDelete").style.display = isNew ? "none" : "flex";
-    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
@@ -460,20 +588,17 @@ mark.hit.current{background:var(--accent);color:#fff}
     document.body.style.overflow = "";
   }
 
-  function updateCount() {
-    $("count").textContent = source.value.length.toLocaleString() + "文字";
-  }
-
   function saveCurrent() {
     const name = (nameInput.value || "").trim() || "無題";
     const html = source.value;
+    const ts = Date.now();
     if (editingId) {
       const it = items.find(x => x.id === editingId);
-      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
+      if (it) { it.name = name; it.html = html; it.updated = ts; }
       selectedId = editingId;
     } else {
       const id = uid();
-      items.push({ id, name, html, updated: Date.now() });
+      items.push({ id, name, html, updated: ts });
       selectedId = id;
     }
     persist();
@@ -500,7 +625,7 @@ mark.hit.current{background:var(--accent);color:#fff}
     searchIndex = -1;
   }
 
-  function runSearch(advance) {
+  function runSearch(direction) {
     const q = $("search").value;
     if (!q) {
       $("searchResult").textContent = "";
@@ -524,9 +649,12 @@ mark.hit.current{background:var(--accent);color:#fff}
       return;
     }
 
-    if (advance) {
+    if (direction === "next") {
       if (searchIndex === -1) searchIndex = 0;
       else searchIndex = (searchIndex + 1) % matches.length;
+    } else if (direction === "prev") {
+      if (searchIndex === -1) searchIndex = matches.length - 1;
+      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
     } else {
       $("searchResult").textContent = `${matches.length}件`;
       searchIndex = -1;
@@ -535,17 +663,22 @@ mark.hit.current{background:var(--accent);color:#fff}
 
     const start = matches[searchIndex];
     const end = start + q.length;
-    source.focus();
+    // Set selection first, then focus will scroll to it naturally
     source.setSelectionRange(start, end);
+    // Use focus without preventScroll to allow browser to scroll to selection
+    source.focus();
+    // Force a re-focus to ensure the scroll happens
+    source.blur();
+    source.focus();
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
   }
 
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch(false); });
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
   $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch(true); }
+    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
   });
-  $("btnSearchNext").onclick = () => runSearch(true);
-  $("search").addEventListener("focus", () => source.blur());
+  $("btnSearchNext").onclick = () => runSearch("next");
+  $("btnSearchPrev").onclick = () => runSearch("prev");
 
   function openFullscreen() {
     const it = items.find(x => x.id === selectedId);
@@ -568,24 +701,26 @@ mark.hit.current{background:var(--accent);color:#fff}
   $("btnDelete").onclick = deleteCurrent;
   $("btnClear").onclick = () => {
     source.value = "";
-    updateCount();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
     source.focus();
   };
-  source.addEventListener("input", updateCount);
+  $("btnCopy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(source.value);
+      const btn = $("btnCopy");
+      const old = btn.textContent;
+      btn.textContent = "コピー済";
+      setTimeout(() => btn.textContent = old, 1200);
+    } catch (e) {
+      alert("コピーに失敗しました");
+    }
+  };
+
   $("editorOverlay").addEventListener("click", (e) => {
     if (e.target === $("editorOverlay")) closeEditor();
   });
-
-  function showToast(msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.style.display = "block";
-    clearTimeout(t._hideTimer);
-    t._hideTimer = setTimeout(() => { t.style.display = "none"; }, 1400);
-  }
 
   load();
   renderCards();
