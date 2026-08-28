@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Firebase TEST</title>
 <style>
 * {
@@ -22,23 +23,25 @@ body {
   width: calc(100% - 40px);
   max-width: 400px;
   padding: 30px 20px;
-  text-align: center;
   background: white;
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0,0,0,.1);
 }
 h1 {
-  font-size: 24px;
   margin: 0 0 20px;
+  text-align: center;
+  font-size: 24px;
 }
 #message {
+  min-height: 30px;
+  margin: 20px 0;
+  text-align: center;
   font-size: 20px;
   font-weight: 600;
-  margin: 20px 0;
 }
 input {
   width: 100%;
-  padding: 12px;
+  padding: 13px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 10px;
@@ -46,55 +49,59 @@ input {
 }
 button {
   width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 0;
+  padding: 14px;
+  border: none;
   border-radius: 10px;
   background: #222;
   color: white;
-  cursor: pointer;
+  font-size: 16px;
+  -webkit-appearance: none;
+}
+button:active {
+  transform: scale(.98);
+  opacity: .7;
 }
 button:disabled {
-  opacity: 0.5;
+  opacity: .5;
 }
 #status {
+  margin-top: 15px;
+  text-align: center;
   font-size: 14px;
   color: #666;
-  margin-top: 15px;
+  line-height: 1.5;
 }
 </style>
 </head>
 <body>
 <div class="card">
-  <h1>🔥 Firebase TEST</h1>
-  <div id="message">
-    読み込み中…
-  </div>
+<h1>🔥 Firebase TEST</h1>
+<div id="message">読み込み中…</div>
 
 <input
 id=“inputMessage”
 type=“text”
-placeholder=“Firebaseに保存する文字”
+placeholder=“保存する文字を入力”
+autocomplete=“off”
 
-  <button id="saveButton">
-    Firebaseに保存
-  </button>
-  <div id="status">
-    Firebaseからデータを取得しています
-  </div>
+<button id="saveButton" type="button">
+Firebaseに保存
+</button>
+<div id="status">
+Firebaseからデータを取得しています
+</div>
 </div>
 <script type="module">
-/* Firebase SDK */
-import { initializeApp } from
-  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
   getFirestore,
   doc,
   getDoc,
   setDoc
-} from
-  "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-/* Firebaseプロジェクト設定 */
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+/* Firebase設定 */
 const firebaseConfig = {
   apiKey: "AIzaSyApgxhOGJHWzdqBXsYShVeyPogUifB0lug",
   authDomain: "test-6dd18.firebaseapp.com",
@@ -103,86 +110,95 @@ const firebaseConfig = {
   messagingSenderId: "1017834847457",
   appId: "1:1017834847457:web:d01c5213366a5db9318ba0"
 };
-/* Firebaseを開始 */
+/* Firebase開始 */
 const app = initializeApp(firebaseConfig);
-/* Firestoreを使用 */
 const db = getFirestore(app);
-/* 使用するドキュメント */
-const documentRef = doc(db, "test", "001");
-/* 画面の部品 */
-const messageElement =
+/* 保存先 */
+const messageRef = doc(
+  db,
+  "test",
+  "001"
+);
+/* HTML */
+const message =
   document.getElementById("message");
-const inputElement =
+const input =
   document.getElementById("inputMessage");
-const saveButton =
+const button =
   document.getElementById("saveButton");
-const statusElement =
+const status =
   document.getElementById("status");
-/* Firebaseからデータを読み込む */
-async function loadData() {
+/* Firebaseから読み込み */
+async function loadMessage() {
+  status.textContent =
+    "Firebaseからデータを取得しています…";
   try {
-    const documentSnapshot =
-      await getDoc(documentRef);
-    if (documentSnapshot.exists()) {
+    const snapshot =
+      await getDoc(messageRef);
+    if (snapshot.exists()) {
       const data =
-        documentSnapshot.data();
-      messageElement.textContent =
+        snapshot.data();
+      message.textContent =
         data.message || "データなし";
-      statusElement.textContent =
+      status.textContent =
         "Firebaseから正常に読み込みました。";
     } else {
-      messageElement.textContent =
+      message.textContent =
         "データがありません";
-      statusElement.textContent =
+      status.textContent =
         "Firestoreにデータがありません。";
     }
   } catch (error) {
     console.error(error);
-    messageElement.textContent =
+    message.textContent =
       "読み込みエラー";
-    statusElement.textContent =
-      error.message;
+    status.textContent =
+      "Firebaseエラー：" + error.message;
   }
 }
-/* Firebaseへデータを保存 */
-async function saveData() {
-  const message =
-    inputElement.value.trim();
-  if (!message) {
-    statusElement.textContent =
-      "保存する文字を入力してください。";
+/* Firebaseへ保存 */
+async function saveMessage() {
+  const text =
+    input.value.trim();
+  if (!text) {
+    status.textContent =
+      "文字を入力してください。";
     return;
   }
-  saveButton.disabled = true;
-  statusElement.textContent =
+  button.disabled = true;
+  button.textContent =
+    "保存中…";
+  status.textContent =
     "Firebaseへ保存しています…";
   try {
     await setDoc(
-      documentRef,
+      messageRef,
       {
-        message: message
+        message: text
       }
     );
-    messageElement.textContent =
-      message;
-    statusElement.textContent =
-      "Firebaseへ保存しました！";
-    inputElement.value = "";
+    message.textContent =
+      text;
+    status.textContent =
+      "✅ Firebaseへ保存しました！";
+    input.value = "";
   } catch (error) {
     console.error(error);
-    statusElement.textContent =
-      "保存エラー：" + error.message;
+    status.textContent =
+      "❌ 保存エラー：" + error.message;
   } finally {
-    saveButton.disabled = false;
+    button.disabled = false;
+    button.textContent =
+      "Firebaseに保存";
   }
 }
-/* ボタンを押したら保存 */
-saveButton.addEventListener(
+/* ボタン */
+button.addEventListener(
   "click",
-  saveData
+  saveMessage
 );
-/* 最初にFirebaseから読み込む */
-loadData();
+/* 起動 */
+loadMessage();
 </script>
 </body>
 </html>
