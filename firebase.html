@@ -36,9 +36,31 @@ h1 {
   font-weight: 600;
   margin: 20px 0;
 }
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #222;
+  color: white;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+}
 #status {
   font-size: 14px;
   color: #666;
+  margin-top: 15px;
 }
 </style>
 </head>
@@ -48,6 +70,15 @@ h1 {
   <div id="message">
     読み込み中…
   </div>
+
+<input
+id=“inputMessage”
+type=“text”
+placeholder=“Firebaseに保存する文字”
+
+  <button id="saveButton">
+    Firebaseに保存
+  </button>
   <div id="status">
     Firebaseからデータを取得しています
   </div>
@@ -56,7 +87,12 @@ h1 {
 /* Firebase SDK */
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from
   "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 /* Firebaseプロジェクト設定 */
 const firebaseConfig = {
@@ -71,29 +107,82 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 /* Firestoreを使用 */
 const db = getFirestore(app);
-/* testコレクションの001ドキュメントを取得 */
+/* 使用するドキュメント */
 const documentRef = doc(db, "test", "001");
-try {
-  const documentSnapshot = await getDoc(documentRef);
-  if (documentSnapshot.exists()) {
-    const data = documentSnapshot.data();
-    document.getElementById("message").textContent =
-      data.message;
-    document.getElementById("status").textContent =
-      "Firebaseから正常に読み込みました。";
-  } else {
-    document.getElementById("message").textContent =
-      "データが見つかりません";
-    document.getElementById("status").textContent =
-      "Firestoreのtest / 001を確認してください。";
+/* 画面の部品 */
+const messageElement =
+  document.getElementById("message");
+const inputElement =
+  document.getElementById("inputMessage");
+const saveButton =
+  document.getElementById("saveButton");
+const statusElement =
+  document.getElementById("status");
+/* Firebaseからデータを読み込む */
+async function loadData() {
+  try {
+    const documentSnapshot =
+      await getDoc(documentRef);
+    if (documentSnapshot.exists()) {
+      const data =
+        documentSnapshot.data();
+      messageElement.textContent =
+        data.message || "データなし";
+      statusElement.textContent =
+        "Firebaseから正常に読み込みました。";
+    } else {
+      messageElement.textContent =
+        "データがありません";
+      statusElement.textContent =
+        "Firestoreにデータがありません。";
+    }
+  } catch (error) {
+    console.error(error);
+    messageElement.textContent =
+      "読み込みエラー";
+    statusElement.textContent =
+      error.message;
   }
-} catch (error) {
-  console.error(error);
-  document.getElementById("message").textContent =
-    "読み込みエラー";
-  document.getElementById("status").textContent =
-    error.message;
 }
+/* Firebaseへデータを保存 */
+async function saveData() {
+  const message =
+    inputElement.value.trim();
+  if (!message) {
+    statusElement.textContent =
+      "保存する文字を入力してください。";
+    return;
+  }
+  saveButton.disabled = true;
+  statusElement.textContent =
+    "Firebaseへ保存しています…";
+  try {
+    await setDoc(
+      documentRef,
+      {
+        message: message
+      }
+    );
+    messageElement.textContent =
+      message;
+    statusElement.textContent =
+      "Firebaseへ保存しました！";
+    inputElement.value = "";
+  } catch (error) {
+    console.error(error);
+    statusElement.textContent =
+      "保存エラー：" + error.message;
+  } finally {
+    saveButton.disabled = false;
+  }
+}
+/* ボタンを押したら保存 */
+saveButton.addEventListener(
+  "click",
+  saveData
+);
+/* 最初にFirebaseから読み込む */
+loadData();
 </script>
 </body>
 </html>
