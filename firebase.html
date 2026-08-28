@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase TEST</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f5f5f7;
+  color: #222;
+}
+.card {
+  width: calc(100% - 40px);
+  max-width: 400px;
+  padding: 30px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+h1 {
+  font-size: 24px;
+  margin: 0 0 20px;
+}
+#message {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 20px 0;
+}
+#status {
+  font-size: 14px;
+  color: #666;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🔥 Firebase TEST</h1>
+  <div id="message">
+    読み込み中…
+  </div>
+  <div id="status">
+    Firebaseからデータを取得しています
+  </div>
+</div>
+<script type="module">
+/* Firebase SDK */
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+/* Firebaseプロジェクト設定 */
+const firebaseConfig = {
+  apiKey: "AIzaSyApgxhOGJHWzdqBXsYShVeyPogUifB0lug",
+  authDomain: "test-6dd18.firebaseapp.com",
+  projectId: "test-6dd18",
+  storageBucket: "test-6dd18.firebasestorage.app",
+  messagingSenderId: "1017834847457",
+  appId: "1:1017834847457:web:d01c5213366a5db9318ba0"
+};
+/* Firebaseを開始 */
+const app = initializeApp(firebaseConfig);
+/* Firestoreを使用 */
+const db = getFirestore(app);
+/* testコレクションの001ドキュメントを取得 */
+const documentRef = doc(db, "test", "001");
+try {
+  const documentSnapshot = await getDoc(documentRef);
+  if (documentSnapshot.exists()) {
+    const data = documentSnapshot.data();
+    document.getElementById("message").textContent =
+      data.message;
+    document.getElementById("status").textContent =
+      "Firebaseから正常に読み込みました。";
+  } else {
+    document.getElementById("message").textContent =
+      "データが見つかりません";
+    document.getElementById("status").textContent =
+      "Firestoreのtest / 001を確認してください。";
+  }
+} catch (error) {
+  console.error(error);
+  document.getElementById("message").textContent =
+    "読み込みエラー";
+  document.getElementById("status").textContent =
+    error.message;
+}
+</script>
+</body>
+</html>
