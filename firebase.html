@@ -2,188 +2,1235 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               viewport-fit=cover">
+
 <title>Firebase TEST</title>
+
 <style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100dvh;
+  padding:
+    env(safe-area-inset-top)
+    20px
+    env(safe-area-inset-bottom);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    sans-serif;
   background: #f5f5f7;
+  color: #222;
 }
+
+.container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding-top: 30px;
+}
+
 .card {
-  width: calc(100% - 40px);
-  max-width: 400px;
-  padding: 30px 20px;
   background: white;
   border-radius: 20px;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,.1);
+  padding: 25px 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
 }
+
 h1 {
+  margin: 0 0 25px;
   font-size: 24px;
+  text-align: center;
 }
-#message {
-  margin: 20px 0;
+
+h2 {
+  margin-top: 0;
   font-size: 20px;
-  font-weight: bold;
 }
+
+p {
+  line-height: 1.6;
+}
+
 input {
   width: 100%;
   padding: 14px;
-  box-sizing: border-box;
+  margin: 8px 0 12px;
   border: 1px solid #ccc;
   border-radius: 10px;
+  background: white;
   font-size: 16px;
-  margin-bottom: 10px;
+  color: #222;
+  outline: none;
 }
+
+input:focus {
+  border-color: #555;
+}
+
 button {
   width: 100%;
-  padding: 14px;
+  min-height: 48px;
+  padding: 12px 14px;
+  margin-top: 8px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #222;
   color: white;
   font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
 }
-#status {
+
+button:active {
+  transform: scale(.98);
+  opacity: .75;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+.secondary {
+  background: #e5e5ea;
+  color: #222;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.message {
   margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f0f0f2;
   font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.status-ok {
+  background: #e8f7e8;
+  color: #176b17;
+}
+
+.status-error {
+  background: #fff0f0;
+  color: #a00000;
+}
+
+.label {
+  margin-top: 18px;
+  font-size: 13px;
+  color: #666;
+}
+
+.value {
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.key {
+  margin-top: 8px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f0f0f2;
+  font-family: monospace;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 1px;
+  word-break: break-all;
+  user-select: text;
+}
+
+.notice {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
 }
 </style>
 </head>
+
 <body>
+
+<div class="container">
+
 <div class="card">
+
 <h1>🔥 Firebase TEST</h1>
-<div id="message">接続しています…</div>
 
-<input
-id=“input”
-type=“text”
-placeholder=“保存する文字を入力”
 
-<button id="save">
-Firebaseに保存
-</button>
-<div id="status">
-準備中…
+<!-- =========================
+     メイン画面
+========================= -->
+
+<div id="mainScreen">
+
+  <div id="welcome">
+    読み込み中…
+  </div>
+
+  <input
+    id="messageInput"
+    type="text"
+    maxlength="1000"
+    placeholder="保存するメッセージ"
+    autocomplete="off"
+  >
+
+  <button
+    id="saveButton"
+    type="button">
+    Firebaseに保存
+  </button>
+
+  <button
+    id="settingsButton"
+    class="secondary"
+    type="button">
+    設定
+  </button>
+
+  <button
+    id="restoreButton"
+    class="secondary"
+    type="button">
+    別の端末からデータを復元
+  </button>
+
+  <div
+    id="status"
+    class="message">
+    Firebaseに接続しています…
+  </div>
+
+</div>
+
+
+<!-- =========================
+     初回登録画面
+========================= -->
+
+<div
+  id="registerScreen"
+  class="hidden">
+
+  <h2>初めての保存</h2>
+
+  <p>
+    楽曲をクラウドに保存するため、
+    ニックネームを登録してください。
+  </p>
+
+  <input
+    id="nicknameInput"
+    type="text"
+    maxlength="30"
+    placeholder="ニックネーム"
+    autocomplete="off"
+  >
+
+  <button
+    id="registerButton"
+    type="button">
+    登録して保存
+  </button>
+
+  <button
+    id="cancelRegisterButton"
+    class="secondary"
+    type="button">
+    キャンセル
+  </button>
+
+  <div
+    id="registerStatus"
+    class="message">
+  </div>
+
+</div>
+
+
+<!-- =========================
+     復元画面
+========================= -->
+
+<div
+  id="restoreScreen"
+  class="hidden">
+
+  <h2>データを復元</h2>
+
+  <p>
+    以前の端末で発行された
+    復旧キーを入力してください。
+  </p>
+
+  <input
+    id="recoveryInput"
+    type="text"
+    maxlength="30"
+    placeholder="復旧キー"
+    autocomplete="off"
+  >
+
+  <button
+    id="restoreLoginButton"
+    type="button">
+    データを復元
+  </button>
+
+  <button
+    id="cancelRestoreButton"
+    class="secondary"
+    type="button">
+    キャンセル
+  </button>
+
+  <div
+    id="restoreStatus"
+    class="message">
+    復元機能は次の段階で追加します。
+  </div>
+
+</div>
+
+
+<!-- =========================
+     設定画面
+========================= -->
+
+<div
+  id="settingsScreen"
+  class="hidden">
+
+  <h2>設定</h2>
+
+  <div class="label">
+    ニックネーム
+  </div>
+
+  <div
+    id="nicknameDisplay"
+    class="value">
+    -
+  </div>
+
+  <div class="label">
+    復旧キー
+  </div>
+
+  <div
+    id="recoveryDisplay"
+    class="key">
+    -
+  </div>
+
+  <p class="notice">
+    復旧キーは、別のiPhoneやiPadから
+    データを復元するときに使用します。
+    他人に知られないよう大切に保管してください。
+  </p>
+
+  <button
+    id="copyRecoveryButton"
+    type="button">
+    復旧キーをコピー
+  </button>
+
+  <button
+    id="closeSettingsButton"
+    class="secondary"
+    type="button">
+    戻る
+  </button>
+
+</div>
+
 </div>
 </div>
+
+
 <script type="module">
-/*
- Firebase SDK
-*/
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+/* =========================================
+   Firebase SDK
+========================================= */
+
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInAnonymously
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
   setDoc
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-/*
- Firebase設定
-*/
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================================
+   Firebase設定
+========================================= */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyApgxhOGJHWzdqBXsYShVeyPogUifB0lug",
-  authDomain: "test-6dd18.firebaseapp.com",
-  projectId: "test-6dd18",
-  storageBucket: "test-6dd18.firebasestorage.app",
-  messagingSenderId: "1017834847457",
-  appId: "1:1017834847457:web:d01c5213366a5db9318ba0"
+
+  apiKey:
+    "AIzaSyApgxhOGJHWzdqBXsYShVeyPogUifB0lug",
+
+  authDomain:
+    "test-6dd18.firebaseapp.com",
+
+  projectId:
+    "test-6dd18",
+
+  storageBucket:
+    "test-6dd18.firebasestorage.app",
+
+  messagingSenderId:
+    "1017834847457",
+
+  appId:
+    "1:1017834847457:web:d01c5213366a5db9318ba0"
+
 };
-/*
- Firebaseを開始
-*/
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-/*
- Firestoreの保存場所
-*/
-const ref = doc(
-  db,
-  "test",
-  "001"
-);
-/*
- HTMLの部品
-*/
-const message =
-  document.getElementById("message");
-const input =
-  document.getElementById("input");
-const save =
-  document.getElementById("save");
+
+
+/* =========================================
+   Firebase初期化
+========================================= */
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+/* =========================================
+   画面要素
+========================================= */
+
+const mainScreen =
+  document.getElementById("mainScreen");
+
+const registerScreen =
+  document.getElementById("registerScreen");
+
+const restoreScreen =
+  document.getElementById("restoreScreen");
+
+const settingsScreen =
+  document.getElementById("settingsScreen");
+
+const welcome =
+  document.getElementById("welcome");
+
 const status =
   document.getElementById("status");
-/*
- Firebaseから読み込む
-*/
-async function readData() {
-  try {
-    const result =
-      await getDoc(ref);
-    if (result.exists()) {
-      message.textContent =
-        result.data().message;
-      status.textContent =
-        "Firebaseから読み込みました。";
-    } else {
-      message.textContent =
-        "データなし";
-      status.textContent =
-        "データがありません。";
-    }
-  } catch (error) {
-    message.textContent =
-      "接続エラー";
-    status.textContent =
-      error.message;
-    console.error(error);
-  }
+
+const messageInput =
+  document.getElementById("messageInput");
+
+const saveButton =
+  document.getElementById("saveButton");
+
+const settingsButton =
+  document.getElementById("settingsButton");
+
+const restoreButton =
+  document.getElementById("restoreButton");
+
+const nicknameInput =
+  document.getElementById("nicknameInput");
+
+const registerButton =
+  document.getElementById("registerButton");
+
+const cancelRegisterButton =
+  document.getElementById(
+    "cancelRegisterButton"
+  );
+
+const registerStatus =
+  document.getElementById(
+    "registerStatus"
+  );
+
+const recoveryInput =
+  document.getElementById(
+    "recoveryInput"
+  );
+
+const restoreLoginButton =
+  document.getElementById(
+    "restoreLoginButton"
+  );
+
+const cancelRestoreButton =
+  document.getElementById(
+    "cancelRestoreButton"
+  );
+
+const restoreStatus =
+  document.getElementById(
+    "restoreStatus"
+  );
+
+const nicknameDisplay =
+  document.getElementById(
+    "nicknameDisplay"
+  );
+
+const recoveryDisplay =
+  document.getElementById(
+    "recoveryDisplay"
+  );
+
+const copyRecoveryButton =
+  document.getElementById(
+    "copyRecoveryButton"
+  );
+
+const closeSettingsButton =
+  document.getElementById(
+    "closeSettingsButton"
+  );
+
+
+/* =========================================
+   現在のFirebaseユーザー
+========================================= */
+
+let currentUser = null;
+
+
+/* =========================================
+   画面切り替え
+========================================= */
+
+function showOnly(screen) {
+
+  mainScreen.classList.add("hidden");
+  registerScreen.classList.add("hidden");
+  restoreScreen.classList.add("hidden");
+  settingsScreen.classList.add("hidden");
+
+  screen.classList.remove("hidden");
+
 }
-/*
- Firebaseへ保存
-*/
-save.addEventListener("click", async () => {
-  const text =
-    input.value.trim();
-  if (!text) {
-    status.textContent =
-      "文字を入力してください。";
+
+
+/* =========================================
+   ステータス表示
+========================================= */
+
+function setStatus(
+  text,
+  type = ""
+) {
+
+  status.textContent = text;
+
+  status.className =
+    "message";
+
+  if (type === "ok") {
+
+    status.classList.add(
+      "status-ok"
+    );
+
+  }
+
+  if (type === "error") {
+
+    status.classList.add(
+      "status-error"
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   復旧キー生成
+========================================= */
+
+function generateRecoveryKey() {
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  const values =
+    new Uint32Array(20);
+
+  crypto.getRandomValues(values);
+
+  let result = "";
+
+  for (
+    let i = 0;
+    i < values.length;
+    i++
+  ) {
+
+    if (
+      i > 0 &&
+      i % 5 === 0
+    ) {
+
+      result += "-";
+
+    }
+
+    result +=
+      chars[
+        values[i] % chars.length
+      ];
+
+  }
+
+  return result;
+
+}
+
+
+/* =========================================
+   Firebase匿名認証
+========================================= */
+
+onAuthStateChanged(
+  auth,
+  async (user) => {
+
+    if (user) {
+
+      currentUser = user;
+
+      welcome.textContent =
+        "ログイン不要で使用中";
+
+      setStatus(
+        "Firebaseに接続しました",
+        "ok"
+      );
+
+      await loadCurrentUser();
+
+      return;
+
+    }
+
+
+    try {
+
+      await signInAnonymously(auth);
+
+    } catch (error) {
+
+      console.error(error);
+
+      welcome.textContent =
+        "Firebaseに接続できません";
+
+      setStatus(
+        "❌ Firebase認証エラー：" +
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   現在のユーザー情報読み込み
+========================================= */
+
+async function loadCurrentUser() {
+
+  if (!currentUser) {
     return;
   }
-  save.textContent =
-    "保存中…";
-  save.disabled = true;
+
+
   try {
-    await setDoc(ref, {
-      message: text
-    });
-    message.textContent =
-      text;
-    status.textContent =
-      "✅ Firebaseへ保存しました！";
-    input.value = "";
+
+    const userRef =
+      doc(
+        db,
+        "users",
+        currentUser.uid
+      );
+
+    const snapshot =
+      await getDoc(userRef);
+
+
+    if (snapshot.exists()) {
+
+      const data =
+        snapshot.data();
+
+      const nickname =
+        data.nickname || "";
+
+
+      welcome.textContent =
+        nickname
+          ? "こんにちは、" +
+            nickname +
+            "！"
+          : "ログイン不要で使用中";
+
+
+      nicknameDisplay.textContent =
+        nickname || "-";
+
+
+      const localKey =
+        localStorage.getItem(
+          "firebaseRecoveryKey"
+        );
+
+
+      recoveryDisplay.textContent =
+        localKey ||
+        "この端末では未保存";
+
+    }
+
   } catch (error) {
-    status.textContent =
-      "❌ 保存できませんでした：" +
-      error.message;
+
     console.error(error);
-  } finally {
-    save.textContent =
-      "Firebaseに保存";
-    save.disabled = false;
+
+    setStatus(
+      "❌ ユーザー情報の読み込みに失敗しました",
+      "error"
+    );
+
   }
-});
-/*
- 起動時に読み込む
-*/
-readData();
+
+}
+
+
+/* =========================================
+   Firebase保存ボタン
+========================================= */
+
+saveButton.addEventListener(
+  "click",
+  async () => {
+
+    const message =
+      messageInput.value.trim();
+
+
+    if (!message) {
+
+      setStatus(
+        "保存する文字を入力してください",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (!currentUser) {
+
+      setStatus(
+        "Firebaseに接続しています…"
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      const userRef =
+        doc(
+          db,
+          "users",
+          currentUser.uid
+        );
+
+      const snapshot =
+        await getDoc(userRef);
+
+
+      /*
+        初回保存
+      */
+
+      if (!snapshot.exists()) {
+
+        localStorage.setItem(
+          "pendingMessage",
+          message
+        );
+
+        nicknameInput.value = "";
+
+        registerStatus.textContent =
+          "";
+
+        showOnly(
+          registerScreen
+        );
+
+        return;
+
+      }
+
+
+      /*
+        登録済みなら直接保存
+      */
+
+      await saveSong(message);
+
+    } catch (error) {
+
+      console.error(error);
+
+      setStatus(
+        "❌ 保存前の確認に失敗しました：" +
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   初回登録
+========================================= */
+
+registerButton.addEventListener(
+  "click",
+  async () => {
+
+    const nickname =
+      nicknameInput.value.trim();
+
+
+    if (!nickname) {
+
+      registerStatus.textContent =
+        "ニックネームを入力してください";
+
+      return;
+
+    }
+
+
+    if (!currentUser) {
+
+      registerStatus.textContent =
+        "Firebaseに接続しています…";
+
+      return;
+
+    }
+
+
+    registerButton.disabled =
+      true;
+
+    registerButton.textContent =
+      "登録中…";
+
+
+    try {
+
+      /*
+        復旧キーを自動生成
+      */
+
+      const recoveryKey =
+        generateRecoveryKey();
+
+
+      /*
+        Firebase Authenticationが
+        自動発行したUIDを使用
+      */
+
+      await setDoc(
+        doc(
+          db,
+          "users",
+          currentUser.uid
+        ),
+        {
+          nickname: nickname,
+
+          createdAt:
+            new Date().toISOString()
+        }
+      );
+
+
+      /*
+        復旧キーはLocalStorageへ保存
+        Firebase Authenticationや
+        Firestoreには保存しない
+      */
+
+      localStorage.setItem(
+        "firebaseRecoveryKey",
+        recoveryKey
+      );
+
+      localStorage.setItem(
+        "firebaseNickname",
+        nickname
+      );
+
+
+      nicknameDisplay.textContent =
+        nickname;
+
+      recoveryDisplay.textContent =
+        recoveryKey;
+
+
+      /*
+        初回入力されたメッセージ
+      */
+
+      const pending =
+        localStorage.getItem(
+          "pendingMessage"
+        );
+
+
+      if (pending) {
+
+        await saveSong(
+          pending
+        );
+
+        localStorage.removeItem(
+          "pendingMessage"
+        );
+
+      }
+
+
+      showOnly(
+        settingsScreen
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      registerStatus.textContent =
+        "❌ 登録エラー：" +
+        error.message;
+
+    } finally {
+
+      registerButton.disabled =
+        false;
+
+      registerButton.textContent =
+        "登録して保存";
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   楽曲データ保存
+========================================= */
+
+async function saveSong(
+  message
+) {
+
+  if (!currentUser) {
+
+    setStatus(
+      "Firebaseに接続されていません",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  saveButton.disabled =
+    true;
+
+  saveButton.textContent =
+    "保存中…";
+
+  setStatus(
+    "Firebaseへ保存しています…"
+  );
+
+
+  try {
+
+    await setDoc(
+      doc(
+        db,
+        "users",
+        currentUser.uid,
+        "songs",
+        "song001"
+      ),
+      {
+        message: message,
+
+        updatedAt:
+          new Date().toISOString()
+      }
+    );
+
+
+    welcome.textContent =
+      message;
+
+    messageInput.value = "";
+
+    setStatus(
+      "✅ Firebaseへ保存しました！",
+      "ok"
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    setStatus(
+      "❌ Firebaseへの保存に失敗しました：" +
+      error.message,
+      "error"
+    );
+
+  } finally {
+
+    saveButton.disabled =
+      false;
+
+    saveButton.textContent =
+      "Firebaseに保存";
+
+  }
+
+}
+
+
+/* =========================================
+   設定
+========================================= */
+
+settingsButton.addEventListener(
+  "click",
+  () => {
+
+    const nickname =
+      localStorage.getItem(
+        "firebaseNickname"
+      );
+
+    const key =
+      localStorage.getItem(
+        "firebaseRecoveryKey"
+      );
+
+
+    nicknameDisplay.textContent =
+      nickname || "-";
+
+    recoveryDisplay.textContent =
+      key ||
+      "この端末では未保存";
+
+
+    showOnly(
+      settingsScreen
+    );
+
+  }
+);
+
+
+/* =========================================
+   設定 → 戻る
+========================================= */
+
+closeSettingsButton.addEventListener(
+  "click",
+  () => {
+
+    showOnly(
+      mainScreen
+    );
+
+  }
+);
+
+
+/* =========================================
+   初回登録 → キャンセル
+========================================= */
+
+cancelRegisterButton.addEventListener(
+  "click",
+  () => {
+
+    localStorage.removeItem(
+      "pendingMessage"
+    );
+
+    showOnly(
+      mainScreen
+    );
+
+  }
+);
+
+
+/* =========================================
+   復元画面
+========================================= */
+
+restoreButton.addEventListener(
+  "click",
+  () => {
+
+    showOnly(
+      restoreScreen
+    );
+
+    recoveryInput.value = "";
+
+    restoreStatus.textContent =
+      "復元機能は次の段階で追加します。";
+
+  }
+);
+
+
+/* =========================================
+   復元 → キャンセル
+========================================= */
+
+cancelRestoreButton.addEventListener(
+  "click",
+  () => {
+
+    showOnly(
+      mainScreen
+    );
+
+  }
+);
+
+
+/* =========================================
+   復旧キーコピー
+========================================= */
+
+copyRecoveryButton.addEventListener(
+  "click",
+  async () => {
+
+    const key =
+      recoveryDisplay.textContent;
+
+
+    if (
+      !key ||
+      key === "-" ||
+      key.includes("未保存")
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      await navigator.clipboard.writeText(
+        key
+      );
+
+      copyRecoveryButton.textContent =
+        "コピーしました！";
+
+
+      setTimeout(
+        () => {
+
+          copyRecoveryButton.textContent =
+            "復旧キーをコピー";
+
+        },
+        1500
+      );
+
+
+    } catch (error) {
+
+      alert(
+        "復旧キー：\n\n" +
+        key
+      );
+
+    }
+
+  }
+);
+
 </script>
+
 </body>
 </html>
