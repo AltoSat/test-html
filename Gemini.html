@@ -208,7 +208,7 @@
         .field-row input[type="date"] {
             font-size: 11px;
             padding: 0;
-            text-align: right;
+            text-align: left;
             -webkit-appearance: none;
             background: transparent;
         }
@@ -217,6 +217,13 @@
             color: #b91c1c !important;
             font-weight: bold !important;
             font-size: 13px !important;
+        }
+
+        .url-input-inline {
+            font-size: 11px !important;
+            font-family: monospace !important;
+            color: #2563eb !important;
+            font-weight: normal !important;
         }
 
         .qr-area {
@@ -240,26 +247,6 @@
             max-width: 100%;
         }
 
-        .url-edit {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 2px;
-        }
-
-        .url-edit input {
-            border: 1px dashed #94a3b8;
-            border-radius: 4px;
-            background: #f8fafc;
-            padding: 4px 6px;
-            font-size: 11px;
-            color: #2563eb;
-            font-family: monospace;
-            width: 100%;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
         .card-actions {
             display: flex;
             gap: 4px;
@@ -281,15 +268,15 @@
 
         .no-print {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             width: 100%;
-            margin-top: 6px;
-            flex-wrap: wrap;
+            margin-top: 8px;
+            padding: 0 16px; /* 画面の左右の余白を増加 */
+            box-sizing: border-box;
         }
 
         .btn {
             flex: 1;
-            min-width: 110px;
             padding: 12px 8px;
             border: none;
             border-radius: 8px;
@@ -304,9 +291,8 @@
         }
 
         .btn-secondary { background-color: #10b981; }
-        .btn-danger { background-color: #ef4444; }
 
-        /* メモ読み込みモーダル */
+        /* モーダル */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -383,7 +369,6 @@
             }
 
             .no-print,
-            .url-edit,
             .remove-btn,
             .card-actions {
                 display: none !important;
@@ -460,20 +445,18 @@
         <div class="no-print">
             <button class="btn btn-secondary" onclick="addProduct()">＋ 商品を追加</button>
             <button class="btn" onclick="window.print()">印刷 / PDF保存</button>
-            <button class="btn btn-danger" onclick="resetAll()">リセット</button>
         </div>
     </div>
 
-    <!-- メモ読み込みモーダル -->
     <div class="modal-overlay" id="importModal">
         <div class="modal-content">
             <h3 style="margin:0; font-size:15px;">メモからデータを読み込む</h3>
             <p style="margin:0; font-size:11px; color:#64748b; line-height:1.3;">
                 以下の順序で改行区切りで貼り付けてください：<br>
-                1行目: 商品名 / 2行目: 価格 / 3行目: 店舗<br>
-                4行目: 日付 / 5行目: 備考 / 6行目: URL
+                1行目: 商品名 / 2行目: 備考 / 3行目: 価格<br>
+                4行目: 店舗 / 5行目: 日付 / 6行目: URL
             </p>
-            <textarea id="importText" placeholder="例:&#10;商品名&#10;1,000円&#10;店舗名&#10;2026-08-31&#10;備考テキスト&#10;https://..."></textarea>
+            <textarea id="importText" placeholder="例:&#10;商品名&#10;備考テキスト&#10;1,000円&#10;店舗名&#10;2026.8.31&#10;https://..."></textarea>
             <div class="modal-btns">
                 <button onclick="closeImportModal()" style="background:#e2e8f0; color:#475569;">キャンセル</button>
                 <button onclick="applyImportText()" style="background:#2563eb; color:#fff;">反映する</button>
@@ -486,7 +469,7 @@
             let products = [];
             let activeImportProdId = null;
             const MAX_PRODUCTS = 6;
-            const STORAGE_KEY = 'item_management_data_v6';
+            const STORAGE_KEY = 'item_management_data_v7';
 
             function generateId() {
                 return 'p' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -514,19 +497,23 @@
                 }
             }
 
-            function getDefaultProducts() {
-                return [
-                    { title: 'エレコム USB Type-C ケーブル 2m', memo: 'USB-C to USB-C | 60W PD対応', price: '1,030円', store: 'Amazon', date: '2026-08-31', url: 'https://amzn.asia/d/05mPK5Q5', photo: null },
-                    { title: 'Anker PowerPort III 65W', memo: 'USB-C PD 65W | GaN搭載', price: '4,980円', store: 'ヨドバシ', date: '2026-09-01', url: 'https://amzn.asia/d/example1', photo: null },
-                    { title: '無印良品 ステンレスボトル 500ml', memo: '保温・保冷 | ワンタッチオープン', price: '1,490円', store: '無印良品', date: '2026-08-28', url: 'https://amzn.asia/d/example2', photo: null },
-                    { title: 'Logicool MX Master 3S', memo: '静音クリック | 8K DPI', price: '12,800円', store: 'Amazon', date: '2026-08-25', url: 'https://amzn.asia/d/example3', photo: null },
-                ];
+            function createEmptyProduct() {
+                return {
+                    id: generateId(),
+                    title: '',
+                    memo: '',
+                    price: '',
+                    store: '',
+                    date: '',
+                    url: '',
+                    photo: null
+                };
             }
 
             function init() {
                 loadFromStorage();
                 if (products.length === 0) {
-                    products = getDefaultProducts().map(p => ({ ...p, id: generateId() }));
+                    products = [createEmptyProduct()];
                     saveToStorage();
                 }
                 renderAllCards();
@@ -605,9 +592,9 @@
                 const leftFields = document.createElement('div');
                 leftFields.className = 'left-fields';
 
-                // 1段目: 価格 と 日付 を横並び
-                const priceDateRow = document.createElement('div');
-                priceDateRow.className = 'field-row-split';
+                // 1段目: 価格 ＋ 店舗
+                const priceStoreRow = document.createElement('div');
+                priceStoreRow.className = 'field-row-split';
 
                 const priceRow = document.createElement('div');
                 priceRow.className = 'field-row';
@@ -635,21 +622,6 @@
                 });
                 priceRow.appendChild(priceInput);
 
-                const dateRow = document.createElement('div');
-                dateRow.className = 'field-row';
-                const dateInput = document.createElement('input');
-                dateInput.type = 'date';
-                dateInput.value = prod.date || '';
-                dateInput.addEventListener('input', () => {
-                    prod.date = dateInput.value;
-                    saveToStorage();
-                });
-                dateRow.appendChild(dateInput);
-
-                priceDateRow.appendChild(priceRow);
-                priceDateRow.appendChild(dateRow);
-
-                // 2段目: 店舗名
                 const storeRow = document.createElement('div');
                 storeRow.className = 'field-row';
                 const storeInput = document.createElement('input');
@@ -662,8 +634,43 @@
                 });
                 storeRow.appendChild(storeInput);
 
-                leftFields.appendChild(priceDateRow);
-                leftFields.appendChild(storeRow);
+                priceStoreRow.appendChild(priceRow);
+                priceStoreRow.appendChild(storeRow);
+
+                // 2段目: 日付 ＋ URL
+                const dateUrlRow = document.createElement('div');
+                dateUrlRow.className = 'field-row-split';
+
+                const dateRow = document.createElement('div');
+                dateRow.className = 'field-row';
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.value = prod.date || '';
+                dateInput.addEventListener('input', () => {
+                    prod.date = dateInput.value;
+                    saveToStorage();
+                });
+                dateRow.appendChild(dateInput);
+
+                const urlRow = document.createElement('div');
+                urlRow.className = 'field-row';
+                const urlInput = document.createElement('input');
+                urlInput.type = 'url';
+                urlInput.className = 'url-input-inline';
+                urlInput.value = prod.url || '';
+                urlInput.placeholder = 'https://...';
+                urlInput.addEventListener('input', () => {
+                    prod.url = urlInput.value;
+                    saveToStorage();
+                    generateQRCode(qrContainer, prod.url);
+                });
+                urlRow.appendChild(urlInput);
+
+                dateUrlRow.appendChild(dateRow);
+                dateUrlRow.appendChild(urlRow);
+
+                leftFields.appendChild(priceStoreRow);
+                leftFields.appendChild(dateUrlRow);
 
                 const qrArea = document.createElement('div');
                 qrArea.className = 'qr-area';
@@ -674,31 +681,18 @@
                 bottomInfo.appendChild(leftFields);
                 bottomInfo.appendChild(qrArea);
 
-                const urlEdit = document.createElement('div');
-                urlEdit.className = 'url-edit';
-                const urlInput = document.createElement('input');
-                urlInput.type = 'url';
-                urlInput.value = prod.url || '';
-                urlInput.placeholder = 'https://... (URL)';
-                urlInput.addEventListener('input', () => {
-                    prod.url = urlInput.value;
-                    saveToStorage();
-                    generateQRCode(qrContainer, prod.url);
-                });
-                urlEdit.appendChild(urlInput);
-
                 // アクションボタン
                 const actions = document.createElement('div');
                 actions.className = 'card-actions';
                 
                 const exportBtn = document.createElement('button');
                 exportBtn.className = 'action-sub-btn';
-                exportBtn.textContent = 'メモに保存';
+                exportBtn.textContent = '保存';
                 exportBtn.addEventListener('click', () => exportToAppleNotes(prod));
 
                 const importBtn = document.createElement('button');
                 importBtn.className = 'action-sub-btn';
-                importBtn.textContent = 'メモから読み込み';
+                importBtn.textContent = '読込';
                 importBtn.addEventListener('click', () => openImportModal(prod.id));
 
                 actions.appendChild(exportBtn);
@@ -709,7 +703,6 @@
                 card.appendChild(titleInput);
                 card.appendChild(memoTextarea);
                 card.appendChild(bottomInfo);
-                card.appendChild(urlEdit);
                 card.appendChild(actions);
 
                 generateQRCode(qrContainer, prod.url);
@@ -773,76 +766,13 @@
                 reader.readAsDataURL(file);
             }
 
-            // 画像とテキスト情報を合成して共有用画像を生成する関数
-            function createMergedImage(prod) {
-                return new Promise((resolve) => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 600;
-                    canvas.height = 800;
-                    const ctx = canvas.getContext('2d');
-
-                    // 背景描画
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    // 写真部描画
-                    if (prod.photo) {
-                        const img = new Image();
-                        img.onload = () => {
-                            ctx.drawImage(img, 20, 20, 560, 560);
-                            drawText();
-                        };
-                        img.src = prod.photo;
-                    } else {
-                        ctx.fillStyle = '#f8fafc';
-                        ctx.fillRect(20, 20, 560, 560);
-                        ctx.strokeStyle = '#cbd5e1';
-                        ctx.strokeRect(20, 20, 560, 560);
-                        drawText();
-                    }
-
-                    function drawText() {
-                        ctx.fillStyle = '#0f172a';
-                        ctx.font = 'bold 24px -apple-system, sans-serif';
-                        ctx.fillText(prod.title || '（商品名なし）', 20, 615);
-
-                        ctx.font = 'bold 20px -apple-system, sans-serif';
-                        ctx.fillStyle = '#b91c1c';
-                        ctx.fillText(prod.price || '', 20, 650);
-
-                        ctx.fillStyle = '#475569';
-                        ctx.font = '18px -apple-system, sans-serif';
-                        ctx.fillText((prod.store ? '店舗: ' + prod.store : '') + (prod.date ? '  日付: ' + prod.date : ''), 200, 650);
-
-                        ctx.fillStyle = '#334155';
-                        ctx.font = '16px -apple-system, sans-serif';
-                        ctx.fillText('備考: ' + (prod.memo || ''), 20, 685);
-
-                        ctx.fillStyle = '#2563eb';
-                        ctx.font = '14px -apple-system, sans-serif';
-                        ctx.fillText(prod.url || '', 20, 715);
-
-                        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85);
-                    }
-                });
-            }
-
-            // メモアプリへの書き出し・保存
+            // メモアプリへの書き出し（文字のみ）
+            // 順序: 商品名 -> 備考 -> 価格 -> 店舗 -> 日付 -> URL
             async function exportToAppleNotes(prod) {
-                const textData = `${prod.title || ''}\n${prod.price || ''}\n${prod.store || ''}\n${prod.date || ''}\n${prod.memo || ''}\n${prod.url || ''}`;
+                const textData = `${prod.title || ''}\n${prod.memo || ''}\n${prod.price || ''}\n${prod.store || ''}\n${prod.date || ''}\n${prod.url || ''}`;
 
                 if (navigator.share) {
                     try {
-                        if (prod.photo) {
-                            // 写真がある場合はテキスト入り合成画像をファイルとして共有（メモ側で消えずに写真として保存される）
-                            const blob = await createMergedImage(prod);
-                            const file = new File([blob], `${prod.title || 'item'}.jpg`, { type: 'image/jpeg' });
-                            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                                await navigator.share({ files: [file] });
-                                return;
-                            }
-                        }
-                        // 写真がない場合はテキストとして共有
                         await navigator.share({ title: prod.title || '商品データ', text: textData });
                     } catch (err) {
                         if (err.name !== 'AbortError') {
@@ -867,7 +797,23 @@
                 activeImportProdId = null;
             };
 
-            // 1行目:商品名、2行目:価格、3行目:店舗、4行目:日付、5行目:備考、6行目:URL として順次読み込み
+            // 日付文字列の正規化 (2026.8.31, 2026/8/31 -> 2026-08-31)
+            function normalizeDate(dateStr) {
+                if (!dateStr) return '';
+                let cleaned = dateStr.replace(/[\.\/]/g, '-').trim();
+                let parts = cleaned.split('-');
+                if (parts.length === 3) {
+                    let year = parts[0];
+                    let month = parts[1].padStart(2, '0');
+                    let day = parts[2].padStart(2, '0');
+                    if (year.length === 4) {
+                        return `${year}-${month}-${day}`;
+                    }
+                }
+                return dateStr;
+            }
+
+            // 1行目:商品名、2行目:備考、3行目:価格、4行目:店舗、5行目:日付、6行目:URL として順次読み込み
             window.applyImportText = function() {
                 const text = document.getElementById('importText').value;
                 if (!text || !activeImportProdId) return;
@@ -876,10 +822,10 @@
                 if (prod) {
                     const lines = text.split('\n').map(l => l.trim());
                     if (lines.length > 0 && lines[0]) prod.title = lines[0];
-                    if (lines.length > 1 && lines[1]) prod.price = lines[1];
-                    if (lines.length > 2 && lines[2]) prod.store = lines[2];
-                    if (lines.length > 3 && lines[3]) prod.date = lines[3];
-                    if (lines.length > 4 && lines[4]) prod.memo = lines[4];
+                    if (lines.length > 1 && lines[1]) prod.memo = lines[1];
+                    if (lines.length > 2 && lines[2]) prod.price = lines[2];
+                    if (lines.length > 3 && lines[3]) prod.store = lines[3];
+                    if (lines.length > 4 && lines[4]) prod.date = normalizeDate(lines[4]);
                     if (lines.length > 5 && lines[5]) prod.url = lines[5];
 
                     saveToStorage();
@@ -893,17 +839,7 @@
                     alert('最大' + MAX_PRODUCTS + '商品まで登録できます。');
                     return;
                 }
-                const newProd = {
-                    id: generateId(),
-                    title: '',
-                    memo: '',
-                    price: '',
-                    store: '',
-                    date: '',
-                    url: '',
-                    photo: null
-                };
-                products.push(newProd);
+                products.push(createEmptyProduct());
                 saveToStorage();
                 renderAllCards();
                 updateGridMode();
@@ -915,14 +851,6 @@
                     return;
                 }
                 products = products.filter(p => p.id !== id);
-                saveToStorage();
-                renderAllCards();
-                updateGridMode();
-            }
-
-            function resetAll() {
-                if (!confirm('全ての商品をリセットしますか？')) return;
-                products = getDefaultProducts().map(p => ({ ...p, id: generateId() }));
                 saveToStorage();
                 renderAllCards();
                 updateGridMode();
@@ -941,7 +869,6 @@
             window.addEventListener('beforeprint', updateGridMode);
 
             window.addProduct = addProduct;
-            window.resetAll = resetAll;
             window.removeProduct = removeProduct;
         })();
     </script>
