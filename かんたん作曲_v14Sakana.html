@@ -115,6 +115,11 @@
             user-select: none;
         }
 
+        .input-wrap {
+            position: relative;
+            width: 100%;
+        }
+
         .item-title {
             font-size: 15px;
             font-weight: bold;
@@ -122,7 +127,7 @@
             border: none;
             border-bottom: 2px solid #2563eb;
             background: transparent;
-            padding: 2px 0;
+            padding: 2px 22px 2px 0;
             width: 100%;
             font-family: inherit;
             outline: none;
@@ -136,7 +141,7 @@
             border: none;
             border-bottom: 1px solid #cbd5e1;
             background: transparent;
-            padding: 2px 0;
+            padding: 2px 22px 2px 0;
             font-size: 12px;
             color: #0f172a;
             font-family: inherit;
@@ -149,6 +154,28 @@
             text-overflow: ellipsis;
             border-radius: 0;
             -webkit-appearance: none;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background: #94a3b8;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 10px;
+            line-height: 1;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            z-index: 2;
+            font-weight: bold;
         }
 
         .edit-info {
@@ -184,6 +211,24 @@
             border-bottom: 1px solid #cbd5e1;
             height: 26px;
             width: 100%;
+            position: relative;
+        }
+
+        .field-row input {
+            border: none;
+            background: transparent;
+            padding: 0 22px 0 2px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #0f172a;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            min-width: 0;
+            text-align: left;
+            height: 100%;
+            border-radius: 0;
+            -webkit-appearance: none;
         }
 
         .field-row-split {
@@ -198,26 +243,9 @@
             min-width: 0;
         }
 
-        .field-row input {
-            border: none;
-            background: transparent;
-            padding: 0 2px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #0f172a;
-            font-family: inherit;
-            outline: none;
-            width: 100%;
-            min-width: 0;
-            text-align: left;
-            height: 100%;
-            border-radius: 0;
-            -webkit-appearance: none;
-        }
-
         .field-row input[type="date"] {
             font-size: 11px;
-            padding: 0;
+            padding: 0 22px 0 0;
             text-align: right;
             -webkit-appearance: none;
             background: transparent;
@@ -275,7 +303,7 @@
             width: 100%;
             margin-top: 6px;
             flex-wrap: wrap;
-            padding: 0 16px;
+            padding: 0 24px;
         }
 
         .btn {
@@ -381,7 +409,8 @@
             .no-print,
             .remove-btn,
             .card-actions,
-            .edit-info {
+            .edit-info,
+            .clear-btn {
                 display: none !important;
             }
 
@@ -458,8 +487,8 @@
     <div class="app-container" id="appContainer">
         <div class="card-grid" id="cardGrid"></div>
         <div class="no-print">
-            <button class="btn btn-secondary" onclick="addProduct()">＋ 商品を追加</button>
-            <button class="btn" onclick="window.print()">印刷 / PDF保存</button>
+            <button class="btn btn-secondary" onclick="addProduct()">＋追加</button>
+            <button class="btn" onclick="window.print()">◻︎印刷</button>
         </div>
     </div>
 
@@ -470,9 +499,10 @@
             <p style="margin:0; font-size:11px; color:#64748b; line-height:1.3;">
                 以下の順序で改行区切りで貼り付けてください：<br>
                 1行目: 商品名 / 2行目: 備考 / 3行目: 価格<br>
-                4行目: 店舗 / 5行目: 日付 / 6行目: URL
+                4行目: 日付 / 5行目: 店舗 / 6行目: URL<br>
+                （空白行は無視されます。順序が違っていても自動で補正します）
             </p>
-            <textarea id="importText" placeholder="例:&#10;商品名&#10;備考テキスト&#10;1,000円&#10;店舗名&#10;2026.8.31&#10;https://..."></textarea>
+            <textarea id="importText" placeholder="例:&#10;商品名&#10;備考テキスト&#10;1,000円&#10;2026.8.31&#10;店舗名&#10;https://..."></textarea>
             <div class="modal-btns">
                 <button onclick="closeImportModal()" style="background:#e2e8f0; color:#475569;">キャンセル</button>
                 <button onclick="applyImportText()" style="background:#2563eb; color:#fff;">反映する</button>
@@ -485,7 +515,7 @@
             let products = [];
             let activeImportProdId = null;
             const MAX_PRODUCTS = 6;
-            const STORAGE_KEY = 'item_management_data_v7';
+            const STORAGE_KEY = 'item_management_data_v8';
 
             function generateId() {
                 return 'p' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -515,8 +545,8 @@
 
             function normalizeDate(dateStr) {
                 if (!dateStr) return '';
-                let normalized = dateStr.replace(/[．.／\/]/g, '-');
-                const parts = normalized.split('-');
+                let normalized = dateStr.replace(/[．.／\/]/g, '-').replace(/年|月/g, '-').replace(/日/g, '');
+                const parts = normalized.split('-').filter(s => s.trim() !== '');
                 if (parts.length === 3) {
                     const y = parts[0];
                     const m = parts[1].padStart(2, '0');
@@ -524,6 +554,73 @@
                     return `${y}-${m}-${d}`;
                 }
                 return normalized;
+            }
+
+            function analyzeLine(line) {
+                const types = [];
+                if (/^https?:\/\//i.test(line) || /^www\./i.test(line)) {
+                    types.push('url');
+                }
+                if (/\d{4}[.\-／\/年]\d{1,2}[.\-／\/月]\d{1,2}/.test(line) || /^\d{4}-\d{2}-\d{2}$/.test(line)) {
+                    types.push('date');
+                }
+                if (/[¥￥]|\d+\s*円|^\d{1,3}(,\d{3})+\s*円?$/.test(line) || (/^\d{3,}$/.test(line.replace(/,/g, '')) && parseInt(line.replace(/,/g, '')) >= 100)) {
+                    types.push('price');
+                }
+                if (types.length === 0) types.push('text');
+                return { line, types, len: line.length };
+            }
+
+            function smartParseLines(lines) {
+                const result = { title: '', memo: '', price: '', store: '', date: '', url: '' };
+                if (lines.length === 0) return result;
+
+                const order = ['title', 'memo', 'price', 'date', 'store', 'url'];
+
+                // まず順序で仮割り当て（最大6行）
+                lines.slice(0, 6).forEach((line, i) => {
+                    const field = order[i];
+                    if (field === 'date') result[field] = normalizeDate(line);
+                    else result[field] = line;
+                });
+
+                const analyzed = lines.map((line, idx) => ({ ...analyzeLine(line), idx }));
+
+                // URLを正しいフィールドへ移動
+                const urlItem = analyzed.find(a => a.types.includes('url'));
+                if (urlItem) {
+                    const currentKey = Object.keys(result).find(k => result[k] === urlItem.line);
+                    if (currentKey && currentKey !== 'url') result[currentKey] = '';
+                    result.url = urlItem.line;
+                }
+
+                // 日付を正しいフィールドへ移動
+                const dateItem = analyzed.find(a => a.types.includes('date'));
+                if (dateItem) {
+                    const currentKey = Object.keys(result).find(k => result[k] === dateItem.line);
+                    if (currentKey && currentKey !== 'date') result[currentKey] = '';
+                    result.date = normalizeDate(dateItem.line);
+                }
+
+                // 価格を正しいフィールドへ移動
+                const priceItem = analyzed.find(a => a.types.includes('price'));
+                if (priceItem) {
+                    const currentKey = Object.keys(result).find(k => result[k] === priceItem.line);
+                    if (currentKey && currentKey !== 'price') result[currentKey] = '';
+                    result.price = priceItem.line;
+                }
+
+                // 残りのtext行で空になったフィールドを補完
+                const textItems = analyzed.filter(a => a.types.length === 1 && a.types[0] === 'text');
+                const emptyFields = order.filter(f => !result[f]);
+                textItems.forEach((item, i) => {
+                    if (i < emptyFields.length) {
+                        if (emptyFields[i] === 'date') result[emptyFields[i]] = normalizeDate(item.line);
+                        else result[emptyFields[i]] = item.line;
+                    }
+                });
+
+                return result;
             }
 
             function init() {
@@ -551,6 +648,25 @@
                 products.forEach(prod => {
                     grid.appendChild(createCardElement(prod));
                 });
+            }
+
+            function addClearButton(inputEl, onClear) {
+                const wrap = inputEl.closest('.input-wrap') || inputEl.parentElement;
+                if (!wrap) return;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'clear-btn';
+                btn.innerHTML = '×';
+                btn.addEventListener('mousedown', (e) => e.preventDefault());
+                btn.addEventListener('click', () => {
+                    inputEl.value = '';
+                    onClear();
+                    inputEl.focus();
+                });
+                wrap.appendChild(btn);
+
+                inputEl.addEventListener('focus', () => { btn.style.display = 'flex'; });
+                inputEl.addEventListener('blur', () => { setTimeout(() => { btn.style.display = 'none'; }, 150); });
             }
 
             function createCardElement(prod) {
@@ -591,6 +707,8 @@
                 photoArea.appendChild(fileInput);
                 photoArea.addEventListener('click', () => fileInput.click());
 
+                const titleWrap = document.createElement('div');
+                titleWrap.className = 'input-wrap';
                 const titleInput = document.createElement('input');
                 titleInput.type = 'text';
                 titleInput.className = 'item-title';
@@ -600,7 +718,11 @@
                     prod.title = titleInput.value;
                     saveToStorage();
                 });
+                titleWrap.appendChild(titleInput);
+                addClearButton(titleInput, () => { prod.title = ''; saveToStorage(); });
 
+                const memoWrap = document.createElement('div');
+                memoWrap.className = 'input-wrap';
                 const memoTextarea = document.createElement('textarea');
                 memoTextarea.className = 'item-memo';
                 memoTextarea.rows = 1;
@@ -610,8 +732,10 @@
                     prod.memo = memoTextarea.value;
                     saveToStorage();
                 });
+                memoWrap.appendChild(memoTextarea);
+                addClearButton(memoTextarea, () => { prod.memo = ''; saveToStorage(); });
 
-                // --- Print-only fields (original layout) ---
+                // --- Print-only fields ---
                 const bottomInfo = document.createElement('div');
                 bottomInfo.className = 'bottom-info print-only';
 
@@ -720,6 +844,7 @@
                     if (priceInput) priceInput.value = e.target.value;
                 });
                 editPriceRow.appendChild(editPriceInput);
+                addClearButton(editPriceInput, () => { prod.price = ''; if (priceInput) priceInput.value = ''; saveToStorage(); });
 
                 const editStoreRow = document.createElement('div');
                 editStoreRow.className = 'field-row';
@@ -733,6 +858,7 @@
                     saveToStorage();
                 });
                 editStoreRow.appendChild(editStoreInput);
+                addClearButton(editStoreInput, () => { prod.store = ''; if (storeInput) storeInput.value = ''; saveToStorage(); });
 
                 editRow1.appendChild(editPriceRow);
                 editRow1.appendChild(editStoreRow);
@@ -765,6 +891,7 @@
                     generateQRCode(qrContainer, prod.url);
                 });
                 editUrlRow.appendChild(editUrlInput);
+                addClearButton(editUrlInput, () => { prod.url = ''; saveToStorage(); generateQRCode(qrContainer, ''); });
 
                 editRow2.appendChild(editDateRow);
                 editRow2.appendChild(editUrlRow);
@@ -786,13 +913,22 @@
                 importBtn.textContent = '読込';
                 importBtn.addEventListener('click', () => openImportModal(prod.id));
 
+                const linkBtn = document.createElement('button');
+                linkBtn.className = 'action-sub-btn';
+                linkBtn.textContent = 'リンク';
+                linkBtn.addEventListener('click', () => {
+                    if (prod.url) window.open(prod.url, '_blank');
+                    else alert('URLが設定されていません。');
+                });
+
                 actions.appendChild(exportBtn);
                 actions.appendChild(importBtn);
+                actions.appendChild(linkBtn);
 
                 card.appendChild(removeBtn);
                 card.appendChild(photoArea);
-                card.appendChild(titleInput);
-                card.appendChild(memoTextarea);
+                card.appendChild(titleWrap);
+                card.appendChild(memoWrap);
                 card.appendChild(editInfo);
                 card.appendChild(bottomInfo);
                 card.appendChild(actions);
@@ -860,7 +996,7 @@
 
             // メモアプリへの書き出し・保存（テキストのみ）
             async function exportToAppleNotes(prod) {
-                const textData = `${prod.title || ''}\n${prod.memo || ''}\n${prod.price || ''}\n${prod.store || ''}\n${prod.date || ''}\n${prod.url || ''}`;
+                const textData = `${prod.title || ''}\n${prod.memo || ''}\n${prod.price || ''}\n${prod.date || ''}\n${prod.store || ''}\n${prod.url || ''}`;
 
                 if (navigator.share) {
                     try {
@@ -888,20 +1024,22 @@
                 activeImportProdId = null;
             };
 
-            // 1行目:商品名、2行目:備考、3行目:価格、4行目:店舗、5行目:日付、6行目:URL として順次読み込み
+            // 空行・空白行を無視して読み込み、順序が違っていても自動補正
             window.applyImportText = function() {
                 const text = document.getElementById('importText').value;
                 if (!text || !activeImportProdId) return;
 
                 const prod = products.find(p => p.id === activeImportProdId);
                 if (prod) {
-                    const lines = text.split('\n').map(l => l.trim());
-                    if (lines.length > 0 && lines[0]) prod.title = lines[0];
-                    if (lines.length > 1 && lines[1]) prod.memo = lines[1];
-                    if (lines.length > 2 && lines[2]) prod.price = lines[2];
-                    if (lines.length > 3 && lines[3]) prod.store = lines[3];
-                    if (lines.length > 4 && lines[4]) prod.date = normalizeDate(lines[4]);
-                    if (lines.length > 5 && lines[5]) prod.url = lines[5];
+                    const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '');
+                    const parsed = smartParseLines(lines);
+
+                    if (parsed.title) prod.title = parsed.title;
+                    if (parsed.memo) prod.memo = parsed.memo;
+                    if (parsed.price) prod.price = parsed.price;
+                    if (parsed.date) prod.date = parsed.date;
+                    if (parsed.store) prod.store = parsed.store;
+                    if (parsed.url) prod.url = parsed.url;
 
                     saveToStorage();
                     renderAllCards();
