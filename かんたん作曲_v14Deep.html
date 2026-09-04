@@ -7,8 +7,7 @@
     <link rel="manifest" href="data:application/manifest+json;utf8,{%22name%22:%22物品管理%22,%22short_name%22:%22物品管理%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#ffffff%22,%22theme_color%22:%22#2563eb%22}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -223,19 +222,11 @@
             font-size: 13px !important;
         }
 
-        /* Grid area assignments for edit screen */
-        .field-price {
-            grid-area: price;
-        }
-        .field-store {
-            grid-area: store;
-        }
-        .field-date {
-            grid-area: date;
-        }
-        .field-url {
-            grid-area: url;
-        }
+        /* Grid area assignments */
+        .field-price { grid-area: price; }
+        .field-store { grid-area: store; }
+        .field-date { grid-area: date; }
+        .field-url { grid-area: url; }
 
         /* URL input styling */
         .field-url {
@@ -256,6 +247,47 @@
             -webkit-appearance: none;
             height: auto;
             font-weight: normal;
+        }
+
+        /* Clear button for text inputs */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .input-wrapper input,
+        .input-wrapper textarea {
+            flex: 1;
+            min-width: 0;
+            padding-right: 20px; /* space for clear button */
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            padding: 0 2px;
+            line-height: 1;
+            z-index: 2;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .input-wrapper.focused .clear-btn {
+            display: block;
+        }
+
+        .clear-btn:hover {
+            color: #ef4444;
         }
 
         .qr-area {
@@ -408,7 +440,8 @@
 
             .no-print,
             .remove-btn,
-            .card-actions {
+            .card-actions,
+            .clear-btn {
                 display: none !important;
             }
 
@@ -488,6 +521,10 @@
                 width: 40px !important;
                 height: 40px !important;
             }
+
+            .input-wrapper {
+                padding-right: 0;
+            }
         }
     </style>
 </head>
@@ -495,8 +532,8 @@
     <div class="app-container" id="appContainer">
         <div class="card-grid" id="cardGrid"></div>
         <div class="no-print">
-            <button class="btn btn-secondary" onclick="addProduct()">＋ 商品を追加</button>
-            <button class="btn" onclick="window.print()">印刷 / PDF保存</button>
+            <button class="btn btn-secondary" onclick="addProduct()">＋追加</button>
+            <button class="btn" onclick="window.print()">◻︎印刷</button>
         </div>
     </div>
 
@@ -507,9 +544,10 @@
             <p style="margin:0; font-size:11px; color:#64748b; line-height:1.3;">
                 以下の順序で改行区切りで貼り付けてください：<br>
                 1行目: 商品名 / 2行目: 備考 / 3行目: 価格<br>
-                4行目: 店舗 / 5行目: 日付 / 6行目: URL
+                4行目: 日付 / 5行目: 店舗 / 6行目: URL<br>
+                ※順序が多少違っても自動判別します。空白行は無視します。
             </p>
-            <textarea id="importText" placeholder="例:&#10;商品名&#10;備考テキスト&#10;1,000円&#10;店舗名&#10;2026-08-31&#10;https://..."></textarea>
+            <textarea id="importText" placeholder="例:&#10;商品名&#10;備考テキスト&#10;1,000円&#10;2026-08-31&#10;店舗名&#10;https://..."></textarea>
             <div class="modal-btns">
                 <button onclick="closeImportModal()" style="background:#e2e8f0; color:#475569;">キャンセル</button>
                 <button onclick="applyImportText()" style="background:#2563eb; color:#fff;">反映する</button>
@@ -522,7 +560,7 @@
             let products = [];
             let activeImportProdId = null;
             const MAX_PRODUCTS = 6;
-            const STORAGE_KEY = 'item_management_data_v7';
+            const STORAGE_KEY = 'item_management_data_v8';
 
             function generateId() {
                 return 'p' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -572,6 +610,33 @@
                 });
             }
 
+            function createClearButton(input, wrapper, onChangeCallback) {
+                const clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = 'clear-btn';
+                clearBtn.textContent = '×';
+                clearBtn.tabIndex = -1;
+                clearBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    input.value = '';
+                    if (onChangeCallback) onChangeCallback();
+                    input.focus();
+                    wrapper.classList.remove('focused');
+                });
+                input.addEventListener('focus', () => {
+                    wrapper.classList.add('focused');
+                });
+                input.addEventListener('blur', () => {
+                    // Delay hiding to allow click on clear button
+                    setTimeout(() => {
+                        if (!wrapper.contains(document.activeElement)) {
+                            wrapper.classList.remove('focused');
+                        }
+                    }, 100);
+                });
+                wrapper.appendChild(clearBtn);
+            }
+
             function createCardElement(prod) {
                 const card = document.createElement('div');
                 card.className = 'item-card';
@@ -610,6 +675,9 @@
                 photoArea.appendChild(fileInput);
                 photoArea.addEventListener('click', () => fileInput.click());
 
+                // Title
+                const titleWrapper = document.createElement('div');
+                titleWrapper.className = 'input-wrapper';
                 const titleInput = document.createElement('input');
                 titleInput.type = 'text';
                 titleInput.className = 'item-title';
@@ -619,7 +687,15 @@
                     prod.title = titleInput.value;
                     saveToStorage();
                 });
+                titleWrapper.appendChild(titleInput);
+                createClearButton(titleInput, titleWrapper, () => {
+                    prod.title = '';
+                    saveToStorage();
+                });
 
+                // Memo
+                const memoWrapper = document.createElement('div');
+                memoWrapper.className = 'input-wrapper';
                 const memoTextarea = document.createElement('textarea');
                 memoTextarea.className = 'item-memo';
                 memoTextarea.rows = 1;
@@ -629,6 +705,11 @@
                     prod.memo = memoTextarea.value;
                     saveToStorage();
                 });
+                memoWrapper.appendChild(memoTextarea);
+                createClearButton(memoTextarea, memoWrapper, () => {
+                    prod.memo = '';
+                    saveToStorage();
+                });
 
                 const bottomInfo = document.createElement('div');
                 bottomInfo.className = 'bottom-info';
@@ -636,9 +717,9 @@
                 const leftFields = document.createElement('div');
                 leftFields.className = 'left-fields';
 
-                // 価格
-                const priceField = document.createElement('div');
-                priceField.className = 'field-row field-price';
+                // Price
+                const priceWrapper = document.createElement('div');
+                priceWrapper.className = 'input-wrapper field-row field-price';
                 const priceInput = document.createElement('input');
                 priceInput.type = 'text';
                 priceInput.className = 'price-input';
@@ -661,11 +742,15 @@
                 priceInput.addEventListener('input', (e) => {
                     prod.price = e.target.value;
                 });
-                priceField.appendChild(priceInput);
+                priceWrapper.appendChild(priceInput);
+                createClearButton(priceInput, priceWrapper, () => {
+                    prod.price = '';
+                    saveToStorage();
+                });
 
-                // 店舗
-                const storeField = document.createElement('div');
-                storeField.className = 'field-row field-store';
+                // Store
+                const storeWrapper = document.createElement('div');
+                storeWrapper.className = 'input-wrapper field-row field-store';
                 const storeInput = document.createElement('input');
                 storeInput.type = 'text';
                 storeInput.value = prod.store || '';
@@ -674,11 +759,15 @@
                     prod.store = storeInput.value;
                     saveToStorage();
                 });
-                storeField.appendChild(storeInput);
+                storeWrapper.appendChild(storeInput);
+                createClearButton(storeInput, storeWrapper, () => {
+                    prod.store = '';
+                    saveToStorage();
+                });
 
-                // 日付
-                const dateField = document.createElement('div');
-                dateField.className = 'field-row field-date';
+                // Date
+                const dateWrapper = document.createElement('div');
+                dateWrapper.className = 'input-wrapper field-row field-date';
                 const dateInput = document.createElement('input');
                 dateInput.type = 'date';
                 dateInput.value = prod.date || '';
@@ -686,11 +775,15 @@
                     prod.date = dateInput.value;
                     saveToStorage();
                 });
-                dateField.appendChild(dateInput);
+                dateWrapper.appendChild(dateInput);
+                createClearButton(dateInput, dateWrapper, () => {
+                    prod.date = '';
+                    saveToStorage();
+                });
 
                 // URL
-                const urlField = document.createElement('div');
-                urlField.className = 'field-row field-url';
+                const urlWrapper = document.createElement('div');
+                urlWrapper.className = 'input-wrapper field-row field-url';
                 const urlInput = document.createElement('input');
                 urlInput.type = 'url';
                 urlInput.value = prod.url || '';
@@ -700,12 +793,17 @@
                     saveToStorage();
                     generateQRCode(qrContainer, prod.url);
                 });
-                urlField.appendChild(urlInput);
+                urlWrapper.appendChild(urlInput);
+                createClearButton(urlInput, urlWrapper, () => {
+                    prod.url = '';
+                    saveToStorage();
+                    generateQRCode(qrContainer, '');
+                });
 
-                leftFields.appendChild(priceField);
-                leftFields.appendChild(storeField);
-                leftFields.appendChild(dateField);
-                leftFields.appendChild(urlField);
+                leftFields.appendChild(priceWrapper);
+                leftFields.appendChild(storeWrapper);
+                leftFields.appendChild(dateWrapper);
+                leftFields.appendChild(urlWrapper);
 
                 const qrArea = document.createElement('div');
                 qrArea.className = 'qr-area';
@@ -716,7 +814,7 @@
                 bottomInfo.appendChild(leftFields);
                 bottomInfo.appendChild(qrArea);
 
-                // アクションボタン
+                // Actions
                 const actions = document.createElement('div');
                 actions.className = 'card-actions';
 
@@ -730,13 +828,25 @@
                 importBtn.textContent = '読込';
                 importBtn.addEventListener('click', () => openImportModal(prod.id));
 
+                const linkBtn = document.createElement('button');
+                linkBtn.className = 'action-sub-btn';
+                linkBtn.textContent = 'リンク';
+                linkBtn.addEventListener('click', () => {
+                    if (prod.url) {
+                        window.open(prod.url, '_blank');
+                    } else {
+                        alert('URLが設定されていません。');
+                    }
+                });
+
                 actions.appendChild(exportBtn);
                 actions.appendChild(importBtn);
+                actions.appendChild(linkBtn);
 
                 card.appendChild(removeBtn);
                 card.appendChild(photoArea);
-                card.appendChild(titleInput);
-                card.appendChild(memoTextarea);
+                card.appendChild(titleWrapper);
+                card.appendChild(memoWrapper);
                 card.appendChild(bottomInfo);
                 card.appendChild(actions);
 
@@ -801,10 +911,9 @@
                 reader.readAsDataURL(file);
             }
 
-            // 日付の正規化（2026.8.31 → 2026-08-31）
             function normalizeDate(dateStr) {
                 if (!dateStr) return '';
-                const match = dateStr.match(/^(\d{4})[.\/](\d{1,2})[.\/](\d{1,2})$/);
+                const match = dateStr.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/);
                 if (match) {
                     const year = match[1];
                     const month = match[2].padStart(2, '0');
@@ -814,10 +923,23 @@
                 return dateStr;
             }
 
-            // メモアプリへの書き出し・保存（テキストのみ）
+            function isDateLike(str) {
+                return /^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/.test(str);
+            }
+
+            function isPriceLike(str) {
+                // 例: 1,030円, 1030, ¥1,030, $19.99, 19.99, 1,030
+                return /^(¥|\$)?[\d,]+(\.\d+)?(円|¥|\$)?$/.test(str) && /\d/.test(str);
+            }
+
+            function isUrlLike(str) {
+                return /^(https?:\/\/|www\.)|[a-zA-Z0-9-]+\.(com|jp|net|org|co\.jp|io|shop|info|dev|app|store|amazon|yahoo|rakuten|mercari|aucfan)(\/|$)/i.test(str);
+            }
+
+            // 保存・読込の順序: 商品名、備考、価格、日付、店舗、URL
             async function exportToAppleNotes(prod) {
                 const textData =
-                    `${prod.title || ''}\n${prod.memo || ''}\n${prod.price || ''}\n${prod.store || ''}\n${prod.date || ''}\n${prod.url || ''}`;
+                    `${prod.title || ''}\n${prod.memo || ''}\n${prod.price || ''}\n${prod.date || ''}\n${prod.store || ''}\n${prod.url || ''}`;
 
                 if (navigator.share) {
                     try {
@@ -837,7 +959,6 @@
                 }
             }
 
-            // モーダル操作
             window.openImportModal = function(prodId) {
                 activeImportProdId = prodId;
                 document.getElementById('importText').value = '';
@@ -849,24 +970,41 @@
                 activeImportProdId = null;
             };
 
-            // 読込順: 商品名、備考、価格、店舗、日付、URL
             window.applyImportText = function() {
                 const text = document.getElementById('importText').value;
                 if (!text || !activeImportProdId) return;
 
-                const prod = products.find(p => p.id === activeImportProdId);
-                if (prod) {
-                    const lines = text.split('\n').map(l => l.trim());
-                    if (lines.length > 0 && lines[0]) prod.title = lines[0];
-                    if (lines.length > 1 && lines[1]) prod.memo = lines[1];
-                    if (lines.length > 2 && lines[2]) prod.price = lines[2];
-                    if (lines.length > 3 && lines[3]) prod.store = lines[3];
-                    if (lines.length > 4 && lines[4]) prod.date = normalizeDate(lines[4]);
-                    if (lines.length > 5 && lines[5]) prod.url = lines[5];
+                // 空白行を除外
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length === 0) return;
 
-                    saveToStorage();
-                    renderAllCards();
+                const prod = products.find(p => p.id === activeImportProdId);
+                if (!prod) return;
+
+                // 汎用フィールドの順序: 商品名、備考、店舗
+                const generalFields = ['title', 'memo', 'store'];
+                let generalIndex = 0;
+
+                for (const line of lines) {
+                    if (isUrlLike(line)) {
+                        prod.url = line;
+                    } else if (isDateLike(line)) {
+                        prod.date = normalizeDate(line);
+                    } else if (isPriceLike(line)) {
+                        prod.price = line;
+                    } else {
+                        // 汎用フィールドに割り当て
+                        if (generalIndex < generalFields.length) {
+                            const field = generalFields[generalIndex];
+                            prod[field] = line;
+                            generalIndex++;
+                        }
+                        // それ以上は無視
+                    }
                 }
+
+                saveToStorage();
+                renderAllCards();
                 closeImportModal();
             };
 
