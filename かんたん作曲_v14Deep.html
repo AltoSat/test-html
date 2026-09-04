@@ -1,743 +1,922 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>PWA Previewer</title>
-<style>
-:root{
-  color-scheme:dark;
-  --bg:#000;
-  --panel:#1c1c1e;
-  --panel2:#2c2c2e;
-  --panel3:#3a3a3c;
-  --text:#f5f5f7;
-  --muted:#98989f;
-  --accent:#0a84ff;
-  --danger:#ff453a;
-  --ok:#30d158;
-  --mark:#ffd60a;
-}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
-body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
-button,textarea,input{font:inherit}
-button{
-  border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;text-align:center;
-}
-button.primary{background:var(--accent)}
-button.danger{background:var(--danger)}
-button.ghost{background:transparent;border:1px solid #38383c}
-button:active{transform:scale(.97);opacity:.85}
-button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>物品管理 - カット用A5</title>
+    <link rel="manifest" href="data:application/manifest+json;utf8,{%22name%22:%22物品管理%22,%22short_name%22:%22物品管理%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#ffffff%22,%22theme_color%22:%22#2563eb%22}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-/* card row (horizontal scroll) */
-.card-row{
-  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
-  padding:0 4px 14px;margin:0 -4px 6px;
-  scroll-snap-type:x proximity;
-  -webkit-overflow-scrolling:touch;
-}
-.card-row::-webkit-scrollbar{height:0}
-.card{
-  scroll-snap-align:start;
-  flex:0 0 auto;width:132px;height:90px;
-  background:var(--panel);border-radius:16px;padding:10px 12px;
-  display:flex;flex-direction:column;justify-content:flex-start;gap:3px;
-  border:2px solid transparent;cursor:pointer;
-  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-  transition:border-color .15s,background .15s;
-  position:relative;
-}
-.card:active{background:var(--panel2)}
-.card.active{border-color:var(--accent);background:#0a84ff18}
-.card-name{font-weight:600;font-size:14px;line-height:1.25;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  min-height:35px;max-height:35px;}
-.card-meta{font-size:10.5px;color:var(--muted);line-height:1.25;min-height:13px;}
-.card-new{
-  align-items:center;justify-content:center;color:var(--muted);
-  border:2px dashed #3a3a3c;background:transparent;
-}
-.card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
-.card-new .label{font-size:12px;margin-top:4px}
-.card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: env(safe-area-inset-top, 8px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 8px);
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-/* card toast (inside card, lower half) */
-.card-toast{
-  position:absolute;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  z-index:50;
-  background:rgba(48,48,52,.95);
-  color:var(--text);
-  padding:5px 10px;
-  border-radius:8px;
-  font-size:11px;
-  font-weight:600;
-  border:1px solid #48484a;
-  box-shadow:0 2px 12px rgba(0,0,0,.45);
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .22s;
-  white-space:nowrap;
-}
-.card-toast.show{opacity:1}
+        .app-container {
+            width: 100%;
+            max-width: 540px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-/* device previews */
-.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
-.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+            width: 100%;
+            background: transparent;
+            border: none;
+        }
 
-/* iPhone 17 Pro: 402x874 CSS pt @3x (real device point size) */
-.phone{
-  position:relative;
-  width:min(300px,86vw);
-  aspect-ratio:402/874;
-  background:#000;border:6px solid #202023;border-radius:52px;overflow:hidden;
-  box-shadow:0 14px 40px #000,0 0 0 1px #444;
-}
-.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px}
-.phone-viewport iframe{
-  position:absolute;top:50%;left:50%;
-  width:402px;height:874px;border:0;background:#000;color-scheme:dark;
-  transform-origin:center center;
-  margin-left:-201px;margin-top:-437px;
-}
-.island{
-  position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
-  width:33.5%;
-  height:calc(9.5% * 0.75);
-  max-height:calc(34px * 0.75);
-  background:#000;border-radius:100px;pointer-events:none;
-}
-.homebar{
-  position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
-  width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
-}
+        .card-grid.mode-3col {
+            grid-template-columns: repeat(3, 1fr);
+        }
 
-/* iPad 7th gen: 810x1080 CSS pt landscape */
-.ipad{
-  position:relative;
-  width:min(460px,92vw);
-  aspect-ratio:1080/810;
-  background:#000;border:10px solid #2a2a2e;border-radius:22px;overflow:hidden;
-  box-shadow:0 14px 40px #000,0 0 0 1px #444;
-}
-.ipad-viewport{position:absolute;inset:0;overflow:hidden}
-.ipad-viewport iframe{
-  position:absolute;top:50%;left:50%;
-  width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
-  transform-origin:center center;
-  margin-left:-540px;margin-top:-405px;
-}
+        .item-card {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            padding: 10px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin: 0;
+            overflow: hidden;
+            min-width: 0;
+        }
 
-/* fullscreen action icon - gray instead of primary */
-.fs-icon-btn{
-  position:absolute;
-  left:calc(100% + 8px);
-  top:50%;
-  transform:translateY(-50%);
-  width:40px;height:40px;border-radius:12px;padding:0;
-  background:var(--panel2);border:1px solid #38383c;color:var(--text);
-}
-.fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
+        .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            padding: 0;
+            font-weight: bold;
+        }
 
-/* editor (opened via long-press) */
-.editor-overlay{
-  position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
-  display:none;align-items:flex-end;justify-content:center;
-  overscroll-behavior:none;
-}
-.editor-overlay.show{display:flex}
-.editor-sheet{
-  width:100%;max-width:900px;max-height:92vh;
-  background:var(--bg);border-radius:20px 20px 0 0;
-  box-shadow:0 -10px 40px #000;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  -webkit-user-select:none;user-select:none;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-.editor-scroll{
-  flex:1;
-  overflow:auto;
-  min-height:0;
-  padding:14px 14px 0;
-}
-.editor-search-wrap{
-  flex-shrink:0;
-  background:var(--bg);
-  border-top:1px solid #38383c;
-  padding:8px 14px calc(8px + env(safe-area-inset-bottom));
-}
-.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
+        .photo-area {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border: 1px dashed #94a3b8;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+            flex-shrink: 0;
+        }
 
-/* action buttons above title row */
-.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.editor-actions button{flex:1;min-width:80px;white-space:nowrap}
+        .photo-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 12px;
+        }
 
-/* title row with delete button */
-.editor-title-row{
-  display:flex;align-items:center;gap:8px;margin-bottom:10px;
-}
-.editor-title-row .name-input{
-  flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 12px;outline:none;
-  -webkit-user-select:text;user-select:text;
-}
-.editor-title-row .name-input:focus{border-color:var(--accent)}
-.editor-title-row .btn-delete{
-  min-height:40px;padding:0 14px;font-size:13px;
-}
+        .photo-placeholder {
+            font-size: 20px;
+            color: #94a3b8;
+            text-align: center;
+            font-weight: bold;
+            pointer-events: none;
+            user-select: none;
+        }
 
-/* textarea - word wrap instead of horizontal scroll */
-textarea{
-  width:100%;height:min(42vh,360px);resize:vertical;
-  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
-  padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
-  -webkit-user-select:text;user-select:text;
-}
-textarea:focus{border-color:var(--accent)}
+        .item-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #0f172a;
+            border: none;
+            border-bottom: 2px solid #2563eb;
+            background: transparent;
+            padding: 2px 0;
+            width: 100%;
+            font-family: inherit;
+            outline: none;
+            text-align: left;
+            border-radius: 0;
+            -webkit-appearance: none;
+        }
 
-/* search section at bottom */
-.search-section{
-  margin-top:0;
-  padding-top:0;
-  border-top:none;
-}
-.search-box{
-  position:relative;
-  display:flex;align-items:center;gap:6px;
-}
-.search-box input{
-  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 96px 0 11px;outline:none;
-  -webkit-user-select:text;user-select:text;
-  -webkit-appearance:none;appearance:none;
-  caret-color:#f5f5f7;
-  font-size:16px;
-}
-.search-box input:focus{border-color:var(--accent)}
-.search-box .search-count{
-  position:absolute;
-  right:104px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:12px;
-  color:var(--muted);
-  pointer-events:none;
-}
-.search-box .search-nav{
-  display:flex;gap:4px;
-}
-.search-box button{
-  min-height:36px;
-  min-width:40px;
-  padding:0 8px;
-  font-size:16px;
-}
+        .item-memo {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #cbd5e1;
+            background: transparent;
+            padding: 2px 0;
+            font-size: 12px;
+            color: #0f172a;
+            font-family: inherit;
+            resize: none;
+            height: 22px;
+            outline: none;
+            line-height: 1.2;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            border-radius: 0;
+            -webkit-appearance: none;
+        }
 
-/* fullscreen */
-.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
-.fullscreen.show{display:block}
-.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
-.fullscreen iframe{border:0;background:#000;color-scheme:dark}
-.fs-controls{
-  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));left:0;right:0;
-  display:flex;justify-content:center;gap:8px;
-}
-.fs-controls button{
-  min-height:36px;padding:0 14px;font-size:13px;border-radius:18px;
-  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;
-}
-.fs-controls button.on{background:rgba(10,132,255,.85)}
-.fullscreen .exit{
-  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
-  width:40px;height:40px;padding:0;border-radius:50%;
-  background:rgba(0,0,0,.40);color:#fff;font-size:19px;
-}
+        .bottom-info {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            flex: 1;
+        }
 
-@media(min-width:800px){
-  .phone{width:min(330px,32vw)}
-  .ipad{width:min(520px,46vw)}
-}
-</style>
+        .left-fields {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas:
+                "price store"
+                "date url";
+            gap: 4px;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-bottom: 1px solid #cbd5e1;
+            height: 26px;
+            width: 100%;
+        }
+
+        .field-row-split {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .field-row-split .field-row {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .field-row input {
+            border: none;
+            background: transparent;
+            padding: 0 2px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #0f172a;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            min-width: 0;
+            text-align: left;
+            height: 100%;
+            border-radius: 0;
+            -webkit-appearance: none;
+        }
+
+        .field-row input[type="date"] {
+            font-size: 11px;
+            padding: 0;
+            text-align: right;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        .price-input {
+            color: #b91c1c !important;
+            font-weight: bold !important;
+            font-size: 13px !important;
+        }
+
+        /* Grid area assignments for edit screen */
+        .field-price {
+            grid-area: price;
+        }
+        .field-store {
+            grid-area: store;
+        }
+        .field-date {
+            grid-area: date;
+        }
+        .field-url {
+            grid-area: url;
+        }
+
+        /* URL input styling */
+        .field-url {
+            border-bottom: none !important;
+            height: auto !important;
+            min-height: 26px;
+        }
+        .field-url input {
+            border: 1px dashed #94a3b8;
+            border-radius: 4px;
+            background: #f8fafc;
+            padding: 4px 6px;
+            font-size: 11px;
+            color: #2563eb;
+            font-family: monospace;
+            width: 100%;
+            outline: none;
+            -webkit-appearance: none;
+            height: auto;
+            font-weight: normal;
+        }
+
+        .qr-area {
+            display: none;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+        }
+
+        .qr-code-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            line-height: 0;
+        }
+
+        .qr-code-container img {
+            width: 45px !important;
+            height: 45px !important;
+            max-width: 100%;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .action-sub-btn {
+            flex: 1;
+            padding: 5px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .no-print {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            margin-top: 6px;
+            flex-wrap: wrap;
+            padding: 0 16px;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 110px;
+            padding: 12px 8px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2563eb;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary {
+            background-color: #10b981;
+        }
+
+        /* メモ読み込みモーダル */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            height: 140px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+            resize: none;
+            outline: none;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .modal-btns button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media print {
+            @page {
+                size: A5 portrait;
+                margin: 0;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                display: block;
+                width: 148mm;
+                height: 210mm;
+                overflow: hidden;
+            }
+
+            .app-container {
+                max-width: 100%;
+                width: 100%;
+                gap: 0;
+                padding: 0;
+            }
+
+            .no-print,
+            .remove-btn,
+            .card-actions {
+                display: none !important;
+            }
+
+            .card-grid {
+                gap: 0;
+                border: none;
+                width: 100%;
+                height: 210mm;
+                align-content: start;
+            }
+
+            .item-card {
+                border: 1px solid #d1d5db;
+                padding: 6px 5px;
+                gap: 4px;
+            }
+
+            .item-title {
+                font-size: 13px;
+                border-bottom-width: 1.5px;
+                padding-bottom: 1px;
+            }
+
+            .photo-area {
+                border: 1px solid #999;
+                border-radius: 6px;
+            }
+
+            .photo-area img {
+                border-radius: 6px;
+            }
+
+            .photo-placeholder {
+                font-size: 12px;
+            }
+
+            .item-memo {
+                font-size: 10px;
+                height: 18px;
+                border-bottom: 1px solid #cbd5e1;
+            }
+
+            .bottom-info {
+                gap: 4px;
+            }
+
+            .left-fields {
+                grid-template-columns: 1fr 1fr;
+                grid-template-areas:
+                    "price date"
+                    "store store";
+                gap: 4px;
+            }
+
+            .field-url {
+                display: none !important;
+            }
+
+            .field-row {
+                height: 20px;
+            }
+
+            .field-row input {
+                font-size: 11px;
+            }
+
+            .field-row input[type="date"] {
+                font-size: 9px;
+            }
+
+            .qr-area {
+                display: flex !important;
+                width: 45px;
+            }
+
+            .qr-code-container img {
+                width: 40px !important;
+                height: 40px !important;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="app">
-
-  <div id="cardRow" class="card-row"></div>
-  <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
-
-  <div class="devices">
-    <div class="device-wrap">
-      <div class="phone" id="phone">
-        <div class="island"></div>
-        <div class="phone-viewport">
-          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+    <div class="app-container" id="appContainer">
+        <div class="card-grid" id="cardGrid"></div>
+        <div class="no-print">
+            <button class="btn btn-secondary" onclick="addProduct()">＋ 商品を追加</button>
+            <button class="btn" onclick="window.print()">印刷 / PDF保存</button>
         </div>
-        <div class="homebar"></div>
-      </div>
-      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
-      </button>
     </div>
-    <div class="device-wrap">
-      <div class="ipad" id="ipad">
-        <div class="ipad-viewport">
-          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+
+    <!-- メモ読み込みモーダル -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal-content">
+            <h3 style="margin:0; font-size:15px;">メモからデータを読み込む</h3>
+            <p style="margin:0; font-size:11px; color:#64748b; line-height:1.3;">
+                以下の順序で改行区切りで貼り付けてください：<br>
+                1行目: 商品名 / 2行目: 備考 / 3行目: 価格<br>
+                4行目: 店舗 / 5行目: 日付 / 6行目: URL
+            </p>
+            <textarea id="importText" placeholder="例:&#10;商品名&#10;備考テキスト&#10;1,000円&#10;店舗名&#10;2026-08-31&#10;https://..."></textarea>
+            <div class="modal-btns">
+                <button onclick="closeImportModal()" style="background:#e2e8f0; color:#475569;">キャンセル</button>
+                <button onclick="applyImportText()" style="background:#2563eb; color:#fff;">反映する</button>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- EDITOR SHEET (opened by long-press) -->
-<div id="editorOverlay" class="editor-overlay">
-  <div class="editor-sheet">
-    <div class="editor-scroll">
-      <div class="sheet-handle"></div>
-
-      <!-- 編集アクションをタイトル行の上に移動 -->
-      <div class="editor-actions">
-        <button id="btnCancel" class="ghost">キャンセル</button>
-        <button id="btnClear" class="ghost">クリア</button>
-        <button id="btnCopy" class="ghost">コピー</button>
-        <button id="btnSave" class="primary">保存</button>
-      </div>
-
-      <div class="editor-title-row">
-        <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-        <button id="btnDelete" class="btn-delete danger">削除</button>
-      </div>
-
-      <div class="editor-textwrap">
-        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-      </div>
     </div>
 
-    <div class="editor-search-wrap">
-      <div class="search-section">
-        <div class="search-box">
-          <input id="search" type="text" placeholder="検索" autocomplete="off">
-          <span id="searchResult" class="search-count"></span>
-          <div class="search-nav">
-            <button id="btnSearchPrev" class="ghost">▲</button>
-            <button id="btnSearchNext" class="ghost">▼</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    <script>
+        (function() {
+            let products = [];
+            let activeImportProdId = null;
+            const MAX_PRODUCTS = 6;
+            const STORAGE_KEY = 'item_management_data_v7';
 
-<!-- FULLSCREEN PREVIEW -->
-<div id="fullscreen" class="fullscreen">
-  <button class="exit" id="exit">×</button>
-  <div class="fullscreen-stage" id="fsStage">
-    <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-  </div>
-</div>
+            function generateId() {
+                return 'p' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            }
 
-<script>
-(() => {
-  const $ = id => document.getElementById(id);
-  const STORAGE_KEY = "pwa-previewer-items-v2";
-  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+            function saveToStorage() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+                } catch (e) {
+                    console.warn('保存失敗', e);
+                }
+            }
 
-  const PHONE_W = 402, PHONE_H = 874;
-  const IPAD_W = 1080, IPAD_H = 810;
+            function loadFromStorage() {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (Array.isArray(parsed)) {
+                            products = parsed.filter(p => p && p.id);
+                        }
+                    } catch (e) {
+                        products = [];
+                    }
+                }
+            }
 
-  let items = [];
-  let selectedId = null;
-  let editingId = null;
+            function getDefaultProducts() {
+                return [];
+            }
 
-  const source = $("source");
-  const nameInput = $("nameInput");
-  const framePhone = $("framePhone");
-  const frameIpad = $("frameIpad");
-  const fullFrame = $("fullFrame");
+            function init() {
+                loadFromStorage();
+                if (products.length === 0) {
+                    products = getDefaultProducts().map(p => ({ ...p, id: generateId() }));
+                    saveToStorage();
+                }
+                renderAllCards();
+                updateGridMode();
+            }
 
-  const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+            function renderAllCards() {
+                const grid = document.getElementById('cardGrid');
+                grid.innerHTML = '';
+                products.forEach(prod => {
+                    grid.appendChild(createCardElement(prod));
+                });
+            }
 
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
+            function createCardElement(prod) {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.dataset.productId = prod.id;
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        items = JSON.parse(raw);
-        if (!Array.isArray(items)) items = [];
-      } else {
-        const old = localStorage.getItem(OLD_KEY);
-        if (old) {
-          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
-          persist();
-        }
-      }
-    } catch (e) {
-      items = [];
-    }
-    if (items.length && !selectedId) selectedId = items[0].id;
-  }
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = '×';
+                removeBtn.title = '削除';
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeProduct(prod.id);
+                });
 
-  function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }
+                const photoArea = document.createElement('div');
+                photoArea.className = 'photo-area';
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                fileInput.addEventListener('change', (e) => handlePhotoUpload(e, prod, photoArea));
 
-  function formatDate(ts) {
-    const d = new Date(ts);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const w = WEEKDAYS[d.getDay()];
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `${m}/${day}（${w}）${h}:${min}`;
-  }
+                const placeholder = document.createElement('span');
+                placeholder.className = 'photo-placeholder';
+                placeholder.textContent = '📷';
+                const img = document.createElement('img');
+                img.style.display = 'none';
+                if (prod.photo) {
+                    img.src = prod.photo;
+                    img.style.display = 'block';
+                    placeholder.style.display = 'none';
+                }
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
+                photoArea.appendChild(placeholder);
+                photoArea.appendChild(img);
+                photoArea.appendChild(fileInput);
+                photoArea.addEventListener('click', () => fileInput.click());
 
-  function fitIframe(iframe, wrapEl, deviceW, deviceH) {
-    const rect = wrapEl.getBoundingClientRect();
-    const scale = Math.max(rect.width / deviceW, rect.height / deviceH);
-    iframe.style.transform = `scale(${scale})`;
-  }
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'item-title';
+                titleInput.value = prod.title || '';
+                titleInput.placeholder = '商品名';
+                titleInput.addEventListener('input', () => {
+                    prod.title = titleInput.value;
+                    saveToStorage();
+                });
 
-  function resizeAllPreviews() {
-    fitIframe(framePhone, document.querySelector(".phone-viewport"), PHONE_W, PHONE_H);
-    fitIframe(frameIpad, document.querySelector(".ipad-viewport"), IPAD_W, IPAD_H);
-  }
+                const memoTextarea = document.createElement('textarea');
+                memoTextarea.className = 'item-memo';
+                memoTextarea.rows = 1;
+                memoTextarea.value = prod.memo || '';
+                memoTextarea.placeholder = '備考';
+                memoTextarea.addEventListener('input', () => {
+                    prod.memo = memoTextarea.value;
+                    saveToStorage();
+                });
 
-  function resizeFullscreen() {
-    if (!$("fullscreen").classList.contains("show")) return;
-    const stage = $("fsStage");
-    const dW = PHONE_W;
-    const dH = PHONE_H;
-    const availW = stage.clientWidth;
-    const availH = stage.clientHeight;
-    const scale = Math.min(availW / dW, availH / dH);
-    fullFrame.style.width = dW + "px";
-    fullFrame.style.height = dH + "px";
-    fullFrame.style.transform = `scale(${scale})`;
-    fullFrame.style.transformOrigin = "center center";
-  }
+                const bottomInfo = document.createElement('div');
+                bottomInfo.className = 'bottom-info';
 
-  window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
+                const leftFields = document.createElement('div');
+                leftFields.className = 'left-fields';
 
-  function renderCards() {
-    const row = $("cardRow");
-    const sorted = items.slice().sort((a, b) => b.updated - a.updated);
-    $("emptyHint").style.display = items.length ? "none" : "block";
+                // 価格
+                const priceField = document.createElement('div');
+                priceField.className = 'field-row field-price';
+                const priceInput = document.createElement('input');
+                priceInput.type = 'text';
+                priceInput.className = 'price-input';
+                priceInput.value = prod.price || '';
+                priceInput.placeholder = '価格';
+                priceInput.addEventListener('focus', (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                });
+                priceInput.addEventListener('blur', (e) => {
+                    let val = e.target.value.replace(/[^0-9]/g, '');
+                    if (val) {
+                        e.target.value = Number(val).toLocaleString('ja-JP') + '円';
+                        prod.price = e.target.value;
+                    } else {
+                        e.target.value = '';
+                        prod.price = '';
+                    }
+                    saveToStorage();
+                });
+                priceInput.addEventListener('input', (e) => {
+                    prod.price = e.target.value;
+                });
+                priceField.appendChild(priceInput);
 
-    const cardsHtml = sorted.map(it => `
-      <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
-        <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)}</div>
-        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
-      </div>
-    `).join("");
+                // 店舗
+                const storeField = document.createElement('div');
+                storeField.className = 'field-row field-store';
+                const storeInput = document.createElement('input');
+                storeInput.type = 'text';
+                storeInput.value = prod.store || '';
+                storeInput.placeholder = '店舗名';
+                storeInput.addEventListener('input', () => {
+                    prod.store = storeInput.value;
+                    saveToStorage();
+                });
+                storeField.appendChild(storeInput);
 
-    const newCard = `<div class="card card-new" id="cardNew"><div class="plus">＋</div><div class="label">新規</div></div>`;
+                // 日付
+                const dateField = document.createElement('div');
+                dateField.className = 'field-row field-date';
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.value = prod.date || '';
+                dateInput.addEventListener('input', () => {
+                    prod.date = dateInput.value;
+                    saveToStorage();
+                });
+                dateField.appendChild(dateInput);
 
-    row.innerHTML = cardsHtml + newCard;
+                // URL
+                const urlField = document.createElement('div');
+                urlField.className = 'field-row field-url';
+                const urlInput = document.createElement('input');
+                urlInput.type = 'url';
+                urlInput.value = prod.url || '';
+                urlInput.placeholder = 'https://...';
+                urlInput.addEventListener('input', () => {
+                    prod.url = urlInput.value;
+                    saveToStorage();
+                    generateQRCode(qrContainer, prod.url);
+                });
+                urlField.appendChild(urlInput);
 
-    row.querySelectorAll(".card[data-id]").forEach(el => {
-      let pressTimer = null;
-      let longPressed = false;
+                leftFields.appendChild(priceField);
+                leftFields.appendChild(storeField);
+                leftFields.appendChild(dateField);
+                leftFields.appendChild(urlField);
 
-      const startPress = () => {
-        longPressed = false;
-        pressTimer = setTimeout(() => {
-          longPressed = true;
-          openEditor(el.dataset.id, false);
-        }, 480);
-      };
-      const cancelPress = () => { clearTimeout(pressTimer); };
+                const qrArea = document.createElement('div');
+                qrArea.className = 'qr-area';
+                const qrContainer = document.createElement('div');
+                qrContainer.className = 'qr-code-container';
+                qrArea.appendChild(qrContainer);
 
-      el.addEventListener("pointerdown", startPress);
-      el.addEventListener("pointerup", cancelPress);
-      el.addEventListener("pointerleave", cancelPress);
-      el.addEventListener("pointercancel", cancelPress);
-      el.addEventListener("click", () => {
-        if (longPressed) return;
-        selectedId = el.dataset.id;
-        renderCards();
-        updatePreview();
-        showCardToast(el, "長押しで編集");
-      });
-      el.addEventListener("contextmenu", e => e.preventDefault());
-    });
+                bottomInfo.appendChild(leftFields);
+                bottomInfo.appendChild(qrArea);
 
-    $("cardNew").onclick = () => openEditor(null, true);
-  }
+                // アクションボタン
+                const actions = document.createElement('div');
+                actions.className = 'card-actions';
 
-  function showCardToast(cardEl, msg) {
-    const existing = cardEl.querySelector(".card-toast");
-    if (existing) existing.remove();
+                const exportBtn = document.createElement('button');
+                exportBtn.className = 'action-sub-btn';
+                exportBtn.textContent = '保存';
+                exportBtn.addEventListener('click', () => exportToAppleNotes(prod));
 
-    const toast = document.createElement("div");
-    toast.className = "card-toast";
-    toast.textContent = msg;
-    cardEl.appendChild(toast);
+                const importBtn = document.createElement('button');
+                importBtn.className = 'action-sub-btn';
+                importBtn.textContent = '読込';
+                importBtn.addEventListener('click', () => openImportModal(prod.id));
 
-    requestAnimationFrame(() => toast.classList.add("show"));
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 250);
-    }, 1400);
-  }
+                actions.appendChild(exportBtn);
+                actions.appendChild(importBtn);
 
-  function clearPreviews() {
-    framePhone.srcdoc = "";
-    frameIpad.srcdoc = "";
-  }
+                card.appendChild(removeBtn);
+                card.appendChild(photoArea);
+                card.appendChild(titleInput);
+                card.appendChild(memoTextarea);
+                card.appendChild(bottomInfo);
+                card.appendChild(actions);
 
-  function updatePreview() {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) { clearPreviews(); return; }
-    const html = it.html || "";
-    framePhone.srcdoc = html;
-    frameIpad.srcdoc = html;
-    requestAnimationFrame(resizeAllPreviews);
-  }
+                generateQRCode(qrContainer, prod.url);
+                return card;
+            }
 
-  let searchMatches = [];
-  let searchIndex = -1;
+            function generateQRCode(container, url) {
+                container.innerHTML = '';
+                if (url) {
+                    try {
+                        new QRCode(container, {
+                            text: url,
+                            width: 45,
+                            height: 45,
+                            colorDark: '#0f172a',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    } catch (e) {
+                        console.warn('QR生成エラー', e);
+                    }
+                }
+            }
 
-  function openEditor(id, isNew) {
-    editingId = isNew ? null : id;
-    if (isNew) {
-      nameInput.value = "";
-      source.value = "";
-    } else {
-      const it = items.find(x => x.id === id);
-      nameInput.value = it ? (it.name || "") : "";
-      source.value = it ? (it.html || "") : "";
-    }
-    $("btnDelete").style.display = isNew ? "none" : "flex";
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    clearSearchHighlight();
-    $("editorOverlay").classList.add("show");
-    document.body.style.overflow = "hidden";
-    adjustEditorForKeyboard();
-    setTimeout(() => nameInput.focus(), 50);
-  }
+            function handlePhotoUpload(event, prod, photoArea) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const maxSize = 500;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height && width > maxSize) {
+                            height = Math.round((height * maxSize) / width);
+                            width = maxSize;
+                        } else if (height > maxSize) {
+                            width = Math.round((width * maxSize) / height);
+                            height = maxSize;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        prod.photo = compressedDataUrl;
+                        saveToStorage();
 
-  function closeEditor() {
-    $("editorOverlay").classList.remove("show");
-    document.body.style.overflow = "";
-    document.querySelector(".editor-sheet").style.maxHeight = "";
-  }
+                        const imgElement = photoArea.querySelector('img');
+                        const placeholderEl = photoArea.querySelector('.photo-placeholder');
+                        if (imgElement && placeholderEl) {
+                            imgElement.src = compressedDataUrl;
+                            imgElement.style.display = 'block';
+                            placeholderEl.style.display = 'none';
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
 
-  function saveCurrent() {
-    const name = (nameInput.value || "").trim() || "無題";
-    const html = source.value;
-    if (editingId) {
-      const it = items.find(x => x.id === editingId);
-      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
-      selectedId = editingId;
-    } else {
-      const id = uid();
-      items.push({ id, name, html, updated: Date.now() });
-      selectedId = id;
-    }
-    persist();
-    closeEditor();
-    renderCards();
-    updatePreview();
-  }
+            // 日付の正規化（2026.8.31 → 2026-08-31）
+            function normalizeDate(dateStr) {
+                if (!dateStr) return '';
+                const match = dateStr.match(/^(\d{4})[.\/](\d{1,2})[.\/](\d{1,2})$/);
+                if (match) {
+                    const year = match[1];
+                    const month = match[2].padStart(2, '0');
+                    const day = match[3].padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                }
+                return dateStr;
+            }
 
-  function deleteCurrent() {
-    if (!editingId) return;
-    const it = items.find(x => x.id === editingId);
-    if (!it) return;
-    if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
-    items = items.filter(x => x.id !== editingId);
-    if (selectedId === editingId) selectedId = items.length ? items[0].id : null;
-    persist();
-    closeEditor();
-    renderCards();
-    updatePreview();
-  }
+            // メモアプリへの書き出し・保存（テキストのみ）
+            async function exportToAppleNotes(prod) {
+                const textData =
+                    `${prod.title || ''}\n${prod.memo || ''}\n${prod.price || ''}\n${prod.store || ''}\n${prod.date || ''}\n${prod.url || ''}`;
 
-  function clearSearchHighlight() {
-    searchMatches = [];
-    searchIndex = -1;
-  }
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title: prod.title || '商品データ', text: textData });
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            alert('共有に失敗しました: ' + err.message);
+                        }
+                    }
+                } else {
+                    try {
+                        await navigator.clipboard.writeText(textData);
+                        alert('テキストをクリップボードにコピーしました。');
+                    } catch (e) {
+                        alert('コピーに失敗しました: ' + e.message);
+                    }
+                }
+            }
 
-  function runSearch(direction) {
-    const q = $("search").value;
-    if (!q) {
-      $("searchResult").textContent = "";
-      clearSearchHighlight();
-      return;
-    }
-    const text = source.value;
-    const matches = [];
-    let pos = 0;
-    while (true) {
-      const idx = text.indexOf(q, pos);
-      if (idx === -1) break;
-      matches.push(idx);
-      pos = idx + Math.max(q.length, 1);
-    }
-    searchMatches = matches;
+            // モーダル操作
+            window.openImportModal = function(prodId) {
+                activeImportProdId = prodId;
+                document.getElementById('importText').value = '';
+                document.getElementById('importModal').classList.add('active');
+            };
 
-    if (!matches.length) {
-      $("searchResult").textContent = "0件";
-      searchIndex = -1;
-      return;
-    }
+            window.closeImportModal = function() {
+                document.getElementById('importModal').classList.remove('active');
+                activeImportProdId = null;
+            };
 
-    if (direction === "next") {
-      if (searchIndex === -1) searchIndex = 0;
-      else searchIndex = (searchIndex + 1) % matches.length;
-    } else if (direction === "prev") {
-      if (searchIndex === -1) searchIndex = matches.length - 1;
-      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
-    } else {
-      $("searchResult").textContent = `${matches.length}件`;
-      searchIndex = -1;
-      return;
-    }
+            // 読込順: 商品名、備考、価格、店舗、日付、URL
+            window.applyImportText = function() {
+                const text = document.getElementById('importText').value;
+                if (!text || !activeImportProdId) return;
 
-    const start = matches[searchIndex];
-    const end = start + q.length;
-    source.focus({ preventScroll: true });
-    source.setSelectionRange(start, end);
-    scrollTextareaToSelection(start);
-    $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
-  }
+                const prod = products.find(p => p.id === activeImportProdId);
+                if (prod) {
+                    const lines = text.split('\n').map(l => l.trim());
+                    if (lines.length > 0 && lines[0]) prod.title = lines[0];
+                    if (lines.length > 1 && lines[1]) prod.memo = lines[1];
+                    if (lines.length > 2 && lines[2]) prod.price = lines[2];
+                    if (lines.length > 3 && lines[3]) prod.store = lines[3];
+                    if (lines.length > 4 && lines[4]) prod.date = normalizeDate(lines[4]);
+                    if (lines.length > 5 && lines[5]) prod.url = lines[5];
 
-  function scrollTextareaToSelection(charIndex) {
-    const ta = source;
-    const text = ta.value;
-    const before = text.slice(0, charIndex);
+                    saveToStorage();
+                    renderAllCards();
+                }
+                closeImportModal();
+            };
 
-    const mirror = document.createElement('div');
-    const style = getComputedStyle(ta);
+            function addProduct() {
+                if (products.length >= MAX_PRODUCTS) {
+                    alert('最大' + MAX_PRODUCTS + '商品まで登録できます。');
+                    return;
+                }
+                const newProd = {
+                    id: generateId(),
+                    title: '',
+                    memo: '',
+                    price: '',
+                    store: '',
+                    date: '',
+                    url: '',
+                    photo: null
+                };
+                products.push(newProd);
+                saveToStorage();
+                renderAllCards();
+                updateGridMode();
+            }
 
-    mirror.style.font = style.font;
-    mirror.style.padding = style.padding;
-    mirror.style.letterSpacing = style.letterSpacing;
-    mirror.style.lineHeight = style.lineHeight;
-    mirror.style.whiteSpace = 'pre-wrap';
-    mirror.style.wordBreak = 'break-all';
-    mirror.style.overflowWrap = 'anywhere';
-    mirror.style.boxSizing = 'border-box';
-    mirror.style.border = 'none';
-    mirror.style.width = ta.clientWidth + 'px';
-    mirror.style.position = 'absolute';
-    mirror.style.top = '-9999px';
-    mirror.style.left = '-9999px';
-    mirror.style.visibility = 'hidden';
+            function removeProduct(id) {
+                if (products.length <= 1) {
+                    alert('最低1商品は必要です。');
+                    return;
+                }
+                products = products.filter(p => p.id !== id);
+                saveToStorage();
+                renderAllCards();
+                updateGridMode();
+            }
 
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    mirror.innerHTML = esc(before) + '<span>&#x200b;</span>' + esc(text.slice(charIndex));
+            function updateGridMode() {
+                const grid = document.getElementById('cardGrid');
+                if (products.length > 4) {
+                    grid.classList.add('mode-3col');
+                } else {
+                    grid.classList.remove('mode-3col');
+                }
+            }
 
-    document.body.appendChild(mirror);
+            window.addEventListener('DOMContentLoaded', init);
+            window.addEventListener('beforeprint', updateGridMode);
 
-    const span = mirror.querySelector('span');
-    const spanRect = span.getBoundingClientRect();
-    const mirrorRect = mirror.getBoundingClientRect();
-
-    const relTop = spanRect.top - mirrorRect.top;
-    const lineHeight = parseFloat(style.lineHeight) || 18;
-    const paddingTop = parseFloat(style.paddingTop) || 14;
-    const paddingBottom = parseFloat(style.paddingBottom) || 14;
-    const visibleHeight = ta.clientHeight - paddingTop - paddingBottom;
-
-    ta.scrollTop = Math.max(0, relTop - visibleHeight / 2 + lineHeight / 2);
-
-    document.body.removeChild(mirror);
-  }
-
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
-  $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
-  });
-  $("btnSearchNext").onclick = () => runSearch("next");
-  $("btnSearchPrev").onclick = () => runSearch("prev");
-
-  function openFullscreen() {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) { alert("表示する項目を一覧から選んでください"); return; }
-    fullFrame.srcdoc = it.html || "";
-    $("fullscreen").classList.add("show");
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(resizeFullscreen);
-  }
-
-  $("btnFullscreen").onclick = openFullscreen;
-  $("exit").onclick = () => {
-    $("fullscreen").classList.remove("show");
-    fullFrame.srcdoc = "";
-    document.body.style.overflow = "";
-  };
-
-  $("btnSave").onclick = saveCurrent;
-  $("btnCancel").onclick = closeEditor;
-  $("btnDelete").onclick = deleteCurrent;
-  $("btnClear").onclick = () => {
-    source.value = "";
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    clearSearchHighlight();
-    source.focus();
-  };
-  $("btnCopy").onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(source.value);
-      const btn = $("btnCopy");
-      const old = btn.textContent;
-      btn.textContent = "コピー済";
-      setTimeout(() => btn.textContent = old, 1200);
-    } catch (e) {
-      alert("コピーに失敗しました");
-    }
-  };
-
-  $("editorOverlay").addEventListener("click", (e) => {
-    if (e.target === $("editorOverlay")) closeEditor();
-  });
-
-  function adjustEditorForKeyboard() {
-    if (!window.visualViewport) return;
-    const vv = window.visualViewport;
-    const sheet = document.querySelector(".editor-sheet");
-    if ($("editorOverlay").classList.contains("show")) {
-      sheet.style.maxHeight = (vv.height - 16) + "px";
-    }
-  }
-  window.visualViewport?.addEventListener("resize", adjustEditorForKeyboard);
-  window.visualViewport?.addEventListener("scroll", adjustEditorForKeyboard);
-
-  load();
-  renderCards();
-  updatePreview();
-  requestAnimationFrame(resizeAllPreviews);
-})();
-</script>
+            window.addProduct = addProduct;
+            window.removeProduct = removeProduct;
+        })();
+    </script>
 </body>
 </html>
