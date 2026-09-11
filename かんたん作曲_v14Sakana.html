@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-title" content="ココマーク">
   <style>
     :root {
-      --bg-color: #1c1c1e;
-      --panel-bg: rgba(44, 44, 46, 0.92);
+      --bg-color: #2c2c2e;
+      --panel-bg: rgba(44, 44, 46, 0.65);
       --accent-color: #0a84ff;
       --text-color: #ffffff;
       --border-color: #38383a;
@@ -97,7 +97,7 @@
     #editor-container {
       flex: 1;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
       background-color: #000;
       min-height: 0;
       touch-action: none;
@@ -152,7 +152,7 @@
 
     #properties-panel {
       position: absolute;
-      bottom: calc(60px + var(--safe-area-bottom));
+      bottom: calc(52px + var(--safe-area-bottom));
       left: 10px;
       right: 10px;
       background: var(--panel-bg);
@@ -270,16 +270,43 @@
       background: var(--accent-color);
     }
 
-    .text-input-field {
+    .text-input-wrapper {
       flex: 1;
+      position: relative;
       min-width: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .text-input-field {
+      width: 100%;
       background: #1c1c1e;
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 7px 10px;
+      padding: 7px 32px 7px 10px;
       border-radius: 8px;
       font-size: 16px;
       line-height: 1.2;
+    }
+
+    .text-clear-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #8e8e93;
+      border: none;
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
     }
 
     .nudge-controls {
@@ -308,7 +335,7 @@
     }
 
     toolbar {
-      height: calc(56px + var(--safe-area-bottom));
+      height: calc(48px + var(--safe-area-bottom));
       padding-bottom: var(--safe-area-bottom);
       background: var(--panel-bg);
       backdrop-filter: blur(20px);
@@ -330,9 +357,10 @@
       border: none;
       color: #8e8e93;
       font-size: 10px;
-      gap: 3px;
+      gap: 1px;
       width: 50px;
       height: 100%;
+      padding: 0;
     }
 
     .tool-item svg {
@@ -372,7 +400,7 @@
 
     #save-modal img {
       max-width: 90%;
-      max-height: 70dvh;
+      max-height: 70vh;
       border-radius: 8px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
       object-fit: contain;
@@ -434,7 +462,10 @@
 
     <div class="panel-row" id="text-prop-row">
       <span class="panel-label">文字</span>
-      <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+      <div class="text-input-wrapper">
+        <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+        <button class="text-clear-btn" id="btn-text-clear">×</button>
+      </div>
       <button id="btn-bold" class="toggle-btn">太字</button>
     </div>
 
@@ -473,6 +504,10 @@
         <button class="nudge-btn" id="nudge-right">→</button>
       </div>
     </div>
+
+    <div class="panel-row" id="delete-row">
+      <button id="btn-delete" class="toggle-btn delete-tool" style="width: 100%; color: #ff453a;">削除</button>
+    </div>
   </div>
 
   <toolbar>
@@ -491,10 +526,6 @@
     <button class="tool-item" data-tool="arrow">
       <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
       矢印
-    </button>
-    <button class="tool-item delete-tool" id="btn-delete">
-      <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-      削除
     </button>
   </toolbar>
 
@@ -516,7 +547,6 @@
     const RECENT_COLORS_KEY = 'cocomark_recent_colors';
     const MAX_RECENT_COLORS = 5;
 
-    // 各プロパティの最大値（デフォルトとして採用）
     const MAX_TEXT_SIZE = 160;
     const MAX_STROKE_WIDTH = 40;
     const MAX_OUTLINE_WIDTH = 20;
@@ -572,6 +602,7 @@
     const colorPresetsContainer = document.getElementById('color-presets');
     const customColorPicker = document.getElementById('custom-color-picker');
     const textContentInput = document.getElementById('text-content-input');
+    const btnTextClear = document.getElementById('btn-text-clear');
     const btnBold = document.getElementById('btn-bold');
     const sizeSlider = document.getElementById('size-slider');
     const sizeLabel = document.getElementById('size-label');
@@ -584,7 +615,6 @@
     const savePreview = document.getElementById('save-preview');
     const btnCloseModal = document.getElementById('btn-close-modal');
 
-    // 計測用オフスクリーンコンテキスト
     const measureCtx = document.createElement('canvas').getContext('2d');
 
     // -------------------------------------------------------------
@@ -768,14 +798,12 @@
       return { w, h: a.size };
     }
 
-    // 回転中心（文字は視覚的な中心、四角は矩形中心）
     function getRotCenter(a) {
       if (a.type === 'rect') {
         return { x: a.x + a.w / 2, y: a.y + a.h / 2 };
       }
       if (a.type === 'text') {
-        const m = measureTextAnno(a);
-        return { x: a.x + m.w / 2, y: a.y - m.h / 2 };
+        return { x: a.x, y: a.y };
       }
       return { x: 0, y: 0 };
     }
@@ -870,7 +898,6 @@
     let initialHandleAngle = 0;
     let initialRotation = 0;
 
-    // 指を離した時にパネル表示するためのフラグ
     let pendingTextPanel = false;
 
     function startPinch() {
@@ -908,11 +935,9 @@
     editorContainer.addEventListener('pointerdown', (e) => {
       if (!state.image) return;
 
-      // iOS Safari でポインターを確実に追跡
-      e.preventDefault();
-      if (e.target.setPointerCapture) {
+      try {
         e.target.setPointerCapture(e.pointerId);
-      }
+      } catch (err) {}
 
       activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -970,10 +995,10 @@
           };
           state.annotations.push(newAnno);
           state.selectedId = id;
+          bringToFront(id);
           saveHistory();
           switchTool('select');
           renderAnnotations();
-          // パネルは指を離した時に表示
           pendingTextPanel = true;
           return;
         }
@@ -1016,10 +1041,11 @@
         }
       }
 
-      // 選択モード
+      // 選択・移動モード
       const hitAnno = getHitAnnotation(coords);
       if (hitAnno) {
         state.selectedId = hitAnno.id;
+        bringToFront(hitAnno.id);
         isDraggingObj = true;
         initialObjState = JSON.parse(JSON.stringify(hitAnno));
         updateUI();
@@ -1063,7 +1089,7 @@
 
       if (activePointers.size > 1) return;
 
-      // 1本指パン
+      // 1本指パン移動
       if (isPanning) {
         const c = getContainerCoords(e);
         const dx = c.x - panStart.x;
@@ -1131,7 +1157,7 @@
         return;
       }
 
-      // ドラッグ移動
+      // 要素のドラッグ移動
       if (isDraggingObj && initialObjState) {
         const dx = coords.x - startImageCoords.x;
         const dy = coords.y - startImageCoords.y;
@@ -1149,7 +1175,6 @@
       }
     });
 
-    // 四角のリサイズ（対角固定・回転対応）
     function applyRectResize(target, s, handle, dx, dy) {
       const th = (s.rotation || 0) * Math.PI / 180;
       const cos = Math.cos(-th), sin = Math.sin(-th);
@@ -1191,6 +1216,12 @@
     }
 
     const handlePointerUp = (e) => {
+      try {
+        if (e.target.hasPointerCapture(e.pointerId)) {
+          e.target.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) {}
+
       const wasPinching = isPinching;
       activePointers.delete(e.pointerId);
 
@@ -1252,17 +1283,12 @@
         renderAnnotations();
       }
 
-      // テキスト配置直後は指を離した時にパネル表示
       if (pendingTextPanel) {
         pendingTextPanel = false;
         panelNeedsUpdate = true;
       }
 
-      if (panelNeedsUpdate || !historySaved) {
-        updateUI();
-      } else {
-        updateUI();
-      }
+      updateUI();
 
       isDrawing = false;
       isDraggingObj = false;
@@ -1277,6 +1303,17 @@
     editorContainer.addEventListener('pointerleave', (e) => {
       if (activePointers.has(e.pointerId)) handlePointerUp(e);
     });
+
+    // -------------------------------------------------------------
+    // 最前面へ移動
+    // -------------------------------------------------------------
+    function bringToFront(id) {
+      const idx = state.annotations.findIndex(a => a.id === id);
+      if (idx >= 0 && idx < state.annotations.length - 1) {
+        const item = state.annotations.splice(idx, 1)[0];
+        state.annotations.push(item);
+      }
+    }
 
     // -------------------------------------------------------------
     // ヒットテスト
@@ -1317,8 +1354,8 @@
           const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
           const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
 
-          if (lx >= a.x - 12 && lx <= a.x + w + 12 &&
-              ly >= a.y - h - 12 && ly <= a.y + 12) {
+          if (lx >= a.x - w/2 - 12 && lx <= a.x + w/2 + 12 &&
+              ly >= a.y - h/2 - 12 && ly <= a.y + h/2 + 12) {
             return a;
           }
         }
@@ -1344,10 +1381,8 @@
         const r = localToWorld(a, a.x + a.w / 2, a.y - off);
         handles.push({ id: 'rot', x: r.x, y: r.y });
       } else if (a.type === 'text') {
-        const m = measureTextAnno(a);
-        const topCenterX = a.x + m.w / 2;
-        const topY = a.y - a.size;
-        const r = localToWorld(a, topCenterX, topY - off);
+        const topY = a.y - a.size / 2;
+        const r = localToWorld(a, a.x, topY - off);
         handles.push({ id: 'rot', x: r.x, y: r.y });
       } else if (a.type === 'arrow') {
         handles.push({ id: 'p1', x: a.x1, y: a.y1 });
@@ -1414,38 +1449,35 @@
       positionPanel();
     }
 
-    // arcTo を使った安全な角丸矩形パス（roundRect 非対応環境対応）
-    function pathRoundedRect(ctx, x, y, w, h, r) {
-      const absW = Math.abs(w);
-      const absH = Math.abs(h);
-      const radius = Math.max(0, Math.min(r, absW / 2, absH / 2));
-
-      // w/h が負の場合、座標系を反転させて描画
-      const sx = w < 0 ? -1 : 1;
-      const sy = h < 0 ? -1 : 1;
-
-      ctx.beginPath();
-      ctx.moveTo(x + sx * radius, y);
-      ctx.lineTo(x + sx * (absW - radius), y);
-      ctx.arcTo(x + sx * absW, y, x + sx * absW, y + sy * radius, radius);
-      ctx.lineTo(x + sx * absW, y + sy * (absH - radius));
-      ctx.arcTo(x + sx * absW, y + sy * absH, x + sx * (absW - radius), y + sy * absH, radius);
-      ctx.lineTo(x + sx * radius, y + sy * absH);
-      ctx.arcTo(x, y + sy * absH, x, y + sy * (absH - radius), radius);
-      ctx.lineTo(x, y + sy * radius);
-      ctx.arcTo(x, y, x + sx * radius, y, radius);
-      ctx.closePath();
-    }
-
     function drawRoundedRect(ctx, a) {
       withRotation(ctx, a, () => {
-        const w = Math.abs(a.w);
-        const h = Math.abs(a.h);
-        const maxR = Math.min(w, h) / 2;
-        const pct = (a.borderRadius != null ? a.borderRadius : 0) / 100;
-        const r = Math.max(0, Math.min(maxR, maxR * pct));
+        const x = a.x;
+        const y = a.y;
+        const w = a.w;
+        const h = a.h;
+        const absW = Math.abs(w);
+        const absH = Math.abs(h);
 
-        pathRoundedRect(ctx, a.x, a.y, a.w, a.h, r);
+        const maxR = Math.min(absW, absH) / 2;
+        const pct = (a.borderRadius != null ? a.borderRadius : 0) / 100;
+        let r = Math.max(0, Math.min(maxR, maxR * pct));
+
+        ctx.beginPath();
+        if (r <= 0) {
+          ctx.rect(x, y, w, h);
+        } else {
+          const x1 = Math.min(x, x + w);
+          const x2 = Math.max(x, x + w);
+          const y1 = Math.min(y, y + h);
+          const y2 = Math.max(y, y + h);
+
+          ctx.moveTo(x1 + r, y1);
+          ctx.arcTo(x2, y1, x2, y2, r);
+          ctx.arcTo(x2, y2, x1, y2, r);
+          ctx.arcTo(x1, y2, x1, y1, r);
+          ctx.arcTo(x1, y1, x2, y1, r);
+          ctx.closePath();
+        }
 
         ctx.lineJoin = 'round';
 
@@ -1498,23 +1530,26 @@
       ctx.stroke();
     }
 
-    // 文字描画：回転中心は視覚的中心。影は輪郭シルエットに1回だけ。
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
-        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
 
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
-        // 1) 影を作る（輪郭シルエットに1回だけ影を落とす）
+        // フチが大きい時に影が大きくなりすぎないよう調整
+        const shadowBlur = Math.min(6, 3 + outline * 0.3);
+        const shadowOffset = Math.min(3, 1.5 + outline * 0.15);
+
         if (hasShadow) {
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-          ctx.shadowBlur = 8;
-          ctx.shadowOffsetX = 3;
-          ctx.shadowOffsetY = 3;
+          ctx.shadowBlur = shadowBlur;
+          ctx.shadowOffsetX = shadowOffset;
+          ctx.shadowOffsetY = shadowOffset;
           if (outline > 0) {
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = outline * 2;
@@ -1526,7 +1561,6 @@
           ctx.restore();
         }
 
-        // 2) 影なしで本体を描画
         if (outline > 0) {
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = outline * 2;
@@ -1553,21 +1587,18 @@
       } else if (a.type === 'text') {
         const m = measureTextAnno(a);
         withRotation(annoCtx, a, () => {
-          annoCtx.strokeRect(a.x - 4, a.y - a.size - 4, m.w + 8, a.size + 8);
+          annoCtx.strokeRect(a.x - m.w/2 - 4, a.y - a.size/2 - 4, m.w + 8, a.size + 8);
         });
       }
 
-      // ハンドル
       const handles = getHandles(a);
       handles.forEach(h => {
         if (h.id === 'rot') {
-          const c = getRotCenter(a);
           let base;
           if (a.type === 'rect') {
             base = localToWorld(a, a.x + a.w / 2, a.y);
           } else {
-            const m = measureTextAnno(a);
-            base = localToWorld(a, a.x + m.w / 2, a.y - a.size);
+            base = localToWorld(a, a.x, a.y - a.size / 2);
           }
 
           annoCtx.beginPath();
@@ -1613,7 +1644,7 @@
 
       let objCenterY;
       if (a.type === 'rect') objCenterY = a.y + a.h / 2;
-      else if (a.type === 'text') objCenterY = a.y - a.size / 2;
+      else if (a.type === 'text') objCenterY = a.y;
       else if (a.type === 'arrow') objCenterY = (a.y1 + a.y2) / 2;
       else objCenterY = 0;
 
@@ -1713,6 +1744,16 @@
     });
     textContentInput.addEventListener('change', () => saveHistory());
 
+    btnTextClear.addEventListener('click', () => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'text') {
+        a.text = '';
+        textContentInput.value = '';
+        renderAnnotations();
+        saveHistory();
+      }
+    });
+
     btnBold.addEventListener('click', () => {
       const a = state.annotations.find(x => x.id === state.selectedId);
       if (a && a.type === 'text') {
@@ -1802,7 +1843,7 @@
     });
 
     // -------------------------------------------------------------
-    // 十字キー：長押しで連続移動
+    // 微調整ボタン（長押し対応）
     // -------------------------------------------------------------
     function applyNudge(dx, dy) {
       const a = state.annotations.find(x => x.id === state.selectedId);
@@ -1915,7 +1956,7 @@
       saveModal.classList.remove('active');
     });
 
-    // 初期化
+    // 初期化実行
     init();
   </script>
 </body>
