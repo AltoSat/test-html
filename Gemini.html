@@ -12,11 +12,11 @@
   <style>
     :root {
       --bg-color: #1c1c1e;
-      --panel-bg: rgba(44, 44, 46, 0.65); /* ツール表示の透明度をアップ */
-      --header-bg: rgba(44, 44, 46, 0.92);
+      --panel-bg: rgba(30, 30, 32, 0.45); /* 後ろの画像が見えるように半透明度をアップ */
+      --header-bg: rgba(30, 30, 32, 0.45);
       --accent-color: #0a84ff;
       --text-color: #ffffff;
-      --border-color: #38383a;
+      --border-color: rgba(255, 255, 255, 0.15);
       --safe-area-bottom: env(safe-area-inset-bottom, 0px);
       --safe-area-top: env(safe-area-inset-top, 0px);
     }
@@ -51,7 +51,7 @@
       flex-direction: column;
     }
 
-    /* iPhoneのステータスバー領域含むヘッダー領域 */
+    /* ヘッダー領域 */
     header {
       height: calc(44px + var(--safe-area-top));
       padding-top: var(--safe-area-top);
@@ -102,7 +102,7 @@
     #editor-container {
       flex: 1;
       position: relative;
-      overflow: hidden; /* はみ出た部分はビューポート側で見えるようにし、画面外のみ隠す */
+      overflow: hidden;
       background-color: #000;
       min-height: 0;
       touch-action: none;
@@ -118,11 +118,6 @@
       background: var(--bg-color);
       z-index: 50;
       gap: 20px;
-    }
-
-    #start-screen p {
-      color: #8e8e93;
-      font-size: 14px;
     }
 
     .file-select-label {
@@ -146,7 +141,7 @@
       left: 0;
       transform-origin: 0 0;
       will-change: transform;
-      overflow: visible; /* 画像外にはみ出た要素を見えるようにする */
+      overflow: visible; /* オブジェクトが画像の外側にはみ出ても見えるようにする */
     }
 
     canvas {
@@ -157,7 +152,7 @@
       overflow: visible;
     }
 
-    /* オブジェクトツール（プロパティパネル） - 背景透明度アップ */
+    /* オブジェクトツール（プロパティパネル） */
     #properties-panel {
       position: absolute;
       bottom: calc(48px + (var(--safe-area-bottom) / 2));
@@ -167,10 +162,10 @@
       backdrop-filter: blur(25px);
       -webkit-backdrop-filter: blur(25px);
       border-radius: 14px;
-      padding: 10px 12px 12px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       border: 0.5px solid var(--border-color);
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       z-index: 90;
@@ -189,14 +184,14 @@
     .panel-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       overflow-x: auto;
       overflow-y: hidden;
       white-space: nowrap;
-      padding: 4px 2px;
+      padding: 2px 0;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-x;
-      min-height: 38px;
+      min-height: 34px;
     }
 
     .panel-row::-webkit-scrollbar {
@@ -204,25 +199,24 @@
     }
 
     .panel-label {
-      font-size: 12px;
-      color: #8e8e93;
-      min-width: 45px;
+      font-size: 11px;
+      color: #a0a0a5;
+      min-width: 38px;
       flex-shrink: 0;
     }
 
     #color-presets {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex-shrink: 0;
-      padding: 2px 0;
     }
 
     .color-swatch {
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.18);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       flex-shrink: 0;
       box-sizing: border-box;
       transition: transform 0.12s ease, border-color 0.12s ease;
@@ -236,13 +230,13 @@
 
     .color-picker-wrapper {
       position: relative;
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
       flex-shrink: 0;
       overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.18);
+      border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
     .color-picker-wrapper input[type="color"] {
@@ -250,12 +244,12 @@
       opacity: 0;
       top: -10px;
       left: -10px;
-      width: 50px;
-      height: 50px;
+      width: 44px;
+      height: 44px;
       cursor: pointer;
     }
 
-    /* 文字入力ラッパー ＆ ×消去ボタン */
+    /* 文字入力ラッパー */
     .input-wrapper {
       position: relative;
       flex: 1;
@@ -266,25 +260,25 @@
 
     .text-input-field {
       width: 100%;
-      background: rgba(28, 28, 30, 0.8);
+      background: rgba(0, 0, 0, 0.4);
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 7px 28px 7px 10px;
-      border-radius: 8px;
-      font-size: 16px;
+      padding: 5px 24px 5px 8px;
+      border-radius: 6px;
+      font-size: 14px;
       line-height: 1.2;
     }
 
     .btn-clear-text {
       position: absolute;
-      right: 6px;
-      width: 18px;
-      height: 18px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
       background: rgba(255, 255, 255, 0.3);
       color: #000;
       border-radius: 50%;
       border: none;
-      font-size: 12px;
+      font-size: 10px;
       font-weight: bold;
       display: flex;
       align-items: center;
@@ -292,20 +286,21 @@
       cursor: pointer;
     }
 
+    /* スライダーを短く調整 */
     input[type="range"] {
-      flex: 1;
-      min-width: 60px;
+      width: 85px;
+      flex-shrink: 0;
       accent-color: var(--accent-color);
-      height: 28px;
+      height: 24px;
     }
 
     .toggle-btn {
-      background: rgba(58, 58, 60, 0.8);
+      background: rgba(255, 255, 255, 0.15);
       border: none;
       color: #fff;
-      padding: 7px 12px;
-      border-radius: 8px;
-      font-size: 13px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 500;
       flex-shrink: 0;
       line-height: 1.1;
@@ -318,18 +313,18 @@
     .nudge-controls {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       flex-shrink: 0;
     }
 
     .nudge-btn {
-      width: 32px;
-      height: 32px;
-      background: rgba(58, 58, 60, 0.8);
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.15);
       border: none;
       color: #fff;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -337,31 +332,30 @@
     }
 
     .nudge-btn:active {
-      background: #545458;
+      background: rgba(255, 255, 255, 0.3);
     }
 
-    /* ツール内の削除ボタン */
-    .btn-panel-delete {
-      width: 100%;
-      background: rgba(255, 69, 58, 0.2);
+    /* ゴミ箱マークだけの小さな削除ボタン */
+    .btn-icon-delete {
+      background: rgba(255, 69, 58, 0.25);
       color: #ff453a;
       border: 1px solid rgba(255, 69, 58, 0.4);
-      padding: 8px 0;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      margin-top: 4px;
+      flex-shrink: 0;
+      margin-left: auto;
+      cursor: pointer;
     }
 
-    .btn-panel-delete:active {
-      background: rgba(255, 69, 58, 0.4);
+    .btn-icon-delete:active {
+      background: rgba(255, 69, 58, 0.5);
     }
 
-    /* フッターメニュー（下部余白を半分に縮小） */
+    /* フッターメニュー */
     toolbar {
       height: calc(48px + (var(--safe-area-bottom) / 2));
       padding-bottom: calc(var(--safe-area-bottom) / 2);
@@ -465,7 +459,6 @@
     <div id="start-screen">
       <label class="file-select-label" for="image-input">写真を選択</label>
       <input type="file" id="image-input" accept="image/*">
-      <p>iPhoneの写真・スクショを選択してください</p>
     </div>
 
     <div id="viewport">
@@ -482,6 +475,10 @@
       <div class="color-picker-wrapper">
         <input type="color" id="custom-color-picker">
       </div>
+      <!-- 削除ボタン（ゴミ箱アイコン）を上部ツール列へ移動 -->
+      <button class="btn-icon-delete" id="btn-delete" title="削除">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
     </div>
 
     <div class="panel-row" id="text-prop-row">
@@ -496,10 +493,7 @@
     <div class="panel-row" id="size-prop-row">
       <span class="panel-label" id="size-label">サイズ</span>
       <input type="range" id="size-slider" min="1" max="100" value="100">
-    </div>
-
-    <div class="panel-row" id="outline-prop-row">
-      <span class="panel-label">フチ</span>
+      <span class="panel-label" style="min-width:auto; margin-left:4px;">フチ</span>
       <input type="range" id="outline-slider" min="0" max="20" value="20">
     </div>
 
@@ -515,25 +509,19 @@
     </div>
 
     <div class="panel-row" style="justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 6px;">
         <span class="panel-label">影</span>
         <button id="btn-shadow-toggle" class="toggle-btn active">影 ON</button>
       </div>
 
       <div class="nudge-controls">
-        <span class="panel-label" style="min-width: auto; margin-right: 4px;">微調整</span>
+        <span class="panel-label" style="min-width: auto; margin-right: 2px;">微調整</span>
         <button class="nudge-btn" id="nudge-left">←</button>
         <button class="nudge-btn" id="nudge-up">↑</button>
         <button class="nudge-btn" id="nudge-down">↓</button>
         <button class="nudge-btn" id="nudge-right">→</button>
       </div>
     </div>
-
-    <!-- 各ツール内に表示するように変更された削除ボタン -->
-    <button class="btn-panel-delete" id="btn-delete">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-      選択中のオブジェクトを削除
-    </button>
   </div>
 
   <toolbar>
@@ -644,7 +632,7 @@
     const measureCtx = document.createElement('canvas').getContext('2d');
 
     // -------------------------------------------------------------
-    // 選択オブジェクトを最前面に移動する処理
+    // 最前面へ移動
     // -------------------------------------------------------------
     function bringToFront(id) {
       if (!id) return;
@@ -815,7 +803,7 @@
     }
 
     // -------------------------------------------------------------
-    // 座標変換＆テキスト幅の計測
+    // 座標計算
     // -------------------------------------------------------------
     function getCanvasCoords(e) {
       const rect = annoCanvas.getBoundingClientRect();
@@ -841,7 +829,6 @@
         return { x: a.x + a.w / 2, y: a.y + a.h / 2 };
       }
       if (a.type === 'text') {
-        // 文字の基準点は上下左右中央
         return { x: a.x, y: a.y };
       }
       return { x: 0, y: 0 };
@@ -871,7 +858,7 @@
     }
 
     // -------------------------------------------------------------
-    // 履歴
+    // 履歴管理
     // -------------------------------------------------------------
     function saveHistory() {
       state.history = state.history.slice(0, state.historyIndex + 1);
@@ -911,7 +898,7 @@
     btnRedo.addEventListener('click', redo);
 
     // -------------------------------------------------------------
-    // ポインター操作
+    // タッチ＆ポインターイベント処理
     // -------------------------------------------------------------
     let activePointers = new Map();
     let isDrawing = false;
@@ -919,7 +906,9 @@
     let isTransformingObj = false;
     let isPanning = false;
     let isPinching = false;
+    let wasPinchingGesture = false; // ピンチ操作が行われたかの判定フラグ
     let panMoved = false;
+    let pendingSelectId = null;
 
     let transformHandle = null;
     let currentAnnotation = null;
@@ -937,11 +926,10 @@
     let initialHandleAngle = 0;
     let initialRotation = 0;
 
-    let pendingTextPanel = false;
-
     function startPinch() {
       const pts = Array.from(activePointers.values());
       if (pts.length < 2) return;
+      wasPinchingGesture = true;
       const cRect = editorContainer.getBoundingClientRect();
       const mid = {
         x: (pts[0].x + pts[1].x) / 2 - cRect.left,
@@ -966,9 +954,9 @@
       isTransformingObj = false;
       isPanning = false;
       panMoved = false;
+      pendingSelectId = null;
       transformHandle = null;
       initialObjState = null;
-      pendingTextPanel = false;
     }
 
     editorContainer.addEventListener('pointerdown', (e) => {
@@ -982,16 +970,16 @@
 
       if (activePointers.size === 2) {
         cancelActiveGesture();
-        renderAnnotations();
         startPinch();
         return;
       }
       if (activePointers.size > 2) return;
 
+      wasPinchingGesture = false;
       const coords = getCanvasCoords(e);
       startImageCoords = coords;
 
-      // ハンドル判定
+      // 変形ハンドルのタップ判定
       if (state.selectedId) {
         const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
         if (selectedAnno) {
@@ -1021,7 +1009,6 @@
         const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
 
         if (state.activeTool === 'text') {
-          // タップした場所を起点（上下左右中央）にテキストを生成
           const newAnno = {
             id, type: 'text',
             x: coords.x, y: coords.y,
@@ -1034,12 +1021,11 @@
             rotation: 0
           };
           state.annotations.push(newAnno);
-          state.selectedId = id;
-          bringToFront(id); // 最前面へ
+          pendingSelectId = id;
+          bringToFront(id);
           saveHistory();
           switchTool('select');
           renderAnnotations();
-          pendingTextPanel = true;
           return;
         }
 
@@ -1057,8 +1043,8 @@
             rotation: 0
           };
           state.annotations.push(currentAnnotation);
-          state.selectedId = id;
-          bringToFront(id); // 最前面へ
+          pendingSelectId = id;
+          bringToFront(id);
           renderAnnotations();
           return;
         }
@@ -1076,8 +1062,8 @@
             hasShadow: state.defaults.hasShadow
           };
           state.annotations.push(currentAnnotation);
-          state.selectedId = id;
-          bringToFront(id); // 最前面へ
+          pendingSelectId = id;
+          bringToFront(id);
           renderAnnotations();
           return;
         }
@@ -1086,20 +1072,16 @@
       // 選択・移動モード
       const hitAnno = getHitAnnotation(coords);
       if (hitAnno) {
-        state.selectedId = hitAnno.id;
-        bringToFront(hitAnno.id); // 選択したオブジェクトを最前面へ移動
+        pendingSelectId = hitAnno.id;
+        bringToFront(hitAnno.id);
         isDraggingObj = true;
         initialObjState = JSON.parse(JSON.stringify(hitAnno));
-        updateUI();
-        renderAnnotations();
       } else {
-        state.selectedId = null;
+        pendingSelectId = null;
         isPanning = true;
         panMoved = false;
         panStart = getContainerCoords(e);
         panStartPan = { x: state.panX, y: state.panY };
-        updateUI();
-        renderAnnotations();
       }
     });
 
@@ -1155,7 +1137,7 @@
         return;
       }
 
-      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+      const selectedAnno = state.annotations.find(a => a.id === (state.selectedId || pendingSelectId));
       if (!selectedAnno) return;
 
       if (isTransformingObj && initialObjState) {
@@ -1267,15 +1249,27 @@
         return;
       }
 
+      // ピンチ拡大縮小操作が行われた場合はツールバーを表示しない
+      if (wasPinchingGesture) {
+        wasPinchingGesture = false;
+        return;
+      }
+
       if (isPanning) {
         if (!panMoved) {
           state.selectedId = null;
-          updateUI();
-          renderAnnotations();
         }
         isPanning = false;
         panMoved = false;
+        updateUI();
+        renderAnnotations();
         return;
+      }
+
+      // 指を離した（pointerup）タイミングで対象オブジェクトを選択状態にし、ツールを表示
+      if (pendingSelectId) {
+        state.selectedId = pendingSelectId;
+        pendingSelectId = null;
       }
 
       if (isDrawing || isDraggingObj || isTransformingObj) {
@@ -1311,15 +1305,10 @@
             switchTool('select');
           }
         }
-
-        renderAnnotations();
-      }
-
-      if (pendingTextPanel) {
-        pendingTextPanel = false;
       }
 
       updateUI();
+      renderAnnotations();
 
       isDrawing = false;
       isDraggingObj = false;
@@ -1374,7 +1363,6 @@
           const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
           const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
 
-          // 中央揃えに応じた領域判定
           if (lx >= a.x - w/2 - 12 && lx <= a.x + w/2 + 12 &&
               ly >= a.y - h/2 - 12 && ly <= a.y + h/2 + 12) {
             return a;
@@ -1551,11 +1539,10 @@
       ctx.stroke();
     }
 
-    // 文字の描画（フチと影のサイズ連動調整・中央揃え）
+    // 文字の描画（フチと影が独立して安定描画されるようロジックを最適化）
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
-        // 文字の配置を上下左右中央・中央揃えに変更
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
@@ -1563,19 +1550,16 @@
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
-        // 影のサイズ計算：フチが大きくなっても影が肥大化しないように適正補正
         if (hasShadow) {
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-          // フチが大きくなるほど影のぼかし（blur）を調整して抑える
-          const adjustedBlur = Math.max(2, 8 - (outline * 0.25));
-          const adjustedOffset = Math.max(2, 4 - (outline * 0.1));
-          ctx.shadowBlur = adjustedBlur;
-          ctx.shadowOffsetX = adjustedOffset;
-          ctx.shadowOffsetY = adjustedOffset;
+          ctx.shadowBlur = 6;
+          ctx.shadowOffsetX = 3;
+          ctx.shadowOffsetY = 3;
 
+          // 影描画専用処理：フチの有無に関わらず常に一定の安定した影を生成
           if (outline > 0) {
-            ctx.strokeStyle = '#ffffff';
+            ctx.strokeStyle = 'rgba(0,0,0,0.01)'; // 影を落とすための透明ストローク
             ctx.lineWidth = outline * 2;
             ctx.strokeText(a.text, a.x, a.y);
           } else {
@@ -1585,6 +1569,7 @@
           ctx.restore();
         }
 
+        // 本体（フチ・塗り）の描画
         if (outline > 0) {
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = outline * 2;
@@ -1611,7 +1596,6 @@
       } else if (a.type === 'text') {
         const m = measureTextAnno(a);
         withRotation(annoCtx, a, () => {
-          // 中央揃えに応じた選択枠表示
           annoCtx.strokeRect(a.x - m.w / 2 - 4, a.y - a.size / 2 - 4, m.w + 8, a.size + 8);
         });
       }
@@ -1712,7 +1696,7 @@
       if (a.type === 'text') {
         textContentInput.value = a.text;
         btnBold.classList.toggle('active', !!a.isBold);
-        sizeLabel.textContent = '文字サイズ';
+        sizeLabel.textContent = 'サイズ';
         sizeSlider.min = 12;
         sizeSlider.max = MAX_TEXT_SIZE;
         sizeSlider.value = a.size;
@@ -1769,7 +1753,6 @@
     });
     textContentInput.addEventListener('change', () => saveHistory());
 
-    // 文字消去（×）ボタンの追加機能
     btnClearText.addEventListener('click', () => {
       const a = state.annotations.find(x => x.id === state.selectedId);
       if (a && a.type === 'text') {
@@ -1870,7 +1853,7 @@
     });
 
     // -------------------------------------------------------------
-    // 微調整ボタン（長押し対応）
+    // 微調整ボタン
     // -------------------------------------------------------------
     function applyNudge(dx, dy) {
       const a = state.annotations.find(x => x.id === state.selectedId);
@@ -1925,7 +1908,7 @@
       });
     }
 
-    // 削除ボタン処理（パネル内）
+    // ゴミ箱（削除）ボタン処理
     btnDelete.addEventListener('click', () => {
       if (state.selectedId) {
         state.annotations = state.annotations.filter(a => a.id !== state.selectedId);
@@ -1937,12 +1920,11 @@
     });
 
     // -------------------------------------------------------------
-    // エクスポート（保存処理）
+    // エクスポート（保存）
     // -------------------------------------------------------------
     btnExport.addEventListener('click', () => {
       if (!state.image) return;
 
-      // 元画像サイズのキャンバスで書き出し（画像外領域は含めない仕様）
       const exportCanvas = document.createElement('canvas');
       exportCanvas.width = state.imgWidth;
       exportCanvas.height = state.imgHeight;
