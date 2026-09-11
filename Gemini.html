@@ -12,11 +12,11 @@
   <style>
     :root {
       --bg-color: #1c1c1e;
-      --panel-bg: rgba(30, 30, 32, 0.45); /* 後ろの画像が見えるように半透明度をアップ */
-      --header-bg: rgba(30, 30, 32, 0.45);
+      --panel-bg: rgba(20, 20, 22, 0.85); /* ぼかしを弱め可読性を確保する濃いめの背景 */
+      --header-bg: rgba(30, 30, 32, 0.85);
       --accent-color: #0a84ff;
       --text-color: #ffffff;
-      --border-color: rgba(255, 255, 255, 0.15);
+      --border-color: rgba(255, 255, 255, 0.2);
       --safe-area-bottom: env(safe-area-inset-bottom, 0px);
       --safe-area-top: env(safe-area-inset-top, 0px);
     }
@@ -56,8 +56,8 @@
       height: calc(44px + var(--safe-area-top));
       padding-top: var(--safe-area-top);
       background: var(--header-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -71,6 +71,7 @@
     header h1 {
       font-size: 16px;
       font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .btn-icon {
@@ -102,8 +103,8 @@
     #editor-container {
       flex: 1;
       position: relative;
-      overflow: hidden;
-      background-color: #000;
+      overflow: visible; /* オブジェクトがはみ出ても見やすく設定 */
+      background-color: #121212;
       min-height: 0;
       touch-action: none;
     }
@@ -152,22 +153,23 @@
       overflow: visible;
     }
 
-    /* オブジェクトツール（プロパティパネル） */
+    /* オブジェクトツール（プロパティパネル：3列構成レイアウト） */
     #properties-panel {
       position: absolute;
-      bottom: calc(48px + (var(--safe-area-bottom) / 2));
-      left: 10px;
-      right: 10px;
+      bottom: calc(52px + (var(--safe-area-bottom) / 2));
+      left: 8px;
+      right: 8px;
       background: var(--panel-bg);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-radius: 14px;
-      padding: 8px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 8px;
+      align-items: center;
       border: 0.5px solid var(--border-color);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
       z-index: 90;
       transition: top 0.18s ease, bottom 0.18s ease;
     }
@@ -181,62 +183,59 @@
       display: none;
     }
 
-    .panel-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      white-space: nowrap;
-      padding: 2px 0;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x;
-      min-height: 34px;
-    }
-
-    .panel-row::-webkit-scrollbar {
-      display: none;
-    }
-
+    /* 項目名やテキストの可読性向上 */
     .panel-label {
       font-size: 11px;
-      color: #a0a0a5;
-      min-width: 38px;
+      color: #e0e0e5;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+      min-width: 32px;
       flex-shrink: 0;
+      font-weight: 500;
     }
 
-    #color-presets {
+    /* パネルの左列：削除、色、影 */
+    .panel-col-left {
       display: flex;
-      gap: 8px;
+      flex-direction: column;
+      gap: 6px;
       align-items: center;
-      flex-shrink: 0;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
+    }
+
+    .color-swatch-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
     }
 
     .color-swatch {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       flex-shrink: 0;
       box-sizing: border-box;
-      transition: transform 0.12s ease, border-color 0.12s ease;
+      cursor: pointer;
     }
 
     .color-swatch.selected {
       border-color: #ffffff;
-      transform: scale(1.12);
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+      transform: scale(1.15);
+      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.8);
     }
 
     .color-picker-wrapper {
       position: relative;
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
       flex-shrink: 0;
       overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
     }
 
     .color-picker-wrapper input[type="color"] {
@@ -249,36 +248,94 @@
       cursor: pointer;
     }
 
+    /* パネルの中列：十字キー (十字レイアウト) */
+    .panel-col-middle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
+    }
+
+    .nudge-cross {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      grid-template-rows: repeat(3, 22px);
+      gap: 2px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .nudge-btn {
+      width: 22px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .nudge-btn:active {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    #nudge-up { grid-column: 2; grid-row: 1; }
+    #nudge-left { grid-column: 1; grid-row: 2; }
+    #nudge-right { grid-column: 3; grid-row: 2; }
+    #nudge-down { grid-column: 2; grid-row: 3; }
+
+    /* パネルの右列：各種スライダー・コントロール */
+    .panel-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .panel-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 26px;
+    }
+
     /* 文字入力ラッパー */
     .input-wrapper {
       position: relative;
       flex: 1;
       display: flex;
       align-items: center;
-      min-width: 60px;
+      min-width: 0;
     }
 
     .text-input-field {
       width: 100%;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.6);
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 5px 24px 5px 8px;
-      border-radius: 6px;
-      font-size: 14px;
+      padding: 3px 20px 3px 6px;
+      border-radius: 4px;
+      font-size: 13px;
       line-height: 1.2;
     }
 
     .btn-clear-text {
       position: absolute;
       right: 4px;
-      width: 16px;
-      height: 16px;
-      background: rgba(255, 255, 255, 0.3);
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.4);
       color: #000;
       border-radius: 50%;
       border: none;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: bold;
       display: flex;
       align-items: center;
@@ -286,73 +343,49 @@
       cursor: pointer;
     }
 
-    /* スライダーを短く調整 */
+    /* スライダー調整 */
     input[type="range"] {
-      width: 85px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 50px;
       accent-color: var(--accent-color);
-      height: 24px;
+      height: 20px;
     }
 
     .toggle-btn {
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
       font-weight: 500;
       flex-shrink: 0;
       line-height: 1.1;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
 
     .toggle-btn.active {
       background: var(--accent-color);
     }
 
-    .nudge-controls {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      flex-shrink: 0;
-    }
-
-    .nudge-btn {
-      width: 28px;
-      height: 28px;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
-      color: #fff;
-      border-radius: 6px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .nudge-btn:active {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    /* ゴミ箱マークだけの小さな削除ボタン */
+    /* ゴミ箱ボタン */
     .btn-icon-delete {
-      background: rgba(255, 69, 58, 0.25);
+      background: rgba(255, 69, 58, 0.35);
       color: #ff453a;
-      border: 1px solid rgba(255, 69, 58, 0.4);
-      width: 28px;
-      height: 28px;
+      border: 1px solid rgba(255, 69, 58, 0.5);
+      width: 24px;
+      height: 24px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      margin-left: auto;
       cursor: pointer;
     }
 
     .btn-icon-delete:active {
-      background: rgba(255, 69, 58, 0.5);
+      background: rgba(255, 69, 58, 0.6);
     }
 
     /* フッターメニュー */
@@ -360,8 +393,8 @@
       height: calc(48px + (var(--safe-area-bottom) / 2));
       padding-bottom: calc(var(--safe-area-bottom) / 2);
       background: var(--header-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -377,11 +410,12 @@
       justify-content: center;
       background: none;
       border: none;
-      color: #8e8e93;
+      color: #a0a0a5;
       font-size: 10px;
       gap: 2px;
       width: 60px;
       height: 100%;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .tool-item svg {
@@ -467,59 +501,61 @@
     </div>
   </div>
 
-  <!-- オブジェクト操作用ツールパネル -->
+  <!-- オブジェクト操作用ツールパネル（3列構成） -->
   <div id="properties-panel" class="hidden">
-    <div class="panel-row" id="color-row">
-      <span class="panel-label">色</span>
-      <div id="color-presets"></div>
-      <div class="color-picker-wrapper">
+    <!-- 左列: 削除, パレット/カスタムカラー, 影ON/OFF (色・影の項目名は削除) -->
+    <div class="panel-col-left">
+      <button class="btn-icon-delete" id="btn-delete" title="削除">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+      <div id="color-presets" class="color-swatch-container"></div>
+      <div class="color-picker-wrapper" title="カスタムカラー">
         <input type="color" id="custom-color-picker">
       </div>
-      <!-- 削除ボタン（ゴミ箱アイコン）を上部ツール列へ移動 -->
-      <button class="btn-icon-delete" id="btn-delete" title="削除">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-      </button>
+      <button id="btn-shadow-toggle" class="toggle-btn active" style="padding: 2px 4px; font-size: 10px;">影</button>
     </div>
 
-    <div class="panel-row" id="text-prop-row">
-      <span class="panel-label">文字</span>
-      <div class="input-wrapper">
-        <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
-        <button id="btn-clear-text" class="btn-clear-text">✕</button>
-      </div>
-      <button id="btn-bold" class="toggle-btn">太字</button>
-    </div>
-
-    <div class="panel-row" id="size-prop-row">
-      <span class="panel-label" id="size-label">サイズ</span>
-      <input type="range" id="size-slider" min="1" max="100" value="100">
-      <span class="panel-label" style="min-width:auto; margin-left:4px;">フチ</span>
-      <input type="range" id="outline-slider" min="0" max="20" value="20">
-    </div>
-
-    <div class="panel-row" id="radius-prop-row">
-      <span class="panel-label">角丸</span>
-      <input type="range" id="radius-slider" min="0" max="100" value="100">
-      <button id="btn-aspect-square" class="toggle-btn">正方形</button>
-    </div>
-
-    <div class="panel-row" id="arrow-prop-row">
-      <span class="panel-label">先端</span>
-      <input type="range" id="arrow-slider" min="5" max="90" value="90">
-    </div>
-
-    <div class="panel-row" style="justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span class="panel-label">影</span>
-        <button id="btn-shadow-toggle" class="toggle-btn active">影 ON</button>
-      </div>
-
-      <div class="nudge-controls">
-        <span class="panel-label" style="min-width: auto; margin-right: 2px;">微調整</span>
-        <button class="nudge-btn" id="nudge-left">←</button>
+    <!-- 中列: 十字キー (微調整の項目名は削除) -->
+    <div class="panel-col-middle">
+      <div class="nudge-cross">
         <button class="nudge-btn" id="nudge-up">↑</button>
-        <button class="nudge-btn" id="nudge-down">↓</button>
+        <button class="nudge-btn" id="nudge-left">←</button>
         <button class="nudge-btn" id="nudge-right">→</button>
+        <button class="nudge-btn" id="nudge-down">↓</button>
+      </div>
+    </div>
+
+    <!-- 右列: スライダー & モードに応じた調整機能 -->
+    <div class="panel-col-right">
+      <!-- テキスト操作用 -->
+      <div class="panel-row" id="text-prop-row">
+        <span class="panel-label">文字</span>
+        <div class="input-wrapper">
+          <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+          <button id="btn-clear-text" class="btn-clear-text">✕</button>
+        </div>
+        <button id="btn-bold" class="toggle-btn">太字</button>
+      </div>
+
+      <!-- サイズ/線幅 & フチ -->
+      <div class="panel-row" id="size-prop-row">
+        <span class="panel-label" id="size-label">サイズ</span>
+        <input type="range" id="size-slider" min="1" max="100" value="100">
+        <span class="panel-label" style="min-width:auto; margin-left:2px;">フチ</span>
+        <input type="range" id="outline-slider" min="0" max="20" value="20">
+      </div>
+
+      <!-- 四角形用: 角丸 & 正方形固定 -->
+      <div class="panel-row" id="radius-prop-row">
+        <span class="panel-label">角丸</span>
+        <input type="range" id="radius-slider" min="0" max="100" value="100">
+        <button id="btn-aspect-square" class="toggle-btn">正方形</button>
+      </div>
+
+      <!-- 矢印用: 先端サイズ -->
+      <div class="panel-row" id="arrow-prop-row">
+        <span class="panel-label">先端</span>
+        <input type="range" id="arrow-slider" min="5" max="90" value="90">
       </div>
     </div>
   </div>
@@ -559,7 +595,7 @@
     ];
 
     const RECENT_COLORS_KEY = 'cocomark_recent_colors';
-    const MAX_RECENT_COLORS = 5;
+    const MAX_RECENT_COLORS = 2; // 縦並び配置に合わせて上限を最適化
 
     const MAX_TEXT_SIZE = 160;
     const MAX_STROKE_WIDTH = 40;
@@ -906,7 +942,7 @@
     let isTransformingObj = false;
     let isPanning = false;
     let isPinching = false;
-    let wasPinchingGesture = false; // ピンチ操作が行われたかの判定フラグ
+    let wasPinchingGesture = false;
     let panMoved = false;
     let pendingSelectId = null;
 
@@ -1249,7 +1285,6 @@
         return;
       }
 
-      // ピンチ拡大縮小操作が行われた場合はツールバーを表示しない
       if (wasPinchingGesture) {
         wasPinchingGesture = false;
         return;
@@ -1266,7 +1301,6 @@
         return;
       }
 
-      // 指を離した（pointerup）タイミングで対象オブジェクトを選択状態にし、ツールを表示
       if (pendingSelectId) {
         state.selectedId = pendingSelectId;
         pendingSelectId = null;
@@ -1539,7 +1573,7 @@
       ctx.stroke();
     }
 
-    // 文字の描画（フチと影が独立して安定描画されるようロジックを最適化）
+    // 文字の描画（フチがついた場合でも正しくドロップシャドウが付与されるように修正）
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
@@ -1550,26 +1584,26 @@
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
+        // 1. 影の描画処理（独立して影用のパスを描画）
         if (hasShadow) {
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-          ctx.shadowBlur = 6;
+          ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 3;
           ctx.shadowOffsetY = 3;
 
-          // 影描画専用処理：フチの有無に関わらず常に一定の安定した影を生成
           if (outline > 0) {
-            ctx.strokeStyle = 'rgba(0,0,0,0.01)'; // 影を落とすための透明ストローク
+            ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
             ctx.lineWidth = outline * 2;
             ctx.strokeText(a.text, a.x, a.y);
           } else {
-            ctx.fillStyle = a.color;
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
             ctx.fillText(a.text, a.x, a.y);
           }
           ctx.restore();
         }
 
-        // 本体（フチ・塗り）の描画
+        // 2. 本体の描画（白フチおよびテキスト本体）
         if (outline > 0) {
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = outline * 2;
@@ -1718,7 +1752,6 @@
       outlineSlider.value = (a.outlineWidth != null) ? a.outlineWidth : 2;
 
       btnShadowToggle.classList.toggle('active', !!a.hasShadow);
-      btnShadowToggle.textContent = a.hasShadow ? '影 ON' : '影 OFF';
 
       positionPanel();
     }
