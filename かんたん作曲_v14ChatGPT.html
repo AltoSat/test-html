@@ -19,6 +19,7 @@
       --safe-area-top: env(safe-area-inset-top, 0px);
     }
 
+    /* 修正1: グローバルの touch-action: none を削除しデフォルトのタッチ動作を維持 */
     * {
       box-sizing: border-box;
       user-select: none;
@@ -35,12 +36,15 @@
       -webkit-user-select: auto;
     }
 
+    /* 修正3: Viewport指定に 100dvw / 100dvh を適用（アドレスバー対策） */
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       overflow: hidden;
       position: fixed;
+      width: 100vw;
+      height: 100vh;
       width: 100dvw;
       height: 100dvh;
       display: flex;
@@ -94,6 +98,7 @@
       font-weight: 600;
     }
 
+    /* 修正1: キャンバス操作領域のみに touch-action: none を設定 */
     #editor-container {
       flex: 1;
       position: relative;
@@ -101,7 +106,6 @@
       background-color: #000;
       min-height: 0;
       touch-action: none;
-      -webkit-touch-callout: none;
     }
 
     #start-screen {
@@ -142,6 +146,7 @@
       left: 0;
       transform-origin: 0 0;
       will-change: transform;
+      overflow: visible;
     }
 
     canvas {
@@ -151,12 +156,22 @@
       left: 0;
     }
 
+    #bg-canvas {
+      left: 1200px;
+      top: 1200px;
+    }
+
+    #annotation-canvas {
+      left: 0;
+      top: 0;
+    }
+
     #properties-panel {
       position: absolute;
       bottom: calc(60px + var(--safe-area-bottom));
       left: 10px;
       right: 10px;
-      background: var(--panel-bg);
+      background: rgba(44, 44, 46, 0.68);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-radius: 14px;
@@ -271,6 +286,24 @@
       background: var(--accent-color);
     }
 
+    .panel-delete-btn {
+      width: 100%;
+      background: rgba(255, 69, 58, 0.16);
+      border: 1px solid rgba(255, 69, 58, 0.35);
+      color: #ff453a;
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 34px;
+      touch-action: manipulation;
+    }
+
+    .panel-delete-btn:active {
+      background: rgba(255, 69, 58, 0.28);
+    }
+
+    /* 修正2: iOS Safariの勝手な自動ズームを防止するため font-size: 16px を明示設定 */
     .text-input-field {
       flex: 1;
       min-width: 60px;
@@ -281,6 +314,41 @@
       border-radius: 8px;
       font-size: 16px;
       line-height: 1.2;
+    }
+
+    .text-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .text-input-wrap .text-input-field {
+      width: 100%;
+      padding-right: 34px;
+    }
+
+    .text-clear-btn {
+      position: absolute;
+      right: 5px;
+      width: 26px;
+      height: 26px;
+      border: none;
+      border-radius: 50%;
+      background: #636366;
+      color: #fff;
+      font-size: 18px;
+      line-height: 24px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+
+    .text-clear-btn:active {
+      background: #8e8e93;
     }
 
     .nudge-controls {
@@ -309,8 +377,8 @@
     }
 
     toolbar {
-      height: calc(56px + var(--safe-area-bottom));
-      padding-bottom: var(--safe-area-bottom);
+      height: calc(56px + (var(--safe-area-bottom) / 2));
+      padding-bottom: calc(var(--safe-area-bottom) / 2);
       background: var(--panel-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -435,7 +503,10 @@
 
     <div class="panel-row" id="text-prop-row">
       <span class="panel-label">文字</span>
-      <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+      <div class="text-input-wrap">
+        <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+        <button type="button" id="btn-clear-text" class="text-clear-btn" aria-label="文字を消す">×</button>
+      </div>
       <button id="btn-bold" class="toggle-btn">太字</button>
     </div>
 
@@ -474,6 +545,8 @@
         <button class="nudge-btn" id="nudge-right">→</button>
       </div>
     </div>
+
+    <button id="btn-delete-panel" class="panel-delete-btn">このオブジェクトを削除</button>
   </div>
 
   <toolbar>
@@ -492,10 +565,6 @@
     <button class="tool-item" data-tool="arrow">
       <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
       矢印
-    </button>
-    <button class="tool-item delete-tool" id="btn-delete">
-      <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-      削除
     </button>
   </toolbar>
 
@@ -517,12 +586,12 @@
     const RECENT_COLORS_KEY = 'cocomark_recent_colors';
     const MAX_RECENT_COLORS = 5;
 
-    // 各プロパティの最大値（デフォルトとして採用）
     const MAX_TEXT_SIZE = 160;
     const MAX_STROKE_WIDTH = 40;
     const MAX_OUTLINE_WIDTH = 20;
     const MAX_ARROW_SIZE = 90;
     const MAX_BORDER_RADIUS_PERCENT = 100;
+    const CANVAS_MARGIN = 1200;
 
     // -------------------------------------------------------------
     // 状態
@@ -569,7 +638,8 @@
     const btnUndo = document.getElementById('btn-undo');
     const btnRedo = document.getElementById('btn-redo');
     const btnExport = document.getElementById('btn-export');
-    const btnDelete = document.getElementById('btn-delete');
+    const btnDeletePanel = document.getElementById('btn-delete-panel');
+    const btnClearText = document.getElementById('btn-clear-text');
     const colorPresetsContainer = document.getElementById('color-presets');
     const customColorPicker = document.getElementById('custom-color-picker');
     const textContentInput = document.getElementById('text-content-input');
@@ -585,7 +655,6 @@
     const savePreview = document.getElementById('save-preview');
     const btnCloseModal = document.getElementById('btn-close-modal');
 
-    // 計測用オフスクリーンコンテキスト
     const measureCtx = document.createElement('canvas').getContext('2d');
 
     // -------------------------------------------------------------
@@ -699,8 +768,8 @@
 
           bgCanvas.width = img.width;
           bgCanvas.height = img.height;
-          annoCanvas.width = img.width;
-          annoCanvas.height = img.height;
+          annoCanvas.width = img.width + CANVAS_MARGIN * 2;
+          annoCanvas.height = img.height + CANVAS_MARGIN * 2;
 
           bgCtx.drawImage(img, 0, 0);
 
@@ -733,15 +802,15 @@
       );
 
       state.scale = scale;
-      state.panX = (containerW - state.imgWidth * scale) / 2;
-      state.panY = (containerH - state.imgHeight * scale) / 2;
+      state.panX = (containerW - state.imgWidth * scale) / 2 - CANVAS_MARGIN * scale;
+      state.panY = (containerH - state.imgHeight * scale) / 2 - CANVAS_MARGIN * scale;
 
       updateViewportTransform();
     }
 
     function updateViewportTransform() {
-      viewport.style.width = state.imgWidth + 'px';
-      viewport.style.height = state.imgHeight + 'px';
+      viewport.style.width = (state.imgWidth + CANVAS_MARGIN * 2) + 'px';
+      viewport.style.height = (state.imgHeight + CANVAS_MARGIN * 2) + 'px';
       viewport.style.transform =
         `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.scale})`;
       positionPanel();
@@ -753,8 +822,8 @@
     function getCanvasCoords(e) {
       const rect = annoCanvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return { x: 0, y: 0 };
-      const x = (e.clientX - rect.left) * (state.imgWidth / rect.width);
-      const y = (e.clientY - rect.top) * (state.imgHeight / rect.height);
+      const x = (e.clientX - rect.left) * (annoCanvas.width / rect.width) - CANVAS_MARGIN;
+      const y = (e.clientY - rect.top) * (annoCanvas.height / rect.height) - CANVAS_MARGIN;
       return { x, y };
     }
 
@@ -769,14 +838,17 @@
       return { w, h: a.size };
     }
 
-    // 回転中心（文字は視覚的な中心、四角は矩形中心）
+    function getTextBox(a) {
+      const m = measureTextAnno(a);
+      return { left: a.x - m.w / 2, top: a.y - m.h / 2, w: m.w, h: m.h };
+    }
+
     function getRotCenter(a) {
       if (a.type === 'rect') {
         return { x: a.x + a.w / 2, y: a.y + a.h / 2 };
       }
       if (a.type === 'text') {
-        const m = measureTextAnno(a);
-        return { x: a.x + m.w / 2, y: a.y - m.h / 2 };
+        return { x: a.x, y: a.y };
       }
       return { x: 0, y: 0 };
     }
@@ -845,19 +917,18 @@
     btnRedo.addEventListener('click', redo);
 
     // -------------------------------------------------------------
-    // ポインター操作
+    // ポインター操作（修正1 & 5: ポインターキャプチャとジェスチャー管理）
     // -------------------------------------------------------------
-    // -------------------------------------------------------------
-    // ポインター操作
-    // iOS Safariでは Pointer Events + pointer capture を基本とし、
-    // 1本指操作と2本指ジェスチャーを明確に分離する。
-    // -------------------------------------------------------------
-    const activePointers = new Map();
-
-    let gestureMode = 'none'; // none | draw | object-drag | transform | pan | pinch
+    let activePointers = new Map();
+    let isDrawing = false;
+    let isDraggingObj = false;
+    let isTransformingObj = false;
+    let isPanning = false;
+    let isPinching = false;
     let panMoved = false;
-    let currentAnnotation = null;
+
     let transformHandle = null;
+    let currentAnnotation = null;
     let startImageCoords = { x: 0, y: 0 };
     let initialObjState = null;
 
@@ -872,122 +943,85 @@
     let initialHandleAngle = 0;
     let initialRotation = 0;
 
-    // 指を離した時にパネル表示するためのフラグ
     let pendingTextPanel = false;
 
-    function capturePointer(e) {
-      // pointer capture をイベント発生元に設定。
-      // iOS Safariで指が要素の外へ出ても pointermove/up を追跡できるようにする。
-      if (e.target && typeof e.target.setPointerCapture === 'function') {
-        try {
-          e.target.setPointerCapture(e.pointerId);
-        } catch (_) {}
-      }
-    }
-
-    function releasePointer(e) {
-      if (e.target && typeof e.target.releasePointerCapture === 'function') {
-        try {
-          if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
-            e.target.releasePointerCapture(e.pointerId);
-          }
-        } catch (_) {}
-      }
-    }
-
-    function getActivePointerPair() {
-      return Array.from(activePointers.values()).slice(0, 2);
-    }
-
     function startPinch() {
-      const pts = getActivePointerPair();
+      const pts = Array.from(activePointers.values());
       if (pts.length < 2) return;
-
       const cRect = editorContainer.getBoundingClientRect();
       const mid = {
         x: (pts[0].x + pts[1].x) / 2 - cRect.left,
         y: (pts[0].y + pts[1].y) / 2 - cRect.top
       };
-
-      initialPinchDist =
-        Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      initialPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
       initialScale = state.scale;
-
-      // ピンチ開始時の指の中点にある画像座標を固定し、
-      // 拡大縮小と同時に中点移動（パン）も行う。
       initialImgAnchor = {
-        x: (mid.x - state.panX) / state.scale,
-        y: (mid.y - state.panY) / state.scale
+        x: (mid.x - state.panX) / state.scale - CANVAS_MARGIN,
+        y: (mid.y - state.panY) / state.scale - CANVAS_MARGIN
       };
-
-      gestureMode = 'pinch';
+      isPinching = true;
     }
 
     function cancelActiveGesture() {
-      if (currentAnnotation) {
-        state.annotations = state.annotations.filter(
-          a => a.id !== currentAnnotation.id
-        );
+      if (isDrawing && currentAnnotation) {
+        state.annotations = state.annotations.filter(a => a.id !== currentAnnotation.id);
         currentAnnotation = null;
       }
-
-      gestureMode = 'none';
+      isDrawing = false;
+      isDraggingObj = false;
+      isTransformingObj = false;
+      isPanning = false;
       panMoved = false;
+      transformHandle = null;
       initialObjState = null;
       pendingTextPanel = false;
     }
 
-    function updatePinch() {
-      const pts = getActivePointerPair();
-      if (pts.length < 2) return;
+    editorContainer.addEventListener('pointerdown', (e) => {
+      if (!state.image) return;
 
-      const dist =
-        Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      // 修正1: ドラッグ/ピンチ操作の追従を安定化するためにPointer Captureを設定
+      try {
+        e.target.setPointerCapture(e.pointerId);
+      } catch (err) {}
 
-      let newScale = initialScale * (dist / initialPinchDist);
-      newScale = Math.max(0.05, Math.min(20, newScale));
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-      const cRect = editorContainer.getBoundingClientRect();
-      const mid = {
-        x: (pts[0].x + pts[1].x) / 2 - cRect.left,
-        y: (pts[0].y + pts[1].y) / 2 - cRect.top
-      };
+      // 修正5: 2本指以上でピンチ操作にスムーズ切替
+      if (activePointers.size === 2) {
+        cancelActiveGesture();
+        renderAnnotations();
+        startPinch();
+        return;
+      }
+      if (activePointers.size > 2) return;
 
-      state.scale = newScale;
-      state.panX = mid.x - initialImgAnchor.x * newScale;
-      state.panY = mid.y - initialImgAnchor.y * newScale;
-
-      updateViewportTransform();
-    }
-
-    function beginSinglePointerGesture(e) {
       const coords = getCanvasCoords(e);
       startImageCoords = coords;
 
-      // 選択中オブジェクトのハンドル判定
+      // ハンドル判定
       if (state.selectedId) {
-        const selectedAnno = state.annotations.find(
-          a => a.id === state.selectedId
-        );
-
+        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
         if (selectedAnno) {
+          const selectedIndex = state.annotations.findIndex(a => a.id === selectedAnno.id);
+          if (selectedIndex >= 0 && selectedIndex !== state.annotations.length - 1) {
+            const [frontAnno] = state.annotations.splice(selectedIndex, 1);
+            state.annotations.push(frontAnno);
+          }
           const handle = getHitHandle(coords, selectedAnno);
           if (handle) {
-            gestureMode = 'transform';
-            initialObjState = JSON.parse(JSON.stringify(selectedAnno));
+            isTransformingObj = true;
             transformHandle = handle;
-
+            initialObjState = JSON.parse(JSON.stringify(selectedAnno));
             if (handle === 'rot') {
               initialRotCenter = getRotCenter(selectedAnno);
               const rotH = getHandles(selectedAnno).find(h => h.id === 'rot');
-
               if (rotH) {
                 initialHandleAngle = Math.atan2(
                   rotH.y - initialRotCenter.y,
                   rotH.x - initialRotCenter.x
                 );
               }
-
               initialRotation = selectedAnno.rotation || 0;
             }
             return;
@@ -997,15 +1031,12 @@
 
       // 新規作成
       if (state.activeTool !== 'select') {
-        const id =
-          Date.now().toString() + Math.random().toString(36).slice(2, 6);
+        const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
 
         if (state.activeTool === 'text') {
           const newAnno = {
-            id,
-            type: 'text',
-            x: coords.x,
-            y: coords.y,
+            id, type: 'text',
+            x: coords.x, y: coords.y,
             text: state.defaults.text,
             color: state.defaults.color,
             size: state.defaults.textSize,
@@ -1014,26 +1045,21 @@
             outlineWidth: state.defaults.outlineWidth,
             rotation: 0
           };
-
           state.annotations.push(newAnno);
           state.selectedId = id;
           saveHistory();
           switchTool('select');
           renderAnnotations();
-
           pendingTextPanel = true;
-          gestureMode = 'none';
           return;
         }
 
         if (state.activeTool === 'rect') {
+          isDrawing = true;
           currentAnnotation = {
-            id,
-            type: 'rect',
-            x: coords.x,
-            y: coords.y,
-            w: 1,
-            h: 1,
+            id, type: 'rect',
+            x: coords.x, y: coords.y,
+            w: 1, h: 1,
             color: state.defaults.color,
             strokeWidth: state.defaults.strokeWidth,
             outlineWidth: state.defaults.outlineWidth,
@@ -1041,127 +1067,101 @@
             hasShadow: state.defaults.hasShadow,
             rotation: 0
           };
-
           state.annotations.push(currentAnnotation);
           state.selectedId = id;
-          gestureMode = 'draw';
           renderAnnotations();
           return;
         }
 
         if (state.activeTool === 'arrow') {
+          isDrawing = true;
           currentAnnotation = {
-            id,
-            type: 'arrow',
-            x1: coords.x,
-            y1: coords.y,
-            x2: coords.x + 1,
-            y2: coords.y + 1,
+            id, type: 'arrow',
+            x1: coords.x, y1: coords.y,
+            x2: coords.x + 1, y2: coords.y + 1,
             color: state.defaults.color,
             strokeWidth: state.defaults.strokeWidth,
             outlineWidth: state.defaults.outlineWidth,
             arrowSize: state.defaults.arrowSize,
             hasShadow: state.defaults.hasShadow
           };
-
           state.annotations.push(currentAnnotation);
           state.selectedId = id;
-          gestureMode = 'draw';
           renderAnnotations();
           return;
         }
       }
 
-      // 選択モード
+      // 選択・移動モード
       const hitAnno = getHitAnnotation(coords);
-
       if (hitAnno) {
         state.selectedId = hitAnno.id;
-        gestureMode = 'object-drag';
+        // 選択したオブジェクトを配列の最後へ移し、常に最前面にします。
+        const hitIndex = state.annotations.findIndex(a => a.id === hitAnno.id);
+        if (hitIndex >= 0 && hitIndex !== state.annotations.length - 1) {
+          const [frontAnno] = state.annotations.splice(hitIndex, 1);
+          state.annotations.push(frontAnno);
+        }
+        const frontAnno = state.annotations[state.annotations.length - 1];
+        isDraggingObj = true;
         initialObjState = JSON.parse(JSON.stringify(hitAnno));
         updateUI();
         renderAnnotations();
       } else {
         state.selectedId = null;
-        gestureMode = 'pan';
+        isPanning = true;
         panMoved = false;
         panStart = getContainerCoords(e);
         panStartPan = { x: state.panX, y: state.panY };
         updateUI();
         renderAnnotations();
       }
-    }
-
-    editorContainer.addEventListener('pointerdown', (e) => {
-      if (!state.image) return;
-
-      // pointerdown時に必ず capture を確保する。
-      capturePointer(e);
-
-      activePointers.set(e.pointerId, {
-        x: e.clientX,
-        y: e.clientY
-      });
-
-      // 2本目の指が入った瞬間に、進行中の1本指操作をキャンセルして
-      // ピンチ・パン専用モードへ切り替える。
-      if (activePointers.size >= 2) {
-        if (gestureMode === 'draw' && currentAnnotation) {
-          state.annotations = state.annotations.filter(
-            a => a.id !== currentAnnotation.id
-          );
-          currentAnnotation = null;
-        }
-
-        gestureMode = 'pinch';
-        initialObjState = null;
-        pendingTextPanel = false;
-        startPinch();
-        renderAnnotations();
-        return;
-      }
-
-      // 3本目以降は操作対象にしない。
-      if (activePointers.size > 2) return;
-
-      beginSinglePointerGesture(e);
     });
 
     editorContainer.addEventListener('pointermove', (e) => {
       if (!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-      activePointers.set(e.pointerId, {
-        x: e.clientX,
-        y: e.clientY
-      });
+      // 2本指ズーム & パン
+      if (activePointers.size === 2) {
+        if (!isPinching) startPinch();
+        const pts = Array.from(activePointers.values());
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+        let newScale = initialScale * (dist / initialPinchDist);
+        newScale = Math.max(0.05, Math.min(20, newScale));
 
-      // 2本指になったら常にピンチ・パンを優先。
-      if (activePointers.size >= 2) {
-        if (gestureMode !== 'pinch') startPinch();
-        updatePinch();
+        const cRect = editorContainer.getBoundingClientRect();
+        const mid = {
+          x: (pts[0].x + pts[1].x) / 2 - cRect.left,
+          y: (pts[0].y + pts[1].y) / 2 - cRect.top
+        };
+
+        state.scale = newScale;
+        state.panX = mid.x - (initialImgAnchor.x + CANVAS_MARGIN) * newScale;
+        state.panY = mid.y - (initialImgAnchor.y + CANVAS_MARGIN) * newScale;
+
+        updateViewportTransform();
         return;
       }
 
-      if (activePointers.size !== 1) return;
+      if (activePointers.size > 1) return;
 
-      const coords = getCanvasCoords(e);
-
-      if (gestureMode === 'pan') {
+      // 1本指パン移動
+      if (isPanning) {
         const c = getContainerCoords(e);
         const dx = c.x - panStart.x;
         const dy = c.y - panStart.y;
-
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-          panMoved = true;
-        }
-
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panMoved = true;
         state.panX = panStartPan.x + dx;
         state.panY = panStartPan.y + dy;
         updateViewportTransform();
         return;
       }
 
-      if (gestureMode === 'draw' && currentAnnotation) {
+      const coords = getCanvasCoords(e);
+
+      // 新規描画中
+      if (isDrawing && currentAnnotation) {
         if (currentAnnotation.type === 'rect') {
           currentAnnotation.w = coords.x - startImageCoords.x;
           currentAnnotation.h = coords.y - startImageCoords.y;
@@ -1169,18 +1169,15 @@
           currentAnnotation.x2 = coords.x;
           currentAnnotation.y2 = coords.y;
         }
-
         renderAnnotations();
         return;
       }
 
-      const selectedAnno = state.annotations.find(
-        a => a.id === state.selectedId
-      );
-
+      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
       if (!selectedAnno) return;
 
-      if (gestureMode === 'transform' && initialObjState) {
+      // 変形ハンドル操作
+      if (isTransformingObj && initialObjState) {
         const dx = coords.x - startImageCoords.x;
         const dy = coords.y - startImageCoords.y;
 
@@ -1190,18 +1187,10 @@
               coords.y - initialRotCenter.y,
               coords.x - initialRotCenter.x
             );
-
             selectedAnno.rotation =
-              initialRotation +
-              (cur - initialHandleAngle) * (180 / Math.PI);
+              initialRotation + (cur - initialHandleAngle) * (180 / Math.PI);
           } else {
-            applyRectResize(
-              selectedAnno,
-              initialObjState,
-              transformHandle,
-              dx,
-              dy
-            );
+            applyRectResize(selectedAnno, initialObjState, transformHandle, dx, dy);
           }
         } else if (selectedAnno.type === 'arrow') {
           if (transformHandle === 'p1') {
@@ -1217,18 +1206,16 @@
               coords.y - initialRotCenter.y,
               coords.x - initialRotCenter.x
             );
-
             selectedAnno.rotation =
-              initialRotation +
-              (cur - initialHandleAngle) * (180 / Math.PI);
+              initialRotation + (cur - initialHandleAngle) * (180 / Math.PI);
           }
         }
-
         renderAnnotations();
         return;
       }
 
-      if (gestureMode === 'object-drag' && initialObjState) {
+      // 要素のドラッグ移動
+      if (isDraggingObj && initialObjState) {
         const dx = coords.x - startImageCoords.x;
         const dy = coords.y - startImageCoords.y;
 
@@ -1241,144 +1228,10 @@
           selectedAnno.x2 = initialObjState.x2 + dx;
           selectedAnno.y2 = initialObjState.y2 + dy;
         }
-
         renderAnnotations();
       }
     });
 
-    const finishPointer = (e, cancelled = false) => {
-      const wasPinching = gestureMode === 'pinch';
-
-      activePointers.delete(e.pointerId);
-      releasePointer(e);
-
-      // 2本指ジェスチャー中に1本離れた場合：
-      // 残った指は、そのまま1本指のドラッグへ誤移行させない。
-      if (wasPinching) {
-        if (activePointers.size >= 2) {
-          startPinch();
-          return;
-        }
-
-        if (activePointers.size === 1) {
-          gestureMode = 'none';
-        } else {
-          gestureMode = 'none';
-        }
-
-        panMoved = false;
-        initialObjState = null;
-        currentAnnotation = null;
-        updateUI();
-        renderAnnotations();
-        return;
-      }
-
-      if (cancelled) {
-        if (currentAnnotation) {
-          state.annotations = state.annotations.filter(
-            a => a.id !== currentAnnotation.id
-          );
-          currentAnnotation = null;
-        }
-
-        gestureMode = 'none';
-        panMoved = false;
-        initialObjState = null;
-        pendingTextPanel = false;
-        updateUI();
-        renderAnnotations();
-        return;
-      }
-
-      if (gestureMode === 'pan') {
-        if (!panMoved) {
-          state.selectedId = null;
-          updateUI();
-          renderAnnotations();
-        }
-
-        gestureMode = 'none';
-        panMoved = false;
-        return;
-      }
-
-      let historySaved = false;
-
-      if (
-        gestureMode === 'draw' ||
-        gestureMode === 'object-drag' ||
-        gestureMode === 'transform'
-      ) {
-        let discard = false;
-
-        if (currentAnnotation && currentAnnotation.type === 'rect') {
-          if (currentAnnotation.w < 0) {
-            currentAnnotation.x += currentAnnotation.w;
-            currentAnnotation.w = Math.abs(currentAnnotation.w);
-          }
-
-          if (currentAnnotation.h < 0) {
-            currentAnnotation.y += currentAnnotation.h;
-            currentAnnotation.h = Math.abs(currentAnnotation.h);
-          }
-        }
-
-        if (gestureMode === 'draw' && currentAnnotation) {
-          const a = currentAnnotation;
-
-          if (a.type === 'rect') {
-            discard = Math.abs(a.w) < 8 || Math.abs(a.h) < 8;
-          } else if (a.type === 'arrow') {
-            discard =
-              Math.hypot(a.x2 - a.x1, a.y2 - a.y1) < 8;
-          }
-
-          if (discard) {
-            state.annotations = state.annotations.filter(
-              x => x.id !== a.id
-            );
-            state.selectedId = null;
-          }
-        }
-
-        if (!discard) {
-          saveHistory();
-          historySaved = true;
-
-          if (gestureMode === 'draw') {
-            switchTool('select');
-          }
-        }
-
-        renderAnnotations();
-      }
-
-      if (pendingTextPanel) {
-        pendingTextPanel = false;
-      }
-
-      updateUI();
-
-      gestureMode = 'none';
-      panMoved = false;
-      currentAnnotation = null;
-      initialObjState = null;
-      transformHandle = null;
-    };
-
-    editorContainer.addEventListener('pointerup', e => {
-      finishPointer(e, false);
-    });
-
-    editorContainer.addEventListener('pointercancel', e => {
-      finishPointer(e, true);
-    });
-
-    // pointerleave では終了処理をしない。
-    // setPointerCapture() により、指が領域外へ出ても pointermove/up を受け取るため。
-
-    // 四角のリサイズ（対角固定・回転対応）
     function applyRectResize(target, s, handle, dx, dy) {
       const th = (s.rotation || 0) * Math.PI / 180;
       const cos = Math.cos(-th), sin = Math.sin(-th);
@@ -1420,6 +1273,13 @@
     }
 
     const handlePointerUp = (e) => {
+      // 修正1: Pointer Captureを解除
+      try {
+        if (e.target.hasPointerCapture(e.pointerId)) {
+          e.target.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) {}
+
       const wasPinching = isPinching;
       activePointers.delete(e.pointerId);
 
@@ -1481,17 +1341,12 @@
         renderAnnotations();
       }
 
-      // テキスト配置直後は指を離した時にパネル表示
       if (pendingTextPanel) {
         pendingTextPanel = false;
         panelNeedsUpdate = true;
       }
 
-      if (panelNeedsUpdate || !historySaved) {
-        updateUI();
-      } else {
-        updateUI();
-      }
+      updateUI();
 
       isDrawing = false;
       isDraggingObj = false;
@@ -1535,10 +1390,7 @@
           const dist = distToSegment(coords, { x: a.x1, y: a.y1 }, { x: a.x2, y: a.y2 });
           if (dist < (a.strokeWidth / 2 + 24 / state.scale)) return a;
         } else if (a.type === 'text') {
-          const m = measureTextAnno(a);
-          const w = m.w;
-          const h = a.size;
-
+          const box = getTextBox(a);
           const c = getRotCenter(a);
           const rad = -(a.rotation || 0) * Math.PI / 180;
           const dx = coords.x - c.x;
@@ -1546,8 +1398,8 @@
           const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
           const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
 
-          if (lx >= a.x - 12 && lx <= a.x + w + 12 &&
-              ly >= a.y - h - 12 && ly <= a.y + 12) {
+          if (lx >= box.left - 12 && lx <= box.left + box.w + 12 &&
+              ly >= box.top - 12 && ly <= box.top + box.h + 12) {
             return a;
           }
         }
@@ -1609,6 +1461,8 @@
     // -------------------------------------------------------------
     function renderAnnotations() {
       annoCtx.clearRect(0, 0, annoCanvas.width, annoCanvas.height);
+      annoCtx.save();
+      annoCtx.translate(CANVAS_MARGIN, CANVAS_MARGIN);
 
       state.annotations.forEach(a => {
         if (a.type === 'rect') {
@@ -1639,10 +1493,12 @@
           drawSelectionBounds(a);
         }
       });
+      annoCtx.restore();
 
       positionPanel();
     }
 
+    // 修正4: ctx.roundRect の代わりに arcTo / lineTo を用いた安全な角丸描画ロジック
     function drawRoundedRect(ctx, a) {
       withRotation(ctx, a, () => {
         const x = a.x;
@@ -1652,54 +1508,38 @@
         const absW = Math.abs(w);
         const absH = Math.abs(h);
 
-        // 角丸は短辺の半分を最大値とする。
-        // CanvasRenderingContext2D.roundRect() に依存せず、
-        // arcTo() だけで描画することで iOS Safari を含む環境差を回避する。
         const maxR = Math.min(absW, absH) / 2;
-        const pct = (a.borderRadius != null ? Number(a.borderRadius) : 0) / 100;
-        const r = Math.max(0, Math.min(maxR, maxR * pct));
-
-        // 負の幅・高さにも対応して、常に正しい矩形パスを作る。
-        const left = Math.min(x, x + w);
-        const right = Math.max(x, x + w);
-        const top = Math.min(y, y + h);
-        const bottom = Math.max(y, y + h);
-        const width = right - left;
-        const height = bottom - top;
-        const radius = Math.min(r, width / 2, height / 2);
+        const pct = (a.borderRadius != null ? a.borderRadius : 0) / 100;
+        let r = Math.max(0, Math.min(maxR, maxR * pct));
 
         ctx.beginPath();
-
-        if (radius <= 0.001) {
-          ctx.rect(left, top, width, height);
+        if (r <= 0) {
+          ctx.rect(x, y, w, h);
         } else {
-          ctx.moveTo(left + radius, top);
-          ctx.lineTo(right - radius, top);
-          ctx.arcTo(right, top, right, top + radius, radius);
+          const x1 = Math.min(x, x + w);
+          const x2 = Math.max(x, x + w);
+          const y1 = Math.min(y, y + h);
+          const y2 = Math.max(y, y + h);
 
-          ctx.lineTo(right, bottom - radius);
-          ctx.arcTo(right, bottom, right - radius, bottom, radius);
-
-          ctx.lineTo(left + radius, bottom);
-          ctx.arcTo(left, bottom, left, bottom - radius, radius);
-
-          ctx.lineTo(left, top + radius);
-          ctx.arcTo(left, top, left + radius, top, radius);
-
+          ctx.moveTo(x1 + r, y1);
+          ctx.arcTo(x2, y1, x2, y2, r);
+          ctx.arcTo(x2, y2, x1, y2, r);
+          ctx.arcTo(x1, y2, x1, y1, r);
+          ctx.arcTo(x1, y1, x2, y1, r);
           ctx.closePath();
         }
 
         ctx.lineJoin = 'round';
 
-        const outline = a.outlineWidth != null ? Number(a.outlineWidth) : 2;
+        const outline = a.outlineWidth != null ? a.outlineWidth : 2;
         if (outline > 0) {
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = Math.max(0, Number(a.strokeWidth) || 0) + outline * 2;
+          ctx.lineWidth = a.strokeWidth + outline * 2;
           ctx.stroke();
         }
 
         ctx.strokeStyle = a.color;
-        ctx.lineWidth = Math.max(0, Number(a.strokeWidth) || 0);
+        ctx.lineWidth = a.strokeWidth;
         ctx.stroke();
       });
     }
@@ -1740,23 +1580,26 @@
       ctx.stroke();
     }
 
-    // 文字描画：回転中心は視覚的中心。影は輪郭シルエットに1回だけ。
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
-        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
 
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
-        // 1) 影を作る（輪郭シルエットに1回だけ影を落とす）
+        // フチが太くなっても影が過剰に大きくならないよう、
+        // フチ幅に応じて影のぼかし・オフセットを少しずつ抑えます。
         if (hasShadow) {
           ctx.save();
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-          ctx.shadowBlur = 8;
-          ctx.shadowOffsetX = 3;
-          ctx.shadowOffsetY = 3;
+          const shadowScale = Math.max(0.35, 1 - outline / 30);
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.58)';
+          ctx.shadowBlur = Math.max(2.5, 8 * shadowScale);
+          ctx.shadowOffsetX = Math.max(1, 3 * shadowScale);
+          ctx.shadowOffsetY = Math.max(1, 3 * shadowScale);
+
           if (outline > 0) {
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = outline * 2;
@@ -1768,7 +1611,6 @@
           ctx.restore();
         }
 
-        // 2) 影なしで本体を描画
         if (outline > 0) {
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = outline * 2;
@@ -1799,17 +1641,15 @@
         });
       }
 
-      // ハンドル
       const handles = getHandles(a);
       handles.forEach(h => {
         if (h.id === 'rot') {
-          const c = getRotCenter(a);
           let base;
           if (a.type === 'rect') {
             base = localToWorld(a, a.x + a.w / 2, a.y);
           } else {
             const m = measureTextAnno(a);
-            base = localToWorld(a, a.x + m.w / 2, a.y - a.size);
+            base = localToWorld(a, a.x, a.y - m.h / 2);
           }
 
           annoCtx.beginPath();
@@ -1855,7 +1695,7 @@
 
       let objCenterY;
       if (a.type === 'rect') objCenterY = a.y + a.h / 2;
-      else if (a.type === 'text') objCenterY = a.y - a.size / 2;
+      else if (a.type === 'text') objCenterY = a.y;
       else if (a.type === 'arrow') objCenterY = (a.y1 + a.y2) / 2;
       else objCenterY = 0;
 
@@ -1881,6 +1721,7 @@
       }
 
       propertiesPanel.classList.remove('hidden');
+      btnDeletePanel.textContent = 'このオブジェクトを削除';
 
       document.querySelectorAll('.color-swatch').forEach(s => {
         if (s.dataset.color && s.dataset.color.toLowerCase() === (a.color || '').toLowerCase()) {
@@ -2044,7 +1885,7 @@
     });
 
     // -------------------------------------------------------------
-    // 十字キー：長押しで連続移動
+    // 微調整ボタン（長押し対応）
     // -------------------------------------------------------------
     function applyNudge(dx, dy) {
       const a = state.annotations.find(x => x.id === state.selectedId);
@@ -2099,15 +1940,25 @@
       });
     }
 
-    // 削除
-    btnDelete.addEventListener('click', () => {
-      if (state.selectedId) {
-        state.annotations = state.annotations.filter(a => a.id !== state.selectedId);
-        state.selectedId = null;
-        updateUI();
-        saveHistory();
-        renderAnnotations();
-      }
+    // 文字入力欄のクリア
+    btnClearText.addEventListener('click', () => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (!a || a.type !== 'text') return;
+      a.text = '';
+      textContentInput.value = '';
+      textContentInput.focus();
+      saveHistory();
+      renderAnnotations();
+    });
+
+    // プロパティパネル内の削除
+    btnDeletePanel.addEventListener('click', () => {
+      if (!state.selectedId) return;
+      state.annotations = state.annotations.filter(a => a.id !== state.selectedId);
+      state.selectedId = null;
+      updateUI();
+      saveHistory();
+      renderAnnotations();
     });
 
     // -------------------------------------------------------------
@@ -2157,7 +2008,7 @@
       saveModal.classList.remove('active');
     });
 
-    // 初期化
+    // 初期化実行
     init();
   </script>
 </body>
