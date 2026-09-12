@@ -12,7 +12,7 @@
   <style>
     :root {
       --bg-color: #1c1c1e;
-      --panel-bg: rgba(20, 20, 22, 0.85); /* ぼかしを弱め可読性を確保する濃いめの背景 */
+      --panel-bg: rgba(20, 20, 22, 0.55); /* ぼかしを弱め、後ろの画像が見える透過設定 */
       --header-bg: rgba(30, 30, 32, 0.85);
       --accent-color: #0a84ff;
       --text-color: #ffffff;
@@ -103,7 +103,7 @@
     #editor-container {
       flex: 1;
       position: relative;
-      overflow: visible; /* オブジェクトがはみ出ても見やすく設定 */
+      overflow: visible; /* 画像外のオブジェクトを表示する */
       background-color: #121212;
       min-height: 0;
       touch-action: none;
@@ -153,20 +153,20 @@
       overflow: visible;
     }
 
-    /* オブジェクトツール（プロパティパネル：3列構成レイアウト） */
+    /* オブジェクトツール（プロパティパネル：4列構成省スペースレイアウト） */
     #properties-panel {
       position: absolute;
       bottom: calc(52px + (var(--safe-area-bottom) / 2));
       left: 8px;
       right: 8px;
       background: var(--panel-bg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(3px); /* ぼかしを弱めて背景画像を見やすく調整 */
+      -webkit-backdrop-filter: blur(3px);
       border-radius: 14px;
-      padding: 8px;
+      padding: 6px 8px;
       display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 8px;
+      grid-template-columns: auto auto auto 1fr; /* 4列レイアウト */
+      gap: 6px;
       align-items: center;
       border: 0.5px solid var(--border-color);
       box-shadow: 0 8px 24px rgba(0,0,0,0.6);
@@ -188,34 +188,45 @@
       font-size: 11px;
       color: #e0e0e5;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-      min-width: 32px;
+      min-width: 28px;
       flex-shrink: 0;
       font-weight: 500;
     }
 
-    /* パネルの左列：削除、色、影 */
-    .panel-col-left {
+    /* 第1列：その他のボタン（削除・影） */
+    .panel-col-misc {
       display: flex;
       flex-direction: column;
       gap: 6px;
       align-items: center;
       justify-content: center;
-      border-right: 1px solid rgba(255,255,255,0.1);
+      border-right: 1px solid rgba(255,255,255,0.15);
       padding-right: 6px;
     }
 
-    .color-swatch-container {
+    /* 第2列：カラー（縦3×横3＝最大9要素） */
+    .panel-col-colors {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
       align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.15);
+      padding-right: 6px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      grid-template-rows: repeat(3, 22px);
+      gap: 3px;
+      align-items: center;
+      justify-items: center;
     }
 
     .color-swatch {
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
       flex-shrink: 0;
       box-sizing: border-box;
       cursor: pointer;
@@ -227,33 +238,52 @@
       box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.8);
     }
 
+    /* カスタムカラー選択ボタンの見た目を改善 */
     .color-picker-wrapper {
       position: relative;
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+      background: conic-gradient(from 0deg, red, yellow, lime, cyan, blue, magenta, red);
       flex-shrink: 0;
-      overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s ease;
+    }
+
+    .color-picker-wrapper:active {
+      transform: scale(0.92);
+    }
+
+    .color-picker-wrapper::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 2px rgba(0,0,0,0.5);
+      pointer-events: none;
     }
 
     .color-picker-wrapper input[type="color"] {
       position: absolute;
       opacity: 0;
-      top: -10px;
-      left: -10px;
-      width: 44px;
-      height: 44px;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       cursor: pointer;
     }
 
-    /* パネルの中列：十字キー (十字レイアウト) */
-    .panel-col-middle {
+    /* 第3列：十字キー */
+    .panel-col-nudge {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-right: 1px solid rgba(255,255,255,0.1);
+      border-right: 1px solid rgba(255,255,255,0.15);
       padding-right: 6px;
     }
 
@@ -290,11 +320,11 @@
     #nudge-right { grid-column: 3; grid-row: 2; }
     #nudge-down { grid-column: 2; grid-row: 3; }
 
-    /* パネルの右列：各種スライダー・コントロール */
-    .panel-col-right {
+    /* 第4列：スライダー（縦並び配置） */
+    .panel-col-sliders {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       justify-content: center;
       min-width: 0;
     }
@@ -302,8 +332,8 @@
     .panel-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      min-height: 26px;
+      gap: 4px;
+      min-height: 24px;
     }
 
     /* 文字入力ラッパー */
@@ -320,9 +350,9 @@
       background: rgba(0, 0, 0, 0.6);
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 3px 20px 3px 6px;
+      padding: 2px 18px 2px 5px;
       border-radius: 4px;
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.2;
     }
 
@@ -346,18 +376,18 @@
     /* スライダー調整 */
     input[type="range"] {
       flex: 1;
-      min-width: 50px;
+      min-width: 40px;
       accent-color: var(--accent-color);
-      height: 20px;
+      height: 18px;
     }
 
     .toggle-btn {
       background: rgba(255, 255, 255, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 3px 8px;
+      padding: 3px 6px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
       flex-shrink: 0;
       line-height: 1.1;
@@ -501,22 +531,23 @@
     </div>
   </div>
 
-  <!-- オブジェクト操作用ツールパネル（3列構成） -->
+  <!-- オブジェクト操作用ツールパネル（4列省スペース構成） -->
   <div id="properties-panel" class="hidden">
-    <!-- 左列: 削除, パレット/カスタムカラー, 影ON/OFF (色・影の項目名は削除) -->
-    <div class="panel-col-left">
+    <!-- 列1: その他のボタン（削除, 影） -->
+    <div class="panel-col-misc">
       <button class="btn-icon-delete" id="btn-delete" title="削除">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
       </button>
-      <div id="color-presets" class="color-swatch-container"></div>
-      <div class="color-picker-wrapper" title="カスタムカラー">
-        <input type="color" id="custom-color-picker">
-      </div>
       <button id="btn-shadow-toggle" class="toggle-btn active" style="padding: 2px 4px; font-size: 10px;">影</button>
     </div>
 
-    <!-- 中列: 十字キー (微調整の項目名は削除) -->
-    <div class="panel-col-middle">
+    <!-- 列2: カラー（縦3×横3の9マスグリッド：プリセット＋履歴＋カスタムカラー） -->
+    <div class="panel-col-colors">
+      <div id="color-grid" class="color-grid"></div>
+    </div>
+
+    <!-- 列3: 十字キー -->
+    <div class="panel-col-nudge">
       <div class="nudge-cross">
         <button class="nudge-btn" id="nudge-up">↑</button>
         <button class="nudge-btn" id="nudge-left">←</button>
@@ -525,8 +556,8 @@
       </div>
     </div>
 
-    <!-- 右列: スライダー & モードに応じた調整機能 -->
-    <div class="panel-col-right">
+    <!-- 列4: スライダー（縦に並べるレイアウト） -->
+    <div class="panel-col-sliders">
       <!-- テキスト操作用 -->
       <div class="panel-row" id="text-prop-row">
         <span class="panel-label">文字</span>
@@ -595,7 +626,7 @@
     ];
 
     const RECENT_COLORS_KEY = 'cocomark_recent_colors';
-    const MAX_RECENT_COLORS = 2; // 縦並び配置に合わせて上限を最適化
+    const MAX_RECENT_COLORS = 6; // 3x3 グリッドに合わせて履歴の上限を最大6個に変更
 
     const MAX_TEXT_SIZE = 160;
     const MAX_STROKE_WIDTH = 40;
@@ -649,8 +680,7 @@
     const btnRedo = document.getElementById('btn-redo');
     const btnExport = document.getElementById('btn-export');
     const btnDelete = document.getElementById('btn-delete');
-    const colorPresetsContainer = document.getElementById('color-presets');
-    const customColorPicker = document.getElementById('custom-color-picker');
+    const colorGridContainer = document.getElementById('color-grid');
     const textContentInput = document.getElementById('text-content-input');
     const btnClearText = document.getElementById('btn-clear-text');
     const btnBold = document.getElementById('btn-bold');
@@ -680,7 +710,7 @@
     }
 
     // -------------------------------------------------------------
-    // 最近使った色
+    // 最近使った色 & パレット管理（色が干渉しないよう改善）
     // -------------------------------------------------------------
     function loadRecentColors() {
       try {
@@ -712,11 +742,14 @@
     }
 
     function renderColorPalette() {
-      colorPresetsContainer.innerHTML = '';
+      colorGridContainer.innerHTML = '';
+      
+      // プリセット + 最近使用した色
       const list = [
         ...PRESET_COLORS.map(p => p.val),
         ...state.recentColors
-      ];
+      ].slice(0, 8); // ピッカー用の1枠を確保（最大9個）
+
       list.forEach(val => {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
@@ -726,8 +759,35 @@
           e.preventDefault();
           selectColor(val);
         });
-        colorPresetsContainer.appendChild(swatch);
+        colorGridContainer.appendChild(swatch);
       });
+
+      // カスタムカラーピッカーボタン
+      const pickerWrapper = document.createElement('div');
+      pickerWrapper.className = 'color-picker-wrapper';
+      pickerWrapper.title = 'カスタムカラー';
+
+      const pickerInput = document.createElement('input');
+      pickerInput.type = 'color';
+      
+      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+      pickerInput.value = selectedAnno ? selectedAnno.color : state.defaults.color;
+
+      pickerInput.addEventListener('change', (e) => {
+        const c = e.target.value;
+        state.defaults.color = c;
+        pushRecentColor(c);
+        const currAnno = state.annotations.find(a => a.id === state.selectedId);
+        if (currAnno) {
+          currAnno.color = c;
+          saveHistory();
+          renderAnnotations();
+        }
+        updateUI();
+      });
+
+      pickerWrapper.appendChild(pickerInput);
+      colorGridContainer.appendChild(pickerWrapper);
     }
 
     // -------------------------------------------------------------
@@ -736,20 +796,6 @@
     function init() {
       loadRecentColors();
       renderColorPalette();
-
-      customColorPicker.value = state.defaults.color;
-      customColorPicker.addEventListener('change', (e) => {
-        const c = e.target.value;
-        state.defaults.color = c;
-        pushRecentColor(c);
-        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
-        if (selectedAnno) {
-          selectedAnno.color = c;
-          saveHistory();
-          renderAnnotations();
-        }
-        updateUI();
-      });
 
       document.querySelectorAll('.tool-item[data-tool]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1573,7 +1619,7 @@
       ctx.stroke();
     }
 
-    // 文字の描画（フチがついた場合でも正しくドロップシャドウが付与されるように修正）
+    // 文字の描画（フチを大きくしても影が肥大化しないように適正化）
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
@@ -1584,17 +1630,18 @@
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
-        // 1. 影の描画処理（独立して影用のパスを描画）
+        // 1. 影の独立描画（フチの厚みに影響されないよう一定のストローク幅で影のみ付与）
         if (hasShadow) {
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-          ctx.shadowBlur = 8;
+          ctx.shadowBlur = 6;
           ctx.shadowOffsetX = 3;
           ctx.shadowOffsetY = 3;
 
           if (outline > 0) {
             ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-            ctx.lineWidth = outline * 2;
+            // 影用に固定された控えめな太さで描画し、フチ拡大による影の膨らみを抑える
+            ctx.lineWidth = Math.min(outline * 2, 6);
             ctx.strokeText(a.text, a.x, a.y);
           } else {
             ctx.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -1714,6 +1761,8 @@
 
       propertiesPanel.classList.remove('hidden');
 
+      renderColorPalette();
+
       document.querySelectorAll('.color-swatch').forEach(s => {
         if (s.dataset.color && s.dataset.color.toLowerCase() === (a.color || '').toLowerCase()) {
           s.classList.add('selected');
@@ -1721,7 +1770,6 @@
           s.classList.remove('selected');
         }
       });
-      customColorPicker.value = a.color || '#e63946';
 
       document.getElementById('text-prop-row').style.display = (a.type === 'text') ? 'flex' : 'none';
       document.getElementById('radius-prop-row').style.display = (a.type === 'rect') ? 'flex' : 'none';
