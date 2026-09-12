@@ -1,727 +1,2082 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>PWA Previewer</title>
-<style>
-:root{
-  color-scheme:dark;
-  --bg:#000;
-  --panel:#1c1c1e;
-  --panel2:#2c2c2e;
-  --panel3:#3a3a3c;
-  --text:#f5f5f7;
-  --muted:#98989f;
-  --accent:#0a84ff;
-  --danger:#ff453a;
-  --ok:#30d158;
-  --mark:#ffd60a;
-}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
-body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
-button,textarea,input{font:inherit}
-button{
-  border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;text-align:center;
-}
-button.primary{background:var(--accent)}
-button.danger{background:var(--danger)}
-button.ghost{background:transparent;border:1px solid #38383c}
-button:active{transform:scale(.97);opacity:.85}
-button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2c2c2e">
+  <title>ココマーク</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ココマーク">
+  <style>
+    :root {
+      --bg-color: #1c1c1e;
+      --panel-bg: rgba(20, 20, 22, 0.85); /* ぼかしを弱め可読性を確保する濃いめの背景 */
+      --header-bg: rgba(30, 30, 32, 0.85);
+      --accent-color: #0a84ff;
+      --text-color: #ffffff;
+      --border-color: rgba(255, 255, 255, 0.2);
+      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-area-top: env(safe-area-inset-top, 0px);
+    }
 
-/* card row (horizontal scroll) */
-.card-row{
-  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
-  padding:0 4px 14px;margin:0 -4px 6px;
-  scroll-snap-type:x proximity;
-  -webkit-overflow-scrolling:touch;
-}
-.card-row::-webkit-scrollbar{height:0}
-.card{
-  scroll-snap-align:start;
-  flex:0 0 auto;width:132px;height:96px;
-  background:var(--panel);border-radius:16px;padding:12px;
-  display:flex;flex-direction:column;justify-content:space-between;
-  border:2px solid transparent;cursor:pointer;
-  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-  transition:border-color .15s,background .15s;
-  position:relative;
-}
-.card:active{background:var(--panel2)}
-.card.active{border-color:var(--accent);background:#0a84ff18}
-.card-name{font-weight:600;font-size:14px;line-height:1.25;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-meta{font-size:10.5px;color:var(--muted)}
-.card-new{
-  align-items:center;justify-content:center;color:var(--muted);
-  border:2px dashed #3a3a3c;background:transparent;
-}
-.card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
-.card-new .label{font-size:12px;margin-top:4px}
-.card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
 
-/* card toast (slide up from below tapped card) */
-.card-toast{
-  position:absolute;
-  z-index:50;
-  background:var(--panel2);
-  color:var(--text);
-  padding:8px 14px;
-  border-radius:12px;
-  font-size:12.5px;
-  border:1px solid #38383c;
-  box-shadow:0 4px 20px rgba(0,0,0,.5);
-  pointer-events:none;
-  opacity:0;
-  transform:translateY(10px);
-  transition:opacity .22s, transform .22s;
-  white-space:nowrap;
-}
-.card-toast.show{
-  opacity:1;
-  transform:translateY(0);
-}
+    input[type="range"],
+    input[type="color"],
+    input[type="text"] {
+      touch-action: auto;
+      user-select: auto;
+      -webkit-user-select: auto;
+    }
 
-/* device previews */
-.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
-.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      width: 100dvw;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
 
-/* iPhone 17 Pro: 402x874 CSS pt @3x (real device point size) */
-.phone{
-  position:relative;
-  width:min(300px,86vw);
-  aspect-ratio:402/874;
-  background:#000;border:6px solid #202023;border-radius:52px;overflow:hidden;
-  box-shadow:0 14px 40px #000,0 0 0 1px #444;
-}
-.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px}
-.phone-viewport iframe{
-  position:absolute;top:50%;left:50%;
-  width:402px;height:874px;border:0;background:#000;color-scheme:dark;
-  transform-origin:center center;
-  margin-left:-201px;margin-top:-437px;
-}
-.island{
-  position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
-  width:33.5%;
-  height:calc(9.5% * 0.75);
-  max-height:calc(34px * 0.75);
-  background:#000;border-radius:100px;pointer-events:none;
-}
-.homebar{
-  position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
-  width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
-}
+    /* ヘッダー領域 */
+    header {
+      height: calc(44px + var(--safe-area-top));
+      padding-top: var(--safe-area-top);
+      background: var(--header-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 12px;
+      padding-right: 12px;
+      border-bottom: 0.5px solid var(--border-color);
+      z-index: 100;
+      flex-shrink: 0;
+    }
 
-/* iPad 7th gen: 810x1080 CSS pt landscape */
-.ipad{
-  position:relative;
-  width:min(460px,92vw);
-  aspect-ratio:1080/810;
-  background:#000;border:10px solid #2a2a2e;border-radius:22px;overflow:hidden;
-  box-shadow:0 14px 40px #000,0 0 0 1px #444;
-}
-.ipad-viewport{position:absolute;inset:0;overflow:hidden}
-.ipad-viewport iframe{
-  position:absolute;top:50%;left:50%;
-  width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
-  transform-origin:center center;
-  margin-left:-540px;margin-top:-405px;
-}
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
 
-/* fullscreen action icon - gray instead of primary */
-.fs-icon-btn{
-  position:absolute;
-  left:calc(100% + 8px);
-  top:50%;
-  transform:translateY(-50%);
-  width:40px;height:40px;border-radius:12px;padding:0;
-  background:var(--panel2);border:1px solid #38383c;color:var(--text);
-}
-.fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--accent-color);
+      font-size: 15px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
 
-/* editor (opened via long-press) */
-.editor-overlay{
-  position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
-  display:none;align-items:flex-end;justify-content:center;
-  overscroll-behavior:none;
-}
-.editor-overlay.show{display:flex}
-.editor-sheet{
-  width:100%;max-width:900px;max-height:92vh;overflow:auto;
-  background:var(--bg);border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
-  box-shadow:0 -10px 40px #000;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  /* prevent text selection in editor UI */
-  -webkit-user-select:none;user-select:none;
-}
-.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
+    .btn-icon:disabled {
+      color: #636366;
+    }
 
-/* title row with delete button */
-.editor-title-row{
-  display:flex;align-items:center;gap:8px;margin-bottom:10px;
-}
-.editor-title-row .name-input{
-  flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 12px;outline:none;
-  /* allow text selection inside input */
-  -webkit-user-select:text;user-select:text;
-}
-.editor-title-row .name-input:focus{border-color:var(--accent)}
-.editor-title-row .btn-delete{
-  min-height:40px;padding:0 14px;font-size:13px;
-}
+    .btn-primary {
+      background-color: var(--accent-color);
+      color: #fff;
+      border-radius: 18px;
+      padding: 6px 14px;
+      font-weight: 600;
+    }
 
-/* textarea - word wrap instead of horizontal scroll */
-textarea{
-  width:100%;height:min(42vh,360px);resize:vertical;
-  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
-  padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
-  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
-  /* allow text selection inside textarea */
-  -webkit-user-select:text;user-select:text;
-}
-textarea:focus{border-color:var(--accent)}
+    #editor-container {
+      flex: 1;
+      position: relative;
+      overflow: visible; /* オブジェクトがはみ出ても見やすく設定 */
+      background-color: #121212;
+      min-height: 0;
+      touch-action: none;
+    }
 
-/* editor actions - single row */
-.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.editor-actions button{flex:1;min-width:80px;white-space:nowrap;padding:0 8px}
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-color);
+      z-index: 50;
+      gap: 20px;
+    }
 
-/* search section at bottom */
-.search-section{
-  margin-top:12px;
-  padding-top:12px;
-  border-top:1px solid #38383c;
-}
-.search-box{
-  position:relative;
-  display:flex;align-items:center;gap:6px;
-}
-.search-box input{
-  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
-  background:#111113;color:#fff;padding:0 92px 0 11px;outline:none;
-  /* allow text selection inside input */
-  -webkit-user-select:text;user-select:text;
-}
-.search-box input:focus{border-color:var(--accent)}
-.search-box .search-count{
-  position:absolute;
-  right:100px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:12px;
-  color:var(--muted);
-  pointer-events:none;
-}
-.search-box .search-nav{
-  display:flex;gap:4px;
-}
-.search-box button{
-  min-height:36px;
-  min-width:40px;
-  padding:0 8px;
-  font-size:16px;
-}
+    .file-select-label {
+      background-color: var(--accent-color);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 24px;
+      font-weight: 600;
+      font-size: 17px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+    }
 
-/* fullscreen */
-.fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
-.fullscreen.show{display:block}
-.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
-.fullscreen iframe{border:0;background:#000;color-scheme:dark}
-.fs-controls{
-  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));left:0;right:0;
-  display:flex;justify-content:center;gap:8px;
-}
-.fs-controls button{
-  min-height:36px;padding:0 14px;font-size:13px;border-radius:18px;
-  background:rgba(60,60,65,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;
-}
-.fs-controls button.on{background:rgba(10,132,255,.85)}
-.fullscreen .exit{
-  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
-  width:40px;height:40px;padding:0;border-radius:50%;
-  background:rgba(0,0,0,.40);color:#fff;font-size:19px;
-}
+    #image-input {
+      display: none;
+    }
 
-@media(min-width:800px){
-  .phone{width:min(330px,32vw)}
-  .ipad{width:min(520px,46vw)}
-}
-</style>
+    #viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+      overflow: visible; /* オブジェクトが画像の外側にはみ出ても見えるようにする */
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: visible;
+    }
+
+    /* オブジェクトが画像の外側にはみ出ても見えるように、注釈用キャンバスだけ周囲に余白を持たせて配置する */
+    #annotation-canvas {
+      top: calc(-1 * var(--overflow-margin, 0px));
+      left: calc(-1 * var(--overflow-margin, 0px));
+    }
+
+    /* オブジェクトツール（プロパティパネル：4列構成レイアウト・省スペース化） */
+    #properties-panel {
+      position: absolute;
+      bottom: calc(52px + (var(--safe-area-bottom) / 2));
+      left: 8px;
+      right: 8px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      border-radius: 14px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: auto auto auto 1fr;
+      gap: 8px;
+      align-items: center;
+      border: 0.5px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 90;
+      transition: top 0.18s ease, bottom 0.18s ease;
+    }
+
+    #properties-panel.at-top {
+      bottom: auto;
+      top: calc(52px + var(--safe-area-top));
+    }
+
+    #properties-panel.hidden {
+      display: none;
+    }
+
+    /* 項目名やテキストの可読性向上 */
+    .panel-label {
+      font-size: 11px;
+      color: #e0e0e5;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+      min-width: 32px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    /* 1列目：削除・影ON/OFFなど、その他のボタン（縦に並べる） */
+    .panel-col-misc {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
+    }
+
+    /* 2列目：カラー（プリセット・最近使った色・カスタムカラーを縦横3個ずつのグリッドで配置） */
+    .panel-col-color {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
+    }
+
+    .color-swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 20px);
+      grid-auto-rows: 20px;
+      gap: 3px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .color-presets-cells {
+      display: contents;
+    }
+
+    .color-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      flex-shrink: 0;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+
+    .color-swatch.selected {
+      border-color: #ffffff;
+      transform: scale(1.15);
+      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.8);
+    }
+
+    .color-picker-wrapper {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    .color-picker-wrapper::after {
+      /* 中央に白い円+アイコンを重ねて「カラー変更ボタン」であることを分かりやすくする */
+      content: '';
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95), rgba(255,255,255,0.6) 60%, rgba(255,255,255,0) 61%),
+        #ffffff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.35);
+      pointer-events: none;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      opacity: 0;
+      top: -10px;
+      left: -10px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+    }
+
+    /* 3列目：十字キー (十字レイアウト) */
+    .panel-col-middle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
+    }
+
+    .nudge-cross {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      grid-template-rows: repeat(3, 22px);
+      gap: 2px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .nudge-btn {
+      width: 22px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .nudge-btn:active {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    #nudge-up { grid-column: 2; grid-row: 1; }
+    #nudge-left { grid-column: 1; grid-row: 2; }
+    #nudge-right { grid-column: 3; grid-row: 2; }
+    #nudge-down { grid-column: 2; grid-row: 3; }
+
+    /* 4列目：各種スライダー・コントロール（縦に並べる） */
+    .panel-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .panel-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 26px;
+    }
+
+    /* 文字入力ラッパー */
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .text-input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 3px 20px 3px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .btn-clear-text {
+      position: absolute;
+      right: 4px;
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.4);
+      color: #000;
+      border-radius: 50%;
+      border: none;
+      font-size: 9px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* スライダー調整 */
+    input[type="range"] {
+      flex: 1;
+      min-width: 50px;
+      accent-color: var(--accent-color);
+      height: 20px;
+    }
+
+    .toggle-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      flex-shrink: 0;
+      line-height: 1.1;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .toggle-btn.active {
+      background: var(--accent-color);
+    }
+
+    /* ゴミ箱ボタン */
+    .btn-icon-delete {
+      background: rgba(255, 69, 58, 0.35);
+      color: #ff453a;
+      border: 1px solid rgba(255, 69, 58, 0.5);
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .btn-icon-delete:active {
+      background: rgba(255, 69, 58, 0.6);
+    }
+
+    /* フッターメニュー */
+    toolbar {
+      height: calc(48px + (var(--safe-area-bottom) / 2));
+      padding-bottom: calc(var(--safe-area-bottom) / 2);
+      background: var(--header-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border-top: 0.5px solid var(--border-color);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .tool-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: #a0a0a5;
+      font-size: 10px;
+      gap: 2px;
+      width: 60px;
+      height: 100%;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .tool-item svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .tool-item.active {
+      color: var(--accent-color);
+    }
+
+    #save-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      gap: 15px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    #save-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #save-modal img {
+      max-width: 90%;
+      max-height: 70vh;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      object-fit: contain;
+    }
+
+    #save-modal p {
+      color: #fff;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .close-modal-btn {
+      background: #3a3a3c;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
-<div class="app">
 
-  <div id="cardRow" class="card-row"></div>
-  <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
-
-  <div class="devices">
-    <div class="device-wrap">
-      <div class="phone" id="phone">
-        <div class="island"></div>
-        <div class="phone-viewport">
-          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-        </div>
-        <div class="homebar"></div>
-      </div>
-      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
+  <header>
+    <div style="display: flex; gap: 4px;">
+      <button id="btn-undo" class="btn-icon" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+      </button>
+      <button id="btn-redo" class="btn-icon" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg>
       </button>
     </div>
-    <div class="device-wrap">
-      <div class="ipad" id="ipad">
-        <div class="ipad-viewport">
-          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-        </div>
-      </div>
+    <h1>ココマーク</h1>
+    <button id="btn-export" class="btn-icon btn-primary">保存</button>
+  </header>
+
+  <div id="editor-container">
+    <div id="start-screen">
+      <label class="file-select-label" for="image-input">写真を選択</label>
+      <input type="file" id="image-input" accept="image/*">
+    </div>
+
+    <div id="viewport">
+      <canvas id="bg-canvas"></canvas>
+      <canvas id="annotation-canvas"></canvas>
     </div>
   </div>
 
-</div>
-
-<!-- EDITOR SHEET (opened by long-press on a card) -->
-<div id="editorOverlay" class="editor-overlay">
-  <div class="editor-sheet">
-    <div class="sheet-handle"></div>
-
-    <div class="editor-title-row">
-      <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
-      <button id="btnDelete" class="btn-delete danger">削除</button>
+  <!-- オブジェクト操作用ツールパネル（4列構成：①その他ボタン ②カラー(3x3) ③十字キー ④スライダー(縦)、省スペース化のためのレイアウト） -->
+  <div id="properties-panel" class="hidden">
+    <!-- 1列目: 削除, 影ON/OFF などその他のボタン（縦に並べる） -->
+    <div class="panel-col-misc">
+      <button class="btn-icon-delete" id="btn-delete" title="削除">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+      <button id="btn-shadow-toggle" class="toggle-btn active" style="padding: 2px 4px; font-size: 10px;">影</button>
     </div>
 
-    <div class="editor-textwrap">
-      <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
-    </div>
-
-    <div class="editor-actions">
-      <button id="btnCancel" class="ghost">キャンセル</button>
-      <button id="btnClear" class="ghost">クリア</button>
-      <button id="btnCopy" class="ghost">コピー</button>
-      <button id="btnSave" class="primary">保存</button>
-    </div>
-
-    <div class="search-section">
-      <div class="search-box">
-        <input id="search" type="search" placeholder="検索" autocomplete="off">
-        <span id="searchResult" class="search-count"></span>
-        <div class="search-nav">
-          <button id="btnSearchPrev" class="ghost">▲</button>
-          <button id="btnSearchNext" class="ghost">▼</button>
+    <!-- 2列目: カラー（プリセット・最近使った色・カスタムカラーを縦横3個ずつのグリッドで配置） -->
+    <div class="panel-col-color">
+      <div class="color-swatch-grid">
+        <div id="color-presets" class="color-presets-cells"></div>
+        <div class="color-picker-wrapper" title="カスタムカラー">
+          <input type="color" id="custom-color-picker">
         </div>
       </div>
     </div>
 
+    <!-- 3列目: 十字キー (微調整の項目名は削除) -->
+    <div class="panel-col-middle">
+      <div class="nudge-cross">
+        <button class="nudge-btn" id="nudge-up">↑</button>
+        <button class="nudge-btn" id="nudge-left">←</button>
+        <button class="nudge-btn" id="nudge-right">→</button>
+        <button class="nudge-btn" id="nudge-down">↓</button>
+      </div>
+    </div>
+
+    <!-- 4列目: スライダー & モードに応じた調整機能（縦に並べる） -->
+    <div class="panel-col-right">
+      <!-- テキスト操作用 -->
+      <div class="panel-row" id="text-prop-row">
+        <span class="panel-label">文字</span>
+        <div class="input-wrapper">
+          <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+          <button id="btn-clear-text" class="btn-clear-text">✕</button>
+        </div>
+        <button id="btn-bold" class="toggle-btn">太字</button>
+      </div>
+
+      <!-- サイズ/線幅 & フチ -->
+      <div class="panel-row" id="size-prop-row">
+        <span class="panel-label" id="size-label">サイズ</span>
+        <input type="range" id="size-slider" min="1" max="100" value="100">
+        <span class="panel-label" style="min-width:auto; margin-left:2px;">フチ</span>
+        <input type="range" id="outline-slider" min="0" max="20" value="20">
+      </div>
+
+      <!-- 四角形用: 角丸 & 正方形固定 -->
+      <div class="panel-row" id="radius-prop-row">
+        <span class="panel-label">角丸</span>
+        <input type="range" id="radius-slider" min="0" max="100" value="100">
+        <button id="btn-aspect-square" class="toggle-btn">正方形</button>
+      </div>
+
+      <!-- 矢印用: 先端サイズ -->
+      <div class="panel-row" id="arrow-prop-row">
+        <span class="panel-label">先端</span>
+        <input type="range" id="arrow-slider" min="5" max="90" value="90">
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- FULLSCREEN PREVIEW -->
-<div id="fullscreen" class="fullscreen">
-  <button class="exit" id="exit">×</button>
-  <div class="fullscreen-stage" id="fsStage">
-    <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+  <toolbar>
+    <button class="tool-item active" data-tool="select">
+      <svg viewBox="0 0 24 24"><path d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2 1-3.2-7.4L7 18.5V2z"/></svg>
+      選択
+    </button>
+    <button class="tool-item" data-tool="text">
+      <svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4H5z"/></svg>
+      文字
+    </button>
+    <button class="tool-item" data-tool="rect">
+      <svg viewBox="0 0 24 24"><path d="M3 5v14h18V5H3zm16 12H5V7h14v10z"/></svg>
+      四角
+    </button>
+    <button class="tool-item" data-tool="arrow">
+      <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
+      矢印
+    </button>
+  </toolbar>
+
+  <div id="save-modal">
+    <img id="save-preview" src="" alt="完成画像">
+    <p>画像を長押しして「"写真"に保存」を選択してください</p>
+    <button class="close-modal-btn" id="btn-close-modal">閉じる</button>
   </div>
-</div>
 
-<script>
-(() => {
-  const $ = id => document.getElementById(id);
-  const STORAGE_KEY = "pwa-previewer-items-v2";
-  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+  <script>
+    // -------------------------------------------------------------
+    // 定数
+    // -------------------------------------------------------------
+    const PRESET_COLORS = [
+      { name: '赤', val: '#e63946' },
+      { name: '黒', val: '#000000' }
+    ];
 
-  const PHONE_W = 402, PHONE_H = 874;
-  const IPAD_W = 1080, IPAD_H = 810;
+    const RECENT_COLORS_KEY = 'cocomark_recent_colors';
+    const MAX_RECENT_COLORS = 6; // カラー列を縦横3個ずつ(3x3=9枠: プリセット2+最近使った色6+カスタム1)のグリッドに合わせて設定
 
-  let items = [];
-  let selectedId = null;
-  let editingId = null;
+    const MAX_TEXT_SIZE = 160;
+    const MAX_STROKE_WIDTH = 40;
+    const MAX_OUTLINE_WIDTH = 20;
+    const MAX_ARROW_SIZE = 90;
+    const MAX_BORDER_RADIUS_PERCENT = 100;
+    // 画像の外側にオブジェクトがはみ出た場合でも見えるようにするための余白（画像ピクセル基準）
+    const OVERFLOW_MARGIN = 400;
 
-  const source = $("source");
-  const nameInput = $("nameInput");
-  const framePhone = $("framePhone");
-  const frameIpad = $("frameIpad");
-  const fullFrame = $("fullFrame");
+    // -------------------------------------------------------------
+    // 状態
+    // -------------------------------------------------------------
+    const state = {
+      image: null,
+      imgWidth: 0,
+      imgHeight: 0,
+      scale: 1,
+      panX: 0,
+      panY: 0,
+      activeTool: 'select',
+      annotations: [],
+      selectedId: null,
+      history: [],
+      historyIndex: -1,
+      recentColors: [],
+      defaults: {
+        color: '#e63946',
+        strokeWidth: MAX_STROKE_WIDTH,
+        textSize: MAX_TEXT_SIZE,
+        borderRadius: MAX_BORDER_RADIUS_PERCENT,
+        outlineWidth: MAX_OUTLINE_WIDTH,
+        arrowSize: MAX_ARROW_SIZE,
+        isBold: true,
+        hasShadow: true,
+        text: '文字入力'
+      }
+    };
 
-  const WEEKDAYS = ["日","月","火","水","木","金","土"];
+    // -------------------------------------------------------------
+    // DOM
+    // -------------------------------------------------------------
+    const editorContainer = document.getElementById('editor-container');
+    const viewport = document.getElementById('viewport');
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    const annoCanvas = document.getElementById('annotation-canvas');
+    const annoCtx = annoCanvas.getContext('2d');
+    const imageInput = document.getElementById('image-input');
+    const startScreen = document.getElementById('start-screen');
+    const propertiesPanel = document.getElementById('properties-panel');
 
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
+    const btnUndo = document.getElementById('btn-undo');
+    const btnRedo = document.getElementById('btn-redo');
+    const btnExport = document.getElementById('btn-export');
+    const btnDelete = document.getElementById('btn-delete');
+    const colorPresetsContainer = document.getElementById('color-presets');
+    const customColorPicker = document.getElementById('custom-color-picker');
+    const textContentInput = document.getElementById('text-content-input');
+    const btnClearText = document.getElementById('btn-clear-text');
+    const btnBold = document.getElementById('btn-bold');
+    const sizeSlider = document.getElementById('size-slider');
+    const sizeLabel = document.getElementById('size-label');
+    const outlineSlider = document.getElementById('outline-slider');
+    const radiusSlider = document.getElementById('radius-slider');
+    const arrowSlider = document.getElementById('arrow-slider');
+    const btnAspectSquare = document.getElementById('btn-aspect-square');
+    const btnShadowToggle = document.getElementById('btn-shadow-toggle');
+    const saveModal = document.getElementById('save-modal');
+    const savePreview = document.getElementById('save-preview');
+    const btnCloseModal = document.getElementById('btn-close-modal');
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        items = JSON.parse(raw);
-        if (!Array.isArray(items)) items = [];
-      } else {
-        const old = localStorage.getItem(OLD_KEY);
-        if (old) {
-          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
-          persist();
+    const measureCtx = document.createElement('canvas').getContext('2d');
+
+    // -------------------------------------------------------------
+    // 最前面へ移動
+    // -------------------------------------------------------------
+    function bringToFront(id) {
+      if (!id) return;
+      const idx = state.annotations.findIndex(a => a.id === id);
+      if (idx !== -1 && idx !== state.annotations.length - 1) {
+        const [item] = state.annotations.splice(idx, 1);
+        state.annotations.push(item);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 最近使った色
+    // -------------------------------------------------------------
+    function loadRecentColors() {
+      try {
+        const raw = localStorage.getItem(RECENT_COLORS_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        state.recentColors = Array.isArray(arr) ? arr.slice(0, MAX_RECENT_COLORS) : [];
+      } catch (err) {
+        state.recentColors = [];
+      }
+    }
+
+    function saveRecentColors() {
+      try {
+        localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(state.recentColors));
+      } catch (err) {}
+    }
+
+    function pushRecentColor(color) {
+      if (!color) return;
+      const c = color.toLowerCase();
+      if (PRESET_COLORS.some(p => p.val.toLowerCase() === c)) return;
+      state.recentColors = state.recentColors.filter(x => x.toLowerCase() !== c);
+      state.recentColors.unshift(c);
+      if (state.recentColors.length > MAX_RECENT_COLORS) {
+        state.recentColors.length = MAX_RECENT_COLORS;
+      }
+      saveRecentColors();
+      renderColorPalette();
+    }
+
+    function renderColorPalette() {
+      colorPresetsContainer.innerHTML = '';
+      const list = [
+        ...PRESET_COLORS.map(p => p.val),
+        ...state.recentColors
+      ];
+
+      // 現在選択中のオブジェクトの色が、最近使った色の入れ替わりによって
+      // パレットから消えてしまうと「色が勝手に変わった」ように見えてしまうため、
+      // 選択中の色は一覧に必ず残す（表示上の追加のみで、最近使った色の履歴自体は変更しない）
+      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+      if (selectedAnno && selectedAnno.color) {
+        const cur = selectedAnno.color.toLowerCase();
+        const alreadyShown = list.some(v => v.toLowerCase() === cur);
+        if (!alreadyShown) {
+          list.push(selectedAnno.color);
         }
       }
-    } catch (e) {
-      items = [];
-    }
-    if (items.length && !selectedId) selectedId = items[0].id;
-  }
 
-  function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }
-
-  function formatDate(ts) {
-    const d = new Date(ts);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const w = WEEKDAYS[d.getDay()];
-    const h = String(d.getHours()).padStart(2,"0");
-    const min = String(d.getMinutes()).padStart(2,"0");
-    return `${m}/${day}（${w}）${h}:${min}`;
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-
-  function fitIframe(iframe, wrapEl, deviceW, deviceH) {
-    const rect = wrapEl.getBoundingClientRect();
-    const scale = Math.max(rect.width / deviceW, rect.height / deviceH);
-    iframe.style.transform = `scale(${scale})`;
-  }
-
-  function resizeAllPreviews() {
-    fitIframe(framePhone, document.querySelector(".phone-viewport"), PHONE_W, PHONE_H);
-    fitIframe(frameIpad, document.querySelector(".ipad-viewport"), IPAD_W, IPAD_H);
-  }
-
-  function resizeFullscreen() {
-    if (!$("fullscreen").classList.contains("show")) return;
-    const stage = $("fsStage");
-    const dW = PHONE_W;
-    const dH = PHONE_H;
-    const availW = stage.clientWidth;
-    const availH = stage.clientHeight;
-    const scale = Math.min(availW / dW, availH / dH);
-    fullFrame.style.width = dW + "px";
-    fullFrame.style.height = dH + "px";
-    fullFrame.style.transform = `scale(${scale})`;
-    fullFrame.style.transformOrigin = "center center";
-  }
-
-  window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
-
-  function renderCards() {
-    const row = $("cardRow");
-    const sorted = items.slice().sort((a, b) => b.updated - a.updated);
-    $("emptyHint").style.display = items.length ? "none" : "block";
-
-    const cardsHtml = sorted.map(it => `
-      <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
-        <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)}</div>
-        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
-      </div>
-    `).join("");
-
-    const newCard = `<div class="card card-new" id="cardNew"><div class="plus">＋</div><div class="label">新規</div></div>`;
-
-    row.innerHTML = cardsHtml + newCard;
-
-    row.querySelectorAll(".card[data-id]").forEach(el => {
-      let pressTimer = null;
-      let longPressed = false;
-
-      const startPress = () => {
-        longPressed = false;
-        pressTimer = setTimeout(() => {
-          longPressed = true;
-          openEditor(el.dataset.id, false);
-        }, 480);
-      };
-      const cancelPress = () => { clearTimeout(pressTimer); };
-
-      el.addEventListener("pointerdown", startPress);
-      el.addEventListener("pointerup", cancelPress);
-      el.addEventListener("pointerleave", cancelPress);
-      el.addEventListener("pointercancel", cancelPress);
-      el.addEventListener("click", () => {
-        if (longPressed) return;
-        selectedId = el.dataset.id;
-        renderCards();
-        updatePreview();
-        showCardToast(el, "長押しで編集");
+      list.forEach(val => {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.backgroundColor = val;
+        swatch.dataset.color = val;
+        swatch.addEventListener('click', (e) => {
+          e.preventDefault();
+          selectColor(val);
+        });
+        colorPresetsContainer.appendChild(swatch);
       });
-      el.addEventListener("contextmenu", e => e.preventDefault());
+    }
+
+    // -------------------------------------------------------------
+    // 初期化
+    // -------------------------------------------------------------
+    function init() {
+      loadRecentColors();
+      renderColorPalette();
+
+      customColorPicker.value = state.defaults.color;
+      customColorPicker.addEventListener('change', (e) => {
+        const c = e.target.value;
+        state.defaults.color = c;
+        pushRecentColor(c);
+        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+        if (selectedAnno) {
+          selectedAnno.color = c;
+          saveHistory();
+          renderAnnotations();
+        }
+        updateUI();
+      });
+
+      document.querySelectorAll('.tool-item[data-tool]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tool-item[data-tool]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.activeTool = btn.dataset.tool;
+          if (state.activeTool !== 'select') {
+            state.selectedId = null;
+          }
+          updateUI();
+          renderAnnotations();
+        });
+      });
+
+      setupNudgeButtons();
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
+
+      saveHistory();
+    }
+
+    // -------------------------------------------------------------
+    // 画像読み込み
+    // -------------------------------------------------------------
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          state.image = img;
+          state.imgWidth = img.width;
+          state.imgHeight = img.height;
+
+          bgCanvas.width = img.width;
+          bgCanvas.height = img.height;
+          // 注釈用キャンバスは、画像の外側にはみ出たオブジェクトも描画できるよう周囲に余白を持たせる
+          annoCanvas.width = img.width + OVERFLOW_MARGIN * 2;
+          annoCanvas.height = img.height + OVERFLOW_MARGIN * 2;
+          viewport.style.setProperty('--overflow-margin', OVERFLOW_MARGIN + 'px');
+
+          bgCtx.drawImage(img, 0, 0);
+
+          startScreen.style.display = 'none';
+          state.annotations = [];
+          state.selectedId = null;
+
+          requestAnimationFrame(() => {
+            fitViewportToScreen();
+            updateUI();
+            renderAnnotations();
+          });
+
+          saveHistory();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
     });
 
-    $("cardNew").onclick = () => openEditor(null, true);
-  }
+    function fitViewportToScreen() {
+      const containerW = editorContainer.clientWidth;
+      const containerH = editorContainer.clientHeight;
+      if (!containerW || !containerH || !state.imgWidth || !state.imgHeight) return;
 
-  function showCardToast(cardEl, msg) {
-    // remove existing toast
-    const existing = document.querySelector(".card-toast");
-    if (existing) existing.remove();
+      const padding = 20;
+      const scale = Math.min(
+        (containerW - padding) / state.imgWidth,
+        (containerH - padding) / state.imgHeight
+      );
 
-    const toast = document.createElement("div");
-    toast.className = "card-toast";
-    toast.textContent = msg;
-    document.body.appendChild(toast);
+      state.scale = scale;
+      state.panX = (containerW - state.imgWidth * scale) / 2;
+      state.panY = (containerH - state.imgHeight * scale) / 2;
 
-    const rect = cardEl.getBoundingClientRect();
-    const toastRect = toast.getBoundingClientRect();
-    // center horizontally under the card, place just below it
-    let left = rect.left + rect.width/2 - toast.offsetWidth/2;
-    let top = rect.bottom + 8;
-    // clamp to viewport
-    left = Math.max(8, Math.min(left, window.innerWidth - toast.offsetWidth - 8));
-    top = Math.max(8, Math.min(top, window.innerHeight - toast.offsetHeight - 8));
-    toast.style.left = left + "px";
-    toast.style.top = top + "px";
-
-    requestAnimationFrame(() => toast.classList.add("show"));
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 250);
-    }, 1400);
-  }
-
-  function clearPreviews() {
-    framePhone.srcdoc = "";
-    frameIpad.srcdoc = "";
-  }
-
-  function updatePreview() {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) { clearPreviews(); return; }
-    const html = it.html || "";
-    framePhone.srcdoc = html;
-    frameIpad.srcdoc = html;
-    requestAnimationFrame(resizeAllPreviews);
-  }
-
-  let searchMatches = [];
-  let searchIndex = -1;
-
-  function openEditor(id, isNew) {
-    editingId = isNew ? null : id;
-    if (isNew) {
-      nameInput.value = "";
-      source.value = "";
-    } else {
-      const it = items.find(x => x.id === id);
-      nameInput.value = it ? (it.name || "") : "";
-      source.value = it ? (it.html || "") : "";
-    }
-    $("btnDelete").style.display = isNew ? "none" : "flex";
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    clearSearchHighlight();
-    $("editorOverlay").classList.add("show");
-    document.body.style.overflow = "hidden";
-    setTimeout(() => nameInput.focus(), 50);
-  }
-
-  function closeEditor() {
-    $("editorOverlay").classList.remove("show");
-    document.body.style.overflow = "";
-  }
-
-  function saveCurrent() {
-    const name = (nameInput.value || "").trim() || "無題";
-    const html = source.value;
-    if (editingId) {
-      const it = items.find(x => x.id === editingId);
-      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
-      selectedId = editingId;
-    } else {
-      const id = uid();
-      items.push({ id, name, html, updated: Date.now() });
-      selectedId = id;
-    }
-    persist();
-    closeEditor();
-    renderCards();
-    updatePreview();
-  }
-
-  function deleteCurrent() {
-    if (!editingId) return;
-    const it = items.find(x => x.id === editingId);
-    if (!it) return;
-    if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
-    items = items.filter(x => x.id !== editingId);
-    if (selectedId === editingId) selectedId = items.length ? items[0].id : null;
-    persist();
-    closeEditor();
-    renderCards();
-    updatePreview();
-  }
-
-  function clearSearchHighlight() {
-    searchMatches = [];
-    searchIndex = -1;
-  }
-
-  function runSearch(direction) {
-    const q = $("search").value;
-    if (!q) {
-      $("searchResult").textContent = "";
-      clearSearchHighlight();
-      return;
-    }
-    const text = source.value;
-    const matches = [];
-    let pos = 0;
-    while (true) {
-      const idx = text.indexOf(q, pos);
-      if (idx === -1) break;
-      matches.push(idx);
-      pos = idx + Math.max(q.length, 1);
-    }
-    searchMatches = matches;
-
-    if (!matches.length) {
-      $("searchResult").textContent = "0件";
-      searchIndex = -1;
-      return;
+      updateViewportTransform();
     }
 
-    if (direction === "next") {
-      if (searchIndex === -1) searchIndex = 0;
-      else searchIndex = (searchIndex + 1) % matches.length;
-    } else if (direction === "prev") {
-      if (searchIndex === -1) searchIndex = matches.length - 1;
-      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
-    } else {
-      $("searchResult").textContent = `${matches.length}件`;
-      searchIndex = -1;
-      return;
+    function updateViewportTransform() {
+      viewport.style.width = state.imgWidth + 'px';
+      viewport.style.height = state.imgHeight + 'px';
+      viewport.style.transform =
+        `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.scale})`;
+      positionPanel();
     }
 
-    const start = matches[searchIndex];
-    const end = start + q.length;
-    source.focus({ preventScroll: true });
-    source.setSelectionRange(start, end);
-    scrollTextareaToSelection(start, end);
-    $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
-  }
-
-  // hidden mirror div used to measure the exact pixel offset of a
-  // character index inside the textarea, accounting for wrapped lines
-  let mirrorEl = null;
-  function getMirror() {
-    if (mirrorEl) return mirrorEl;
-    mirrorEl = document.createElement("div");
-    const style = getComputedStyle(source);
-    const props = [
-      "boxSizing","width","paddingTop","paddingRight","paddingBottom","paddingLeft",
-      "borderTopWidth","borderRightWidth","borderBottomWidth","borderLeftWidth",
-      "fontFamily","fontSize","fontWeight","lineHeight","letterSpacing",
-      "whiteSpace","wordBreak","overflowWrap","tabSize"
-    ];
-    props.forEach(p => { mirrorEl.style[p] = style[p]; });
-    mirrorEl.style.position = "absolute";
-    mirrorEl.style.visibility = "hidden";
-    mirrorEl.style.height = "auto";
-    mirrorEl.style.top = "0";
-    mirrorEl.style.left = "-9999px";
-    document.body.appendChild(mirrorEl);
-    return mirrorEl;
-  }
-
-  function scrollTextareaToSelection(startIdx, endIdx) {
-    const mirror = getMirror();
-    mirror.style.width = source.clientWidth + "px";
-
-    const before = source.value.slice(0, startIdx);
-    const match = source.value.slice(startIdx, endIdx) || "\u200b";
-
-    mirror.textContent = "";
-    const beforeNode = document.createTextNode(before);
-    const markNode = document.createElement("span");
-    markNode.textContent = match;
-    mirror.appendChild(beforeNode);
-    mirror.appendChild(markNode);
-    // ensure trailing content so final-line offsets measure correctly
-    mirror.appendChild(document.createTextNode("\u200b"));
-
-    const markTop = markNode.offsetTop;
-    const markHeight = markNode.offsetHeight || parseFloat(getComputedStyle(source).lineHeight) || 18;
-
-    const visibleHeight = source.clientHeight;
-    const targetScroll = markTop - (visibleHeight / 2) + (markHeight / 2);
-    source.scrollTop = Math.max(0, targetScroll);
-  }
-
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
-  $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
-  });
-  $("btnSearchNext").onclick = () => runSearch("next");
-  $("btnSearchPrev").onclick = () => runSearch("prev");
-
-  function openFullscreen() {
-    const it = items.find(x => x.id === selectedId);
-    if (!it) { alert("表示する項目を一覧から選んでください"); return; }
-    fullFrame.srcdoc = it.html || "";
-    $("fullscreen").classList.add("show");
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(resizeFullscreen);
-  }
-
-  $("btnFullscreen").onclick = openFullscreen;
-  $("exit").onclick = () => {
-    $("fullscreen").classList.remove("show");
-    fullFrame.srcdoc = "";
-    document.body.style.overflow = "";
-  };
-
-  $("btnSave").onclick = saveCurrent;
-  $("btnCancel").onclick = closeEditor;
-  $("btnDelete").onclick = deleteCurrent;
-  $("btnClear").onclick = () => {
-    source.value = "";
-    $("search").value = "";
-    $("searchResult").textContent = "";
-    clearSearchHighlight();
-    source.focus();
-  };
-  $("btnCopy").onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(source.value);
-      const btn = $("btnCopy");
-      const old = btn.textContent;
-      btn.textContent = "コピー済";
-      setTimeout(() => btn.textContent = old, 1200);
-    } catch (e) {
-      alert("コピーに失敗しました");
+    // -------------------------------------------------------------
+    // 座標計算
+    // -------------------------------------------------------------
+    function getCanvasCoords(e) {
+      const rect = annoCanvas.getBoundingClientRect();
+      if (!rect.width || !rect.height || !annoCanvas.width || !annoCanvas.height) return { x: 0, y: 0 };
+      // annoCanvasは画像の周囲にOVERFLOW_MARGIN分の余白を持つため、
+      // 一度キャンバスのピクセル座標系に変換したうえで、余白分を差し引いて画像座標系に揃える
+      const px = (e.clientX - rect.left) * (annoCanvas.width / rect.width);
+      const py = (e.clientY - rect.top) * (annoCanvas.height / rect.height);
+      return { x: px - OVERFLOW_MARGIN, y: py - OVERFLOW_MARGIN };
     }
-  };
 
-  $("editorOverlay").addEventListener("click", (e) => {
-    if (e.target === $("editorOverlay")) closeEditor();
-  });
+    function getContainerCoords(e) {
+      const rect = editorContainer.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
 
-  load();
-  renderCards();
-  updatePreview();
-  requestAnimationFrame(resizeAllPreviews);
-})();
-</script>
+    function measureTextAnno(a) {
+      measureCtx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
+      const w = measureCtx.measureText(a.text).width;
+      return { w, h: a.size };
+    }
+
+    function getRotCenter(a) {
+      if (a.type === 'rect') {
+        return { x: a.x + a.w / 2, y: a.y + a.h / 2 };
+      }
+      if (a.type === 'text') {
+        return { x: a.x, y: a.y };
+      }
+      return { x: 0, y: 0 };
+    }
+
+    function localToWorld(a, px, py) {
+      const c = getRotCenter(a);
+      const rad = (a.rotation || 0) * Math.PI / 180;
+      const dx = px - c.x;
+      const dy = py - c.y;
+      return {
+        x: c.x + dx * Math.cos(rad) - dy * Math.sin(rad),
+        y: c.y + dx * Math.sin(rad) + dy * Math.cos(rad)
+      };
+    }
+
+    function withRotation(ctx, a, fn) {
+      const c = getRotCenter(a);
+      ctx.save();
+      if (a.rotation) {
+        ctx.translate(c.x, c.y);
+        ctx.rotate((a.rotation * Math.PI) / 180);
+        ctx.translate(-c.x, -c.y);
+      }
+      fn();
+      ctx.restore();
+    }
+
+    // -------------------------------------------------------------
+    // 履歴管理
+    // -------------------------------------------------------------
+    function saveHistory() {
+      state.history = state.history.slice(0, state.historyIndex + 1);
+      state.history.push(JSON.stringify(state.annotations));
+      state.historyIndex++;
+      updateUndoRedoButtons();
+    }
+
+    function undo() {
+      if (state.historyIndex > 0) {
+        state.historyIndex--;
+        state.annotations = JSON.parse(state.history[state.historyIndex]);
+        state.selectedId = null;
+        updateUI();
+        renderAnnotations();
+        updateUndoRedoButtons();
+      }
+    }
+
+    function redo() {
+      if (state.historyIndex < state.history.length - 1) {
+        state.historyIndex++;
+        state.annotations = JSON.parse(state.history[state.historyIndex]);
+        state.selectedId = null;
+        updateUI();
+        renderAnnotations();
+        updateUndoRedoButtons();
+      }
+    }
+
+    function updateUndoRedoButtons() {
+      btnUndo.disabled = state.historyIndex <= 0;
+      btnRedo.disabled = state.historyIndex >= state.history.length - 1;
+    }
+
+    btnUndo.addEventListener('click', undo);
+    btnRedo.addEventListener('click', redo);
+
+    // -------------------------------------------------------------
+    // タッチ＆ポインターイベント処理
+    // -------------------------------------------------------------
+    let activePointers = new Map();
+    let isDrawing = false;
+    let isDraggingObj = false;
+    let isTransformingObj = false;
+    let isPanning = false;
+    let isPinching = false;
+    let wasPinchingGesture = false;
+    let panMoved = false;
+    let pendingSelectId = null;
+
+    let transformHandle = null;
+    let currentAnnotation = null;
+    let startImageCoords = { x: 0, y: 0 };
+    let initialObjState = null;
+
+    let panStart = { x: 0, y: 0 };
+    let panStartPan = { x: 0, y: 0 };
+
+    let initialPinchDist = 1;
+    let initialScale = 1;
+    let initialImgAnchor = { x: 0, y: 0 };
+
+    let initialRotCenter = { x: 0, y: 0 };
+    let initialHandleAngle = 0;
+    let initialRotation = 0;
+
+    function startPinch() {
+      const pts = Array.from(activePointers.values());
+      if (pts.length < 2) return;
+      wasPinchingGesture = true;
+      const cRect = editorContainer.getBoundingClientRect();
+      const mid = {
+        x: (pts[0].x + pts[1].x) / 2 - cRect.left,
+        y: (pts[0].y + pts[1].y) / 2 - cRect.top
+      };
+      initialPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      initialScale = state.scale;
+      initialImgAnchor = {
+        x: (mid.x - state.panX) / state.scale,
+        y: (mid.y - state.panY) / state.scale
+      };
+      isPinching = true;
+    }
+
+    function cancelActiveGesture() {
+      if (isDrawing && currentAnnotation) {
+        state.annotations = state.annotations.filter(a => a.id !== currentAnnotation.id);
+        currentAnnotation = null;
+      }
+      isDrawing = false;
+      isDraggingObj = false;
+      isTransformingObj = false;
+      isPanning = false;
+      panMoved = false;
+      pendingSelectId = null;
+      transformHandle = null;
+      initialObjState = null;
+    }
+
+    editorContainer.addEventListener('pointerdown', (e) => {
+      if (!state.image) return;
+
+      try {
+        e.target.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (activePointers.size === 2) {
+        cancelActiveGesture();
+        startPinch();
+        return;
+      }
+      if (activePointers.size > 2) return;
+
+      wasPinchingGesture = false;
+      const coords = getCanvasCoords(e);
+      startImageCoords = coords;
+
+      // 変形ハンドルのタップ判定
+      if (state.selectedId) {
+        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+        if (selectedAnno) {
+          const handle = getHitHandle(coords, selectedAnno);
+          if (handle) {
+            isTransformingObj = true;
+            transformHandle = handle;
+            initialObjState = JSON.parse(JSON.stringify(selectedAnno));
+            if (handle === 'rot') {
+              initialRotCenter = getRotCenter(selectedAnno);
+              const rotH = getHandles(selectedAnno).find(h => h.id === 'rot');
+              if (rotH) {
+                initialHandleAngle = Math.atan2(
+                  rotH.y - initialRotCenter.y,
+                  rotH.x - initialRotCenter.x
+                );
+              }
+              initialRotation = selectedAnno.rotation || 0;
+            }
+            return;
+          }
+        }
+      }
+
+      // 新規作成
+      if (state.activeTool !== 'select') {
+        const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+
+        if (state.activeTool === 'text') {
+          const newAnno = {
+            id, type: 'text',
+            x: coords.x, y: coords.y,
+            text: state.defaults.text,
+            color: state.defaults.color,
+            size: state.defaults.textSize,
+            isBold: state.defaults.isBold,
+            hasShadow: state.defaults.hasShadow,
+            outlineWidth: state.defaults.outlineWidth,
+            rotation: 0
+          };
+          state.annotations.push(newAnno);
+          pendingSelectId = id;
+          bringToFront(id);
+          saveHistory();
+          switchTool('select');
+          renderAnnotations();
+          return;
+        }
+
+        if (state.activeTool === 'rect') {
+          isDrawing = true;
+          currentAnnotation = {
+            id, type: 'rect',
+            x: coords.x, y: coords.y,
+            w: 1, h: 1,
+            color: state.defaults.color,
+            strokeWidth: state.defaults.strokeWidth,
+            outlineWidth: state.defaults.outlineWidth,
+            borderRadius: state.defaults.borderRadius,
+            hasShadow: state.defaults.hasShadow,
+            rotation: 0
+          };
+          state.annotations.push(currentAnnotation);
+          pendingSelectId = id;
+          bringToFront(id);
+          renderAnnotations();
+          return;
+        }
+
+        if (state.activeTool === 'arrow') {
+          isDrawing = true;
+          currentAnnotation = {
+            id, type: 'arrow',
+            x1: coords.x, y1: coords.y,
+            x2: coords.x + 1, y2: coords.y + 1,
+            color: state.defaults.color,
+            strokeWidth: state.defaults.strokeWidth,
+            outlineWidth: state.defaults.outlineWidth,
+            arrowSize: state.defaults.arrowSize,
+            hasShadow: state.defaults.hasShadow
+          };
+          state.annotations.push(currentAnnotation);
+          pendingSelectId = id;
+          bringToFront(id);
+          renderAnnotations();
+          return;
+        }
+      }
+
+      // 選択・移動モード
+      const hitAnno = getHitAnnotation(coords);
+      if (hitAnno) {
+        pendingSelectId = hitAnno.id;
+        bringToFront(hitAnno.id);
+        isDraggingObj = true;
+        initialObjState = JSON.parse(JSON.stringify(hitAnno));
+      } else {
+        pendingSelectId = null;
+        isPanning = true;
+        panMoved = false;
+        panStart = getContainerCoords(e);
+        panStartPan = { x: state.panX, y: state.panY };
+      }
+    });
+
+    editorContainer.addEventListener('pointermove', (e) => {
+      if (!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (activePointers.size === 2) {
+        if (!isPinching) startPinch();
+        const pts = Array.from(activePointers.values());
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+        let newScale = initialScale * (dist / initialPinchDist);
+        newScale = Math.max(0.05, Math.min(20, newScale));
+
+        const cRect = editorContainer.getBoundingClientRect();
+        const mid = {
+          x: (pts[0].x + pts[1].x) / 2 - cRect.left,
+          y: (pts[0].y + pts[1].y) / 2 - cRect.top
+        };
+
+        state.scale = newScale;
+        state.panX = mid.x - initialImgAnchor.x * newScale;
+        state.panY = mid.y - initialImgAnchor.y * newScale;
+
+        updateViewportTransform();
+        return;
+      }
+
+      if (activePointers.size > 1) return;
+
+      if (isPanning) {
+        const c = getContainerCoords(e);
+        const dx = c.x - panStart.x;
+        const dy = c.y - panStart.y;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panMoved = true;
+        state.panX = panStartPan.x + dx;
+        state.panY = panStartPan.y + dy;
+        updateViewportTransform();
+        return;
+      }
+
+      const coords = getCanvasCoords(e);
+
+      if (isDrawing && currentAnnotation) {
+        if (currentAnnotation.type === 'rect') {
+          currentAnnotation.w = coords.x - startImageCoords.x;
+          currentAnnotation.h = coords.y - startImageCoords.y;
+        } else if (currentAnnotation.type === 'arrow') {
+          currentAnnotation.x2 = coords.x;
+          currentAnnotation.y2 = coords.y;
+        }
+        renderAnnotations();
+        return;
+      }
+
+      const selectedAnno = state.annotations.find(a => a.id === (state.selectedId || pendingSelectId));
+      if (!selectedAnno) return;
+
+      if (isTransformingObj && initialObjState) {
+        const dx = coords.x - startImageCoords.x;
+        const dy = coords.y - startImageCoords.y;
+
+        if (selectedAnno.type === 'rect') {
+          if (transformHandle === 'rot') {
+            const cur = Math.atan2(
+              coords.y - initialRotCenter.y,
+              coords.x - initialRotCenter.x
+            );
+            selectedAnno.rotation =
+              initialRotation + (cur - initialHandleAngle) * (180 / Math.PI);
+          } else {
+            applyRectResize(selectedAnno, initialObjState, transformHandle, dx, dy);
+          }
+        } else if (selectedAnno.type === 'arrow') {
+          if (transformHandle === 'p1') {
+            selectedAnno.x1 = coords.x;
+            selectedAnno.y1 = coords.y;
+          } else if (transformHandle === 'p2') {
+            selectedAnno.x2 = coords.x;
+            selectedAnno.y2 = coords.y;
+          }
+        } else if (selectedAnno.type === 'text') {
+          if (transformHandle === 'rot') {
+            const cur = Math.atan2(
+              coords.y - initialRotCenter.y,
+              coords.x - initialRotCenter.x
+            );
+            selectedAnno.rotation =
+              initialRotation + (cur - initialHandleAngle) * (180 / Math.PI);
+          }
+        }
+        renderAnnotations();
+        return;
+      }
+
+      if (isDraggingObj && initialObjState) {
+        const dx = coords.x - startImageCoords.x;
+        const dy = coords.y - startImageCoords.y;
+
+        if (selectedAnno.type === 'rect' || selectedAnno.type === 'text') {
+          selectedAnno.x = initialObjState.x + dx;
+          selectedAnno.y = initialObjState.y + dy;
+        } else if (selectedAnno.type === 'arrow') {
+          selectedAnno.x1 = initialObjState.x1 + dx;
+          selectedAnno.y1 = initialObjState.y1 + dy;
+          selectedAnno.x2 = initialObjState.x2 + dx;
+          selectedAnno.y2 = initialObjState.y2 + dy;
+        }
+        renderAnnotations();
+      }
+    });
+
+    function applyRectResize(target, s, handle, dx, dy) {
+      const th = (s.rotation || 0) * Math.PI / 180;
+      const cos = Math.cos(-th), sin = Math.sin(-th);
+      const ldx = dx * cos - dy * sin;
+      const ldy = dx * sin + dy * cos;
+
+      let nw = s.w;
+      let nh = s.h;
+      if (handle === 'se') { nw = s.w + ldx; nh = s.h + ldy; }
+      else if (handle === 'nw') { nw = s.w - ldx; nh = s.h - ldy; }
+      else if (handle === 'ne') { nw = s.w + ldx; nh = s.h - ldy; }
+      else if (handle === 'sw') { nw = s.w - ldx; nh = s.h + ldy; }
+
+      nw = Math.max(10, nw);
+      nh = Math.max(10, nh);
+
+      let anchorLocalX, anchorLocalY;
+      if (handle === 'se') { anchorLocalX = s.x; anchorLocalY = s.y; }
+      else if (handle === 'nw') { anchorLocalX = s.x + s.w; anchorLocalY = s.y + s.h; }
+      else if (handle === 'ne') { anchorLocalX = s.x; anchorLocalY = s.y + s.h; }
+      else { anchorLocalX = s.x + s.w; anchorLocalY = s.y; }
+
+      const A = localToWorld(s, anchorLocalX, anchorLocalY);
+
+      let ax, ay;
+      if (handle === 'se') { ax = -nw / 2; ay = -nh / 2; }
+      else if (handle === 'nw') { ax = nw / 2; ay = nh / 2; }
+      else if (handle === 'ne') { ax = -nw / 2; ay = nh / 2; }
+      else { ax = nw / 2; ay = -nh / 2; }
+
+      const c = Math.cos(th), sn = Math.sin(th);
+      const rx = ax * c - ay * sn;
+      const ry = ax * sn + ay * c;
+
+      target.w = nw;
+      target.h = nh;
+      target.x = (A.x - rx) - nw / 2;
+      target.y = (A.y - ry) - nh / 2;
+    }
+
+    const handlePointerUp = (e) => {
+      try {
+        if (e.target.hasPointerCapture(e.pointerId)) {
+          e.target.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) {}
+
+      const wasPinching = isPinching;
+      activePointers.delete(e.pointerId);
+
+      if (wasPinching) {
+        if (activePointers.size < 2) isPinching = false;
+        return;
+      }
+
+      if (wasPinchingGesture) {
+        wasPinchingGesture = false;
+        return;
+      }
+
+      if (isPanning) {
+        if (!panMoved) {
+          state.selectedId = null;
+        }
+        isPanning = false;
+        panMoved = false;
+        updateUI();
+        renderAnnotations();
+        return;
+      }
+
+      if (pendingSelectId) {
+        state.selectedId = pendingSelectId;
+        pendingSelectId = null;
+      }
+
+      if (isDrawing || isDraggingObj || isTransformingObj) {
+        let discard = false;
+
+        if (currentAnnotation && currentAnnotation.type === 'rect') {
+          if (currentAnnotation.w < 0) {
+            currentAnnotation.x += currentAnnotation.w;
+            currentAnnotation.w = Math.abs(currentAnnotation.w);
+          }
+          if (currentAnnotation.h < 0) {
+            currentAnnotation.y += currentAnnotation.h;
+            currentAnnotation.h = Math.abs(currentAnnotation.h);
+          }
+        }
+
+        if (isDrawing && currentAnnotation) {
+          const a = currentAnnotation;
+          if (a.type === 'rect') {
+            discard = Math.abs(a.w) < 8 || Math.abs(a.h) < 8;
+          } else if (a.type === 'arrow') {
+            discard = Math.hypot(a.x2 - a.x1, a.y2 - a.y1) < 8;
+          }
+          if (discard) {
+            state.annotations = state.annotations.filter(x => x.id !== a.id);
+            state.selectedId = null;
+          }
+        }
+
+        if (!discard) {
+          saveHistory();
+          if (isDrawing) {
+            switchTool('select');
+          }
+        }
+      }
+
+      updateUI();
+      renderAnnotations();
+
+      isDrawing = false;
+      isDraggingObj = false;
+      isTransformingObj = false;
+      transformHandle = null;
+      currentAnnotation = null;
+      initialObjState = null;
+    };
+
+    editorContainer.addEventListener('pointerup', handlePointerUp);
+    editorContainer.addEventListener('pointercancel', handlePointerUp);
+    editorContainer.addEventListener('pointerleave', (e) => {
+      if (activePointers.has(e.pointerId)) handlePointerUp(e);
+    });
+
+    // -------------------------------------------------------------
+    // ヒットテスト
+    // -------------------------------------------------------------
+    function getHitAnnotation(coords) {
+      for (let i = state.annotations.length - 1; i >= 0; i--) {
+        const a = state.annotations[i];
+
+        if (a.type === 'rect') {
+          const c = getRotCenter(a);
+          const rad = -(a.rotation || 0) * Math.PI / 180;
+          const dx = coords.x - c.x;
+          const dy = coords.y - c.y;
+          const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
+          const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
+
+          const minX = Math.min(a.x, a.x + a.w);
+          const maxX = Math.max(a.x, a.x + a.w);
+          const minY = Math.min(a.y, a.y + a.h);
+          const maxY = Math.max(a.y, a.y + a.h);
+          const margin = 12 / state.scale + 8;
+          if (lx >= minX - margin && lx <= maxX + margin &&
+              ly >= minY - margin && ly <= maxY + margin) {
+            return a;
+          }
+        } else if (a.type === 'arrow') {
+          const dist = distToSegment(coords, { x: a.x1, y: a.y1 }, { x: a.x2, y: a.y2 });
+          if (dist < (a.strokeWidth / 2 + 24 / state.scale)) return a;
+        } else if (a.type === 'text') {
+          const m = measureTextAnno(a);
+          const w = m.w;
+          const h = a.size;
+
+          const c = getRotCenter(a);
+          const rad = -(a.rotation || 0) * Math.PI / 180;
+          const dx = coords.x - c.x;
+          const dy = coords.y - c.y;
+          const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
+          const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
+
+          if (lx >= a.x - w/2 - 12 && lx <= a.x + w/2 + 12 &&
+              ly >= a.y - h/2 - 12 && ly <= a.y + h/2 + 12) {
+            return a;
+          }
+        }
+      }
+      return null;
+    }
+
+    function getHandles(a) {
+      const handles = [];
+      const off = 34 / state.scale;
+
+      if (a.type === 'rect') {
+        const corners = [
+          { id: 'nw', x: a.x, y: a.y },
+          { id: 'ne', x: a.x + a.w, y: a.y },
+          { id: 'se', x: a.x + a.w, y: a.y + a.h },
+          { id: 'sw', x: a.x, y: a.y + a.h }
+        ];
+        corners.forEach(p => {
+          const w = localToWorld(a, p.x, p.y);
+          handles.push({ id: p.id, x: w.x, y: w.y });
+        });
+        const r = localToWorld(a, a.x + a.w / 2, a.y - off);
+        handles.push({ id: 'rot', x: r.x, y: r.y });
+      } else if (a.type === 'text') {
+        const topY = a.y - a.size / 2;
+        const r = localToWorld(a, a.x, topY - off);
+        handles.push({ id: 'rot', x: r.x, y: r.y });
+      } else if (a.type === 'arrow') {
+        handles.push({ id: 'p1', x: a.x1, y: a.y1 });
+        handles.push({ id: 'p2', x: a.x2, y: a.y2 });
+      }
+      return handles;
+    }
+
+    function getHitHandle(coords, a) {
+      const handleSize = 26 / state.scale;
+      const handles = getHandles(a);
+      for (const h of handles) {
+        if (Math.hypot(coords.x - h.x, coords.y - h.y) < handleSize) {
+          return h.id;
+        }
+      }
+      return null;
+    }
+
+    function distToSegment(p, v, w) {
+      const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
+      if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    }
+
+    // -------------------------------------------------------------
+    // 描画処理
+    // -------------------------------------------------------------
+    function renderAnnotations() {
+      annoCtx.save();
+      annoCtx.setTransform(1, 0, 0, 1, 0, 0);
+      annoCtx.clearRect(0, 0, annoCanvas.width, annoCanvas.height);
+      // 以降の描画はすべて画像座標系（既存コードのまま）で行えるよう、余白分だけ平行移動しておく
+      annoCtx.translate(OVERFLOW_MARGIN, OVERFLOW_MARGIN);
+
+      state.annotations.forEach(a => {
+        if (a.type === 'rect') {
+          annoCtx.save();
+          if (a.hasShadow) {
+            annoCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            annoCtx.shadowBlur = 8;
+            annoCtx.shadowOffsetX = 3;
+            annoCtx.shadowOffsetY = 3;
+          }
+          drawRoundedRect(annoCtx, a);
+          annoCtx.restore();
+        } else if (a.type === 'arrow') {
+          annoCtx.save();
+          if (a.hasShadow) {
+            annoCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            annoCtx.shadowBlur = 8;
+            annoCtx.shadowOffsetX = 3;
+            annoCtx.shadowOffsetY = 3;
+          }
+          drawArrow(annoCtx, a);
+          annoCtx.restore();
+        } else if (a.type === 'text') {
+          drawText(annoCtx, a);
+        }
+
+        if (a.id === state.selectedId) {
+          drawSelectionBounds(a);
+        }
+      });
+
+      annoCtx.restore();
+
+      positionPanel();
+    }
+
+    function drawRoundedRect(ctx, a) {
+      withRotation(ctx, a, () => {
+        const x = a.x;
+        const y = a.y;
+        const w = a.w;
+        const h = a.h;
+        const absW = Math.abs(w);
+        const absH = Math.abs(h);
+
+        const maxR = Math.min(absW, absH) / 2;
+        const pct = (a.borderRadius != null ? a.borderRadius : 0) / 100;
+        let r = Math.max(0, Math.min(maxR, maxR * pct));
+
+        ctx.beginPath();
+        if (r <= 0) {
+          ctx.rect(x, y, w, h);
+        } else {
+          const x1 = Math.min(x, x + w);
+          const x2 = Math.max(x, x + w);
+          const y1 = Math.min(y, y + h);
+          const y2 = Math.max(y, y + h);
+
+          ctx.moveTo(x1 + r, y1);
+          ctx.arcTo(x2, y1, x2, y2, r);
+          ctx.arcTo(x2, y2, x1, y2, r);
+          ctx.arcTo(x1, y2, x1, y1, r);
+          ctx.arcTo(x1, y1, x2, y1, r);
+          ctx.closePath();
+        }
+
+        ctx.lineJoin = 'round';
+
+        const outline = a.outlineWidth != null ? a.outlineWidth : 2;
+        if (outline > 0) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = a.strokeWidth + outline * 2;
+          ctx.stroke();
+        }
+
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth = a.strokeWidth;
+        ctx.stroke();
+      });
+    }
+
+    function drawArrow(ctx, a) {
+      const angle = Math.atan2(a.y2 - a.y1, a.x2 - a.x1);
+      const headLen = a.arrowSize || 20;
+
+      const drawPath = () => {
+        ctx.beginPath();
+        ctx.moveTo(a.x1, a.y1);
+        ctx.lineTo(a.x2, a.y2);
+        ctx.lineTo(
+          a.x2 - headLen * Math.cos(angle - Math.PI / 6),
+          a.y2 - headLen * Math.sin(angle - Math.PI / 6)
+        );
+        ctx.moveTo(a.x2, a.y2);
+        ctx.lineTo(
+          a.x2 - headLen * Math.cos(angle + Math.PI / 6),
+          a.y2 - headLen * Math.sin(angle + Math.PI / 6)
+        );
+      };
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const outline = a.outlineWidth != null ? a.outlineWidth : 2;
+      if (outline > 0) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = a.strokeWidth + outline * 2;
+        drawPath();
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = a.color;
+      ctx.lineWidth = a.strokeWidth;
+      drawPath();
+      ctx.stroke();
+    }
+
+    // 文字の描画（フチがついた場合でも正しくドロップシャドウが付与されるように修正）
+    function drawText(ctx, a) {
+      withRotation(ctx, a, () => {
+        ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+
+        const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
+        const hasShadow = a.hasShadow !== false;
+
+        // 1. 影の描画処理（独立して影用のパスを描画）
+        if (hasShadow) {
+          ctx.save();
+          // フチ（アウトライン）が太いほど、影の輪郭自体もフチ分だけ膨らむため、
+          // ぼかし・オフセットをフチの太さに応じて少し弱め、影がフチのサイズ以上に
+          // 大きくなりすぎないよう調整する
+          const shadowShrink = 1 / (1 + outline / MAX_OUTLINE_WIDTH);
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+          ctx.shadowBlur = 8 * shadowShrink;
+          ctx.shadowOffsetX = 3 * shadowShrink;
+          ctx.shadowOffsetY = 3 * shadowShrink;
+
+          if (outline > 0) {
+            ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+            ctx.lineWidth = outline * 2;
+            ctx.strokeText(a.text, a.x, a.y);
+          } else {
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillText(a.text, a.x, a.y);
+          }
+          ctx.restore();
+        }
+
+        // 2. 本体の描画（白フチおよびテキスト本体）
+        if (outline > 0) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = outline * 2;
+          ctx.strokeText(a.text, a.x, a.y);
+        }
+        ctx.fillStyle = a.color;
+        ctx.fillText(a.text, a.x, a.y);
+      });
+    }
+
+    function drawSelectionBounds(a) {
+      annoCtx.save();
+      annoCtx.strokeStyle = '#0a84ff';
+      annoCtx.lineWidth = 2 / state.scale;
+      annoCtx.fillStyle = '#ffffff';
+      annoCtx.setLineDash([]);
+
+      const handleR = 7 / state.scale;
+
+      if (a.type === 'rect') {
+        withRotation(annoCtx, a, () => {
+          annoCtx.strokeRect(a.x, a.y, a.w, a.h);
+        });
+      } else if (a.type === 'text') {
+        const m = measureTextAnno(a);
+        withRotation(annoCtx, a, () => {
+          annoCtx.strokeRect(a.x - m.w / 2 - 4, a.y - a.size / 2 - 4, m.w + 8, a.size + 8);
+        });
+      }
+
+      const handles = getHandles(a);
+      handles.forEach(h => {
+        if (h.id === 'rot') {
+          let base;
+          if (a.type === 'rect') {
+            base = localToWorld(a, a.x + a.w / 2, a.y);
+          } else {
+            base = localToWorld(a, a.x, a.y - a.size / 2);
+          }
+
+          annoCtx.beginPath();
+          annoCtx.moveTo(base.x, base.y);
+          annoCtx.lineTo(h.x, h.y);
+          annoCtx.strokeStyle = '#0a84ff';
+          annoCtx.lineWidth = 2 / state.scale;
+          annoCtx.stroke();
+
+          annoCtx.beginPath();
+          annoCtx.arc(h.x, h.y, handleR + 2 / state.scale, 0, Math.PI * 2);
+          annoCtx.fillStyle = '#0a84ff';
+          annoCtx.fill();
+          annoCtx.strokeStyle = '#ffffff';
+          annoCtx.lineWidth = 2 / state.scale;
+          annoCtx.stroke();
+
+          annoCtx.beginPath();
+          annoCtx.arc(h.x, h.y, handleR * 0.45, 0.4, Math.PI * 1.6);
+          annoCtx.strokeStyle = '#ffffff';
+          annoCtx.lineWidth = 1.6 / state.scale;
+          annoCtx.stroke();
+        } else {
+          annoCtx.beginPath();
+          annoCtx.arc(h.x, h.y, handleR, 0, Math.PI * 2);
+          annoCtx.fillStyle = '#ffffff';
+          annoCtx.fill();
+          annoCtx.strokeStyle = '#0a84ff';
+          annoCtx.lineWidth = 2 / state.scale;
+          annoCtx.stroke();
+        }
+      });
+
+      annoCtx.restore();
+    }
+
+    // -------------------------------------------------------------
+    // パネル位置調整
+    // -------------------------------------------------------------
+    function positionPanel() {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (!a) return;
+
+      let objCenterY;
+      if (a.type === 'rect') objCenterY = a.y + a.h / 2;
+      else if (a.type === 'text') objCenterY = a.y;
+      else if (a.type === 'arrow') objCenterY = (a.y1 + a.y2) / 2;
+      else objCenterY = 0;
+
+      const screenY = state.panY + objCenterY * state.scale;
+      const containerH = editorContainer.clientHeight;
+
+      if (screenY > containerH * 0.5) {
+        propertiesPanel.classList.add('at-top');
+      } else {
+        propertiesPanel.classList.remove('at-top');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // UI 同期
+    // -------------------------------------------------------------
+    function updateUI() {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+
+      if (!a) {
+        propertiesPanel.classList.add('hidden');
+        return;
+      }
+
+      propertiesPanel.classList.remove('hidden');
+
+      // 選択中オブジェクトの色が最近使った色の入れ替わりでパレットから消えないよう再構築してから選択状態を反映する
+      renderColorPalette();
+      document.querySelectorAll('.color-swatch').forEach(s => {
+        if (s.dataset.color && s.dataset.color.toLowerCase() === (a.color || '').toLowerCase()) {
+          s.classList.add('selected');
+        } else {
+          s.classList.remove('selected');
+        }
+      });
+      customColorPicker.value = a.color || '#e63946';
+
+      document.getElementById('text-prop-row').style.display = (a.type === 'text') ? 'flex' : 'none';
+      document.getElementById('radius-prop-row').style.display = (a.type === 'rect') ? 'flex' : 'none';
+      document.getElementById('arrow-prop-row').style.display = (a.type === 'arrow') ? 'flex' : 'none';
+
+      if (a.type === 'text') {
+        textContentInput.value = a.text;
+        btnBold.classList.toggle('active', !!a.isBold);
+        sizeLabel.textContent = 'サイズ';
+        sizeSlider.min = 12;
+        sizeSlider.max = MAX_TEXT_SIZE;
+        sizeSlider.value = a.size;
+      } else {
+        sizeLabel.textContent = '線幅';
+        sizeSlider.min = 1;
+        sizeSlider.max = MAX_STROKE_WIDTH;
+        sizeSlider.value = a.strokeWidth;
+      }
+
+      if (a.type === 'rect') {
+        radiusSlider.value = (a.borderRadius != null) ? a.borderRadius : 0;
+      }
+      if (a.type === 'arrow') {
+        arrowSlider.value = a.arrowSize || 20;
+      }
+
+      outlineSlider.max = MAX_OUTLINE_WIDTH;
+      outlineSlider.value = (a.outlineWidth != null) ? a.outlineWidth : 2;
+
+      btnShadowToggle.classList.toggle('active', !!a.hasShadow);
+
+      positionPanel();
+    }
+
+    function switchTool(tool) {
+      state.activeTool = tool;
+      document.querySelectorAll('.tool-item[data-tool]').forEach(b => {
+        b.classList.toggle('active', b.dataset.tool === tool);
+      });
+    }
+
+    function selectColor(color) {
+      state.defaults.color = color;
+      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+      if (selectedAnno) {
+        selectedAnno.color = color;
+        saveHistory();
+        renderAnnotations();
+      }
+      updateUI();
+    }
+
+    // -------------------------------------------------------------
+    // プロパティ操作イベント
+    // -------------------------------------------------------------
+    textContentInput.addEventListener('input', (e) => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'text') {
+        a.text = e.target.value;
+        renderAnnotations();
+      }
+    });
+    textContentInput.addEventListener('change', () => saveHistory());
+
+    btnClearText.addEventListener('click', () => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'text') {
+        a.text = '';
+        textContentInput.value = '';
+        textContentInput.focus();
+        renderAnnotations();
+        saveHistory();
+      }
+    });
+
+    btnBold.addEventListener('click', () => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'text') {
+        a.isBold = !a.isBold;
+        state.defaults.isBold = a.isBold;
+        updateUI();
+        saveHistory();
+        renderAnnotations();
+      }
+    });
+
+    sizeSlider.addEventListener('input', (e) => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (!a) return;
+      const val = Number(e.target.value);
+      if (a.type === 'text') {
+        a.size = val;
+      } else {
+        a.strokeWidth = val;
+      }
+      renderAnnotations();
+    });
+    sizeSlider.addEventListener('change', (e) => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (!a) return;
+      const val = Number(e.target.value);
+      if (a.type === 'text') state.defaults.textSize = val;
+      else state.defaults.strokeWidth = val;
+      saveHistory();
+    });
+
+    outlineSlider.addEventListener('input', (e) => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (!a) return;
+      a.outlineWidth = Number(e.target.value);
+      state.defaults.outlineWidth = a.outlineWidth;
+      renderAnnotations();
+    });
+    outlineSlider.addEventListener('change', () => saveHistory());
+
+    radiusSlider.addEventListener('input', (e) => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'rect') {
+        a.borderRadius = Number(e.target.value);
+        state.defaults.borderRadius = a.borderRadius;
+        renderAnnotations();
+      }
+    });
+    radiusSlider.addEventListener('change', () => saveHistory());
+
+    arrowSlider.addEventListener('input', (e) => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'arrow') {
+        a.arrowSize = Number(e.target.value);
+        state.defaults.arrowSize = a.arrowSize;
+        renderAnnotations();
+      }
+    });
+    arrowSlider.addEventListener('change', () => saveHistory());
+
+    btnAspectSquare.addEventListener('click', () => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a && a.type === 'rect') {
+        const minSide = Math.min(Math.abs(a.w), Math.abs(a.h));
+        const cx = a.x + a.w / 2;
+        const cy = a.y + a.h / 2;
+        const signW = a.w < 0 ? -1 : 1;
+        const signH = a.h < 0 ? -1 : 1;
+        a.w = minSide * signW;
+        a.h = minSide * signH;
+        a.x = cx - a.w / 2;
+        a.y = cy - a.h / 2;
+        saveHistory();
+        renderAnnotations();
+      }
+    });
+
+    btnShadowToggle.addEventListener('click', () => {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (a) {
+        a.hasShadow = !a.hasShadow;
+        state.defaults.hasShadow = a.hasShadow;
+        updateUI();
+        saveHistory();
+        renderAnnotations();
+      }
+    });
+
+    // -------------------------------------------------------------
+    // 微調整ボタン
+    // -------------------------------------------------------------
+    function applyNudge(dx, dy) {
+      const a = state.annotations.find(x => x.id === state.selectedId);
+      if (!a) return;
+      if (a.type === 'rect' || a.type === 'text') {
+        a.x += dx;
+        a.y += dy;
+      } else if (a.type === 'arrow') {
+        a.x1 += dx;
+        a.y1 += dy;
+        a.x2 += dx;
+        a.y2 += dy;
+      }
+      renderAnnotations();
+    }
+
+    function setupNudgeButtons() {
+      const defs = [
+        { id: 'nudge-left', dx: -2, dy: 0 },
+        { id: 'nudge-right', dx: 2, dy: 0 },
+        { id: 'nudge-up', dx: 0, dy: -2 },
+        { id: 'nudge-down', dx: 0, dy: 2 }
+      ];
+
+      defs.forEach(({ id, dx, dy }) => {
+        const btn = document.getElementById(id);
+        let holdTimer = null;
+        let repeatTimer = null;
+        let active = false;
+
+        const stop = () => {
+          if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+          if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
+          if (active) {
+            active = false;
+            saveHistory();
+          }
+        };
+
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          if (!state.selectedId) return;
+          active = true;
+          applyNudge(dx, dy);
+          holdTimer = setTimeout(() => {
+            repeatTimer = setInterval(() => applyNudge(dx, dy), 55);
+          }, 380);
+        });
+        btn.addEventListener('pointerup', stop);
+        btn.addEventListener('pointercancel', stop);
+        btn.addEventListener('pointerleave', stop);
+      });
+    }
+
+    // ゴミ箱（削除）ボタン処理
+    btnDelete.addEventListener('click', () => {
+      if (state.selectedId) {
+        state.annotations = state.annotations.filter(a => a.id !== state.selectedId);
+        state.selectedId = null;
+        updateUI();
+        saveHistory();
+        renderAnnotations();
+      }
+    });
+
+    // -------------------------------------------------------------
+    // エクスポート（保存）
+    // -------------------------------------------------------------
+    btnExport.addEventListener('click', () => {
+      if (!state.image) return;
+
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = state.imgWidth;
+      exportCanvas.height = state.imgHeight;
+      const exportCtx = exportCanvas.getContext('2d');
+
+      exportCtx.drawImage(state.image, 0, 0);
+
+      state.annotations.forEach(a => {
+        if (a.type === 'rect') {
+          exportCtx.save();
+          if (a.hasShadow) {
+            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            exportCtx.shadowBlur = 8;
+            exportCtx.shadowOffsetX = 3;
+            exportCtx.shadowOffsetY = 3;
+          }
+          drawRoundedRect(exportCtx, a);
+          exportCtx.restore();
+        } else if (a.type === 'arrow') {
+          exportCtx.save();
+          if (a.hasShadow) {
+            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            exportCtx.shadowBlur = 8;
+            exportCtx.shadowOffsetX = 3;
+            exportCtx.shadowOffsetY = 3;
+          }
+          drawArrow(exportCtx, a);
+          exportCtx.restore();
+        } else if (a.type === 'text') {
+          drawText(exportCtx, a);
+        }
+      });
+
+      savePreview.src = exportCanvas.toDataURL('image/png');
+      saveModal.classList.add('active');
+    });
+
+    btnCloseModal.addEventListener('click', () => {
+      saveModal.classList.remove('active');
+    });
+
+    // 初期化実行
+    init();
+  </script>
 </body>
 </html>
