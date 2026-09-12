@@ -12,11 +12,11 @@
   <style>
     :root {
       --bg-color: #1c1c1e;
-      --panel-bg: rgba(30, 30, 32, 0.72);
-      --header-bg: rgba(30, 30, 32, 0.45);
+      --panel-bg: rgba(28, 28, 30, 0.75);
+      --header-bg: rgba(30, 30, 32, 0.85);
       --accent-color: #0a84ff;
       --text-color: #ffffff;
-      --border-color: rgba(255, 255, 255, 0.15);
+      --border-color: rgba(255, 255, 255, 0.2);
       --safe-area-bottom: env(safe-area-inset-bottom, 0px);
       --safe-area-top: env(safe-area-inset-top, 0px);
     }
@@ -56,8 +56,8 @@
       height: calc(44px + var(--safe-area-top));
       padding-top: var(--safe-area-top);
       background: var(--header-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -71,6 +71,7 @@
     header h1 {
       font-size: 16px;
       font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .btn-icon {
@@ -103,7 +104,7 @@
       flex: 1;
       position: relative;
       overflow: visible;
-      background-color: #000;
+      background-color: #121212;
       min-height: 0;
       touch-action: none;
     }
@@ -152,19 +153,23 @@
       overflow: visible;
     }
 
-    /* オブジェクトツール（プロパティパネル） */
+    /* オブジェクトツール（プロパティパネル：4列構成レイアウト） */
     #properties-panel {
       position: absolute;
-      bottom: calc(48px + (var(--safe-area-bottom) / 2));
-      left: 10px;
-      right: 10px;
+      bottom: calc(52px + (var(--safe-area-bottom) / 2));
+      left: 8px;
+      right: 8px;
       background: var(--panel-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       border-radius: 14px;
-      padding: 10px 12px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: auto auto auto 1fr;
+      gap: 8px;
+      align-items: start;
       border: 0.5px solid var(--border-color);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
       z-index: 90;
       transition: top 0.18s ease, bottom 0.18s ease;
     }
@@ -178,52 +183,59 @@
       display: none;
     }
 
-    .panel-grid {
-      display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 10px;
-      align-items: start;
+    .panel-label {
+      font-size: 10px;
+      color: #e0e0e5;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+      min-width: 28px;
+      flex-shrink: 0;
+      font-weight: 500;
     }
 
-    .panel-col {
+    /* 列1: その他のボタン */
+    .panel-col-tools {
       display: flex;
       flex-direction: column;
       gap: 6px;
+      align-items: center;
+      justify-content: flex-start;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
+      min-width: 36px;
     }
 
-    /* 左列 */
-    .panel-col-left {
-      gap: 8px;
+    /* 列2: カラー 3×3 */
+    .panel-col-color {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
       justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
     }
 
-    .col-left-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    #color-presets {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-shrink: 0;
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 24px);
+      grid-template-rows: repeat(3, 24px);
+      gap: 3px;
     }
 
     .color-swatch {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       flex-shrink: 0;
       box-sizing: border-box;
-      transition: transform 0.12s ease, border-color 0.12s ease;
+      cursor: pointer;
     }
 
     .color-swatch.selected {
       border-color: #ffffff;
-      transform: scale(1.12);
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+      transform: scale(1.1);
+      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.8);
     }
 
     .color-picker-wrapper {
@@ -234,7 +246,29 @@
       background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
       flex-shrink: 0;
       overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .color-picker-wrapper::after {
+      content: '+';
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .color-picker-wrapper.has-custom {
+      background: var(--custom-color, conic-gradient(red, yellow, lime, cyan, blue, magenta, red));
+    }
+
+    .color-picker-wrapper.has-custom::after {
+      content: none;
     }
 
     .color-picker-wrapper input[type="color"] {
@@ -247,101 +281,72 @@
       cursor: pointer;
     }
 
-    .btn-icon-delete {
-      background: rgba(255, 69, 58, 0.25);
-      color: #ff453a;
-      border: 1px solid rgba(255, 69, 58, 0.4);
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+    /* 列3: 十字キー */
+    .panel-col-nudge {
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
-      cursor: pointer;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding-right: 6px;
     }
 
-    .btn-icon-delete:active {
-      background: rgba(255, 69, 58, 0.5);
-    }
-
-    .toggle-btn {
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
-      color: #fff;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      flex-shrink: 0;
-      line-height: 1.1;
-      cursor: pointer;
-    }
-
-    .toggle-btn.active {
-      background: var(--accent-color);
-    }
-
-    /* 中列: 十字キー */
-    .panel-col-center {
-      display: flex;
-      flex-direction: column;
+    .nudge-cross {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      grid-template-rows: repeat(3, 22px);
+      gap: 2px;
       align-items: center;
-      justify-content: center;
-      gap: 2px;
-      padding: 0 4px;
-    }
-
-    .nudge-middle {
-      display: flex;
-      gap: 2px;
+      justify-items: center;
     }
 
     .nudge-btn {
-      width: 32px;
-      height: 32px;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
+      width: 22px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255,255,255,0.1);
       color: #fff;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 4px;
+      font-size: 11px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
       cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      padding: 0;
     }
 
     .nudge-btn:active {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.4);
     }
 
-    /* 右列 */
-    .panel-col-right {
-      gap: 8px;
-      min-width: 0;
+    #nudge-up { grid-column: 2; grid-row: 1; }
+    #nudge-left { grid-column: 1; grid-row: 2; }
+    #nudge-right { grid-column: 3; grid-row: 2; }
+    #nudge-down { grid-column: 2; grid-row: 3; }
+
+    /* 列4: スライダー（縦に並べる） */
+    .panel-col-sliders {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
       justify-content: center;
+      min-width: 0;
+      overflow: hidden;
     }
 
-    .right-row {
+    .panel-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
+      min-height: 22px;
+      flex-wrap: nowrap;
     }
 
-    .slider-row {
-      display: flex;
-      gap: 10px;
+    .panel-row-wrap {
+      flex-wrap: wrap;
     }
 
-    input[type="range"] {
-      flex: 1;
-      min-width: 60px;
-      accent-color: var(--accent-color);
-      height: 24px;
-    }
-
-    /* 文字入力 */
+    /* 文字入力ラッパー */
     .input-wrapper {
       position: relative;
       flex: 1;
@@ -352,25 +357,25 @@
 
     .text-input-field {
       width: 100%;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.6);
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 6px 26px 6px 8px;
-      border-radius: 6px;
-      font-size: 14px;
+      padding: 3px 20px 3px 6px;
+      border-radius: 4px;
+      font-size: 13px;
       line-height: 1.2;
     }
 
     .btn-clear-text {
       position: absolute;
       right: 4px;
-      width: 18px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.3);
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.4);
       color: #000;
       border-radius: 50%;
       border: none;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: bold;
       display: flex;
       align-items: center;
@@ -378,13 +383,59 @@
       cursor: pointer;
     }
 
+    /* スライダー調整 */
+    input[type="range"] {
+      flex: 1;
+      min-width: 40px;
+      accent-color: var(--accent-color);
+      height: 20px;
+    }
+
+    .toggle-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      flex-shrink: 0;
+      line-height: 1.1;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .toggle-btn.active {
+      background: var(--accent-color);
+    }
+
+    /* ゴミ箱ボタン */
+    .btn-icon-delete {
+      background: rgba(255, 69, 58, 0.35);
+      color: #ff453a;
+      border: 1px solid rgba(255, 69, 58, 0.5);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .btn-icon-delete:active {
+      background: rgba(255, 69, 58, 0.6);
+    }
+
     /* フッターメニュー */
     toolbar {
       height: calc(48px + (var(--safe-area-bottom) / 2));
       padding-bottom: calc(var(--safe-area-bottom) / 2);
       background: var(--header-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -400,12 +451,12 @@
       justify-content: center;
       background: none;
       border: none;
-      color: #8e8e93;
+      color: #a0a0a5;
       font-size: 10px;
       gap: 2px;
       width: 60px;
       height: 100%;
-      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .tool-item svg {
@@ -461,7 +512,6 @@
       border-radius: 20px;
       font-size: 15px;
       font-weight: 600;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -492,55 +542,66 @@
     </div>
   </div>
 
-  <!-- オブジェクト操作用ツールパネル -->
+  <!-- オブジェクト操作用ツールパネル（4列構成） -->
   <div id="properties-panel" class="hidden">
-    <div class="panel-grid">
-      <!-- 左列: 削除・色・影・補助ボタン -->
-      <div class="panel-col panel-col-left">
-        <div class="col-left-row">
-          <button class="btn-icon-delete" id="btn-delete" title="削除">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          </button>
-          <div id="color-presets"></div>
-          <div class="color-picker-wrapper">
-            <input type="color" id="custom-color-picker">
-          </div>
-        </div>
-        <div class="col-left-row">
-          <button id="btn-shadow-toggle" class="toggle-btn active">影 ON</button>
-          <button id="btn-bold" class="toggle-btn">太字</button>
-          <button id="btn-aspect-square" class="toggle-btn">正方形</button>
-        </div>
-      </div>
+    <!-- 列1: その他のボタン -->
+    <div class="panel-col-tools">
+      <button class="btn-icon-delete" id="btn-delete" title="削除">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+      <button id="btn-shadow-toggle" class="toggle-btn active" style="padding: 2px 4px; font-size: 10px; width: 28px;">影</button>
+    </div>
 
-      <!-- 中列: 十字キー -->
-      <div class="panel-col panel-col-center">
+    <!-- 列2: カラー 3×3 -->
+    <div class="panel-col-color">
+      <div id="color-grid" class="color-grid"></div>
+    </div>
+
+    <!-- 列3: 十字キー -->
+    <div class="panel-col-nudge">
+      <div class="nudge-cross">
         <button class="nudge-btn" id="nudge-up">↑</button>
-        <div class="nudge-middle">
-          <button class="nudge-btn" id="nudge-left">←</button>
-          <button class="nudge-btn" id="nudge-right">→</button>
-        </div>
+        <button class="nudge-btn" id="nudge-left">←</button>
+        <button class="nudge-btn" id="nudge-right">→</button>
         <button class="nudge-btn" id="nudge-down">↓</button>
       </div>
+    </div>
 
-      <!-- 右列: テキスト入力・スライダー群 -->
-      <div class="panel-col panel-col-right">
-        <div class="right-row" id="text-input-row">
-          <div class="input-wrapper">
-            <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
-            <button id="btn-clear-text" class="btn-clear-text">✕</button>
-          </div>
+    <!-- 列4: スライダー（縦に並べる） -->
+    <div class="panel-col-sliders">
+      <!-- テキスト操作用 -->
+      <div class="panel-row" id="text-prop-row">
+        <span class="panel-label">文字</span>
+        <div class="input-wrapper">
+          <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+          <button id="btn-clear-text" class="btn-clear-text">✕</button>
         </div>
-        <div class="right-row slider-row">
-          <input type="range" id="size-slider" min="1" max="100" value="100">
-          <input type="range" id="outline-slider" min="0" max="20" value="20">
-        </div>
-        <div class="right-row slider-row" id="radius-prop-row">
-          <input type="range" id="radius-slider" min="0" max="100" value="100">
-        </div>
-        <div class="right-row slider-row" id="arrow-prop-row">
-          <input type="range" id="arrow-slider" min="5" max="90" value="90">
-        </div>
+        <button id="btn-bold" class="toggle-btn">太字</button>
+      </div>
+
+      <!-- サイズ/線幅 -->
+      <div class="panel-row" id="size-prop-row">
+        <span class="panel-label" id="size-label">サイズ</span>
+        <input type="range" id="size-slider" min="1" max="100" value="100">
+      </div>
+
+      <!-- フチ -->
+      <div class="panel-row" id="outline-prop-row">
+        <span class="panel-label">フチ</span>
+        <input type="range" id="outline-slider" min="0" max="20" value="20">
+      </div>
+
+      <!-- 四角形用: 角丸 & 正方形固定 -->
+      <div class="panel-row panel-row-wrap" id="radius-prop-row">
+        <span class="panel-label">角丸</span>
+        <input type="range" id="radius-slider" min="0" max="100" value="100">
+        <button id="btn-aspect-square" class="toggle-btn">正方形</button>
+      </div>
+
+      <!-- 矢印用: 先端サイズ -->
+      <div class="panel-row" id="arrow-prop-row">
+        <span class="panel-label">先端</span>
+        <input type="range" id="arrow-slider" min="5" max="90" value="90">
       </div>
     </div>
   </div>
@@ -574,21 +635,27 @@
     // -------------------------------------------------------------
     // 定数
     // -------------------------------------------------------------
+    const CANVAS_MARGIN = 500; // 画像外描画用マージン
+
     const PRESET_COLORS = [
       { name: '赤', val: '#e63946' },
-      { name: '黒', val: '#000000' }
+      { name: '黒', val: '#000000' },
+      { name: '白', val: '#ffffff' },
+      { name: '黄', val: '#ffcc00' },
+      { name: '緑', val: '#34c759' },
+      { name: '青', val: '#007aff' },
+      { name: '紫', val: '#af52de' },
+      { name: '橙', val: '#ff9500' }
     ];
 
     const RECENT_COLORS_KEY = 'cocomark_recent_colors';
-    const MAX_RECENT_COLORS = 5;
+    const MAX_RECENT_COLORS = 0; // 3×3グリッドに合わせプリセット固定で運用
 
     const MAX_TEXT_SIZE = 160;
     const MAX_STROKE_WIDTH = 40;
     const MAX_OUTLINE_WIDTH = 20;
     const MAX_ARROW_SIZE = 90;
     const MAX_BORDER_RADIUS_PERCENT = 100;
-
-    const CANVAS_MARGIN = 2000;
 
     // -------------------------------------------------------------
     // 状態
@@ -636,12 +703,12 @@
     const btnRedo = document.getElementById('btn-redo');
     const btnExport = document.getElementById('btn-export');
     const btnDelete = document.getElementById('btn-delete');
-    const colorPresetsContainer = document.getElementById('color-presets');
-    const customColorPicker = document.getElementById('custom-color-picker');
+    const colorGrid = document.getElementById('color-grid');
     const textContentInput = document.getElementById('text-content-input');
     const btnClearText = document.getElementById('btn-clear-text');
     const btnBold = document.getElementById('btn-bold');
     const sizeSlider = document.getElementById('size-slider');
+    const sizeLabel = document.getElementById('size-label');
     const outlineSlider = document.getElementById('outline-slider');
     const radiusSlider = document.getElementById('radius-slider');
     const arrowSlider = document.getElementById('arrow-slider');
@@ -694,25 +761,67 @@
         state.recentColors.length = MAX_RECENT_COLORS;
       }
       saveRecentColors();
-      renderColorPalette();
     }
 
     function renderColorPalette() {
-      colorPresetsContainer.innerHTML = '';
+      colorGrid.innerHTML = '';
       const list = [
         ...PRESET_COLORS.map(p => p.val),
         ...state.recentColors
       ];
-      list.forEach(val => {
+
+      // 3×3に合わせて8色＋カラーピッカー
+      const displayColors = list.slice(0, 8);
+      while (displayColors.length < 8) {
+        displayColors.push('#444444'); // プレースホルダー
+      }
+
+      displayColors.forEach((val, idx) => {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.backgroundColor = val;
         swatch.dataset.color = val;
+        if (val === '#444444' && idx >= PRESET_COLORS.length + state.recentColors.length) {
+          swatch.style.visibility = 'hidden';
+          swatch.style.pointerEvents = 'none';
+        }
         swatch.addEventListener('click', (e) => {
           e.preventDefault();
           selectColor(val);
         });
-        colorPresetsContainer.appendChild(swatch);
+        colorGrid.appendChild(swatch);
+      });
+
+      // カラーピッカーを9番目に配置
+      const pickerWrap = document.createElement('div');
+      pickerWrap.className = 'color-picker-wrapper';
+      pickerWrap.id = 'custom-color-wrapper';
+      pickerWrap.title = 'カスタムカラー';
+      const picker = document.createElement('input');
+      picker.type = 'color';
+      picker.id = 'custom-color-picker';
+      picker.value = state.defaults.color;
+      pickerWrap.appendChild(picker);
+      colorGrid.appendChild(pickerWrap);
+
+      // カラーピッカーイベント
+      let colorPickerTargetId = null;
+      pickerWrap.addEventListener('pointerdown', () => {
+        colorPickerTargetId = state.selectedId;
+      });
+      picker.addEventListener('change', (e) => {
+        const c = e.target.value;
+        pickerWrap.style.setProperty('--custom-color', c);
+        pickerWrap.classList.add('has-custom');
+        pushRecentColor(c);
+        const targetId = colorPickerTargetId || state.selectedId;
+        const targetAnno = state.annotations.find(a => a.id === targetId);
+        if (targetAnno) {
+          targetAnno.color = c;
+          saveHistory();
+          renderAnnotations();
+        }
+        updateUI();
       });
     }
 
@@ -722,20 +831,6 @@
     function init() {
       loadRecentColors();
       renderColorPalette();
-
-      customColorPicker.value = state.defaults.color;
-      customColorPicker.addEventListener('change', (e) => {
-        const c = e.target.value;
-        state.defaults.color = c;
-        pushRecentColor(c);
-        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
-        if (selectedAnno) {
-          selectedAnno.color = c;
-          saveHistory();
-          renderAnnotations();
-        }
-        updateUI();
-      });
 
       document.querySelectorAll('.tool-item[data-tool]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -774,15 +869,21 @@
           state.imgWidth = img.width;
           state.imgHeight = img.height;
 
-          bgCanvas.width = img.width + CANVAS_MARGIN * 2;
-          bgCanvas.height = img.height + CANVAS_MARGIN * 2;
-          annoCanvas.width = bgCanvas.width;
-          annoCanvas.height = bgCanvas.height;
+          const cw = img.width + CANVAS_MARGIN * 2;
+          const ch = img.height + CANVAS_MARGIN * 2;
 
-          bgCtx.save();
-          bgCtx.translate(CANVAS_MARGIN, CANVAS_MARGIN);
-          bgCtx.drawImage(img, 0, 0);
-          bgCtx.restore();
+          bgCanvas.width = cw;
+          bgCanvas.height = ch;
+          annoCanvas.width = cw;
+          annoCanvas.height = ch;
+
+          // canvasをマージン分ずらして配置
+          bgCanvas.style.top = -CANVAS_MARGIN + 'px';
+          bgCanvas.style.left = -CANVAS_MARGIN + 'px';
+          annoCanvas.style.top = -CANVAS_MARGIN + 'px';
+          annoCanvas.style.left = -CANVAS_MARGIN + 'px';
+
+          bgCtx.drawImage(img, CANVAS_MARGIN, CANVAS_MARGIN);
 
           startScreen.style.display = 'none';
           state.annotations = [];
@@ -813,18 +914,15 @@
       );
 
       state.scale = scale;
-      const contentW = state.imgWidth + CANVAS_MARGIN * 2;
-      const contentH = state.imgHeight + CANVAS_MARGIN * 2;
-      viewport.style.width = contentW + 'px';
-      viewport.style.height = contentH + 'px';
-
-      state.panX = (containerW - state.imgWidth * scale) / 2 - CANVAS_MARGIN * scale;
-      state.panY = (containerH - state.imgHeight * scale) / 2 - CANVAS_MARGIN * scale;
+      state.panX = (containerW - state.imgWidth * scale) / 2;
+      state.panY = (containerH - state.imgHeight * scale) / 2;
 
       updateViewportTransform();
     }
 
     function updateViewportTransform() {
+      viewport.style.width = state.imgWidth + 'px';
+      viewport.style.height = state.imgHeight + 'px';
       viewport.style.transform =
         `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.scale})`;
       positionPanel();
@@ -836,8 +934,10 @@
     function getCanvasCoords(e) {
       const rect = annoCanvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return { x: 0, y: 0 };
-      const x = (e.clientX - rect.left) * (annoCanvas.width / rect.width) - CANVAS_MARGIN;
-      const y = (e.clientY - rect.top) * (annoCanvas.height / rect.height) - CANVAS_MARGIN;
+      const scaleX = annoCanvas.width / rect.width;
+      const scaleY = annoCanvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX - CANVAS_MARGIN;
+      const y = (e.clientY - rect.top) * scaleY - CANVAS_MARGIN;
       return { x, y };
     }
 
@@ -1449,18 +1549,19 @@
     // 描画処理
     // -------------------------------------------------------------
     function renderAnnotations() {
-      annoCtx.clearRect(0, 0, annoCanvas.width, annoCanvas.height);
       annoCtx.save();
-      annoCtx.translate(CANVAS_MARGIN, CANVAS_MARGIN);
+      annoCtx.setTransform(1, 0, 0, 1, 0, 0);
+      annoCtx.clearRect(0, 0, annoCanvas.width, annoCanvas.height);
+      annoCtx.restore();
 
       state.annotations.forEach(a => {
         if (a.type === 'rect') {
           annoCtx.save();
           if (a.hasShadow) {
             annoCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            annoCtx.shadowBlur = 8;
-            annoCtx.shadowOffsetX = 3;
-            annoCtx.shadowOffsetY = 3;
+            annoCtx.shadowBlur = 6;
+            annoCtx.shadowOffsetX = 2;
+            annoCtx.shadowOffsetY = 2;
           }
           drawRoundedRect(annoCtx, a);
           annoCtx.restore();
@@ -1468,9 +1569,9 @@
           annoCtx.save();
           if (a.hasShadow) {
             annoCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            annoCtx.shadowBlur = 8;
-            annoCtx.shadowOffsetX = 3;
-            annoCtx.shadowOffsetY = 3;
+            annoCtx.shadowBlur = 6;
+            annoCtx.shadowOffsetX = 2;
+            annoCtx.shadowOffsetY = 2;
           }
           drawArrow(annoCtx, a);
           annoCtx.restore();
@@ -1483,7 +1584,6 @@
         }
       });
 
-      annoCtx.restore();
       positionPanel();
     }
 
@@ -1568,7 +1668,7 @@
       ctx.stroke();
     }
 
-    // 文字の描画（フチに影を正しく付与）
+    // 文字の描画（影をテキスト本体のみに適用し、フチサイズに依存しないように調整）
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
@@ -1579,35 +1679,28 @@
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
-        // 1. 影付きフチ（白いフチに影を落とす）
-        if (hasShadow && outline > 0) {
+        // 1. 影の描画（テキスト本体のみに適用）
+        if (hasShadow) {
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
           ctx.shadowBlur = 6;
-          ctx.shadowOffsetX = 3;
-          ctx.shadowOffsetY = 3;
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = outline * 2;
-          ctx.strokeText(a.text, a.x, a.y);
+          ctx.shadowOffsetX = 2;
+          ctx.shadowOffsetY = 2;
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.fillText(a.text, a.x, a.y);
           ctx.restore();
         }
 
-        // 2. 鮮明なフチ（影なし）
+        // 2. 白フチ
         if (outline > 0) {
-          ctx.save();
-          ctx.shadowColor = 'transparent';
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = outline * 2;
           ctx.strokeText(a.text, a.x, a.y);
-          ctx.restore();
         }
 
-        // 3. 文字本体（影なし）
-        ctx.save();
-        ctx.shadowColor = 'transparent';
+        // 3. 本体
         ctx.fillStyle = a.color;
         ctx.fillText(a.text, a.x, a.y);
-        ctx.restore();
       });
     }
 
@@ -1688,7 +1781,7 @@
       else if (a.type === 'arrow') objCenterY = (a.y1 + a.y2) / 2;
       else objCenterY = 0;
 
-      const screenY = state.panY + (objCenterY + CANVAS_MARGIN) * state.scale;
+      const screenY = state.panY + objCenterY * state.scale;
       const containerH = editorContainer.clientHeight;
 
       if (screenY > containerH * 0.5) {
@@ -1711,6 +1804,7 @@
 
       propertiesPanel.classList.remove('hidden');
 
+      // カラースウォッチの選択状態
       document.querySelectorAll('.color-swatch').forEach(s => {
         if (s.dataset.color && s.dataset.color.toLowerCase() === (a.color || '').toLowerCase()) {
           s.classList.add('selected');
@@ -1718,21 +1812,31 @@
           s.classList.remove('selected');
         }
       });
-      customColorPicker.value = a.color || '#e63946';
 
-      document.getElementById('text-input-row').style.display = (a.type === 'text') ? 'flex' : 'none';
+      // カラーピッカーの値更新（操作時の誤作動防止のため、selectedIdが一致するときのみ）
+      const picker = document.getElementById('custom-color-picker');
+      const pickerWrap = document.getElementById('custom-color-wrapper');
+      if (picker && document.activeElement !== picker) {
+        picker.value = a.color || '#e63946';
+        if (pickerWrap) {
+          pickerWrap.style.setProperty('--custom-color', picker.value);
+          pickerWrap.classList.add('has-custom');
+        }
+      }
+
+      document.getElementById('text-prop-row').style.display = (a.type === 'text') ? 'flex' : 'none';
       document.getElementById('radius-prop-row').style.display = (a.type === 'rect') ? 'flex' : 'none';
       document.getElementById('arrow-prop-row').style.display = (a.type === 'arrow') ? 'flex' : 'none';
-      document.getElementById('btn-bold').style.display = (a.type === 'text') ? 'inline-flex' : 'none';
-      document.getElementById('btn-aspect-square').style.display = (a.type === 'rect') ? 'inline-flex' : 'none';
 
       if (a.type === 'text') {
         textContentInput.value = a.text;
         btnBold.classList.toggle('active', !!a.isBold);
+        sizeLabel.textContent = 'サイズ';
         sizeSlider.min = 12;
         sizeSlider.max = MAX_TEXT_SIZE;
         sizeSlider.value = a.size;
       } else {
+        sizeLabel.textContent = '線幅';
         sizeSlider.min = 1;
         sizeSlider.max = MAX_STROKE_WIDTH;
         sizeSlider.value = a.strokeWidth;
@@ -1749,7 +1853,6 @@
       outlineSlider.value = (a.outlineWidth != null) ? a.outlineWidth : 2;
 
       btnShadowToggle.classList.toggle('active', !!a.hasShadow);
-      btnShadowToggle.textContent = a.hasShadow ? '影 ON' : '影 OFF';
 
       positionPanel();
     }
@@ -1762,7 +1865,6 @@
     }
 
     function selectColor(color) {
-      state.defaults.color = color;
       const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
       if (selectedAnno) {
         selectedAnno.color = color;
@@ -1968,9 +2070,9 @@
           exportCtx.save();
           if (a.hasShadow) {
             exportCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            exportCtx.shadowBlur = 8;
-            exportCtx.shadowOffsetX = 3;
-            exportCtx.shadowOffsetY = 3;
+            exportCtx.shadowBlur = 6;
+            exportCtx.shadowOffsetX = 2;
+            exportCtx.shadowOffsetY = 2;
           }
           drawRoundedRect(exportCtx, a);
           exportCtx.restore();
@@ -1978,9 +2080,9 @@
           exportCtx.save();
           if (a.hasShadow) {
             exportCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            exportCtx.shadowBlur = 8;
-            exportCtx.shadowOffsetX = 3;
-            exportCtx.shadowOffsetY = 3;
+            exportCtx.shadowBlur = 6;
+            exportCtx.shadowOffsetX = 2;
+            exportCtx.shadowOffsetY = 2;
           }
           drawArrow(exportCtx, a);
           exportCtx.restore();
