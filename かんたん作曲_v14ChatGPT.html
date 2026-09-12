@@ -12,11 +12,11 @@
   <style>
     :root {
       --bg-color: #1c1c1e;
-      --panel-bg: rgba(44, 44, 46, 0.34);
-      --header-bg: rgba(44, 44, 46, 0.34);
+      --panel-bg: rgba(20, 20, 22, 0.78); /* 背景画像を読み取りやすく、ぼかしを弱める */
+      --header-bg: rgba(30, 30, 32, 0.85);
       --accent-color: #0a84ff;
       --text-color: #ffffff;
-      --border-color: #38383a;
+      --border-color: rgba(255, 255, 255, 0.2);
       --safe-area-bottom: env(safe-area-inset-bottom, 0px);
       --safe-area-top: env(safe-area-inset-top, 0px);
     }
@@ -51,13 +51,13 @@
       flex-direction: column;
     }
 
-    /* iPhoneのステータスバー領域含むヘッダー領域 */
+    /* ヘッダー領域 */
     header {
       height: calc(44px + var(--safe-area-top));
       padding-top: var(--safe-area-top);
       background: var(--header-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -71,6 +71,7 @@
     header h1 {
       font-size: 16px;
       font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .btn-icon {
@@ -102,8 +103,8 @@
     #editor-container {
       flex: 1;
       position: relative;
-      overflow: hidden; /* はみ出た部分はビューポート側で見えるようにし、画面外のみ隠す */
-      background-color: #000;
+      overflow: visible; /* オブジェクトがはみ出ても見やすく設定 */
+      background-color: #121212;
       min-height: 0;
       touch-action: none;
     }
@@ -118,11 +119,6 @@
       background: var(--bg-color);
       z-index: 50;
       gap: 20px;
-    }
-
-    #start-screen p {
-      color: #8e8e93;
-      font-size: 14px;
     }
 
     .file-select-label {
@@ -146,7 +142,7 @@
       left: 0;
       transform-origin: 0 0;
       will-change: transform;
-      overflow: visible; /* 画像外のオブジェクトも表示 */
+      overflow: visible; /* オブジェクトが画像の外側にはみ出ても見えるようにする */
     }
 
     canvas {
@@ -157,22 +153,23 @@
       overflow: visible;
     }
 
-    /* オブジェクトツール（プロパティパネル） - 背景透明度アップ */
+    /* オブジェクトツール（プロパティパネル：4列・省スペース構成） */
     #properties-panel {
       position: absolute;
-      bottom: calc(48px + (var(--safe-area-bottom) / 2));
-      left: 10px;
-      right: 10px;
+      bottom: calc(52px + (var(--safe-area-bottom) / 2));
+      left: 8px;
+      right: 8px;
       background: var(--panel-bg);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       border-radius: 14px;
-      padding: 10px 12px 12px;
-      display: flex;
-      flex-direction: column;
+      padding: 7px;
+      display: grid;
+      grid-template-columns: 48px 76px 76px minmax(0, 1fr);
       gap: 6px;
+      align-items: center;
       border: 0.5px solid var(--border-color);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
       z-index: 90;
       transition: top 0.18s ease, bottom 0.18s ease;
     }
@@ -186,105 +183,192 @@
       display: none;
     }
 
-    .panel-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      white-space: nowrap;
-      padding: 2px 1px;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x;
-      min-height: 32px;
-    }
-
-    .panel-row::-webkit-scrollbar {
-      display: none;
-    }
-
     .panel-label {
-      font-size: 12px;
-      color: #8e8e93;
-      min-width: 45px;
+      font-size: 10px;
+      color: #f0f0f5;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+      min-width: 28px;
       flex-shrink: 0;
+      font-weight: 600;
     }
 
-    #color-presets {
+    /* 1列目：その他のボタン */
+    .panel-col-other {
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      gap: 5px;
       align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      padding-right: 5px;
+      min-width: 0;
+    }
+
+    /* 2列目：カラー（3×3） */
+    .panel-col-color {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      padding-right: 6px;
+      min-width: 0;
+    }
+
+    .color-swatch-container {
+      display: grid;
+      grid-template-columns: repeat(3, 20px);
+      grid-template-rows: repeat(3, 20px);
+      gap: 4px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .color-swatch,
+    .color-picker-wrapper {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
       flex-shrink: 0;
-      padding: 2px 0;
+      box-sizing: border-box;
+      cursor: pointer;
     }
 
     .color-swatch {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.18);
-      flex-shrink: 0;
-      box-sizing: border-box;
-      transition: transform 0.12s ease, border-color 0.12s ease;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      background-clip: padding-box;
     }
 
     .color-swatch.selected {
       border-color: #ffffff;
       transform: scale(1.12);
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.85);
     }
 
+    /* 自由カラー変更ボタン：色相リング＋中央の白いボタンで視認性を向上 */
     .color-picker-wrapper {
       position: relative;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
-      flex-shrink: 0;
+      background:
+        radial-gradient(circle at center, #2c2c2e 0 30%, transparent 31%),
+        conic-gradient(from -45deg, #ff3b30, #ffcc00, #34c759, #00c7be, #0a84ff, #5856d6, #af52de, #ff2d55, #ff3b30);
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.25);
       overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .color-picker-wrapper::after {
+      content: '＋';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      text-shadow: 0 1px 2px #000;
+      pointer-events: none;
     }
 
     .color-picker-wrapper input[type="color"] {
       position: absolute;
       opacity: 0;
-      top: -10px;
-      left: -10px;
-      width: 50px;
-      height: 50px;
+      inset: -10px;
+      width: 40px;
+      height: 40px;
       cursor: pointer;
+      z-index: 2;
     }
 
-    /* 文字入力ラッパー ＆ ×消去ボタン */
+    /* 3列目：十字キー */
+    .panel-col-middle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      padding-right: 6px;
+      min-width: 0;
+    }
+
+    .nudge-cross {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      grid-template-rows: repeat(3, 22px);
+      gap: 2px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .nudge-btn {
+      width: 22px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .nudge-btn:active {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    #nudge-up { grid-column: 2; grid-row: 1; }
+    #nudge-left { grid-column: 1; grid-row: 2; }
+    #nudge-right { grid-column: 3; grid-row: 2; }
+    #nudge-down { grid-column: 2; grid-row: 3; }
+
+    /* 4列目：各種コントロールを縦に並べる */
+    .panel-col-sliders {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .panel-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 24px;
+      min-width: 0;
+    }
+
     .input-wrapper {
       position: relative;
       flex: 1;
       display: flex;
       align-items: center;
-      min-width: 60px;
+      min-width: 0;
     }
 
     .text-input-field {
       width: 100%;
-      background: rgba(28, 28, 30, 0.8);
+      min-width: 0;
+      background: rgba(0, 0, 0, 0.6);
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 7px 28px 7px 10px;
-      border-radius: 8px;
-      font-size: 16px;
+      padding: 3px 20px 3px 6px;
+      border-radius: 4px;
+      font-size: 13px;
       line-height: 1.2;
     }
 
     .btn-clear-text {
       position: absolute;
-      right: 6px;
-      width: 18px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.3);
+      right: 4px;
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.4);
       color: #000;
       border-radius: 50%;
       border: none;
-      font-size: 12px;
+      font-size: 9px;
       font-weight: bold;
       display: flex;
       align-items: center;
@@ -294,81 +378,91 @@
 
     input[type="range"] {
       flex: 1;
-      min-width: 48px;
-      max-width: 135px;
+      min-width: 0;
       accent-color: var(--accent-color);
-      height: 28px;
+      height: 20px;
     }
 
     .toggle-btn {
-      background: rgba(58, 58, 60, 0.8);
-      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 6px 9px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
+      padding: 3px 5px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 600;
       flex-shrink: 0;
       line-height: 1.1;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      min-width: 34px;
     }
 
     .toggle-btn.active {
       background: var(--accent-color);
     }
 
-    .nudge-controls {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .nudge-btn {
-      width: 32px;
-      height: 32px;
-      background: rgba(58, 58, 60, 0.8);
-      border: none;
-      color: #fff;
-      border-radius: 6px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .nudge-btn:active {
-      background: #545458;
-    }
-
-    /* ツール内の小さな削除アイコン */
-    .btn-panel-delete {
-      width: 30px;
-      height: 30px;
-      flex: 0 0 30px;
-      padding: 0;
-      margin: 0 0 0 2px;
-      background: rgba(255, 69, 58, 0.16);
+    .btn-icon-delete {
+      background: rgba(255, 69, 58, 0.35);
       color: #ff453a;
-      border: 1px solid rgba(255, 69, 58, 0.28);
-      border-radius: 8px;
-      display: inline-flex;
+      border: 1px solid rgba(255, 69, 58, 0.5);
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
       cursor: pointer;
     }
-    .btn-panel-delete:active {
-      background: rgba(255, 69, 58, 0.34);
-      transform: scale(0.94);
+
+    .btn-icon-delete:active {
+      background: rgba(255, 69, 58, 0.6);
     }
 
-    /* フッターメニュー（下部余白を半分に縮小） */
+    /* 小さい画面でも4列を維持しつつ、省スペースで操作できるようにする */
+    @media (max-width: 430px) {
+      #properties-panel {
+        grid-template-columns: 42px 70px 70px minmax(0, 1fr);
+        gap: 4px;
+        padding: 6px;
+      }
+
+      .color-swatch-container {
+        grid-template-columns: repeat(3, 18px);
+        grid-template-rows: repeat(3, 18px);
+        gap: 3px;
+      }
+
+      .color-swatch,
+      .color-picker-wrapper {
+        width: 18px;
+        height: 18px;
+      }
+
+      .nudge-cross {
+        grid-template-columns: repeat(3, 20px);
+        grid-template-rows: repeat(3, 20px);
+      }
+
+      .nudge-btn {
+        width: 20px;
+        height: 20px;
+      }
+
+      .panel-label {
+        min-width: 25px;
+        font-size: 9px;
+      }
+    }
+
+    /* フッターメニュー */
     toolbar {
       height: calc(48px + (var(--safe-area-bottom) / 2));
       padding-bottom: calc(var(--safe-area-bottom) / 2);
       background: var(--header-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -384,11 +478,12 @@
       justify-content: center;
       background: none;
       border: none;
-      color: #8e8e93;
+      color: #a0a0a5;
       font-size: 10px;
       gap: 2px;
       width: 60px;
       height: 100%;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .tool-item svg {
@@ -474,65 +569,63 @@
     </div>
   </div>
 
-  <!-- オブジェクト操作用ツールパネル -->
+  <!-- オブジェクト操作用ツールパネル（4列構成） -->
   <div id="properties-panel" class="hidden">
-    <div class="panel-row" id="color-row">
-      <span class="panel-label">色</span>
-      <div id="color-presets"></div>
-      <div class="color-picker-wrapper">
-        <input type="color" id="custom-color-picker">
-      </div>
-    </div>
-
-    <div class="panel-row" id="text-prop-row">
-      <span class="panel-label">文字</span>
-      <div class="input-wrapper">
-        <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
-        <button id="btn-clear-text" class="btn-clear-text">✕</button>
-      </div>
+    <!-- 1列目：その他のボタン -->
+    <div class="panel-col-other">
+      <button class="btn-icon-delete" id="btn-delete" title="削除" aria-label="削除">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+      <button id="btn-shadow-toggle" class="toggle-btn active">影</button>
       <button id="btn-bold" class="toggle-btn">太字</button>
-    </div>
-
-    <div class="panel-row" id="size-prop-row">
-      <span class="panel-label" id="size-label">サイズ</span>
-      <input type="range" id="size-slider" min="1" max="100" value="100">
-    </div>
-
-    <div class="panel-row" id="outline-prop-row">
-      <span class="panel-label">フチ</span>
-      <input type="range" id="outline-slider" min="0" max="20" value="20">
-    </div>
-
-    <div class="panel-row" id="radius-prop-row">
-      <span class="panel-label">角丸</span>
-      <input type="range" id="radius-slider" min="0" max="100" value="100">
       <button id="btn-aspect-square" class="toggle-btn">正方形</button>
     </div>
 
-    <div class="panel-row" id="arrow-prop-row">
-      <span class="panel-label">先端</span>
-      <input type="range" id="arrow-slider" min="5" max="90" value="90">
+    <!-- 2列目：カラー（3×3） -->
+    <div class="panel-col-color">
+      <div id="color-presets" class="color-swatch-container"></div>
     </div>
 
-    <div class="panel-row" style="justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span class="panel-label">影</span>
-        <button id="btn-shadow-toggle" class="toggle-btn active">影 ON</button>
-      </div>
-
-      <div class="nudge-controls">
-        <span class="panel-label" style="min-width: auto; margin-right: 4px;">微調整</span>
-        <button class="nudge-btn" id="nudge-left">←</button>
+    <!-- 3列目：十字キー -->
+    <div class="panel-col-middle">
+      <div class="nudge-cross">
         <button class="nudge-btn" id="nudge-up">↑</button>
-        <button class="nudge-btn" id="nudge-down">↓</button>
+        <button class="nudge-btn" id="nudge-left">←</button>
         <button class="nudge-btn" id="nudge-right">→</button>
+        <button class="nudge-btn" id="nudge-down">↓</button>
       </div>
     </div>
 
-    <!-- ツール内の小さな削除アイコン -->
-    <button class="btn-panel-delete" id="btn-delete" aria-label="選択中のオブジェクトを削除" title="削除">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-    </button>
+    <!-- 4列目：スライダー・文字入力 -->
+    <div class="panel-col-sliders">
+      <div class="panel-row" id="text-prop-row">
+        <span class="panel-label">文字</span>
+        <div class="input-wrapper">
+          <input type="text" id="text-content-input" class="text-input-field" placeholder="テキストを入力">
+          <button id="btn-clear-text" class="btn-clear-text">✕</button>
+        </div>
+      </div>
+
+      <div class="panel-row" id="size-prop-row">
+        <span class="panel-label" id="size-label">サイズ</span>
+        <input type="range" id="size-slider" min="1" max="100" value="100">
+      </div>
+
+      <div class="panel-row" id="outline-prop-row">
+        <span class="panel-label">フチ</span>
+        <input type="range" id="outline-slider" min="0" max="20" value="20">
+      </div>
+
+      <div class="panel-row" id="radius-prop-row">
+        <span class="panel-label">角丸</span>
+        <input type="range" id="radius-slider" min="0" max="100" value="100">
+      </div>
+
+      <div class="panel-row" id="arrow-prop-row">
+        <span class="panel-label">先端</span>
+        <input type="range" id="arrow-slider" min="5" max="90" value="90">
+      </div>
+    </div>
   </div>
 
   <toolbar>
@@ -570,15 +663,16 @@
     ];
 
     const RECENT_COLORS_KEY = 'cocomark_recent_colors';
-    const MAX_RECENT_COLORS = 5;
+    const MAX_RECENT_COLORS = 6; // 3×3カラーグリッド用（プリセット2＋最近6＋カスタム1）
 
     const MAX_TEXT_SIZE = 160;
     const MAX_STROKE_WIDTH = 40;
     const MAX_OUTLINE_WIDTH = 20;
     const MAX_ARROW_SIZE = 90;
     const MAX_BORDER_RADIUS_PERCENT = 100;
-    // 画像外に出たオブジェクトを表示するための注釈キャンバス余白
-    const DISPLAY_PAD = 1000;
+    // 画像外へ移動したオブジェクトを画面上で表示するための描画余白。
+    // 保存時は従来どおり画像サイズだけを書き出すため影響しない。
+    const ANNOTATION_OVERFLOW = 2000;
 
     // -------------------------------------------------------------
     // 状態
@@ -627,7 +721,6 @@
     const btnExport = document.getElementById('btn-export');
     const btnDelete = document.getElementById('btn-delete');
     const colorPresetsContainer = document.getElementById('color-presets');
-    const customColorPicker = document.getElementById('custom-color-picker');
     const textContentInput = document.getElementById('text-content-input');
     const btnClearText = document.getElementById('btn-clear-text');
     const btnBold = document.getElementById('btn-bold');
@@ -645,7 +738,7 @@
     const measureCtx = document.createElement('canvas').getContext('2d');
 
     // -------------------------------------------------------------
-    // 選択オブジェクトを最前面に移動する処理
+    // 最前面へ移動
     // -------------------------------------------------------------
     function bringToFront(id) {
       if (!id) return;
@@ -694,7 +787,7 @@
         ...PRESET_COLORS.map(p => p.val),
         ...state.recentColors
       ];
-      list.forEach(val => {
+      list.slice(0, 8).forEach(val => {
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
         swatch.style.backgroundColor = val;
@@ -705,6 +798,37 @@
         });
         colorPresetsContainer.appendChild(swatch);
       });
+
+      // 9マス目は常に自由カラー変更ボタン
+      const picker = document.createElement('div');
+      picker.className = 'color-picker-wrapper';
+      picker.title = '自由にカラーを変更';
+      picker.setAttribute('aria-label', '自由にカラーを変更');
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.id = 'custom-color-picker';
+      input.value = state.defaults.color;
+      picker.appendChild(input);
+      colorPresetsContainer.appendChild(picker);
+
+      input.addEventListener('change', (e) => {
+        const c = e.target.value;
+        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+
+        // 選択中のオブジェクトだけを変更。デフォルト色は変更しないため、
+        // 既存オブジェクトや次回作成するオブジェクトの色が連動して変わらない。
+        if (selectedAnno) {
+          selectedAnno.color = c;
+          pushRecentColor(c);
+          saveHistory();
+          renderAnnotations();
+          updateUI();
+        } else {
+          state.defaults.color = c;
+          pushRecentColor(c);
+          updateUI();
+        }
+      });
     }
 
     // -------------------------------------------------------------
@@ -713,20 +837,6 @@
     function init() {
       loadRecentColors();
       renderColorPalette();
-
-      customColorPicker.value = state.defaults.color;
-      customColorPicker.addEventListener('change', (e) => {
-        const c = e.target.value;
-        state.defaults.color = c;
-        pushRecentColor(c);
-        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
-        if (selectedAnno) {
-          selectedAnno.color = c;
-          saveHistory();
-          renderAnnotations();
-        }
-        updateUI();
-      });
 
       document.querySelectorAll('.tool-item[data-tool]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -767,10 +877,12 @@
 
           bgCanvas.width = img.width;
           bgCanvas.height = img.height;
-          annoCanvas.width = img.width + DISPLAY_PAD * 2;
-          annoCanvas.height = img.height + DISPLAY_PAD * 2;
-          annoCanvas.style.left = `${-DISPLAY_PAD}px`;
-          annoCanvas.style.top = `${-DISPLAY_PAD}px`;
+          annoCanvas.width = img.width + ANNOTATION_OVERFLOW * 2;
+          annoCanvas.height = img.height + ANNOTATION_OVERFLOW * 2;
+          annoCanvas.style.width = (img.width + ANNOTATION_OVERFLOW * 2) + 'px';
+          annoCanvas.style.height = (img.height + ANNOTATION_OVERFLOW * 2) + 'px';
+          annoCanvas.style.left = (-ANNOTATION_OVERFLOW) + 'px';
+          annoCanvas.style.top = (-ANNOTATION_OVERFLOW) + 'px';
 
           bgCtx.drawImage(img, 0, 0);
 
@@ -818,13 +930,13 @@
     }
 
     // -------------------------------------------------------------
-    // 座標変換＆テキスト幅の計測
+    // 座標計算
     // -------------------------------------------------------------
     function getCanvasCoords(e) {
-      const rect = annoCanvas.getBoundingClientRect();
+      const rect = bgCanvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return { x: 0, y: 0 };
-      const x = (e.clientX - rect.left) / state.scale - DISPLAY_PAD;
-      const y = (e.clientY - rect.top) / state.scale - DISPLAY_PAD;
+      const x = (e.clientX - rect.left) * (state.imgWidth / rect.width);
+      const y = (e.clientY - rect.top) * (state.imgHeight / rect.height);
       return { x, y };
     }
 
@@ -844,7 +956,6 @@
         return { x: a.x + a.w / 2, y: a.y + a.h / 2 };
       }
       if (a.type === 'text') {
-        // 文字の基準点は上下左右中央
         return { x: a.x, y: a.y };
       }
       return { x: 0, y: 0 };
@@ -874,7 +985,7 @@
     }
 
     // -------------------------------------------------------------
-    // 履歴
+    // 履歴管理
     // -------------------------------------------------------------
     function saveHistory() {
       state.history = state.history.slice(0, state.historyIndex + 1);
@@ -914,7 +1025,7 @@
     btnRedo.addEventListener('click', redo);
 
     // -------------------------------------------------------------
-    // ポインター操作
+    // タッチ＆ポインターイベント処理
     // -------------------------------------------------------------
     let activePointers = new Map();
     let isDrawing = false;
@@ -922,7 +1033,9 @@
     let isTransformingObj = false;
     let isPanning = false;
     let isPinching = false;
+    let wasPinchingGesture = false;
     let panMoved = false;
+    let pendingSelectId = null;
 
     let transformHandle = null;
     let currentAnnotation = null;
@@ -940,11 +1053,10 @@
     let initialHandleAngle = 0;
     let initialRotation = 0;
 
-    let pendingTextPanel = false;
-
     function startPinch() {
       const pts = Array.from(activePointers.values());
       if (pts.length < 2) return;
+      wasPinchingGesture = true;
       const cRect = editorContainer.getBoundingClientRect();
       const mid = {
         x: (pts[0].x + pts[1].x) / 2 - cRect.left,
@@ -969,9 +1081,9 @@
       isTransformingObj = false;
       isPanning = false;
       panMoved = false;
+      pendingSelectId = null;
       transformHandle = null;
       initialObjState = null;
-      pendingTextPanel = false;
     }
 
     editorContainer.addEventListener('pointerdown', (e) => {
@@ -985,17 +1097,16 @@
 
       if (activePointers.size === 2) {
         cancelActiveGesture();
-        propertiesPanel.classList.add('hidden');
-        renderAnnotations();
         startPinch();
         return;
       }
       if (activePointers.size > 2) return;
 
+      wasPinchingGesture = false;
       const coords = getCanvasCoords(e);
       startImageCoords = coords;
 
-      // ハンドル判定
+      // 変形ハンドルのタップ判定
       if (state.selectedId) {
         const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
         if (selectedAnno) {
@@ -1025,7 +1136,6 @@
         const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
 
         if (state.activeTool === 'text') {
-          // タップした場所を起点（上下左右中央）にテキストを生成
           const newAnno = {
             id, type: 'text',
             x: coords.x, y: coords.y,
@@ -1038,12 +1148,11 @@
             rotation: 0
           };
           state.annotations.push(newAnno);
-          state.selectedId = id;
-          bringToFront(id); // 最前面へ
+          pendingSelectId = id;
+          bringToFront(id);
           saveHistory();
           switchTool('select');
           renderAnnotations();
-          pendingTextPanel = true;
           return;
         }
 
@@ -1061,8 +1170,8 @@
             rotation: 0
           };
           state.annotations.push(currentAnnotation);
-          state.selectedId = id;
-          bringToFront(id); // 最前面へ
+          pendingSelectId = id;
+          bringToFront(id);
           renderAnnotations();
           return;
         }
@@ -1080,8 +1189,8 @@
             hasShadow: state.defaults.hasShadow
           };
           state.annotations.push(currentAnnotation);
-          state.selectedId = id;
-          bringToFront(id); // 最前面へ
+          pendingSelectId = id;
+          bringToFront(id);
           renderAnnotations();
           return;
         }
@@ -1090,21 +1199,16 @@
       // 選択・移動モード
       const hitAnno = getHitAnnotation(coords);
       if (hitAnno) {
-        state.selectedId = hitAnno.id;
-        bringToFront(hitAnno.id); // 選択したオブジェクトを最前面へ移動
+        pendingSelectId = hitAnno.id;
+        bringToFront(hitAnno.id);
         isDraggingObj = true;
         initialObjState = JSON.parse(JSON.stringify(hitAnno));
-        // ツールパネルは指を離した時だけ表示
-        propertiesPanel.classList.add('hidden');
-        renderAnnotations();
       } else {
-        state.selectedId = null;
+        pendingSelectId = null;
         isPanning = true;
         panMoved = false;
         panStart = getContainerCoords(e);
         panStartPan = { x: state.panX, y: state.panY };
-        propertiesPanel.classList.add('hidden');
-        renderAnnotations();
       }
     });
 
@@ -1160,7 +1264,7 @@
         return;
       }
 
-      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
+      const selectedAnno = state.annotations.find(a => a.id === (state.selectedId || pendingSelectId));
       if (!selectedAnno) return;
 
       if (isTransformingObj && initialObjState) {
@@ -1272,15 +1376,25 @@
         return;
       }
 
+      if (wasPinchingGesture) {
+        wasPinchingGesture = false;
+        return;
+      }
+
       if (isPanning) {
         if (!panMoved) {
           state.selectedId = null;
-          updateUI();
-          renderAnnotations();
         }
         isPanning = false;
         panMoved = false;
+        updateUI();
+        renderAnnotations();
         return;
+      }
+
+      if (pendingSelectId) {
+        state.selectedId = pendingSelectId;
+        pendingSelectId = null;
       }
 
       if (isDrawing || isDraggingObj || isTransformingObj) {
@@ -1316,18 +1430,10 @@
             switchTool('select');
           }
         }
-
-        renderAnnotations();
-        // オブジェクト操作完了後、指を離したタイミングで初めて表示
-        if (!discard && (isDraggingObj || isTransformingObj || isDrawing)) {
-          updateUI();
-        }
       }
 
-      if (pendingTextPanel) {
-        pendingTextPanel = false;
-        updateUI();
-      }
+      updateUI();
+      renderAnnotations();
 
       isDrawing = false;
       isDraggingObj = false;
@@ -1382,7 +1488,6 @@
           const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
           const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
 
-          // 中央揃えに応じた領域判定
           if (lx >= a.x - w/2 - 12 && lx <= a.x + w/2 + 12 &&
               ly >= a.y - h/2 - 12 && ly <= a.y + h/2 + 12) {
             return a;
@@ -1445,7 +1550,7 @@
     function renderAnnotations() {
       annoCtx.clearRect(0, 0, annoCanvas.width, annoCanvas.height);
       annoCtx.save();
-      annoCtx.translate(DISPLAY_PAD, DISPLAY_PAD);
+      annoCtx.translate(ANNOTATION_OVERFLOW, ANNOTATION_OVERFLOW);
 
       state.annotations.forEach(a => {
         if (a.type === 'rect') {
@@ -1562,11 +1667,10 @@
       ctx.stroke();
     }
 
-    // 文字の描画（フチと影のサイズ連動調整・中央揃え）
+    // 文字の描画（フチがついた場合でも正しくドロップシャドウが付与されるように修正）
     function drawText(ctx, a) {
       withRotation(ctx, a, () => {
         ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
-        // 文字の配置を上下左右中央・中央揃えに変更
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
@@ -1574,28 +1678,27 @@
         const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
         const hasShadow = a.hasShadow !== false;
 
-        // 影のサイズ計算：フチが大きくなっても影が肥大化しないように適正補正
+        // 1. 影の描画処理（独立して影用のパスを描画）
         if (hasShadow) {
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-          // フチが大きくなるほど影のぼかし（blur）を調整して抑える
-          const adjustedBlur = Math.max(2, 8 - (outline * 0.25));
-          const adjustedOffset = Math.max(2, 4 - (outline * 0.1));
-          ctx.shadowBlur = adjustedBlur;
-          ctx.shadowOffsetX = adjustedOffset;
-          ctx.shadowOffsetY = adjustedOffset;
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 2;
+          ctx.shadowOffsetY = 2;
 
           if (outline > 0) {
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = outline * 2;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+            // フチを大きくしても影の太さまで同じ割合で増えないよう制限
+            ctx.lineWidth = Math.min(outline * 2, 8);
             ctx.strokeText(a.text, a.x, a.y);
           } else {
-            ctx.fillStyle = a.color;
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
             ctx.fillText(a.text, a.x, a.y);
           }
           ctx.restore();
         }
 
+        // 2. 本体の描画（白フチおよびテキスト本体）
         if (outline > 0) {
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = outline * 2;
@@ -1622,7 +1725,6 @@
       } else if (a.type === 'text') {
         const m = measureTextAnno(a);
         withRotation(annoCtx, a, () => {
-          // 中央揃えに応じた選択枠表示
           annoCtx.strokeRect(a.x - m.w / 2 - 4, a.y - a.size / 2 - 4, m.w + 8, a.size + 8);
         });
       }
@@ -1714,16 +1816,19 @@
           s.classList.remove('selected');
         }
       });
-      customColorPicker.value = a.color || '#e63946';
+      const customPicker = document.getElementById('custom-color-picker');
+      if (customPicker) customPicker.value = a.color || '#e63946';
 
       document.getElementById('text-prop-row').style.display = (a.type === 'text') ? 'flex' : 'none';
       document.getElementById('radius-prop-row').style.display = (a.type === 'rect') ? 'flex' : 'none';
       document.getElementById('arrow-prop-row').style.display = (a.type === 'arrow') ? 'flex' : 'none';
+      btnBold.style.display = (a.type === 'text') ? 'block' : 'none';
+      btnAspectSquare.style.display = (a.type === 'rect') ? 'block' : 'none';
 
       if (a.type === 'text') {
         textContentInput.value = a.text;
         btnBold.classList.toggle('active', !!a.isBold);
-        sizeLabel.textContent = '文字サイズ';
+        sizeLabel.textContent = 'サイズ';
         sizeSlider.min = 12;
         sizeSlider.max = MAX_TEXT_SIZE;
         sizeSlider.value = a.size;
@@ -1745,7 +1850,6 @@
       outlineSlider.value = (a.outlineWidth != null) ? a.outlineWidth : 2;
 
       btnShadowToggle.classList.toggle('active', !!a.hasShadow);
-      btnShadowToggle.textContent = a.hasShadow ? '影 ON' : '影 OFF';
 
       positionPanel();
     }
@@ -1780,7 +1884,6 @@
     });
     textContentInput.addEventListener('change', () => saveHistory());
 
-    // 文字消去（×）ボタンの追加機能
     btnClearText.addEventListener('click', () => {
       const a = state.annotations.find(x => x.id === state.selectedId);
       if (a && a.type === 'text') {
@@ -1881,7 +1984,7 @@
     });
 
     // -------------------------------------------------------------
-    // 微調整ボタン（長押し対応）
+    // 微調整ボタン
     // -------------------------------------------------------------
     function applyNudge(dx, dy) {
       const a = state.annotations.find(x => x.id === state.selectedId);
@@ -1936,7 +2039,7 @@
       });
     }
 
-    // 削除ボタン処理（パネル内）
+    // ゴミ箱（削除）ボタン処理
     btnDelete.addEventListener('click', () => {
       if (state.selectedId) {
         state.annotations = state.annotations.filter(a => a.id !== state.selectedId);
@@ -1948,12 +2051,11 @@
     });
 
     // -------------------------------------------------------------
-    // エクスポート（保存処理）
+    // エクスポート（保存）
     // -------------------------------------------------------------
     btnExport.addEventListener('click', () => {
       if (!state.image) return;
 
-      // 元画像サイズのキャンバスで書き出し（画像外領域は含めない仕様）
       const exportCanvas = document.createElement('canvas');
       exportCanvas.width = state.imgWidth;
       exportCanvas.height = state.imgHeight;
