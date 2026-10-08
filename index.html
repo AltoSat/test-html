@@ -21,20 +21,29 @@
   --ok:#30d158;
   --sep:#38383c;
   --sel:#1a293a;
-  --side:66px;
-  --side-open:min(288px,74vw);
+  --side:70px;
+  --side-open:min(320px,78vw);
 }
 *{box-sizing:border-box}
 [hidden]{display:none !important}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+html,body{
+  height:100%;
+  margin:0;
+  padding:0;
   overflow:hidden;
+  background:#000;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
 }
-body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-  display:flex;flex-direction:column;}
+@supports (height: 100dvh){
+  html,body{height:100dvh}
+}
 button,textarea,input{font:inherit}
 button{
-  border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
+  border:0;color:var(--text);background:var(--panel2);
+  border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;text-align:center;
 }
 button.primary{background:var(--accent)}
@@ -43,7 +52,7 @@ button.ghost{background:transparent;border:1px solid var(--sep)}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
 
-.app{flex:1;min-height:0;display:flex;width:100%}
+.app{height:100%;display:flex;width:100%}
 
 /* ================= SIDEBAR ================= */
 .sidebar{
@@ -61,7 +70,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .side-head{
   flex:0 0 auto;
   display:flex;align-items:center;gap:8px;
-  padding:8px 8px 6px;
+  padding:calc(6px + env(safe-area-inset-top)) 8px 6px;
 }
 .side-toggle{
   width:46px;height:46px;flex:0 0 auto;border-radius:14px;padding:0;
@@ -81,7 +90,9 @@ button:disabled{opacity:.4;pointer-events:none}
   flex:1;min-height:0;
   overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
   padding:0 8px 8px;
+  touch-action:pan-y;
 }
 .side-scroll::-webkit-scrollbar{width:0}
 .side-empty{
@@ -92,7 +103,7 @@ button:disabled{opacity:.4;pointer-events:none}
 
 .side-foot{
   flex:0 0 auto;
-  padding:8px;
+  padding:8px 8px calc(8px + env(safe-area-inset-bottom));
   border-top:1px solid #2c2c2e;
   display:flex;
   gap:6px;
@@ -100,33 +111,34 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .foot-btn{
   flex:1;min-width:0;
-  min-height:44px;
+  min-height:46px;
   border-radius:12px;
   padding:0;
   background:var(--panel2);
   color:var(--muted);
 }
 .foot-btn:hover{color:var(--text)}
-.foot-btn svg{width:19px;height:19px;display:block}
+.foot-btn svg{width:20px;height:20px;display:block}
 
 .sidebar:not(.open) .side-foot{
   flex-direction:column;
   flex-wrap:nowrap;
+  gap:8px;
 }
 .sidebar:not(.open) .foot-btn{
   flex:0 0 auto;
-  width:44px;
-  height:44px;
-  min-height:44px;
+  width:46px;
+  height:46px;
+  min-height:46px;
   border-radius:50%;
   margin:0 auto;
 }
 
-/* rows */
+/* rows — 縦幅広め・アイコン大きめ */
 .srow{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 10px;min-height:54px;
-  border-radius:13px;
+  display:flex;align-items:center;gap:12px;
+  padding:12px 12px;min-height:72px;
+  border-radius:14px;
   position:relative;z-index:2;
   background:var(--panel);
   touch-action:pan-y;
@@ -137,53 +149,53 @@ button:disabled{opacity:.4;pointer-events:none}
 .sidebar:not(.open) .srow{
   flex-direction:column;
   justify-content:center;
-  padding:8px 4px;
-  gap:4px;
-  min-height:70px;
+  padding:10px 4px;
+  gap:5px;
+  min-height:92px;
 }
 
 .row-icon{
-  width:32px;height:32px;flex:0 0 auto;border-radius:9px;
+  width:44px;height:44px;flex:0 0 auto;border-radius:11px;
   display:flex;align-items:center;justify-content:center;
   color:#ffd60a;overflow:hidden;background:transparent;
 }
-.sidebar:not(.open) .row-icon{width:34px;height:34px}
-.row-icon svg{width:26px;height:26px;display:block}
+.sidebar:not(.open) .row-icon{width:46px;height:46px}
+.row-icon svg{width:34px;height:34px;display:block}
 .row-icon img{width:100%;height:100%;object-fit:cover;display:block}
 .row-icon .ico-letter{
-  width:100%;height:100%;border-radius:9px;
+  width:100%;height:100%;border-radius:11px;
   display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:700;color:#fff;
+  font-size:19px;font-weight:700;color:#fff;
 }
 .row-main{flex:1;min-width:0}
 .row-title{
-  font-size:14.5px;font-weight:600;line-height:1.25;
+  font-size:15px;font-weight:600;line-height:1.25;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .row-sub{
-  font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:3px;
+  font-size:12px;color:var(--muted);line-height:1.3;margin-top:4px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .row-apps{
   flex:0 0 auto;display:flex;gap:3px;align-items:center;
 }
 .mini-app{
-  width:19px;height:19px;border-radius:6px;overflow:hidden;
+  width:22px;height:22px;border-radius:7px;overflow:hidden;
   background:var(--panel3);display:flex;align-items:center;justify-content:center;
   flex:0 0 auto;
 }
 .mini-app img{width:100%;height:100%;object-fit:cover;display:block}
 .row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
-.row-chev svg{width:15px;height:15px;display:block}
+.row-chev svg{width:16px;height:16px;display:block}
 
-/* コンパクト時：名前をアイコン下に小さく表示 */
+/* コンパクト時：名前をアイコン下に小さく */
 .sidebar:not(.open) .row-main{
   width:100%;
   text-align:center;
   flex:0 0 auto;
 }
 .sidebar:not(.open) .row-title{
-  font-size:9.5px;
+  font-size:10px;
   font-weight:500;
   color:var(--muted);
   line-height:1.15;
@@ -197,25 +209,25 @@ button:disabled{opacity:.4;pointer-events:none}
 
 .srow.selected{background:var(--sel)}
 .srow.selected::after{
-  content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--accent);
+  content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--accent);
 }
-.sidebar:not(.open) .srow.selected::after{top:10px;bottom:10px}
+.sidebar:not(.open) .srow.selected::after{top:12px;bottom:12px}
 
 /* swipe */
 .swipe{
-  position:relative;overflow:hidden;background:#000;border-radius:13px;
-  margin-bottom:2px;
+  position:relative;overflow:hidden;background:#000;border-radius:14px;
+  margin-bottom:3px;
 }
 .swipe-actions{
   position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1;
 }
 .swipe-actions button{
-  width:72px;min-height:100%;border-radius:0;padding:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:10.5px;font-weight:600;color:#fff;background:#48484a;
+  width:76px;min-height:100%;border-radius:0;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  font-size:11px;font-weight:600;color:#fff;background:#48484a;
 }
 .swipe-actions button:active{transform:none;opacity:.75}
-.swipe-actions button svg{width:18px;height:18px}
+.swipe-actions button svg{width:20px;height:20px}
 .swipe-actions .act-edit{background:#0a84ff}
 .swipe-actions .act-move{background:#5e5ce6}
 .swipe-actions .act-rename{background:#5e5ce6}
@@ -254,7 +266,8 @@ button:disabled{opacity:.4;pointer-events:none}
 
 /* toast */
 .toast{
-  position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));
+  position:fixed;left:50%;
+  bottom:calc(28px + env(safe-area-inset-bottom));
   transform:translate(-50%,20px);
   background:rgba(60,60,65,.96);color:#fff;padding:9px 16px;border-radius:20px;
   font-size:13px;font-weight:600;z-index:120;opacity:0;pointer-events:none;
@@ -271,7 +284,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .toolbar{
   flex:0 0 auto;
   display:flex;align-items:center;gap:8px;
-  padding:8px 12px 6px;
+  padding:calc(6px + env(safe-area-inset-top)) 12px 6px;
 }
 .dev-btn{
   min-height:36px;border-radius:18px;padding:0 16px;font-size:13px;font-weight:700;
@@ -290,10 +303,9 @@ button:disabled{opacity:.4;pointer-events:none}
   flex:1;min-height:0;min-width:0;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
-  padding:4px 10px 14px;
+  padding:4px 8px 6px;
 }
 
-/* スマホ：border含めてデバイス比ぴったりに揃える */
 .phone{
   position:relative;
   width:300px;height:652px;
@@ -328,7 +340,6 @@ button:disabled{opacity:.4;pointer-events:none}
   width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
 }
 
-/* iPad */
 .ipad{
   position:relative;
   width:460px;height:345px;
@@ -352,7 +363,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-/* ================= EDITOR SHEET ================= */
+/* ================= SHEETS (editor/picker/settings) ================= */
 .editor-overlay{
   position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
   display:none;align-items:flex-end;justify-content:center;
@@ -401,9 +412,6 @@ button:disabled{opacity:.4;pointer-events:none}
   -webkit-user-select:text;user-select:text;
 }
 .editor-title-row .name-input:focus{border-color:var(--accent)}
-.editor-title-row .btn-delete{
-  min-height:46px;padding:0 14px;font-size:13px;flex:0 0 auto;
-}
 
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
@@ -432,7 +440,7 @@ textarea:focus{border-color:var(--accent)}
 .search-box .nav-btn{min-height:42px;min-width:44px;padding:0 8px;font-size:15px}
 .search-box #btnSave{min-height:42px;min-width:66px;font-size:14px;font-weight:700}
 
-/* ================= FOLDER PICKER ================= */
+/* picker / settings */
 .picker-sheet{
   width:100%;max-width:520px;max-height:72vh;
   background:var(--bg);border-radius:20px 20px 0 0;
@@ -447,7 +455,7 @@ textarea:focus{border-color:var(--accent)}
 }
 .picker-item{
   display:flex;align-items:center;gap:10px;
-  background:var(--panel);border-radius:14px;padding:14px;
+  background:var(--panel);border-radius:14px;padding:16px;
   font-size:15px;font-weight:600;cursor:pointer;
   border:1px solid transparent;
 }
@@ -483,7 +491,7 @@ textarea:focus{border-color:var(--accent)}
       <div class="side-head-title">メモ</div>
     </div>
 
-    <div class="side-scroll">
+    <div class="side-scroll" id="sideScroll">
       <div class="side-list" id="sideList"></div>
     </div>
 
@@ -494,20 +502,11 @@ textarea:focus{border-color:var(--accent)}
           <path d="M12 5v14M5 12h14"/>
         </svg>
       </button>
-      <button id="btnExport" class="foot-btn" aria-label="エクスポート">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      <button id="btnSettings" class="foot-btn" aria-label="設定">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v12"/>
-          <path d="M7 10l5 5 5-5"/>
-          <path d="M5 21h14"/>
-        </svg>
-      </button>
-      <button id="btnImport" class="foot-btn" aria-label="インポート">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21V9"/>
-          <path d="M7 14l5-5 5 5"/>
-          <path d="M5 3h14"/>
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
     </div>
@@ -515,7 +514,7 @@ textarea:focus{border-color:var(--accent)}
 
   <!-- ================= MAIN ================= -->
   <main class="main">
-    <div class="toolbar">
+    <div class="toolbar" id="toolbar">
       <button class="dev-btn on" data-dev="phone">iPhone</button>
       <button class="dev-btn" data-dev="ipad">iPad</button>
       <div class="spacer"></div>
@@ -572,7 +571,6 @@ textarea:focus{border-color:var(--accent)}
         <div class="icon-preview" id="iconPreview" title="タップしてアイコンを選択"></div>
         <input id="nameInput" class="name-input" type="text" placeholder="名前を入力"
                maxlength="80" autocomplete="off">
-        <button id="btnDelete" class="btn-delete danger">削除</button>
       </div>
 
       <div class="editor-textwrap">
@@ -609,6 +607,22 @@ textarea:focus{border-color:var(--accent)}
   </div>
 </div>
 
+<!-- SETTINGS -->
+<div id="settingsOverlay" class="editor-overlay">
+  <div class="picker-sheet">
+    <div class="sheet-handle"></div>
+    <h3>設定</h3>
+    <div class="picker-list">
+      <div class="picker-item" id="setExport">
+        <span>エクスポート</span>
+      </div>
+      <div class="picker-item" id="setImport">
+        <span>インポート</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- FULLSCREEN PREVIEW -->
 <div id="fullscreen" class="fullscreen">
   <button class="exit" id="exit">×</button>
@@ -630,6 +644,10 @@ textarea:focus{border-color:var(--accent)}
 
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
   const IPAD_W  = 1080, IPAD_H = 810, IPAD_B = 10;
+
+  /* サイドバー長押しスワイプ閾値 */
+  const SB_EXPAND_DX = 40;   // コンパクト→標準
+  const SB_BACK_DX   = 25;   // 標準→フォルダに戻る
 
   let items = [];
   let folders = [];
@@ -668,12 +686,13 @@ textarea:focus{border-color:var(--accent)}
 
   function formatDate(ts){
     const d = new Date(ts);
-    const m = d.getMonth()+1;
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
     const day = d.getDate();
     const w = WEEKDAYS[d.getDay()];
     const h = String(d.getHours()).padStart(2,"0");
     const min = String(d.getMinutes()).padStart(2,"0");
-    return `${m}/${day}（${w}）${h}:${min}`;
+    return `${y}/${m}/${day}（${w}）${h}:${min}`;
   }
 
   function byteLength(s){
@@ -778,7 +797,6 @@ textarea:focus{border-color:var(--accent)}
     if(!wrapEl) return;
     const rect = wrapEl.getBoundingClientRect();
     if(!rect.width || !rect.height) return;
-    // 縦横どちらも必ず覆うよう、少しだけ余裕を持たせる（境界の黒帯防止）
     const scale = Math.max(rect.width / deviceW, rect.height / deviceH) * 1.002;
     iframe.style.transform = `scale(${scale})`;
   }
@@ -788,13 +806,10 @@ textarea:focus{border-color:var(--accent)}
     fitIframe(frameIpad,  document.querySelector(".ipad-viewport"),  IPAD_W,  IPAD_H);
   }
 
-  /* デバイス外枠(border込み)をステージにぴったり合わせる
-     ・content(=viewport)の縦横比を 402:874 / 1080:810 に厳密一致させる
-     ・これにより fitIframe が縦横同時にちょうどフィットし、黒帯が出ない */
   function fitDevices(){
     const stage = $("stage");
-    const sw = Math.max(80, stage.clientWidth  - 20);
-    const sh = Math.max(80, stage.clientHeight - 20);
+    const sw = Math.max(80, stage.clientWidth  - 16);
+    const sh = Math.max(80, stage.clientHeight - 10);
 
     const phone = $("phone");
     const ipad  = $("ipad");
@@ -850,7 +865,6 @@ textarea:focus{border-color:var(--accent)}
   window.addEventListener("resize", relayout);
   window.addEventListener("orientationchange", () => setTimeout(relayout, 120));
 
-  /* ステージのリサイズを監視（サイドバー開閉アニメーション含む） */
   if(window.ResizeObserver){
     const ro = new ResizeObserver(() => {
       fitDevices();
@@ -886,7 +900,7 @@ textarea:focus{border-color:var(--accent)}
   }
 
   /* =========================================================
-     render sidebar
+     render
   ========================================================= */
   function render(){
     const list = $("sideList");
@@ -911,7 +925,7 @@ textarea:focus{border-color:var(--accent)}
     }else{
       const listNotes = items.filter(x => x.folderId === currentFolderId);
       if(listNotes.length === 0){
-        html += `<div class="side-empty">メモがありません<br>左下の「＋」から追加</div>`;
+        html += `<div class="side-empty">メモがありません<br>「＋」から追加</div>`;
       }else{
         html += listNotes.map((it,i) => noteRowHtml(it,i)).join("");
       }
@@ -926,7 +940,7 @@ textarea:focus{border-color:var(--accent)}
   }
 
   function miniIconsHtml(folderId){
-    const list = items.filter(x => x.folderId === folderId).slice(0, 4);
+    const list = items.filter(x => x.folderId === folderId).slice(0, 3);
     if(!list.length) return "";
     return `<div class="row-apps">${list.map(it => {
       if(validIcon(it.icon)){
@@ -977,6 +991,20 @@ textarea:focus{border-color:var(--accent)}
   }
 
   /* =========================================================
+     sidebar ジェスチャ（行の右スワイプで発火）
+  ========================================================= */
+  function handleSidebarSwipe(dx){
+    if(!sidebarOpen){
+      if(dx >= SB_EXPAND_DX) setSidebar(true);
+    }else{
+      if(dx >= SB_BACK_DX){
+        if(currentFolderId !== null) goRoot();
+        else setSidebar(false);
+      }
+    }
+  }
+
+  /* =========================================================
      swipe / drag
   ========================================================= */
   let dragActive = false;
@@ -1015,6 +1043,7 @@ textarea:focus{border-color:var(--accent)}
 
     let pid = null, sx = 0, sy = 0, baseX = 0, curX = 0, maxOpen = 0;
     let mode = null;
+    let lastDx = 0;
     let pressTimer = null;
     let longPressed = false;
 
@@ -1027,6 +1056,7 @@ textarea:focus{border-color:var(--accent)}
       pid = e.pointerId;
       sx = e.clientX; sy = e.clientY;
       mode = null;
+      lastDx = 0;
       longPressed = false;
       maxOpen = actions.offsetWidth || 0;
       baseX = wrap.classList.contains("open") ? -maxOpen : 0;
@@ -1050,15 +1080,21 @@ textarea:focus{border-color:var(--accent)}
       if(pid === null || e.pointerId !== pid) return;
       const dx = e.clientX - sx;
       const dy = e.clientY - sy;
+      lastDx = dx;
 
       if(mode === "drag"){
         updateDrag(e.clientX, e.clientY);
         return;
       }
       if(mode === null){
-        if(maxOpen > 0 && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
+        if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
           clearPress();
-          mode = "h";
+          // 右スワイプ（かつ行が閉じている）→ サイドバージェスチャ
+          if(dx > 0 && baseX === 0){
+            mode = "sb";
+          }else{
+            mode = "h";
+          }
           try{ row.setPointerCapture(pid); }catch(_){}
         }else if(Math.abs(dy) > 10){
           clearPress();
@@ -1095,6 +1131,8 @@ textarea:focus{border-color:var(--accent)}
         }
       }else if(wasMode === "drag"){
         endDrag();
+      }else if(wasMode === "sb"){
+        handleSidebarSwipe(lastDx);
       }
       mode = null;
       try{ row.releasePointerCapture(releaseId); }catch(_){}
@@ -1120,10 +1158,32 @@ textarea:focus{border-color:var(--accent)}
     row.addEventListener("contextmenu", e => e.preventDefault());
   }
 
+  /* 空エリアのスワイプもサポート */
+  (function attachScrollGesture(){
+    const sc = $("sideScroll");
+    let pid = null, sx = 0, sy = 0;
+    sc.addEventListener("pointerdown", e => {
+      if(e.target.closest(".srow")) return;
+      if(e.target.closest("button")) return;
+      pid = e.pointerId;
+      sx = e.clientX; sy = e.clientY;
+    });
+    sc.addEventListener("pointerup", e => {
+      if(pid === null || e.pointerId !== pid) return;
+      const dx = e.clientX - sx;
+      const dy = e.clientY - sy;
+      pid = null;
+      if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20){
+        handleSidebarSwipe(dx);
+      }
+    });
+    sc.addEventListener("pointercancel", () => { pid = null; });
+  })();
+
   /* ---------- drag ---------- */
   function beginDrag(wrap, row, type, index, startY){
     const wraps = [...$("sideList").querySelectorAll(".swipe")];
-    const rowH  = wrap.offsetHeight || 56;
+    const rowH  = wrap.offsetHeight || 60;
 
     dragActive = true;
     dragCtx = {
@@ -1259,7 +1319,6 @@ textarea:focus{border-color:var(--accent)}
     chipEls.forEach(c => c.el.classList.toggle("over", !!id && c.id === id));
   }
 
-  /* 画面端で自動横スクロール */
   function updateChipAutoScroll(x, y){
     const bar = $("dragFolders");
     if(!bar.classList.contains("show")) return;
@@ -1424,6 +1483,16 @@ textarea:focus{border-color:var(--accent)}
   }
 
   /* =========================================================
+     settings
+  ========================================================= */
+  function openSettings(){
+    $("settingsOverlay").classList.add("show");
+  }
+  function closeSettings(){
+    $("settingsOverlay").classList.remove("show");
+  }
+
+  /* =========================================================
      editor
   ========================================================= */
   let searchMatches = [];
@@ -1457,7 +1526,6 @@ textarea:focus{border-color:var(--accent)}
       editingIcon = it && validIcon(it.icon) ? it.icon : null;
     }
     renderIconPreview();
-    $("btnDelete").style.display = isNew ? "none" : "flex";
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
@@ -1663,7 +1731,7 @@ textarea:focus{border-color:var(--accent)}
   }
 
   /* =========================================================
-     device switch / sidebar
+     device / sidebar
   ========================================================= */
   function setDevice(d){
     currentDevice = d;
@@ -1777,7 +1845,6 @@ textarea:focus{border-color:var(--accent)}
           : [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
         items = parsed.items;
       }else{
-        // マージ：フォルダは新IDを割り当て、名前を「(取込)」にする
         const idMap = {};
         parsed.folders.forEach(f => {
           const nid = uid();
@@ -1800,7 +1867,6 @@ textarea:focus{border-color:var(--accent)}
         });
       }
 
-      // フォルダIDが存在しない項目を補正
       const fids = new Set(folders.map(f => f.id));
       items.forEach(it => {
         if(!it.id) it.id = uid();
@@ -1845,8 +1911,12 @@ textarea:focus{border-color:var(--accent)}
     }
   };
 
-  $("btnExport").onclick = () => exportAll();
-  $("btnImport").onclick = () => $("importFile").click();
+  $("btnSettings").onclick = openSettings;
+  $("settingsOverlay").addEventListener("click", e => {
+    if(e.target === $("settingsOverlay")) closeSettings();
+  });
+  $("setExport").onclick = () => { closeSettings(); exportAll(); };
+  $("setImport").onclick = () => { closeSettings(); $("importFile").click(); };
   $("importFile").addEventListener("change", async e => {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
@@ -1862,19 +1932,6 @@ textarea:focus{border-color:var(--accent)}
 
   $("btnSave").onclick = saveCurrent;
   $("btnCancel").onclick = closeEditor;
-
-  $("btnDelete").onclick = () => {
-    if(!editingId) return;
-    const it = items.find(x => x.id === editingId);
-    if(!it) return;
-    if(!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
-    items = items.filter(x => x.id !== editingId);
-    if(selectedId === editingId) selectedId = items.length ? items[0].id : null;
-    persist();
-    closeEditor();
-    render();
-    updatePreview();
-  };
 
   $("btnClear").onclick = () => {
     source.value = "";
@@ -1901,6 +1958,15 @@ textarea:focus{border-color:var(--accent)}
   });
   $("pickerOverlay").addEventListener("click", e => {
     if(e.target === $("pickerOverlay")) closePicker();
+  });
+
+  /* 右エリア（ステージ・ツールバー余白）タップでコンパクト */
+  $("stage").addEventListener("click", () => {
+    if(sidebarOpen) setSidebar(false);
+  });
+  $("toolbar").addEventListener("click", e => {
+    if(e.target.closest("button")) return;
+    if(sidebarOpen) setSidebar(false);
   });
 
   $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
@@ -1935,6 +2001,7 @@ textarea:focus{border-color:var(--accent)}
     resizeAllPreviews();
   });
   setTimeout(relayout, 260);
+  window.addEventListener("load", () => setTimeout(relayout, 100));
 })();
 </script>
 </body>
