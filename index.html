@@ -20,6 +20,7 @@
   --danger:#ff453a;
   --ok:#30d158;
   --mark:#ffd60a;
+  --sep:#38383c;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
@@ -31,70 +32,157 @@ button{
 }
 button.primary{background:var(--accent)}
 button.danger{background:var(--danger)}
-button.ghost{background:transparent;border:1px solid #38383c}
+button.ghost{background:transparent;border:1px solid var(--sep)}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
 .app{max-width:1100px;margin:auto}
 
-/* card row (horizontal scroll) */
-.card-row{
-  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
-  padding:0 4px 14px;margin:0 -4px 6px;
-  scroll-snap-type:x proximity;
+/* ============ BROWSER (Notes style) ============ */
+.browser{
+  background:var(--panel);
+  border-radius:18px;
+  border:1px solid #2c2c2e;
+  overflow:hidden;
+  margin:12px 0 20px;
+}
+.browser-head{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px 0;
+  min-height:44px;
+}
+.head-spacer{flex:1}
+.head-btn{
+  min-height:34px;border-radius:17px;padding:0 13px;font-size:13px;font-weight:600;
+  background:var(--panel2);
+}
+.head-btn.primary{background:var(--accent)}
+.head-btn.back{
+  background:transparent;color:var(--accent);
+  padding:0 8px 0 0;font-size:16px;min-height:34px;font-weight:500;
+}
+.browser-title{
+  padding:4px 16px 12px;
+  font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2;
+  display:flex;align-items:baseline;gap:8px;
+}
+.browser-title .count{font-size:13px;font-weight:600;color:var(--muted)}
+.list-view{padding-bottom:2px}
+.empty-msg{
+  padding:30px 20px 40px;text-align:center;color:var(--muted);
+  font-size:13.5px;line-height:1.7;
+}
+
+/* swipe row */
+.swipe{
+  position:relative;
+  overflow:hidden;
+  background:#000;
+  transition:transform .2s cubic-bezier(.22,.8,.24,1);
+}
+.swipe-actions{
+  position:absolute;top:0;right:0;bottom:0;
+  display:flex;z-index:1;
+}
+.swipe-actions button{
+  width:74px;min-height:100%;border-radius:0;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:11px;font-weight:600;color:#fff;background:#48484a;
+}
+.swipe-actions button:active{transform:none;opacity:.75}
+.swipe-actions button svg{width:19px;height:19px}
+.swipe-actions .act-edit{background:#0a84ff}
+.swipe-actions .act-move{background:#5e5ce6}
+.swipe-actions .act-rename{background:#5e5ce6}
+.swipe-actions .act-del{background:#ff453a}
+
+.row{
+  position:relative;z-index:2;
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;min-height:60px;
+  background:var(--panel);
+  touch-action:pan-y;
+  transition:transform .24s cubic-bezier(.22,.8,.24,1),background .15s;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  cursor:pointer;
+}
+.swipe + .swipe .row::before{
+  content:"";position:absolute;left:16px;right:0;top:0;height:1px;
+  background:var(--sep);
+}
+.row.selected{background:#0a84ff20}
+.row.selected::after{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
+}
+.row-icon{
+  width:30px;height:30px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  color:#ffd60a;
+}
+.row-icon svg{width:27px;height:27px;display:block}
+.row-main{flex:1;min-width:0}
+.row-title{
+  font-size:15px;font-weight:600;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-sub{
+  display:flex;gap:8px;align-items:baseline;
+  font-size:12.5px;color:var(--muted);line-height:1.3;margin-top:3px;
+}
+.row-date{flex:0 0 auto}
+.row-prev{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
+.row-chev svg{width:16px;height:16px;display:block}
+
+/* dragging */
+.swipe.dragging{overflow:visible;z-index:40;transition:none}
+.swipe.dragging .row{
+  transition:none;
+  border-radius:14px;
+  background:var(--panel2);
+  box-shadow:0 12px 34px rgba(0,0,0,.65),0 0 0 1px #4a4a4e;
+  transform:scale(1.02);
+}
+
+/* drag target folders bar */
+.drag-folders{
+  position:fixed;top:0;left:0;right:0;z-index:80;
+  display:none;gap:8px;
+  padding:calc(12px + env(safe-area-inset-top)) 12px 12px;
+  background:rgba(28,28,30,.94);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--sep);
+  overflow-x:auto;white-space:nowrap;
   -webkit-overflow-scrolling:touch;
 }
-.card-row::-webkit-scrollbar{height:0}
-.card{
-  scroll-snap-align:start;
-  flex:0 0 auto;width:132px;height:90px;
-  background:var(--panel);border-radius:16px;padding:10px 12px;
-  display:flex;flex-direction:column;justify-content:flex-start;gap:3px;
-  border:2px solid transparent;cursor:pointer;
-  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-  transition:border-color .15s,background .15s;
-  position:relative;
+.drag-folders.show{display:flex}
+.drag-folders::-webkit-scrollbar{height:0}
+.chip{
+  flex:0 0 auto;height:36px;border-radius:18px;padding:0 16px;
+  background:var(--panel3);color:var(--text);
+  display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;
+  transition:transform .12s,background .12s;
 }
-.card:active{background:var(--panel2)}
-.card.active{border-color:var(--accent);background:#0a84ff18}
-.card-name{font-weight:600;font-size:14px;line-height:1.25;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  min-height:35px;max-height:35px;}
-.card-meta{font-size:10.5px;color:var(--muted);line-height:1.25;min-height:13px;}
-.card-new{
-  align-items:center;justify-content:center;color:var(--muted);
-  border:2px dashed #3a3a3c;background:transparent;
-}
-.card-new .plus{font-size:26px;font-weight:300;color:var(--muted);line-height:1}
-.card-new .label{font-size:12px;margin-top:4px}
-.card-empty-hint{font-size:12.5px;color:var(--muted);padding:2px 4px 10px}
+.chip.current{background:#3a3a3c;color:var(--muted)}
+.chip.over{background:var(--accent);color:#fff;transform:scale(1.08)}
 
-/* card toast (inside card, lower half) */
-.card-toast{
-  position:absolute;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  z-index:50;
-  background:rgba(48,48,52,.95);
-  color:var(--text);
-  padding:5px 10px;
-  border-radius:8px;
-  font-size:11px;
-  font-weight:600;
-  border:1px solid #48484a;
-  box-shadow:0 2px 12px rgba(0,0,0,.45);
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .22s;
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));
+  transform:translate(-50%,20px);
+  background:rgba(60,60,65,.96);
+  color:#fff;padding:9px 16px;border-radius:20px;
+  font-size:13px;font-weight:600;
+  z-index:120;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;
   white-space:nowrap;
+  box-shadow:0 6px 24px rgba(0,0,0,.5);
 }
-.card-toast.show{opacity:1}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* device previews */
+/* ============ DEVICES ============ */
 .devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
 .device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 
-/* iPhone 17 Pro: 402x874 CSS pt @3x (real device point size) */
 .phone{
   position:relative;
   width:min(300px,86vw);
@@ -121,7 +209,6 @@ button:disabled{opacity:.4;pointer-events:none}
   width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
 }
 
-/* iPad 7th gen: 810x1080 CSS pt landscape */
 .ipad{
   position:relative;
   width:min(460px,92vw);
@@ -137,18 +224,17 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-/* fullscreen action icon - gray instead of primary */
 .fs-icon-btn{
   position:absolute;
   left:calc(100% + 8px);
   top:50%;
   transform:translateY(-50%);
   width:40px;height:40px;border-radius:12px;padding:0;
-  background:var(--panel2);border:1px solid #38383c;color:var(--text);
+  background:var(--panel2);border:1px solid var(--sep);color:var(--text);
 }
 .fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
 
-/* editor (opened via long-press) */
+/* ============ EDITOR SHEET ============ */
 .editor-overlay{
   position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
   display:none;align-items:flex-end;justify-content:center;
@@ -175,21 +261,19 @@ button:disabled{opacity:.4;pointer-events:none}
 .editor-search-wrap{
   flex-shrink:0;
   background:var(--bg);
-  border-top:1px solid #38383c;
+  border-top:1px solid var(--sep);
   padding:8px 14px calc(8px + env(safe-area-inset-bottom));
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 
-/* action buttons above title row */
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .editor-actions button{flex:1;min-width:80px;white-space:nowrap}
 
-/* title row with delete button */
 .editor-title-row{
   display:flex;align-items:center;gap:8px;margin-bottom:10px;
 }
 .editor-title-row .name-input{
-  flex:1;min-width:120px;height:40px;border:1px solid #38383c;border-radius:12px;
+  flex:1;min-width:120px;height:40px;border:1px solid var(--sep);border-radius:12px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
   -webkit-user-select:text;user-select:text;
 }
@@ -198,28 +282,19 @@ button:disabled{opacity:.4;pointer-events:none}
   min-height:40px;padding:0 14px;font-size:13px;
 }
 
-/* textarea - word wrap instead of horizontal scroll */
 textarea{
   width:100%;height:min(42vh,360px);resize:vertical;
-  background:#111113;color:#f5f5f7;border:1px solid #38383c;border-radius:14px;
+  background:#111113;color:#f5f5f7;border:1px solid var(--sep);border-radius:14px;
   padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
   white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
   -webkit-user-select:text;user-select:text;
 }
 textarea:focus{border-color:var(--accent)}
 
-/* search section at bottom */
-.search-section{
-  margin-top:0;
-  padding-top:0;
-  border-top:none;
-}
-.search-box{
-  position:relative;
-  display:flex;align-items:center;gap:6px;
-}
+.search-section{margin-top:0;padding-top:0;border-top:none}
+.search-box{position:relative;display:flex;align-items:center;gap:6px}
 .search-box input{
-  flex:1;width:100%;height:40px;border:1px solid #38383c;border-radius:12px;
+  flex:1;width:100%;height:40px;border:1px solid var(--sep);border-radius:12px;
   background:#111113;color:#fff;padding:0 96px 0 11px;outline:none;
   -webkit-user-select:text;user-select:text;
   -webkit-appearance:none;appearance:none;
@@ -228,25 +303,36 @@ textarea:focus{border-color:var(--accent)}
 }
 .search-box input:focus{border-color:var(--accent)}
 .search-box .search-count{
-  position:absolute;
-  right:104px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:12px;
-  color:var(--muted);
-  pointer-events:none;
+  position:absolute;right:104px;top:50%;transform:translateY(-50%);
+  font-size:12px;color:var(--muted);pointer-events:none;
 }
-.search-box .search-nav{
-  display:flex;gap:4px;
-}
-.search-box button{
-  min-height:36px;
-  min-width:40px;
-  padding:0 8px;
-  font-size:16px;
-}
+.search-box .search-nav{display:flex;gap:4px}
+.search-box button{min-height:36px;min-width:40px;padding:0 8px;font-size:16px}
 
-/* fullscreen */
+/* ============ PICKER SHEET ============ */
+.picker-sheet{
+  width:100%;max-width:520px;max-height:72vh;
+  background:var(--bg);border-radius:20px 20px 0 0;
+  padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:12px;
+  box-shadow:0 -10px 40px #000;
+}
+.picker-sheet h3{margin:0;font-size:16px;font-weight:700;text-align:center}
+.picker-list{
+  overflow:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:8px;min-height:0;
+}
+.picker-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--panel);border-radius:14px;padding:14px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  border:1px solid transparent;
+}
+.picker-item .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+.picker-item.current{border-color:var(--accent);background:#0a84ff18}
+.picker-item:active{background:var(--panel2)}
+
+/* ============ FULLSCREEN ============ */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
 .fullscreen.show{display:block}
 .fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
@@ -275,9 +361,19 @@ textarea:focus{border-color:var(--accent)}
 <body>
 <div class="app">
 
-  <div id="cardRow" class="card-row"></div>
-  <div id="emptyHint" class="card-empty-hint" style="display:none">まだHTMLがありません。右端の「＋」から追加してください。長押しで編集・削除できます。</div>
+  <!-- ============ NOTES STYLE BROWSER ============ -->
+  <div class="browser">
+    <div class="browser-head">
+      <button id="btnBack" class="head-btn back" style="display:none">‹ フォルダ</button>
+      <div class="head-spacer"></div>
+      <button id="btnNewFolder" class="head-btn">＋ フォルダ</button>
+      <button id="btnNewNote" class="head-btn primary" style="display:none">＋ メモ</button>
+    </div>
+    <div class="browser-title" id="browserTitle">フォルダ</div>
+    <div class="list-view" id="listView"></div>
+  </div>
 
+  <!-- ============ DEVICE PREVIEWS ============ -->
   <div class="devices">
     <div class="device-wrap">
       <div class="phone" id="phone">
@@ -304,13 +400,18 @@ textarea:focus{border-color:var(--accent)}
 
 </div>
 
-<!-- EDITOR SHEET (opened by long-press) -->
+<!-- drag target folder bar -->
+<div id="dragFolders" class="drag-folders"></div>
+
+<!-- toast -->
+<div id="toast" class="toast"></div>
+
+<!-- EDITOR SHEET -->
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="editor-scroll">
       <div class="sheet-handle"></div>
 
-      <!-- 編集アクションをタイトル行の上に移動 -->
       <div class="editor-actions">
         <button id="btnCancel" class="ghost">キャンセル</button>
         <button id="btnClear" class="ghost">クリア</button>
@@ -343,6 +444,15 @@ textarea:focus{border-color:var(--accent)}
   </div>
 </div>
 
+<!-- FOLDER PICKER -->
+<div id="pickerOverlay" class="editor-overlay">
+  <div class="picker-sheet">
+    <div class="sheet-handle"></div>
+    <h3>移動先のフォルダ</h3>
+    <div id="pickerList" class="picker-list"></div>
+  </div>
+</div>
+
 <!-- FULLSCREEN PREVIEW -->
 <div id="fullscreen" class="fullscreen">
   <button class="exit" id="exit">×</button>
@@ -354,88 +464,152 @@ textarea:focus{border-color:var(--accent)}
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const STORAGE_KEY = "pwa-previewer-items-v2";
-  const OLD_KEY = "iphone17pro-pwa-preview-html-v1";
+
+  /* ---- storage keys ----
+     NOTES_KEY は旧バージョンと同一キーをそのまま使う（folderId を追加しただけ） */
+  const NOTES_KEY   = "pwa-previewer-items-v2";
+  const FOLDERS_KEY = "pwa-previewer-folders-v1";
+  const OLD_KEY     = "iphone17pro-pwa-preview-html-v1";
+  const DEFAULT_FOLDER_NAME = "マイメモ";
 
   const PHONE_W = 402, PHONE_H = 874;
-  const IPAD_W = 1080, IPAD_H = 810;
+  const IPAD_W  = 1080, IPAD_H = 810;
 
-  let items = [];
+  let items = [];        // {id, name, html, updated, folderId}
+  let folders = [];      // {id, name}
   let selectedId = null;
   let editingId = null;
+  let currentFolderId = null;   // null = フォルダ一覧（ルート）
 
-  const source = $("source");
-  const nameInput = $("nameInput");
+  const source     = $("source");
+  const nameInput  = $("nameInput");
   const framePhone = $("framePhone");
-  const frameIpad = $("frameIpad");
-  const fullFrame = $("fullFrame");
+  const frameIpad  = $("frameIpad");
+  const fullFrame  = $("fullFrame");
 
-  const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+  const WEEKDAYS = ["日","月","火","水","木","金","土"];
 
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const ICON = {
+    folder: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.6A2.6 2.6 0 0 1 5.6 4h3.1c.55 0 1.07.24 1.43.66l1.02 1.2c.2.23.48.36.79.36h6.46A2.6 2.6 0 0 1 21 8.82V17.4A2.6 2.6 0 0 1 18.4 20H5.6A2.6 2.6 0 0 1 3 17.4V6.6z"/></svg>`,
+    chev: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`,
+    edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
+    move: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M12.5 6l6 6-6 6"/></svg>`,
+    trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>`
+  };
+
+  /* =========================================================
+     utils
+  ========================================================= */
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        items = JSON.parse(raw);
-        if (!Array.isArray(items)) items = [];
-      } else {
-        const old = localStorage.getItem(OLD_KEY);
-        if (old) {
-          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
-          persist();
-        }
-      }
-    } catch (e) {
-      items = [];
-    }
-    if (items.length && !selectedId) selectedId = items[0].id;
-  }
-
-  function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }
-
-  function formatDate(ts) {
+  function formatDate(ts){
     const d = new Date(ts);
-    const m = d.getMonth() + 1;
+    const m = d.getMonth()+1;
     const day = d.getDate();
     const w = WEEKDAYS[d.getDay()];
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2,"0");
+    const min = String(d.getMinutes()).padStart(2,"0");
     return `${m}/${day}（${w}）${h}:${min}`;
   }
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+  function stripHtml(s){
+    return String(s || "")
+      .replace(/<style[\s\S]*?<\/style>/gi," ")
+      .replace(/<script[\s\S]*?<\/script>/gi," ")
+      .replace(/<!--[\s\S]*?-->/g," ")
+      .replace(/<[^>]*>/g," ")
+      .replace(/&nbsp;/g," ")
+      .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&")
+      .replace(/\s+/g," ")
+      .trim();
   }
 
-  function fitIframe(iframe, wrapEl, deviceW, deviceH) {
+  /* =========================================================
+     persistence / migration
+  ========================================================= */
+  function persist(){
+    try{
+      localStorage.setItem(NOTES_KEY, JSON.stringify(items));
+      localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
+    }catch(e){ console.warn("persist failed", e); }
+  }
+
+  function load(){
+    /* --- folders --- */
+    folders = [];
+    try{
+      const rawF = localStorage.getItem(FOLDERS_KEY);
+      if(rawF){
+        const p = JSON.parse(rawF);
+        if(Array.isArray(p)) folders = p.filter(f => f && typeof f === "object" && f.id);
+      }
+    }catch(e){ folders = []; }
+    folders.forEach(f => { if(typeof f.name !== "string" || !f.name) f.name = "無題のフォルダ"; });
+
+    /* --- notes (旧キーもそのまま読める) --- */
+    items = [];
+    try{
+      const raw = localStorage.getItem(NOTES_KEY);
+      if(raw){
+        const p = JSON.parse(raw);
+        if(Array.isArray(p)) items = p;
+      }else{
+        const old = localStorage.getItem(OLD_KEY);
+        if(old){
+          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
+        }
+      }
+    }catch(e){ items = []; }
+    if(!Array.isArray(items)) items = [];
+    items = items.filter(it => it && typeof it === "object");
+
+    /* --- フォルダが無ければ作成 --- */
+    if(folders.length === 0){
+      folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
+    }
+
+    /* --- 既存アイテムの補正（folderId 未設定は先頭フォルダへ） --- */
+    const fids = new Set(folders.map(f => f.id));
+    items.forEach(it => {
+      if(!it.id) it.id = uid();
+      if(typeof it.name !== "string") it.name = "無題";
+      if(typeof it.html !== "string") it.html = "";
+      if(typeof it.updated !== "number") it.updated = Date.now();
+      if(!it.folderId || !fids.has(it.folderId)) it.folderId = folders[0].id;
+    });
+
+    selectedId = items.length ? items[0].id : null;
+    currentFolderId = null;
+    persist();
+  }
+
+  /* =========================================================
+     previews
+  ========================================================= */
+  function fitIframe(iframe, wrapEl, deviceW, deviceH){
+    if(!wrapEl) return;
     const rect = wrapEl.getBoundingClientRect();
+    if(!rect.width || !rect.height) return;
     const scale = Math.max(rect.width / deviceW, rect.height / deviceH);
     iframe.style.transform = `scale(${scale})`;
   }
 
-  function resizeAllPreviews() {
+  function resizeAllPreviews(){
     fitIframe(framePhone, document.querySelector(".phone-viewport"), PHONE_W, PHONE_H);
-    fitIframe(frameIpad, document.querySelector(".ipad-viewport"), IPAD_W, IPAD_H);
+    fitIframe(frameIpad,  document.querySelector(".ipad-viewport"),  IPAD_W,  IPAD_H);
   }
 
-  function resizeFullscreen() {
-    if (!$("fullscreen").classList.contains("show")) return;
+  function resizeFullscreen(){
+    if(!$("fullscreen").classList.contains("show")) return;
     const stage = $("fsStage");
-    const dW = PHONE_W;
-    const dH = PHONE_H;
-    const availW = stage.clientWidth;
-    const availH = stage.clientHeight;
-    const scale = Math.min(availW / dW, availH / dH);
+    const dW = PHONE_W, dH = PHONE_H;
+    const scale = Math.min(stage.clientWidth / dW, stage.clientHeight / dH);
     fullFrame.style.width = dW + "px";
     fullFrame.style.height = dH + "px";
     fullFrame.style.transform = `scale(${scale})`;
@@ -444,95 +618,531 @@ textarea:focus{border-color:var(--accent)}
 
   window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
 
-  function renderCards() {
-    const row = $("cardRow");
-    const sorted = items.slice().sort((a, b) => b.updated - a.updated);
-    $("emptyHint").style.display = items.length ? "none" : "block";
-
-    const cardsHtml = sorted.map(it => `
-      <div class="card ${it.id === selectedId ? "active" : ""}" data-id="${it.id}">
-        <div class="card-name">${escapeHtml(it.name || "無題")}</div>
-        <div class="card-meta">${formatDate(it.updated)}</div>
-        <div class="card-meta">${(it.html || "").length.toLocaleString()}字</div>
-      </div>
-    `).join("");
-
-    const newCard = `<div class="card card-new" id="cardNew"><div class="plus">＋</div><div class="label">新規</div></div>`;
-
-    row.innerHTML = cardsHtml + newCard;
-
-    row.querySelectorAll(".card[data-id]").forEach(el => {
-      let pressTimer = null;
-      let longPressed = false;
-
-      const startPress = () => {
-        longPressed = false;
-        pressTimer = setTimeout(() => {
-          longPressed = true;
-          openEditor(el.dataset.id, false);
-        }, 480);
-      };
-      const cancelPress = () => { clearTimeout(pressTimer); };
-
-      el.addEventListener("pointerdown", startPress);
-      el.addEventListener("pointerup", cancelPress);
-      el.addEventListener("pointerleave", cancelPress);
-      el.addEventListener("pointercancel", cancelPress);
-      el.addEventListener("click", () => {
-        if (longPressed) return;
-        selectedId = el.dataset.id;
-        renderCards();
-        updatePreview();
-        showCardToast(el, "長押しで編集");
-      });
-      el.addEventListener("contextmenu", e => e.preventDefault());
-    });
-
-    $("cardNew").onclick = () => openEditor(null, true);
-  }
-
-  function showCardToast(cardEl, msg) {
-    const existing = cardEl.querySelector(".card-toast");
-    if (existing) existing.remove();
-
-    const toast = document.createElement("div");
-    toast.className = "card-toast";
-    toast.textContent = msg;
-    cardEl.appendChild(toast);
-
-    requestAnimationFrame(() => toast.classList.add("show"));
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 250);
-    }, 1400);
-  }
-
-  function clearPreviews() {
+  function clearPreviews(){
     framePhone.srcdoc = "";
     frameIpad.srcdoc = "";
   }
 
-  function updatePreview() {
+  function updatePreview(){
     const it = items.find(x => x.id === selectedId);
-    if (!it) { clearPreviews(); return; }
+    if(!it){ clearPreviews(); return; }
     const html = it.html || "";
     framePhone.srcdoc = html;
     frameIpad.srcdoc = html;
     requestAnimationFrame(resizeAllPreviews);
   }
 
+  /* =========================================================
+     toast
+  ========================================================= */
+  let toastTimer = null;
+  function showToast(msg){
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 1300);
+  }
+
+  /* =========================================================
+     render
+  ========================================================= */
+  function render(){
+    renderHead();
+    renderList();
+  }
+
+  function renderHead(){
+    const isRoot = currentFolderId === null;
+    $("btnBack").style.display    = isRoot ? "none" : "inline-flex";
+    $("btnNewNote").style.display = isRoot ? "none" : "inline-flex";
+    if(isRoot){
+      $("browserTitle").innerHTML =
+        `フォルダ<span class="count">${folders.length}</span>`;
+    }else{
+      const f = folders.find(x => x.id === currentFolderId);
+      const n = items.filter(x => x.folderId === currentFolderId).length;
+      $("browserTitle").innerHTML =
+        `${escapeHtml(f ? f.name : "フォルダ")}<span class="count">${n}件</span>`;
+    }
+  }
+
+  function folderRowHtml(f, index){
+    const n = items.filter(x => x.folderId === f.id).length;
+    return `
+    <div class="swipe" data-type="folder" data-id="${f.id}" data-index="${index}">
+      <div class="swipe-actions">
+        <button class="act-rename" data-act="rename">${ICON.edit}<span>名称</span></button>
+        <button class="act-del"    data-act="del">${ICON.trash}<span>削除</span></button>
+      </div>
+      <div class="row">
+        <div class="row-icon">${ICON.folder}</div>
+        <div class="row-main">
+          <div class="row-title">${escapeHtml(f.name)}</div>
+          <div class="row-sub">${n}件</div>
+        </div>
+        <div class="row-chev">${ICON.chev}</div>
+      </div>
+    </div>`;
+  }
+
+  function noteRowHtml(it, index){
+    const sel = it.id === selectedId;
+    const preview = stripHtml(it.html).slice(0, 90);
+    return `
+    <div class="swipe" data-type="note" data-id="${it.id}" data-index="${index}">
+      <div class="swipe-actions">
+        <button class="act-edit" data-act="edit">${ICON.edit}<span>編集</span></button>
+        <button class="act-move" data-act="move">${ICON.move}<span>移動</span></button>
+        <button class="act-del"  data-act="del">${ICON.trash}<span>削除</span></button>
+      </div>
+      <div class="row${sel ? " selected" : ""}">
+        <div class="row-main">
+          <div class="row-title">${escapeHtml(it.name || "無題")}</div>
+          <div class="row-sub">
+            <span class="row-date">${formatDate(it.updated)}</span>
+            <span class="row-prev">${escapeHtml(preview)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderList(){
+    const view = $("listView");
+    let html = "";
+
+    if(currentFolderId === null){
+      if(folders.length === 0){
+        html = `<div class="empty-msg">フォルダがありません</div>`;
+      }else{
+        html = folders.map((f,i) => folderRowHtml(f,i)).join("");
+      }
+    }else{
+      const list = items.filter(x => x.folderId === currentFolderId);
+      if(list.length === 0){
+        html = `<div class="empty-msg">メモがありません。<br>右上の「＋ メモ」から追加できます。</div>`;
+      }else{
+        html = list.map((it,i) => noteRowHtml(it,i)).join("");
+      }
+    }
+
+    view.innerHTML = html;
+    view.querySelectorAll(".swipe").forEach(attachRow);
+  }
+
+  /* =========================================================
+     swipe / drag
+  ========================================================= */
+  let dragActive = false;
+  let dragEndedAt = 0;
+  let dragCtx = null;
+  let chipEls = [];
+
+  function closeSwipe(wrap){
+    wrap.classList.remove("open");
+    const row = wrap.querySelector(".row");
+    if(row){ row.style.transition = ""; row.style.transform = ""; }
+  }
+  function closeAllSwipes(){
+    $("listView").querySelectorAll(".swipe.open").forEach(closeSwipe);
+  }
+
+  function attachRow(wrap){
+    const row     = wrap.querySelector(".row");
+    const actions = wrap.querySelector(".swipe-actions");
+    if(!row || !actions) return;
+
+    const type  = wrap.dataset.type;
+    const id    = wrap.dataset.id;
+    const index = Number(wrap.dataset.index) || 0;
+
+    actions.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", ev => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        closeAllSwipes();
+        handleAction(type, id, btn.dataset.act);
+      });
+    });
+
+    let pid = null, sx = 0, sy = 0, baseX = 0, curX = 0, maxOpen = 0;
+    let mode = null;          // null | 'h' | 'v' | 'drag'
+    let pressTimer = null;
+    let longPressed = false;
+
+    const clearPress = () => { if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+
+    row.addEventListener("pointerdown", e => {
+      if(dragActive) return;
+      if(e.pointerType === "mouse" && e.button !== 0) return;
+
+      pid = e.pointerId;
+      sx = e.clientX; sy = e.clientY;
+      mode = null;
+      longPressed = false;
+      maxOpen = actions.offsetWidth || 148;
+      baseX = wrap.classList.contains("open") ? -maxOpen : 0;
+      curX = baseX;
+      row.style.transition = "none";
+
+      if(baseX === 0){
+        clearPress();
+        pressTimer = setTimeout(() => {
+          pressTimer = null;
+          if(dragActive) return;
+          longPressed = true;
+          mode = "drag";
+          try{ row.setPointerCapture(pid); }catch(_){}
+          beginDrag(wrap, row, type, index, sy);
+        }, 420);
+      }
+    });
+
+    row.addEventListener("pointermove", e => {
+      if(pid === null || e.pointerId !== pid) return;
+      const dx = e.clientX - sx;
+      const dy = e.clientY - sy;
+
+      if(mode === "drag"){
+        updateDrag(e.clientX, e.clientY);
+        return;
+      }
+      if(mode === null){
+        if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
+          clearPress();
+          mode = "h";
+          try{ row.setPointerCapture(pid); }catch(_){}
+        }else if(Math.abs(dy) > 10){
+          clearPress();
+          mode = "v";
+          row.style.transition = "";
+          return;
+        }else{
+          return;
+        }
+      }
+      if(mode === "h"){
+        curX = Math.max(-maxOpen, Math.min(0, baseX + dx));
+        row.style.transform = `translateX(${curX}px)`;
+      }
+    });
+
+    const finish = e => {
+      if(pid === null) return;
+      if(e && e.pointerId !== undefined && e.pointerId !== pid) return;
+
+      clearPress();
+      const wasMode  = mode;
+      const releaseId = pid;
+      pid = null;
+      row.style.transition = "";
+
+      if(wasMode === "h"){
+        if(curX < -maxOpen * 0.45){
+          wrap.classList.add("open");
+          row.style.transform = `translateX(${-maxOpen}px)`;
+        }else{
+          wrap.classList.remove("open");
+          row.style.transform = "";
+        }
+      }else if(wasMode === "drag"){
+        endDrag();
+      }
+      mode = null;
+      try{ row.releasePointerCapture(releaseId); }catch(_){}
+    };
+
+    row.addEventListener("pointerup", finish);
+    row.addEventListener("pointercancel", () => {
+      clearPress();
+      if(mode === "drag") endDrag();
+      mode = null; pid = null;
+      row.style.transition = "";
+    });
+    row.addEventListener("pointerleave", () => { if(!dragActive) clearPress(); });
+
+    row.addEventListener("click", () => {
+      if(Date.now() - dragEndedAt < 350) return;
+      if(longPressed){ longPressed = false; return; }
+      if(wrap.classList.contains("open")){ closeSwipe(wrap); return; }
+      if(type === "folder") openFolder(id);
+      else selectNote(id);
+    });
+
+    row.addEventListener("contextmenu", e => e.preventDefault());
+  }
+
+  /* ---------- drag ---------- */
+  function beginDrag(wrap, row, type, index, startY){
+    const wraps = [...$("listView").querySelectorAll(".swipe")];
+    const rowH  = wrap.offsetHeight || 60;
+
+    dragActive = true;
+    dragCtx = {
+      wrap, row, type, index,
+      from: index, to: index, startY,
+      wraps, rowH, moved: false, targetFolder: null
+    };
+    wrap.classList.add("dragging");
+    if(type === "note") buildDragFolders();
+  }
+
+  function updateDrag(x, y){
+    const c = dragCtx;
+    if(!c) return;
+    const dy = y - c.startY;
+    if(Math.abs(dy) > 4) c.moved = true;
+
+    c.to = Math.max(0, Math.min(c.wraps.length - 1, c.from + Math.round(dy / c.rowH)));
+    c.wrap.style.transform = `translateY(${dy}px)`;
+
+    c.wraps.forEach((w, i) => {
+      if(w === c.wrap) return;
+      let shift = 0;
+      if(c.from < c.to && i > c.from && i <= c.to) shift = -c.rowH;
+      else if(c.from > c.to && i < c.from && i >= c.to) shift = c.rowH;
+      w.style.transform = shift ? `translateY(${shift}px)` : "";
+    });
+
+    if(c.type === "note"){
+      const hit = chipAt(x, y);
+      c.targetFolder = hit ? hit.id : null;
+      updateChipHighlight(c.targetFolder);
+    }
+  }
+
+  function endDrag(){
+    const c = dragCtx;
+    dragCtx = null;
+    dragActive = false;
+    dragEndedAt = Date.now();
+    if(!c) return;
+
+    c.wrap.classList.remove("dragging");
+    c.wrap.style.transform = "";
+    c.wraps.forEach(w => { w.style.transform = ""; });
+
+    if(c.type === "note") hideDragFolders();
+
+    if(!c.moved) return;
+
+    if(c.type === "note" && c.targetFolder && c.targetFolder !== currentFolderId){
+      moveNoteToFolder(c.wrap.dataset.id, c.targetFolder);
+      return;
+    }
+    if(c.to !== c.from){
+      if(c.type === "folder") reorderFolders(c.from, c.to);
+      else reorderNotes(c.from, c.to);
+    }
+  }
+
+  function reorderFolders(from, to){
+    if(from < 0 || from >= folders.length) return;
+    if(to   < 0 || to   >= folders.length) return;
+    const [m] = folders.splice(from, 1);
+    folders.splice(to, 0, m);
+    persist();
+    render();
+  }
+
+  function reorderNotes(from, to){
+    const idxs = [];
+    items.forEach((it, i) => { if(it.folderId === currentFolderId) idxs.push(i); });
+    const list = idxs.map(i => items[i]);
+    if(from < 0 || from >= list.length) return;
+    if(to   < 0 || to   >= list.length) return;
+    const [m] = list.splice(from, 1);
+    list.splice(to, 0, m);
+    idxs.forEach((gi, k) => { items[gi] = list[k]; });
+    persist();
+    render();
+  }
+
+  /* ---------- drag target folder chips ---------- */
+  function buildDragFolders(){
+    const bar = $("dragFolders");
+    bar.innerHTML = folders.map(f => {
+      const cur = f.id === currentFolderId;
+      return `<div class="chip${cur ? " current" : ""}" data-folder="${f.id}">${escapeHtml(f.name)}</div>`;
+    }).join("");
+    bar.classList.add("show");
+    requestAnimationFrame(() => {
+      chipEls = [...bar.querySelectorAll(".chip")].map(el => ({
+        id: el.dataset.folder,
+        el,
+        rect: el.getBoundingClientRect()
+      }));
+    });
+  }
+
+  function hideDragFolders(){
+    const bar = $("dragFolders");
+    bar.classList.remove("show");
+    bar.innerHTML = "";
+    chipEls = [];
+  }
+
+  function chipAt(x, y){
+    for(const c of chipEls){
+      const r = c.rect;
+      if(x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 30 && y <= r.bottom + 24) return c;
+    }
+    return null;
+  }
+
+  function updateChipHighlight(id){
+    chipEls.forEach(c => c.el.classList.toggle("over", !!id && c.id === id));
+  }
+
+  /* drag 中はスクロールを止める */
+  document.addEventListener("touchmove", e => {
+    if(dragActive && e.cancelable) e.preventDefault();
+  }, { passive: false });
+
+  /* =========================================================
+     navigation / actions
+  ========================================================= */
+  function openFolder(id){
+    currentFolderId = id;
+    closeAllSwipes();
+    render();
+  }
+
+  function goRoot(){
+    currentFolderId = null;
+    closeAllSwipes();
+    render();
+  }
+
+  function selectNote(id){
+    selectedId = id;
+    updatePreview();
+    render();
+    showToast("プレビューに表示中");
+  }
+
+  function handleAction(type, id, act){
+    if(type === "folder"){
+      if(act === "rename") renameFolder(id);
+      else if(act === "del") deleteFolder(id);
+      return;
+    }
+    if(act === "edit") openEditor(id, false);
+    else if(act === "move") openFolderPicker(id);
+    else if(act === "del") deleteNote(id);
+  }
+
+  function renameFolder(id){
+    const f = folders.find(x => x.id === id);
+    if(!f) return;
+    const name = prompt("フォルダ名", f.name);
+    if(name === null) return;
+    const trimmed = name.trim();
+    if(!trimmed) return;
+    f.name = trimmed;
+    persist();
+    render();
+  }
+
+  function deleteFolder(id){
+    const f = folders.find(x => x.id === id);
+    if(!f) return;
+    const n = items.filter(x => x.folderId === id).length;
+    const msg = n > 0
+      ? `フォルダ「${f.name}」と、中のメモ${n}件を削除しますか？`
+      : `フォルダ「${f.name}」を削除しますか？`;
+    if(!confirm(msg)) return;
+
+    const removedIds = items.filter(x => x.folderId === id).map(x => x.id);
+    items   = items.filter(x => x.folderId !== id);
+    folders = folders.filter(x => x.id !== id);
+
+    if(removedIds.includes(selectedId)) selectedId = items.length ? items[0].id : null;
+    if(folders.length === 0) folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
+    if(currentFolderId === id) currentFolderId = null;
+
+    persist();
+    render();
+    updatePreview();
+  }
+
+  function deleteNote(id){
+    const it = items.find(x => x.id === id);
+    if(!it) return;
+    if(!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
+    items = items.filter(x => x.id !== id);
+    if(selectedId === id) selectedId = items.length ? items[0].id : null;
+    persist();
+    render();
+    updatePreview();
+  }
+
+  function moveNoteToFolder(noteId, folderId){
+    const it = items.find(x => x.id === noteId);
+    if(!it) return;
+    if(it.folderId === folderId){
+      showToast("同じフォルダです");
+      return;
+    }
+    items = items.filter(x => x.id !== noteId);
+    const idx = items.findIndex(x => x.folderId === folderId);
+    if(idx === -1) items.push(it);
+    else items.splice(idx, 0, it);
+    it.folderId = folderId;
+    persist();
+    render();
+    showToast("移動しました");
+  }
+
+  /* =========================================================
+     folder picker
+  ========================================================= */
+  let pickerNoteId = null;
+
+  function openFolderPicker(noteId){
+    pickerNoteId = noteId;
+    const it = items.find(x => x.id === noteId);
+    $("pickerList").innerHTML = folders.map(f => {
+      const cur = it && it.folderId === f.id;
+      const n = items.filter(x => x.folderId === f.id).length;
+      return `<div class="picker-item${cur ? " current" : ""}" data-folder="${f.id}">
+        <span>${escapeHtml(f.name)}</span>
+        <span class="cnt">${n}件</span>
+      </div>`;
+    }).join("");
+
+    $("pickerList").querySelectorAll(".picker-item").forEach(el => {
+      el.addEventListener("click", () => {
+        moveNoteToFolder(pickerNoteId, el.dataset.folder);
+        closePicker();
+      });
+    });
+
+    $("pickerOverlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closePicker(){
+    $("pickerOverlay").classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  /* =========================================================
+     editor
+  ========================================================= */
   let searchMatches = [];
   let searchIndex = -1;
 
-  function openEditor(id, isNew) {
+  function openEditor(id, isNew){
     editingId = isNew ? null : id;
-    if (isNew) {
+    if(isNew){
       nameInput.value = "";
       source.value = "";
-    } else {
+    }else{
       const it = items.find(x => x.id === id);
       nameInput.value = it ? (it.name || "") : "";
-      source.value = it ? (it.html || "") : "";
+      source.value   = it ? (it.html || "") : "";
     }
     $("btnDelete").style.display = isNew ? "none" : "flex";
     $("search").value = "";
@@ -541,54 +1151,49 @@ textarea:focus{border-color:var(--accent)}
     $("editorOverlay").classList.add("show");
     document.body.style.overflow = "hidden";
     adjustEditorForKeyboard();
-    setTimeout(() => nameInput.focus(), 50);
+    setTimeout(() => { try{ nameInput.focus(); }catch(_){} }, 60);
   }
 
-  function closeEditor() {
+  function closeEditor(){
     $("editorOverlay").classList.remove("show");
     document.body.style.overflow = "";
     document.querySelector(".editor-sheet").style.maxHeight = "";
   }
 
-  function saveCurrent() {
+  function saveCurrent(){
     const name = (nameInput.value || "").trim() || "無題";
     const html = source.value;
-    if (editingId) {
+
+    if(editingId){
       const it = items.find(x => x.id === editingId);
-      if (it) { it.name = name; it.html = html; it.updated = Date.now(); }
+      if(it){ it.name = name; it.html = html; it.updated = Date.now(); }
       selectedId = editingId;
-    } else {
-      const id = uid();
-      items.push({ id, name, html, updated: Date.now() });
-      selectedId = id;
+    }else{
+      const fid = currentFolderId || (folders[0] && folders[0].id);
+      const note = { id: uid(), name, html, updated: Date.now(), folderId: fid };
+      const idx = items.findIndex(x => x.folderId === fid);
+      if(idx === -1) items.push(note);
+      else items.splice(idx, 0, note);
+      selectedId = note.id;
     }
+
     persist();
     closeEditor();
-    renderCards();
+    render();
     updatePreview();
   }
 
-  function deleteCurrent() {
-    if (!editingId) return;
-    const it = items.find(x => x.id === editingId);
-    if (!it) return;
-    if (!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
-    items = items.filter(x => x.id !== editingId);
-    if (selectedId === editingId) selectedId = items.length ? items[0].id : null;
-    persist();
-    closeEditor();
-    renderCards();
-    updatePreview();
-  }
-
-  function clearSearchHighlight() {
+  /* =========================================================
+     search in editor
+  ========================================================= */
+  function clearSearchHighlight(){
     searchMatches = [];
     searchIndex = -1;
   }
 
-  function runSearch(direction) {
+  function runSearch(direction){
     const q = $("search").value;
-    if (!q) {
+    if(!q){
       $("searchResult").textContent = "";
       clearSearchHighlight();
       return;
@@ -596,27 +1201,25 @@ textarea:focus{border-color:var(--accent)}
     const text = source.value;
     const matches = [];
     let pos = 0;
-    while (true) {
+    while(true){
       const idx = text.indexOf(q, pos);
-      if (idx === -1) break;
+      if(idx === -1) break;
       matches.push(idx);
       pos = idx + Math.max(q.length, 1);
     }
     searchMatches = matches;
 
-    if (!matches.length) {
+    if(!matches.length){
       $("searchResult").textContent = "0件";
       searchIndex = -1;
       return;
     }
 
-    if (direction === "next") {
-      if (searchIndex === -1) searchIndex = 0;
-      else searchIndex = (searchIndex + 1) % matches.length;
-    } else if (direction === "prev") {
-      if (searchIndex === -1) searchIndex = matches.length - 1;
-      else searchIndex = (searchIndex - 1 + matches.length) % matches.length;
-    } else {
+    if(direction === "next"){
+      searchIndex = searchIndex === -1 ? 0 : (searchIndex + 1) % matches.length;
+    }else if(direction === "prev"){
+      searchIndex = searchIndex === -1 ? matches.length - 1 : (searchIndex - 1 + matches.length) % matches.length;
+    }else{
       $("searchResult").textContent = `${matches.length}件`;
       searchIndex = -1;
       return;
@@ -630,35 +1233,35 @@ textarea:focus{border-color:var(--accent)}
     $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
   }
 
-  function scrollTextareaToSelection(charIndex) {
+  function scrollTextareaToSelection(charIndex){
     const ta = source;
     const text = ta.value;
     const before = text.slice(0, charIndex);
 
-    const mirror = document.createElement('div');
+    const mirror = document.createElement("div");
     const style = getComputedStyle(ta);
 
     mirror.style.font = style.font;
     mirror.style.padding = style.padding;
     mirror.style.letterSpacing = style.letterSpacing;
     mirror.style.lineHeight = style.lineHeight;
-    mirror.style.whiteSpace = 'pre-wrap';
-    mirror.style.wordBreak = 'break-all';
-    mirror.style.overflowWrap = 'anywhere';
-    mirror.style.boxSizing = 'border-box';
-    mirror.style.border = 'none';
-    mirror.style.width = ta.clientWidth + 'px';
-    mirror.style.position = 'absolute';
-    mirror.style.top = '-9999px';
-    mirror.style.left = '-9999px';
-    mirror.style.visibility = 'hidden';
+    mirror.style.whiteSpace = "pre-wrap";
+    mirror.style.wordBreak = "break-all";
+    mirror.style.overflowWrap = "anywhere";
+    mirror.style.boxSizing = "border-box";
+    mirror.style.border = "none";
+    mirror.style.width = ta.clientWidth + "px";
+    mirror.style.position = "absolute";
+    mirror.style.top = "-9999px";
+    mirror.style.left = "-9999px";
+    mirror.style.visibility = "hidden";
 
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    mirror.innerHTML = esc(before) + '<span>&#x200b;</span>' + esc(text.slice(charIndex));
+    const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    mirror.innerHTML = esc(before) + "<span>&#x200b;</span>" + esc(text.slice(charIndex));
 
     document.body.appendChild(mirror);
 
-    const span = mirror.querySelector('span');
+    const span = mirror.querySelector("span");
     const spanRect = span.getBoundingClientRect();
     const mirrorRect = mirror.getBoundingClientRect();
 
@@ -669,25 +1272,39 @@ textarea:focus{border-color:var(--accent)}
     const visibleHeight = ta.clientHeight - paddingTop - paddingBottom;
 
     ta.scrollTop = Math.max(0, relTop - visibleHeight / 2 + lineHeight / 2);
-
     document.body.removeChild(mirror);
   }
 
-  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
-  $("search").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); runSearch("next"); }
-  });
-  $("btnSearchNext").onclick = () => runSearch("next");
-  $("btnSearchPrev").onclick = () => runSearch("prev");
-
-  function openFullscreen() {
+  /* =========================================================
+     fullscreen
+  ========================================================= */
+  function openFullscreen(){
     const it = items.find(x => x.id === selectedId);
-    if (!it) { alert("表示する項目を一覧から選んでください"); return; }
+    if(!it){ alert("表示するメモを一覧から選んでください"); return; }
     fullFrame.srcdoc = it.html || "";
     $("fullscreen").classList.add("show");
     document.body.style.overflow = "hidden";
     requestAnimationFrame(resizeFullscreen);
   }
+
+  /* =========================================================
+     events
+  ========================================================= */
+  $("btnBack").onclick = goRoot;
+
+  $("btnNewFolder").onclick = () => {
+    const name = prompt("フォルダ名", "新規フォルダ");
+    if(name === null) return;
+    folders.push({ id: uid(), name: name.trim() || "新規フォルダ" });
+    persist();
+    render();
+    showToast("フォルダを作成しました");
+  };
+
+  $("btnNewNote").onclick = () => {
+    if(currentFolderId === null) return;
+    openEditor(null, true);
+  };
 
   $("btnFullscreen").onclick = openFullscreen;
   $("exit").onclick = () => {
@@ -698,7 +1315,20 @@ textarea:focus{border-color:var(--accent)}
 
   $("btnSave").onclick = saveCurrent;
   $("btnCancel").onclick = closeEditor;
-  $("btnDelete").onclick = deleteCurrent;
+
+  $("btnDelete").onclick = () => {
+    if(!editingId) return;
+    const it = items.find(x => x.id === editingId);
+    if(!it) return;
+    if(!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
+    items = items.filter(x => x.id !== editingId);
+    if(selectedId === editingId) selectedId = items.length ? items[0].id : null;
+    persist();
+    closeEditor();
+    render();
+    updatePreview();
+  };
+
   $("btnClear").onclick = () => {
     source.value = "";
     $("search").value = "";
@@ -706,35 +1336,49 @@ textarea:focus{border-color:var(--accent)}
     clearSearchHighlight();
     source.focus();
   };
+
   $("btnCopy").onclick = async () => {
-    try {
+    try{
       await navigator.clipboard.writeText(source.value);
       const btn = $("btnCopy");
       const old = btn.textContent;
       btn.textContent = "コピー済";
       setTimeout(() => btn.textContent = old, 1200);
-    } catch (e) {
+    }catch(e){
       alert("コピーに失敗しました");
     }
   };
 
-  $("editorOverlay").addEventListener("click", (e) => {
-    if (e.target === $("editorOverlay")) closeEditor();
+  $("editorOverlay").addEventListener("click", e => {
+    if(e.target === $("editorOverlay")) closeEditor();
+  });
+  $("pickerOverlay").addEventListener("click", e => {
+    if(e.target === $("pickerOverlay")) closePicker();
   });
 
-  function adjustEditorForKeyboard() {
-    if (!window.visualViewport) return;
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
+  $("search").addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); runSearch("next"); }
+  });
+  $("btnSearchNext").onclick = () => runSearch("next");
+  $("btnSearchPrev").onclick = () => runSearch("prev");
+
+  function adjustEditorForKeyboard(){
+    if(!window.visualViewport) return;
     const vv = window.visualViewport;
     const sheet = document.querySelector(".editor-sheet");
-    if ($("editorOverlay").classList.contains("show")) {
+    if($("editorOverlay").classList.contains("show")){
       sheet.style.maxHeight = (vv.height - 16) + "px";
     }
   }
   window.visualViewport?.addEventListener("resize", adjustEditorForKeyboard);
   window.visualViewport?.addEventListener("scroll", adjustEditorForKeyboard);
 
+  /* =========================================================
+     init
+  ========================================================= */
   load();
-  renderCards();
+  render();
   updatePreview();
   requestAnimationFrame(resizeAllPreviews);
 })();
