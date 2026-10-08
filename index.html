@@ -19,12 +19,17 @@
   --accent:#0a84ff;
   --danger:#ff453a;
   --ok:#30d158;
-  --mark:#ffd60a;
   --sep:#38383c;
+  --sel:#1a293a;   /* 選択行（不透明） */
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif}
-body{padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+[hidden]{display:none !important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+  overflow:hidden;
+}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  display:flex;flex-direction:column;}
 button,textarea,input{font:inherit}
 button{
   border:0;color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
@@ -35,124 +40,156 @@ button.danger{background:var(--danger)}
 button.ghost{background:transparent;border:1px solid var(--sep)}
 button:active{transform:scale(.97);opacity:.85}
 button:disabled{opacity:.4;pointer-events:none}
-.app{max-width:1100px;margin:auto}
 
-/* ============ BROWSER (Notes style) ============ */
-.browser{
+.app{flex:1;min-height:0;display:flex;width:100%}
+
+/* ================= SIDEBAR ================= */
+.sidebar{
+  flex:0 0 auto;
+  width:66px;
   background:var(--panel);
-  border-radius:18px;
-  border:1px solid #2c2c2e;
+  border-right:1px solid #2c2c2e;
+  display:flex;flex-direction:column;
+  transition:width .24s cubic-bezier(.22,.8,.24,1);
   overflow:hidden;
-  margin:12px 0 20px;
+  position:relative;z-index:20;
 }
-.browser-head{
+.sidebar.open{width:min(300px,76vw)}
+
+.side-head{
+  flex:0 0 auto;
   display:flex;align-items:center;gap:8px;
-  padding:10px 12px 0;
-  min-height:44px;
+  padding:8px 8px 6px;
 }
-.head-spacer{flex:1}
-.head-btn{
-  min-height:34px;border-radius:17px;padding:0 13px;font-size:13px;font-weight:600;
+.side-toggle{
+  width:46px;height:46px;flex:0 0 auto;border-radius:14px;padding:0;
   background:var(--panel2);
 }
-.head-btn.primary{background:var(--accent)}
-.head-btn.back{
-  background:transparent;color:var(--accent);
-  padding:0 8px 0 0;font-size:16px;min-height:34px;font-weight:500;
-}
-.browser-title{
-  padding:4px 16px 12px;
-  font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2;
-  display:flex;align-items:baseline;gap:8px;
-}
-.browser-title .count{font-size:13px;font-weight:600;color:var(--muted)}
-.list-view{padding-bottom:2px}
-.empty-msg{
-  padding:30px 20px 40px;text-align:center;color:var(--muted);
-  font-size:13.5px;line-height:1.7;
+.side-toggle svg{transition:transform .24s cubic-bezier(.22,.8,.24,1)}
+.sidebar.open .side-toggle svg{transform:rotate(180deg)}
+.side-head-title{
+  font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;
 }
 
-/* swipe row */
-.swipe{
-  position:relative;
-  overflow:hidden;
-  background:#000;
-  transition:transform .2s cubic-bezier(.22,.8,.24,1);
+.side-scroll{
+  flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:0 8px 8px;
 }
-.swipe-actions{
-  position:absolute;top:0;right:0;bottom:0;
-  display:flex;z-index:1;
+.side-scroll::-webkit-scrollbar{width:0}
+.side-empty{
+  padding:22px 10px;color:var(--muted);font-size:12.5px;line-height:1.7;text-align:center;
 }
-.swipe-actions button{
-  width:74px;min-height:100%;border-radius:0;padding:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:11px;font-weight:600;color:#fff;background:#48484a;
-}
-.swipe-actions button:active{transform:none;opacity:.75}
-.swipe-actions button svg{width:19px;height:19px}
-.swipe-actions .act-edit{background:#0a84ff}
-.swipe-actions .act-move{background:#5e5ce6}
-.swipe-actions .act-rename{background:#5e5ce6}
-.swipe-actions .act-del{background:#ff453a}
 
-.row{
+.side-foot{
+  flex:0 0 auto;padding:8px;
+  border-top:1px solid #2c2c2e;
+}
+.side-add{
+  width:100%;min-height:46px;border-radius:14px;
+  background:var(--accent);color:#fff;font-weight:700;
+  gap:6px;padding:0 10px;
+}
+.side-add .plus{font-size:19px;font-weight:500;line-height:1}
+.sidebar:not(.open) .side-add{padding:0}
+
+/* rows */
+.srow{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;min-height:54px;
+  border-radius:13px;
   position:relative;z-index:2;
-  display:flex;align-items:center;gap:12px;
-  padding:11px 14px;min-height:60px;
   background:var(--panel);
   touch-action:pan-y;
   transition:transform .24s cubic-bezier(.22,.8,.24,1),background .15s;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   cursor:pointer;
 }
-.swipe + .swipe .row::before{
-  content:"";position:absolute;left:16px;right:0;top:0;height:1px;
-  background:var(--sep);
-}
-.row.selected{background:#0a84ff20}
-.row.selected::after{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
-}
+.sidebar:not(.open) .srow{padding:8px;justify-content:center;min-height:54px}
+
 .row-icon{
-  width:30px;height:30px;flex:0 0 auto;
+  width:32px;height:32px;flex:0 0 auto;border-radius:9px;
   display:flex;align-items:center;justify-content:center;
-  color:#ffd60a;
+  color:#ffd60a;overflow:hidden;background:transparent;
 }
-.row-icon svg{width:27px;height:27px;display:block}
+.row-icon svg{width:26px;height:26px;display:block}
+.row-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.row-icon .ico-letter{
+  width:100%;height:100%;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;color:#fff;
+}
 .row-main{flex:1;min-width:0}
 .row-title{
-  font-size:15px;font-weight:600;line-height:1.25;
+  font-size:14.5px;font-weight:600;line-height:1.25;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .row-sub{
-  display:flex;gap:8px;align-items:baseline;
-  font-size:12.5px;color:var(--muted);line-height:1.3;margin-top:3px;
+  font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.row-date{flex:0 0 auto}
-.row-prev{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-apps{
+  flex:0 0 auto;display:flex;gap:3px;align-items:center;
+}
+.mini-app{
+  width:19px;height:19px;border-radius:6px;overflow:hidden;
+  background:var(--panel3);display:flex;align-items:center;justify-content:center;
+  flex:0 0 auto;
+}
+.mini-app img{width:100%;height:100%;object-fit:cover;display:block}
 .row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
-.row-chev svg{width:16px;height:16px;display:block}
+.row-chev svg{width:15px;height:15px;display:block}
 
-/* dragging */
+.sidebar:not(.open) .row-main,
+.sidebar:not(.open) .row-apps,
+.sidebar:not(.open) .row-chev{display:none}
+
+.srow.selected{background:var(--sel)}
+.srow.selected::after{
+  content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--accent);
+}
+.sidebar:not(.open) .srow.selected::after{top:10px;bottom:10px}
+
+/* swipe */
+.swipe{
+  position:relative;overflow:hidden;background:#000;border-radius:13px;
+  margin-bottom:2px;
+}
+.swipe-actions{
+  position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1;
+}
+.swipe-actions button{
+  width:72px;min-height:100%;border-radius:0;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:10.5px;font-weight:600;color:#fff;background:#48484a;
+}
+.swipe-actions button:active{transform:none;opacity:.75}
+.swipe-actions button svg{width:18px;height:18px}
+.swipe-actions .act-edit{background:#0a84ff}
+.swipe-actions .act-move{background:#5e5ce6}
+.swipe-actions .act-rename{background:#5e5ce6}
+.swipe-actions .act-del{background:#ff453a}
+.sidebar:not(.open) .swipe-actions{display:none}
+
 .swipe.dragging{overflow:visible;z-index:40;transition:none}
-.swipe.dragging .row{
-  transition:none;
-  border-radius:14px;
-  background:var(--panel2);
-  box-shadow:0 12px 34px rgba(0,0,0,.65),0 0 0 1px #4a4a4e;
+.swipe.dragging .srow{
+  transition:none;background:var(--panel2);
+  box-shadow:0 12px 34px rgba(0,0,0,.7),0 0 0 1px #4a4a4e;
   transform:scale(1.02);
 }
 
-/* drag target folders bar */
+/* drag target folder bar */
 .drag-folders{
   position:fixed;top:0;left:0;right:0;z-index:80;
-  display:none;gap:8px;
+  display:none;gap:8px;flex-wrap:nowrap;align-items:center;
   padding:calc(12px + env(safe-area-inset-top)) 12px 12px;
-  background:rgba(28,28,30,.94);
+  background:rgba(28,28,30,.96);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--sep);
-  overflow-x:auto;white-space:nowrap;
+  overflow-x:auto;overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
+  scroll-behavior:auto;
 }
 .drag-folders.show{display:flex}
 .drag-folders::-webkit-scrollbar{height:0}
@@ -161,6 +198,7 @@ button:disabled{opacity:.4;pointer-events:none}
   background:var(--panel3);color:var(--text);
   display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;
   transition:transform .12s,background .12s;
+  white-space:nowrap;
 }
 .chip.current{background:#3a3a3c;color:var(--muted)}
 .chip.over{background:var(--accent);color:#fff;transform:scale(1.08)}
@@ -169,28 +207,50 @@ button:disabled{opacity:.4;pointer-events:none}
 .toast{
   position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));
   transform:translate(-50%,20px);
-  background:rgba(60,60,65,.96);
-  color:#fff;padding:9px 16px;border-radius:20px;
-  font-size:13px;font-weight:600;
-  z-index:120;opacity:0;pointer-events:none;
-  transition:opacity .2s,transform .2s;
-  white-space:nowrap;
+  background:rgba(60,60,65,.96);color:#fff;padding:9px 16px;border-radius:20px;
+  font-size:13px;font-weight:600;z-index:120;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;white-space:nowrap;
   box-shadow:0 6px 24px rgba(0,0,0,.5);
 }
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* ============ DEVICES ============ */
-.devices{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start;padding:4px 0 24px}
-.device-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+/* ================= MAIN / PREVIEW ================= */
+.main{
+  flex:1;min-width:0;display:flex;flex-direction:column;
+}
+.toolbar{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px 6px;
+}
+.dev-btn{
+  min-height:36px;border-radius:18px;padding:0 16px;font-size:13px;font-weight:700;
+  background:var(--panel2);color:var(--muted);
+}
+.dev-btn.on{background:var(--accent);color:#fff}
+.toolbar .spacer{flex:1}
+.tool-btn{
+  min-height:36px;border-radius:18px;padding:0 14px;font-size:13px;font-weight:700;
+  background:var(--panel2);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.tool-btn svg{width:16px;height:16px}
+
+.stage{
+  flex:1;min-height:0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  padding:4px 10px 14px;
+}
 
 .phone{
   position:relative;
-  width:min(300px,86vw);
-  aspect-ratio:402/874;
-  background:#000;border:6px solid #202023;border-radius:52px;overflow:hidden;
+  width:300px;height:652px;
+  background:#000;border:6px solid #202023;border-radius:48px;overflow:hidden;
   box-shadow:0 14px 40px #000,0 0 0 1px #444;
+  flex:0 0 auto;
 }
-.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:46px}
+.phone-viewport{position:absolute;inset:0;overflow:hidden;border-radius:42px}
 .phone-viewport iframe{
   position:absolute;top:50%;left:50%;
   width:402px;height:874px;border:0;background:#000;color-scheme:dark;
@@ -211,12 +271,12 @@ button:disabled{opacity:.4;pointer-events:none}
 
 .ipad{
   position:relative;
-  width:min(460px,92vw);
-  aspect-ratio:1080/810;
+  width:460px;height:345px;
   background:#000;border:10px solid #2a2a2e;border-radius:22px;overflow:hidden;
   box-shadow:0 14px 40px #000,0 0 0 1px #444;
+  flex:0 0 auto;
 }
-.ipad-viewport{position:absolute;inset:0;overflow:hidden}
+.ipad-viewport{position:absolute;inset:0;overflow:hidden;border-radius:14px}
 .ipad-viewport iframe{
   position:absolute;top:50%;left:50%;
   width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
@@ -224,17 +284,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin-left:-540px;margin-top:-405px;
 }
 
-.fs-icon-btn{
-  position:absolute;
-  left:calc(100% + 8px);
-  top:50%;
-  transform:translateY(-50%);
-  width:40px;height:40px;border-radius:12px;padding:0;
-  background:var(--panel2);border:1px solid var(--sep);color:var(--text);
-}
-.fs-icon-btn:active{transform:translateY(-50%) scale(.97);opacity:.85}
-
-/* ============ EDITOR SHEET ============ */
+/* ================= EDITOR SHEET ================= */
 .editor-overlay{
   position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);
   display:none;align-items:flex-end;justify-content:center;
@@ -247,39 +297,44 @@ button:disabled{opacity:.4;pointer-events:none}
   box-shadow:0 -10px 40px #000;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
-  -webkit-user-select:none;user-select:none;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
+  display:flex;flex-direction:column;overflow:hidden;
 }
 .editor-scroll{
-  flex:1;
-  overflow:auto;
-  min-height:0;
-  padding:14px 14px 0;
+  flex:1;overflow:auto;min-height:0;padding:14px 14px 0;
 }
 .editor-search-wrap{
-  flex-shrink:0;
-  background:var(--bg);
-  border-top:1px solid var(--sep);
+  flex-shrink:0;background:var(--bg);border-top:1px solid var(--sep);
   padding:8px 14px calc(8px + env(safe-area-inset-bottom));
 }
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.editor-actions button{flex:1;min-width:80px;white-space:nowrap}
+.editor-actions button{flex:1;min-width:70px;white-space:nowrap;font-size:13.5px}
 
 .editor-title-row{
   display:flex;align-items:center;gap:8px;margin-bottom:10px;
 }
+.icon-preview{
+  width:46px;height:46px;flex:0 0 auto;border-radius:13px;
+  background:#111113;border:1px solid var(--sep);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.icon-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.icon-preview .ico-letter{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-size:19px;font-weight:700;color:#fff;
+}
+.icon-preview .ico-none{font-size:19px;color:var(--muted)}
+
 .editor-title-row .name-input{
-  flex:1;min-width:120px;height:40px;border:1px solid var(--sep);border-radius:12px;
+  flex:1;min-width:80px;height:46px;border:1px solid var(--sep);border-radius:13px;
   background:#111113;color:#fff;padding:0 12px;outline:none;
   -webkit-user-select:text;user-select:text;
 }
 .editor-title-row .name-input:focus{border-color:var(--accent)}
 .editor-title-row .btn-delete{
-  min-height:40px;padding:0 14px;font-size:13px;
+  min-height:46px;padding:0 14px;font-size:13px;flex:0 0 auto;
 }
 
 textarea{
@@ -292,24 +347,24 @@ textarea{
 textarea:focus{border-color:var(--accent)}
 
 .search-section{margin-top:0;padding-top:0;border-top:none}
-.search-box{position:relative;display:flex;align-items:center;gap:6px}
-.search-box input{
-  flex:1;width:100%;height:40px;border:1px solid var(--sep);border-radius:12px;
-  background:#111113;color:#fff;padding:0 96px 0 11px;outline:none;
+.search-box{display:flex;align-items:center;gap:6px}
+.search-field{position:relative;flex:1;min-width:0}
+.search-field input{
+  width:100%;height:42px;border:1px solid var(--sep);border-radius:12px;
+  background:#111113;color:#fff;padding:0 62px 0 11px;outline:none;
   -webkit-user-select:text;user-select:text;
   -webkit-appearance:none;appearance:none;
-  caret-color:#f5f5f7;
-  font-size:16px;
+  caret-color:#f5f5f7;font-size:16px;
 }
-.search-box input:focus{border-color:var(--accent)}
-.search-box .search-count{
-  position:absolute;right:104px;top:50%;transform:translateY(-50%);
-  font-size:12px;color:var(--muted);pointer-events:none;
+.search-field input:focus{border-color:var(--accent)}
+.search-count{
+  position:absolute;right:9px;top:50%;transform:translateY(-50%);
+  font-size:11.5px;color:var(--muted);pointer-events:none;white-space:nowrap;
 }
-.search-box .search-nav{display:flex;gap:4px}
-.search-box button{min-height:36px;min-width:40px;padding:0 8px;font-size:16px}
+.search-box .nav-btn{min-height:42px;min-width:44px;padding:0 8px;font-size:15px}
+.search-box #btnSave{min-height:42px;min-width:66px;font-size:14px;font-weight:700}
 
-/* ============ PICKER SHEET ============ */
+/* ================= FOLDER PICKER ================= */
 .picker-sheet{
   width:100%;max-width:520px;max-height:72vh;
   background:var(--bg);border-radius:20px 20px 0 0;
@@ -332,7 +387,7 @@ textarea:focus{border-color:var(--accent)}
 .picker-item.current{border-color:var(--accent);background:#0a84ff18}
 .picker-item:active{background:var(--panel2)}
 
-/* ============ FULLSCREEN ============ */
+/* ================= FULLSCREEN ================= */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
 .fullscreen.show{display:block}
 .fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
@@ -351,52 +406,69 @@ textarea:focus{border-color:var(--accent)}
   width:40px;height:40px;padding:0;border-radius:50%;
   background:rgba(0,0,0,.40);color:#fff;font-size:19px;
 }
-
-@media(min-width:800px){
-  .phone{width:min(330px,32vw)}
-  .ipad{width:min(520px,46vw)}
-}
 </style>
 </head>
 <body>
+
 <div class="app">
 
-  <!-- ============ NOTES STYLE BROWSER ============ -->
-  <div class="browser">
-    <div class="browser-head">
-      <button id="btnBack" class="head-btn back" style="display:none">‹ フォルダ</button>
-      <div class="head-spacer"></div>
-      <button id="btnNewFolder" class="head-btn">＋ フォルダ</button>
-      <button id="btnNewNote" class="head-btn primary" style="display:none">＋ メモ</button>
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <button id="btnSideToggle" class="side-toggle" aria-label="メニュー開閉">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+             stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 6l6 6-6 6"/>
+        </svg>
+      </button>
+      <div class="side-head-title hide-closed">メモ</div>
     </div>
-    <div class="browser-title" id="browserTitle">フォルダ</div>
-    <div class="list-view" id="listView"></div>
-  </div>
 
-  <!-- ============ DEVICE PREVIEWS ============ -->
-  <div class="devices">
-    <div class="device-wrap">
+    <div class="side-scroll">
+      <div class="side-list" id="sideList"></div>
+    </div>
+
+    <div class="side-foot">
+      <button id="btnNew" class="side-add">
+        <span class="plus">＋</span>
+        <span class="hide-closed" id="btnNewLabel">フォルダ</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <div class="toolbar">
+      <button class="dev-btn on" data-dev="phone">iPhone</button>
+      <button class="dev-btn" data-dev="ipad">iPad</button>
+      <div class="spacer"></div>
+      <button id="btnFullscreen" class="tool-btn" aria-label="拡大表示">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        拡大
+      </button>
+    </div>
+
+    <div class="stage" id="stage">
       <div class="phone" id="phone">
         <div class="island"></div>
         <div class="phone-viewport">
-          <iframe id="framePhone" title="iPhone preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          <iframe id="framePhone" title="iPhone preview"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
         </div>
         <div class="homebar"></div>
       </div>
-      <button id="btnFullscreen" class="fs-icon-btn" aria-label="全画面プレビュー">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
-      </button>
-    </div>
-    <div class="device-wrap">
-      <div class="ipad" id="ipad">
+
+      <div class="ipad" id="ipad" hidden>
         <div class="ipad-viewport">
-          <iframe id="frameIpad" title="iPad preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+          <iframe id="frameIpad" title="iPad preview"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
 </div>
 
@@ -406,7 +478,7 @@ textarea:focus{border-color:var(--accent)}
 <!-- toast -->
 <div id="toast" class="toast"></div>
 
-<!-- EDITOR SHEET -->
+<!-- ================= EDITOR SHEET ================= -->
 <div id="editorOverlay" class="editor-overlay">
   <div class="editor-sheet">
     <div class="editor-scroll">
@@ -416,33 +488,39 @@ textarea:focus{border-color:var(--accent)}
         <button id="btnCancel" class="ghost">キャンセル</button>
         <button id="btnClear" class="ghost">クリア</button>
         <button id="btnCopy" class="ghost">コピー</button>
-        <button id="btnSave" class="primary">保存</button>
+        <button id="btnPickIcon" class="ghost">アイコン</button>
       </div>
 
       <div class="editor-title-row">
-        <input id="nameInput" class="name-input" type="text" placeholder="名前を入力" maxlength="80" autocomplete="off">
+        <div class="icon-preview" id="iconPreview" title="タップしてアイコンを選択"></div>
+        <input id="nameInput" class="name-input" type="text" placeholder="名前を入力"
+               maxlength="80" autocomplete="off">
         <button id="btnDelete" class="btn-delete danger">削除</button>
       </div>
 
       <div class="editor-textwrap">
-        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="<!doctype html> ..."></textarea>
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off"
+                  autocorrect="off" placeholder="<!doctype html> ..."></textarea>
       </div>
     </div>
 
     <div class="editor-search-wrap">
       <div class="search-section">
         <div class="search-box">
-          <input id="search" type="text" placeholder="検索" autocomplete="off">
-          <span id="searchResult" class="search-count"></span>
-          <div class="search-nav">
-            <button id="btnSearchPrev" class="ghost">▲</button>
-            <button id="btnSearchNext" class="ghost">▼</button>
+          <div class="search-field">
+            <input id="search" type="text" placeholder="検索" autocomplete="off">
+            <span id="searchResult" class="search-count"></span>
           </div>
+          <button id="btnSearchPrev" class="ghost nav-btn">▲</button>
+          <button id="btnSearchNext" class="ghost nav-btn">▼</button>
+          <button id="btnSave" class="primary">保存</button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<input type="file" id="iconFile" accept="image/*" hidden>
 
 <!-- FOLDER PICKER -->
 <div id="pickerOverlay" class="editor-overlay">
@@ -457,7 +535,8 @@ textarea:focus{border-color:var(--accent)}
 <div id="fullscreen" class="fullscreen">
   <button class="exit" id="exit">×</button>
   <div class="fullscreen-stage" id="fsStage">
-    <iframe id="fullFrame" title="Full screen preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+    <iframe id="fullFrame" title="Full screen preview"
+      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
   </div>
 </div>
 
@@ -465,8 +544,7 @@ textarea:focus{border-color:var(--accent)}
 (() => {
   const $ = id => document.getElementById(id);
 
-  /* ---- storage keys ----
-     NOTES_KEY は旧バージョンと同一キーをそのまま使う（folderId を追加しただけ） */
+  /* ---- storage keys ---- */
   const NOTES_KEY   = "pwa-previewer-items-v2";
   const FOLDERS_KEY = "pwa-previewer-folders-v1";
   const OLD_KEY     = "iphone17pro-pwa-preview-html-v1";
@@ -475,11 +553,13 @@ textarea:focus{border-color:var(--accent)}
   const PHONE_W = 402, PHONE_H = 874;
   const IPAD_W  = 1080, IPAD_H = 810;
 
-  let items = [];        // {id, name, html, updated, folderId}
-  let folders = [];      // {id, name}
+  let items = [];
+  let folders = [];
   let selectedId = null;
   let editingId = null;
-  let currentFolderId = null;   // null = フォルダ一覧（ルート）
+  let currentFolderId = null;
+  let sidebarOpen = window.innerWidth >= 760;
+  let currentDevice = "phone";
 
   const source     = $("source");
   const nameInput  = $("nameInput");
@@ -491,10 +571,10 @@ textarea:focus{border-color:var(--accent)}
 
   const ICON = {
     folder: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.6A2.6 2.6 0 0 1 5.6 4h3.1c.55 0 1.07.24 1.43.66l1.02 1.2c.2.23.48.36.79.36h6.46A2.6 2.6 0 0 1 21 8.82V17.4A2.6 2.6 0 0 1 18.4 20H5.6A2.6 2.6 0 0 1 3 17.4V6.6z"/></svg>`,
-    chev: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`,
-    edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
-    move: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M12.5 6l6 6-6 6"/></svg>`,
-    trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>`
+    back:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>`,
+    edit:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
+    move:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M12.5 6l6 6-6 6"/></svg>`,
+    trash:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>`
   };
 
   /* =========================================================
@@ -518,16 +598,42 @@ textarea:focus{border-color:var(--accent)}
     return `${m}/${day}（${w}）${h}:${min}`;
   }
 
-  function stripHtml(s){
-    return String(s || "")
-      .replace(/<style[\s\S]*?<\/style>/gi," ")
-      .replace(/<script[\s\S]*?<\/script>/gi," ")
-      .replace(/<!--[\s\S]*?-->/g," ")
-      .replace(/<[^>]*>/g," ")
-      .replace(/&nbsp;/g," ")
-      .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&")
-      .replace(/\s+/g," ")
-      .trim();
+  function byteLength(s){
+    let n = 0;
+    for(let i = 0; i < s.length; i++){
+      const c = s.charCodeAt(i);
+      if(c < 0x80) n += 1;
+      else if(c < 0x800) n += 2;
+      else if(c >= 0xD800 && c <= 0xDBFF){ n += 4; i++; }
+      else n += 3;
+    }
+    return n;
+  }
+
+  function formatBytes(n){
+    if(n < 1024) return n + " B";
+    if(n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1024 / 1024).toFixed(2) + " MB";
+  }
+
+  function colorFor(s){
+    let h = 0;
+    for(let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+    return `hsl(${h} 62% 42%)`;
+  }
+
+  function validIcon(v){
+    return typeof v === "string" && /^data:image\//.test(v);
+  }
+
+  /* アイコンの中身（img or 文字） */
+  function iconInner(it){
+    if(validIcon(it.icon)){
+      return `<img src="${it.icon}" alt="">`;
+    }
+    const name = (it.name || "無").trim();
+    const ch = name.charAt(0) || "無";
+    return `<span class="ico-letter" style="background:${colorFor(name)}">${escapeHtml(ch)}</span>`;
   }
 
   /* =========================================================
@@ -537,11 +643,14 @@ textarea:focus{border-color:var(--accent)}
     try{
       localStorage.setItem(NOTES_KEY, JSON.stringify(items));
       localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
-    }catch(e){ console.warn("persist failed", e); }
+    }catch(e){
+      console.warn("persist failed", e);
+      showToast("保存容量が不足しています");
+    }
   }
 
   function load(){
-    /* --- folders --- */
+    /* folders */
     folders = [];
     try{
       const rawF = localStorage.getItem(FOLDERS_KEY);
@@ -552,7 +661,7 @@ textarea:focus{border-color:var(--accent)}
     }catch(e){ folders = []; }
     folders.forEach(f => { if(typeof f.name !== "string" || !f.name) f.name = "無題のフォルダ"; });
 
-    /* --- notes (旧キーもそのまま読める) --- */
+    /* notes（旧キーもそのまま読める） */
     items = [];
     try{
       const raw = localStorage.getItem(NOTES_KEY);
@@ -569,12 +678,10 @@ textarea:focus{border-color:var(--accent)}
     if(!Array.isArray(items)) items = [];
     items = items.filter(it => it && typeof it === "object");
 
-    /* --- フォルダが無ければ作成 --- */
     if(folders.length === 0){
       folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
     }
 
-    /* --- 既存アイテムの補正（folderId 未設定は先頭フォルダへ） --- */
     const fids = new Set(folders.map(f => f.id));
     items.forEach(it => {
       if(!it.id) it.id = uid();
@@ -582,6 +689,7 @@ textarea:focus{border-color:var(--accent)}
       if(typeof it.html !== "string") it.html = "";
       if(typeof it.updated !== "number") it.updated = Date.now();
       if(!it.folderId || !fids.has(it.folderId)) it.folderId = folders[0].id;
+      if(it.icon !== undefined && !validIcon(it.icon)) delete it.icon;
     });
 
     selectedId = items.length ? items[0].id : null;
@@ -605,18 +713,52 @@ textarea:focus{border-color:var(--accent)}
     fitIframe(frameIpad,  document.querySelector(".ipad-viewport"),  IPAD_W,  IPAD_H);
   }
 
+  function fitDevices(){
+    const stage = $("stage");
+    const sw = Math.max(60, stage.clientWidth - 20);
+    const sh = Math.max(60, stage.clientHeight - 20);
+
+    const phone = $("phone");
+    const ipad  = $("ipad");
+
+    if(!phone.hidden){
+      const r = PHONE_W / PHONE_H;
+      let h = sh, w = h * r;
+      if(w > sw){ w = sw; h = w / r; }
+      phone.style.width  = Math.round(w) + "px";
+      phone.style.height = Math.round(h) + "px";
+      const rad = Math.round(w * 0.135);
+      phone.style.borderRadius = rad + "px";
+      phone.querySelector(".phone-viewport").style.borderRadius = Math.max(0, rad - 7) + "px";
+    }
+    if(!ipad.hidden){
+      const r = IPAD_W / IPAD_H;
+      let h = sh, w = h * r;
+      if(w > sw){ w = sw; h = w / r; }
+      ipad.style.width  = Math.round(w) + "px";
+      ipad.style.height = Math.round(h) + "px";
+      const rad = Math.round(Math.min(w, h) * 0.07);
+      ipad.style.borderRadius = rad + "px";
+      ipad.querySelector(".ipad-viewport").style.borderRadius = Math.max(0, rad - 8) + "px";
+    }
+  }
+
   function resizeFullscreen(){
     if(!$("fullscreen").classList.contains("show")) return;
     const stage = $("fsStage");
     const dW = PHONE_W, dH = PHONE_H;
     const scale = Math.min(stage.clientWidth / dW, stage.clientHeight / dH);
-    fullFrame.style.width = dW + "px";
+    fullFrame.style.width  = dW + "px";
     fullFrame.style.height = dH + "px";
     fullFrame.style.transform = `scale(${scale})`;
     fullFrame.style.transformOrigin = "center center";
   }
 
-  window.addEventListener("resize", () => { resizeAllPreviews(); resizeFullscreen(); });
+  window.addEventListener("resize", () => {
+    fitDevices();
+    resizeAllPreviews();
+    resizeFullscreen();
+  });
 
   function clearPreviews(){
     framePhone.srcdoc = "";
@@ -645,26 +787,56 @@ textarea:focus{border-color:var(--accent)}
   }
 
   /* =========================================================
-     render
+     render sidebar
   ========================================================= */
   function render(){
-    renderHead();
-    renderList();
+    const list = $("sideList");
+    const isRoot = currentFolderId === null;
+
+    $("btnNewLabel").textContent = isRoot ? "フォルダ" : "メモ";
+
+    let html = "";
+
+    if(!isRoot){
+      html += `
+        <div class="srow" id="rowBack">
+          <div class="row-icon" style="color:var(--accent)">${ICON.back}</div>
+          <div class="row-main"><div class="row-title">フォルダ一覧</div></div>
+        </div>`;
+    }
+
+    if(isRoot){
+      if(folders.length === 0){
+        html += `<div class="side-empty">フォルダがありません</div>`;
+      }else{
+        html += folders.map((f,i) => folderRowHtml(f,i)).join("");
+      }
+    }else{
+      const listNotes = items.filter(x => x.folderId === currentFolderId);
+      if(listNotes.length === 0){
+        html += `<div class="side-empty">メモがありません<br>左下の「＋ メモ」から追加</div>`;
+      }else{
+        html += listNotes.map((it,i) => noteRowHtml(it,i)).join("");
+      }
+    }
+
+    list.innerHTML = html;
+
+    const back = $("rowBack");
+    if(back) back.onclick = goRoot;
+
+    list.querySelectorAll(".swipe").forEach(attachRow);
   }
 
-  function renderHead(){
-    const isRoot = currentFolderId === null;
-    $("btnBack").style.display    = isRoot ? "none" : "inline-flex";
-    $("btnNewNote").style.display = isRoot ? "none" : "inline-flex";
-    if(isRoot){
-      $("browserTitle").innerHTML =
-        `フォルダ<span class="count">${folders.length}</span>`;
-    }else{
-      const f = folders.find(x => x.id === currentFolderId);
-      const n = items.filter(x => x.folderId === currentFolderId).length;
-      $("browserTitle").innerHTML =
-        `${escapeHtml(f ? f.name : "フォルダ")}<span class="count">${n}件</span>`;
-    }
+  function miniIconsHtml(folderId){
+    const list = items.filter(x => x.folderId === folderId).slice(0, 4);
+    if(!list.length) return "";
+    return `<div class="row-apps">${list.map(it => {
+      if(validIcon(it.icon)){
+        return `<span class="mini-app"><img src="${it.icon}" alt=""></span>`;
+      }
+      return `<span class="mini-app" style="background:${colorFor(it.name || "")}"></span>`;
+    }).join("")}</div>`;
   }
 
   function folderRowHtml(f, index){
@@ -675,20 +847,21 @@ textarea:focus{border-color:var(--accent)}
         <button class="act-rename" data-act="rename">${ICON.edit}<span>名称</span></button>
         <button class="act-del"    data-act="del">${ICON.trash}<span>削除</span></button>
       </div>
-      <div class="row">
+      <div class="srow">
         <div class="row-icon">${ICON.folder}</div>
         <div class="row-main">
           <div class="row-title">${escapeHtml(f.name)}</div>
           <div class="row-sub">${n}件</div>
         </div>
-        <div class="row-chev">${ICON.chev}</div>
+        ${miniIconsHtml(f.id)}
       </div>
     </div>`;
   }
 
   function noteRowHtml(it, index){
     const sel = it.id === selectedId;
-    const preview = stripHtml(it.html).slice(0, 90);
+    const html = it.html || "";
+    const sub = `${html.length.toLocaleString()}字 · ${formatBytes(byteLength(html))}`;
     return `
     <div class="swipe" data-type="note" data-id="${it.id}" data-index="${index}">
       <div class="swipe-actions">
@@ -696,39 +869,14 @@ textarea:focus{border-color:var(--accent)}
         <button class="act-move" data-act="move">${ICON.move}<span>移動</span></button>
         <button class="act-del"  data-act="del">${ICON.trash}<span>削除</span></button>
       </div>
-      <div class="row${sel ? " selected" : ""}">
+      <div class="srow${sel ? " selected" : ""}">
+        <div class="row-icon">${iconInner(it)}</div>
         <div class="row-main">
           <div class="row-title">${escapeHtml(it.name || "無題")}</div>
-          <div class="row-sub">
-            <span class="row-date">${formatDate(it.updated)}</span>
-            <span class="row-prev">${escapeHtml(preview)}</span>
-          </div>
+          <div class="row-sub">${formatDate(it.updated)} ・ ${sub}</div>
         </div>
       </div>
     </div>`;
-  }
-
-  function renderList(){
-    const view = $("listView");
-    let html = "";
-
-    if(currentFolderId === null){
-      if(folders.length === 0){
-        html = `<div class="empty-msg">フォルダがありません</div>`;
-      }else{
-        html = folders.map((f,i) => folderRowHtml(f,i)).join("");
-      }
-    }else{
-      const list = items.filter(x => x.folderId === currentFolderId);
-      if(list.length === 0){
-        html = `<div class="empty-msg">メモがありません。<br>右上の「＋ メモ」から追加できます。</div>`;
-      }else{
-        html = list.map((it,i) => noteRowHtml(it,i)).join("");
-      }
-    }
-
-    view.innerHTML = html;
-    view.querySelectorAll(".swipe").forEach(attachRow);
   }
 
   /* =========================================================
@@ -738,18 +886,20 @@ textarea:focus{border-color:var(--accent)}
   let dragEndedAt = 0;
   let dragCtx = null;
   let chipEls = [];
+  let chipScrollDir = 0;
+  let chipRAF = null;
 
   function closeSwipe(wrap){
     wrap.classList.remove("open");
-    const row = wrap.querySelector(".row");
+    const row = wrap.querySelector(".srow");
     if(row){ row.style.transition = ""; row.style.transform = ""; }
   }
   function closeAllSwipes(){
-    $("listView").querySelectorAll(".swipe.open").forEach(closeSwipe);
+    $("sideList").querySelectorAll(".swipe.open").forEach(closeSwipe);
   }
 
   function attachRow(wrap){
-    const row     = wrap.querySelector(".row");
+    const row     = wrap.querySelector(".srow");
     const actions = wrap.querySelector(".swipe-actions");
     if(!row || !actions) return;
 
@@ -767,7 +917,7 @@ textarea:focus{border-color:var(--accent)}
     });
 
     let pid = null, sx = 0, sy = 0, baseX = 0, curX = 0, maxOpen = 0;
-    let mode = null;          // null | 'h' | 'v' | 'drag'
+    let mode = null;
     let pressTimer = null;
     let longPressed = false;
 
@@ -781,7 +931,7 @@ textarea:focus{border-color:var(--accent)}
       sx = e.clientX; sy = e.clientY;
       mode = null;
       longPressed = false;
-      maxOpen = actions.offsetWidth || 148;
+      maxOpen = actions.offsetWidth || 0;
       baseX = wrap.classList.contains("open") ? -maxOpen : 0;
       curX = baseX;
       row.style.transition = "none";
@@ -809,7 +959,7 @@ textarea:focus{border-color:var(--accent)}
         return;
       }
       if(mode === null){
-        if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
+        if(maxOpen > 0 && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
           clearPress();
           mode = "h";
           try{ row.setPointerCapture(pid); }catch(_){}
@@ -833,7 +983,7 @@ textarea:focus{border-color:var(--accent)}
       if(e && e.pointerId !== undefined && e.pointerId !== pid) return;
 
       clearPress();
-      const wasMode  = mode;
+      const wasMode = mode;
       const releaseId = pid;
       pid = null;
       row.style.transition = "";
@@ -875,14 +1025,15 @@ textarea:focus{border-color:var(--accent)}
 
   /* ---------- drag ---------- */
   function beginDrag(wrap, row, type, index, startY){
-    const wraps = [...$("listView").querySelectorAll(".swipe")];
-    const rowH  = wrap.offsetHeight || 60;
+    const wraps = [...$("sideList").querySelectorAll(".swipe")];
+    const rowH  = wrap.offsetHeight || 56;
 
     dragActive = true;
     dragCtx = {
       wrap, row, type, index,
       from: index, to: index, startY,
-      wraps, rowH, moved: false, targetFolder: null
+      wraps, rowH, moved: false, targetFolder: null,
+      px: 0, py: 0
     };
     wrap.classList.add("dragging");
     if(type === "note") buildDragFolders();
@@ -891,6 +1042,8 @@ textarea:focus{border-color:var(--accent)}
   function updateDrag(x, y){
     const c = dragCtx;
     if(!c) return;
+    c.px = x; c.py = y;
+
     const dy = y - c.startY;
     if(Math.abs(dy) > 4) c.moved = true;
 
@@ -906,6 +1059,7 @@ textarea:focus{border-color:var(--accent)}
     });
 
     if(c.type === "note"){
+      updateChipAutoScroll(x, y);
       const hit = chipAt(x, y);
       c.targetFolder = hit ? hit.id : null;
       updateChipHighlight(c.targetFolder);
@@ -923,6 +1077,7 @@ textarea:focus{border-color:var(--accent)}
     c.wrap.style.transform = "";
     c.wraps.forEach(w => { w.style.transform = ""; });
 
+    stopChipAutoScroll();
     if(c.type === "note") hideDragFolders();
 
     if(!c.moved) return;
@@ -967,12 +1122,22 @@ textarea:focus{border-color:var(--accent)}
       return `<div class="chip${cur ? " current" : ""}" data-folder="${f.id}">${escapeHtml(f.name)}</div>`;
     }).join("");
     bar.classList.add("show");
+    bar.scrollLeft = 0;
+
     requestAnimationFrame(() => {
       chipEls = [...bar.querySelectorAll(".chip")].map(el => ({
         id: el.dataset.folder,
-        el,
-        rect: el.getBoundingClientRect()
+        el
       }));
+      // 選択中のフォルダが見える位置へ
+      const cur = chipEls.find(c => c.id === currentFolderId);
+      if(cur){
+        const r = cur.el.getBoundingClientRect();
+        const br = bar.getBoundingClientRect();
+        if(r.left < br.left || r.right > br.right){
+          bar.scrollLeft += (r.left - br.left) - 12;
+        }
+      }
     });
   }
 
@@ -981,12 +1146,15 @@ textarea:focus{border-color:var(--accent)}
     bar.classList.remove("show");
     bar.innerHTML = "";
     chipEls = [];
+    stopChipAutoScroll();
   }
 
   function chipAt(x, y){
     for(const c of chipEls){
-      const r = c.rect;
-      if(x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 30 && y <= r.bottom + 24) return c;
+      const r = c.el.getBoundingClientRect();
+      if(x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 34 && y <= r.bottom + 26){
+        return c;
+      }
     }
     return null;
   }
@@ -995,7 +1163,48 @@ textarea:focus{border-color:var(--accent)}
     chipEls.forEach(c => c.el.classList.toggle("over", !!id && c.id === id));
   }
 
-  /* drag 中はスクロールを止める */
+  /* フォルダバーの左右自動スクロール */
+  function updateChipAutoScroll(x, y){
+    const bar = $("dragFolders");
+    if(!bar.classList.contains("show")) return;
+    const r = bar.getBoundingClientRect();
+    if(y < r.top - 40 || y > r.bottom + 60){
+      chipScrollDir = 0;
+      return;
+    }
+    const edge = 80;
+    if(x < r.left + edge) chipScrollDir = -1;
+    else if(x > r.right - edge) chipScrollDir = 1;
+    else chipScrollDir = 0;
+
+    if(chipScrollDir !== 0) startChipAutoScroll();
+  }
+
+  function startChipAutoScroll(){
+    if(chipRAF) return;
+    const step = () => {
+      if(!dragActive){ chipRAF = null; return; }
+      const bar = $("dragFolders");
+      if(chipScrollDir !== 0 && bar.classList.contains("show")){
+        const before = bar.scrollLeft;
+        bar.scrollLeft += chipScrollDir * 9;
+        if(bar.scrollLeft !== before && dragCtx){
+          const hit = chipAt(dragCtx.px, dragCtx.py);
+          dragCtx.targetFolder = hit ? hit.id : null;
+          updateChipHighlight(dragCtx.targetFolder);
+        }
+      }
+      chipRAF = requestAnimationFrame(step);
+    };
+    chipRAF = requestAnimationFrame(step);
+  }
+
+  function stopChipAutoScroll(){
+    chipScrollDir = 0;
+    if(chipRAF){ cancelAnimationFrame(chipRAF); chipRAF = null; }
+  }
+
+  /* drag 中はページスクロールを止める */
   document.addEventListener("touchmove", e => {
     if(dragActive && e.cancelable) e.preventDefault();
   }, { passive: false });
@@ -1019,7 +1228,6 @@ textarea:focus{border-color:var(--accent)}
     selectedId = id;
     updatePreview();
     render();
-    showToast("プレビューに表示中");
   }
 
   function handleAction(type, id, act){
@@ -1120,12 +1328,10 @@ textarea:focus{border-color:var(--accent)}
     });
 
     $("pickerOverlay").classList.add("show");
-    document.body.style.overflow = "hidden";
   }
 
   function closePicker(){
     $("pickerOverlay").classList.remove("show");
-    document.body.style.overflow = "";
   }
 
   /* =========================================================
@@ -1133,30 +1339,46 @@ textarea:focus{border-color:var(--accent)}
   ========================================================= */
   let searchMatches = [];
   let searchIndex = -1;
+  let editingIcon = null;
+
+  function renderIconPreview(){
+    const box = $("iconPreview");
+    if(validIcon(editingIcon)){
+      box.innerHTML = `<img src="${editingIcon}" alt="">`;
+    }else{
+      const name = (nameInput.value || "").trim();
+      if(name){
+        box.innerHTML = `<span class="ico-letter" style="background:${colorFor(name)}">${escapeHtml(name.charAt(0))}</span>`;
+      }else{
+        box.innerHTML = `<span class="ico-none">＋</span>`;
+      }
+    }
+  }
 
   function openEditor(id, isNew){
     editingId = isNew ? null : id;
     if(isNew){
       nameInput.value = "";
       source.value = "";
+      editingIcon = null;
     }else{
       const it = items.find(x => x.id === id);
       nameInput.value = it ? (it.name || "") : "";
       source.value   = it ? (it.html || "") : "";
+      editingIcon = it && validIcon(it.icon) ? it.icon : null;
     }
+    renderIconPreview();
     $("btnDelete").style.display = isNew ? "none" : "flex";
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
     $("editorOverlay").classList.add("show");
-    document.body.style.overflow = "hidden";
     adjustEditorForKeyboard();
     setTimeout(() => { try{ nameInput.focus(); }catch(_){} }, 60);
   }
 
   function closeEditor(){
     $("editorOverlay").classList.remove("show");
-    document.body.style.overflow = "";
     document.querySelector(".editor-sheet").style.maxHeight = "";
   }
 
@@ -1166,11 +1388,18 @@ textarea:focus{border-color:var(--accent)}
 
     if(editingId){
       const it = items.find(x => x.id === editingId);
-      if(it){ it.name = name; it.html = html; it.updated = Date.now(); }
+      if(it){
+        it.name = name;
+        it.html = html;
+        it.updated = Date.now();
+        if(validIcon(editingIcon)) it.icon = editingIcon;
+        else delete it.icon;
+      }
       selectedId = editingId;
     }else{
       const fid = currentFolderId || (folders[0] && folders[0].id);
       const note = { id: uid(), name, html, updated: Date.now(), folderId: fid };
+      if(validIcon(editingIcon)) note.icon = editingIcon;
       const idx = items.findIndex(x => x.folderId === fid);
       if(idx === -1) items.push(note);
       else items.splice(idx, 0, note);
@@ -1181,7 +1410,65 @@ textarea:focus{border-color:var(--accent)}
     closeEditor();
     render();
     updatePreview();
+    showToast("保存しました");
   }
+
+  /* ---------- icon pick ---------- */
+  function readImageFile(file, maxSize){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+          if(!w || !h){ reject(new Error("サイズ不明")); return; }
+          const scale = Math.min(1, maxSize / Math.max(w, h));
+          w = Math.max(1, Math.round(w * scale));
+          h = Math.max(1, Math.round(h * scale));
+
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+
+          let out = null;
+          try{
+            if(file.type === "image/png"){
+              out = canvas.toDataURL("image/png");
+            }else{
+              out = canvas.toDataURL("image/jpeg", 0.85);
+            }
+          }catch(e){ out = null; }
+          if(!out) out = reader.result;
+          resolve(out);
+        };
+        img.onerror = () => reject(new Error("画像を読み込めません"));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error("ファイルを読み込めません"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  $("iconFile").addEventListener("change", async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if(!file) return;
+    try{
+      const dataUrl = await readImageFile(file, 128);
+      editingIcon = dataUrl;
+      renderIconPreview();
+      showToast("アイコンを設定しました");
+    }catch(err){
+      alert("画像を読み込めませんでした");
+    }
+  });
+
+  $("btnPickIcon").onclick = () => $("iconFile").click();
+  $("iconPreview").onclick = () => $("iconFile").click();
+  nameInput.addEventListener("input", () => { if(!validIcon(editingIcon)) renderIconPreview(); });
 
   /* =========================================================
      search in editor
@@ -1283,34 +1570,60 @@ textarea:focus{border-color:var(--accent)}
     if(!it){ alert("表示するメモを一覧から選んでください"); return; }
     fullFrame.srcdoc = it.html || "";
     $("fullscreen").classList.add("show");
-    document.body.style.overflow = "hidden";
     requestAnimationFrame(resizeFullscreen);
+  }
+
+  /* =========================================================
+     device switch / sidebar
+  ========================================================= */
+  function setDevice(d){
+    currentDevice = d;
+    $("phone").hidden = d !== "phone";
+    $("ipad").hidden  = d !== "ipad";
+    document.querySelectorAll(".dev-btn").forEach(b => {
+      b.classList.toggle("on", b.dataset.dev === d);
+    });
+    requestAnimationFrame(() => {
+      fitDevices();
+      resizeAllPreviews();
+    });
+  }
+
+  function setSidebar(open){
+    sidebarOpen = open;
+    $("sidebar").classList.toggle("open", open);
+    requestAnimationFrame(() => {
+      fitDevices();
+      resizeAllPreviews();
+    });
   }
 
   /* =========================================================
      events
   ========================================================= */
-  $("btnBack").onclick = goRoot;
+  $("btnSideToggle").onclick = () => setSidebar(!sidebarOpen);
 
-  $("btnNewFolder").onclick = () => {
-    const name = prompt("フォルダ名", "新規フォルダ");
-    if(name === null) return;
-    folders.push({ id: uid(), name: name.trim() || "新規フォルダ" });
-    persist();
-    render();
-    showToast("フォルダを作成しました");
-  };
+  document.querySelectorAll(".dev-btn").forEach(b => {
+    b.onclick = () => setDevice(b.dataset.dev);
+  });
 
-  $("btnNewNote").onclick = () => {
-    if(currentFolderId === null) return;
-    openEditor(null, true);
+  $("btnNew").onclick = () => {
+    if(currentFolderId === null){
+      const name = prompt("フォルダ名", "新規フォルダ");
+      if(name === null) return;
+      folders.push({ id: uid(), name: name.trim() || "新規フォルダ" });
+      persist();
+      render();
+      showToast("フォルダを作成しました");
+    }else{
+      openEditor(null, true);
+    }
   };
 
   $("btnFullscreen").onclick = openFullscreen;
   $("exit").onclick = () => {
     $("fullscreen").classList.remove("show");
     fullFrame.srcdoc = "";
-    document.body.style.overflow = "";
   };
 
   $("btnSave").onclick = saveCurrent;
@@ -1378,9 +1691,15 @@ textarea:focus{border-color:var(--accent)}
      init
   ========================================================= */
   load();
+  setSidebar(sidebarOpen);
   render();
+  setDevice("phone");
   updatePreview();
-  requestAnimationFrame(resizeAllPreviews);
+
+  requestAnimationFrame(() => {
+    fitDevices();
+    resizeAllPreviews();
+  });
 })();
 </script>
 </body>
