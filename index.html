@@ -22,7 +22,7 @@
   --sep:#38383c;
   --sel:#1a293a;
   --side:70px;
-  --side-open:min(320px,78vw);
+  --side-open:min(280px,72vw);
 }
 *{box-sizing:border-box}
 [hidden]{display:none !important}
@@ -67,31 +67,12 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .sidebar.open{width:var(--side-open)}
 
-.side-head{
-  flex:0 0 auto;
-  display:flex;align-items:center;gap:8px;
-  padding:calc(6px + env(safe-area-inset-top)) 8px 6px;
-}
-.side-toggle{
-  width:46px;height:46px;flex:0 0 auto;border-radius:14px;padding:0;
-  background:var(--panel2);
-  margin:0 auto;
-}
-.sidebar.open .side-toggle{margin:0}
-.side-toggle svg{transition:transform .22s cubic-bezier(.22,.8,.24,1)}
-.sidebar.open .side-toggle svg{transform:rotate(180deg)}
-.side-head-title{
-  font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;
-  display:none;
-}
-.sidebar.open .side-head-title{display:block}
-
 .side-scroll{
   flex:1;min-height:0;
   overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
-  padding:0 8px 8px;
+  padding:calc(10px + env(safe-area-inset-top)) 8px 8px;
   touch-action:pan-y;
 }
 .side-scroll::-webkit-scrollbar{width:0}
@@ -134,7 +115,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin:0 auto;
 }
 
-/* rows — 縦幅広め・アイコン大きめ */
+/* rows */
 .srow{
   display:flex;align-items:center;gap:12px;
   padding:12px 12px;min-height:84px;
@@ -170,6 +151,22 @@ button:disabled{opacity:.4;pointer-events:none}
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
 }
 .sidebar:not(.open) .row-icon .ico-letter{border-radius:12px;font-size:34px}
+
+/* フォルダアイコン：大きめ・絵文字対応 */
+.row-icon.folder-icon{
+  width:64px;height:64px;border-radius:16px;
+}
+.row-icon.folder-icon svg{width:54px;height:54px}
+.row-icon.folder-icon .ico-emoji{
+  font-size:44px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.sidebar:not(.open) .row-icon.folder-icon{width:52px;height:52px;border-radius:13px}
+.sidebar:not(.open) .row-icon.folder-icon svg{width:42px;height:42px}
+.sidebar:not(.open) .row-icon.folder-icon .ico-emoji{font-size:38px}
+
 .row-main{flex:1;min-width:0}
 .row-title{
   font-size:15px;font-weight:600;line-height:1.25;
@@ -222,9 +219,8 @@ button:disabled{opacity:.4;pointer-events:none}
 .sidebar:not(.open) .row-apps,
 .sidebar:not(.open) .row-chev{display:none}
 
-/* コンパクト時は余白を詰める */
 .sidebar:not(.open) .side-scroll{
-  padding:0 5px 5px;
+  padding:calc(8px + env(safe-area-inset-top)) 5px 5px;
 }
 .sidebar:not(.open) .swipe{
   margin-bottom:1px;
@@ -262,6 +258,22 @@ button:disabled{opacity:.4;pointer-events:none}
   transition:none;background:var(--panel2);
   box-shadow:0 12px 34px rgba(0,0,0,.7),0 0 0 1px #4a4a4e;
   transform:scale(1.02);
+}
+
+/* 一覧切替アニメーション */
+@keyframes listFadeIn{
+  0%   { opacity:0; transform:translateX(-16px); }
+  100% { opacity:1; transform:translateX(0); }
+}
+@keyframes listFadeInRight{
+  0%   { opacity:0; transform:translateX(16px); }
+  100% { opacity:1; transform:translateX(0); }
+}
+.side-list.anim-in{
+  animation:listFadeIn .24s cubic-bezier(.22,.8,.24,1) both;
+}
+.side-list.anim-in-right{
+  animation:listFadeInRight .24s cubic-bezier(.22,.8,.24,1) both;
 }
 
 /* drag target folder bar */
@@ -377,8 +389,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .island{
   position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
   width:33.5%;
-  height:calc(9.5% * 0.75);
-  max-height:calc(34px * 0.75);
+  height:34px;
   background:#000;border-radius:100px;pointer-events:none;
 }
 .homebar{
@@ -487,7 +498,7 @@ textarea:focus{border-color:var(--accent)}
 .search-box .nav-btn{min-height:42px;min-width:44px;padding:0 8px;font-size:15px}
 .search-box #btnSave{min-height:42px;min-width:66px;font-size:14px;font-weight:700}
 
-/* picker / settings */
+/* picker / settings / folder edit */
 .picker-sheet{
   width:100%;max-width:520px;max-height:72vh;
   background:var(--bg);border-radius:20px 20px 0 0;
@@ -510,6 +521,24 @@ textarea:focus{border-color:var(--accent)}
 .picker-item.current{border-color:var(--accent);background:#0a84ff18}
 .picker-item:active{background:var(--panel2)}
 
+/* folder edit */
+.folder-edit-row{display:flex;gap:8px;align-items:center}
+.folder-edit-row .emoji-input{
+  width:64px;height:52px;flex:0 0 auto;
+  border:1px solid var(--sep);border-radius:13px;
+  background:#111113;color:#fff;padding:0;outline:none;
+  text-align:center;font-size:26px;line-height:1;
+  -webkit-user-select:text;user-select:text;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.folder-edit-row .emoji-input:focus{border-color:var(--accent)}
+.folder-edit-row .name-input{
+  flex:1;min-width:0;height:52px;border:1px solid var(--sep);border-radius:13px;
+  background:#111113;color:#fff;padding:0 12px;outline:none;
+  -webkit-user-select:text;user-select:text;
+}
+.folder-edit-row .name-input:focus{border-color:var(--accent)}
+
 /* ================= FULLSCREEN ================= */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
 .fullscreen.show{display:block}
@@ -528,16 +557,6 @@ textarea:focus{border-color:var(--accent)}
 
   <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar" id="sidebar">
-    <div class="side-head">
-      <button id="btnSideToggle" class="side-toggle" aria-label="メニュー開閉">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-             stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 6l6 6-6 6"/>
-        </svg>
-      </button>
-      <div class="side-head-title">メモ</div>
-    </div>
-
     <div class="side-scroll" id="sideScroll">
       <div class="side-list" id="sideList"></div>
     </div>
@@ -657,6 +676,22 @@ textarea:focus{border-color:var(--accent)}
   </div>
 </div>
 
+<!-- FOLDER EDIT -->
+<div id="folderOverlay" class="editor-overlay">
+  <div class="picker-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="folderSheetTitle">フォルダ編集</h3>
+    <div class="folder-edit-row">
+      <input id="folderEmojiInput" class="emoji-input" type="text" placeholder="絵文字" maxlength="8" autocomplete="off">
+      <input id="folderNameInput" class="name-input" type="text" placeholder="フォルダ名" maxlength="80" autocomplete="off">
+    </div>
+    <div class="editor-actions" style="margin:0">
+      <button id="folderCancel" class="ghost">キャンセル</button>
+      <button id="folderSave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- SETTINGS -->
 <div id="settingsOverlay" class="editor-overlay">
   <div class="picker-sheet">
@@ -695,9 +730,9 @@ textarea:focus{border-color:var(--accent)}
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
   const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
 
-  /* サイドバージェスチャ閾値 */
-  const SB_EXPAND_DX = 40;   // コンパクト→標準
-  const SB_BACK_DX   = 25;   // 短めスワイプ：フォルダに戻る
+  /* サイドバージェスチャ閾値（誤操作防止のため長めに設定） */
+  const SB_BACK_DX   = 55;   // 一覧に戻る / メニューを閉じる
+  const SB_EXPAND_DX = 55;   // メニューを開く
 
   let items = [];
   let folders = [];
@@ -795,6 +830,13 @@ textarea:focus{border-color:var(--accent)}
     return `<span class="ico-letter" style="background:${colorFor(name)}">${escapeHtml(ch)}</span>`;
   }
 
+  function folderIconInner(f){
+    if(f && typeof f.emoji === "string" && f.emoji){
+      return `<span class="ico-emoji">${escapeHtml(f.emoji)}</span>`;
+    }
+    return ICON.folder;
+  }
+
   /* =========================================================
      persistence
   ========================================================= */
@@ -817,7 +859,11 @@ textarea:focus{border-color:var(--accent)}
         if(Array.isArray(p)) folders = p.filter(f => f && typeof f === "object" && f.id);
       }
     }catch(e){ folders = []; }
-    folders.forEach(f => { if(typeof f.name !== "string" || !f.name) f.name = "無題のフォルダ"; });
+    folders.forEach(f => {
+      if(typeof f.name !== "string" || !f.name) f.name = "無題のフォルダ";
+      if(f.emoji !== undefined && typeof f.emoji !== "string") delete f.emoji;
+      if(typeof f.emoji === "string" && f.emoji) f.emoji = firstGrapheme(f.emoji);
+    });
 
     items = [];
     try{
@@ -891,6 +937,19 @@ textarea:focus{border-color:var(--accent)}
       phone.style.borderRadius = rad.toFixed(1) + "px";
       const vp = phone.querySelector(".phone-viewport");
       vp.style.borderRadius = Math.max(0, rad - 7).toFixed(1) + "px";
+
+      /* ダイナミックアイランドとホームバーを枠の縮小に合わせてスケール */
+      const island = phone.querySelector(".island");
+      if(island){
+        island.style.height = Math.max(10, 34 * k).toFixed(2) + "px";
+        island.style.top    = Math.max(3, 11 * k).toFixed(2) + "px";
+        island.style.borderRadius = Math.max(6, 100 * k).toFixed(1) + "px";
+      }
+      const homebar = phone.querySelector(".homebar");
+      if(homebar){
+        homebar.style.height = Math.max(2, 4 * k).toFixed(2) + "px";
+        homebar.style.bottom = Math.max(3, 8 * k).toFixed(2) + "px";
+      }
     }
 
     if(!ipad.hidden){
@@ -973,14 +1032,12 @@ textarea:focus{border-color:var(--accent)}
     if(dx >= 5){
       show = true;
       if(!sidebarOpen){
-        if(dx >= SB_EXPAND_DX){
-          text = "メニューを開く"; ready = true;
-        }else if(dx >= SB_BACK_DX && currentFolderId !== null){
-          text = "一覧に戻る"; ready = true;
-        }else if(currentFolderId !== null){
-          text = "一覧に戻る"; ready = false;
+        if(currentFolderId !== null){
+          text = "一覧に戻る";
+          ready = dx >= SB_BACK_DX;
         }else{
-          text = "メニューを開く"; ready = false;
+          text = "メニューを開く";
+          ready = dx >= SB_EXPAND_DX;
         }
       }else{
         const label = currentFolderId !== null ? "一覧に戻る" : "メニューを閉じる";
@@ -998,7 +1055,6 @@ textarea:focus{border-color:var(--accent)}
     hint.classList.toggle("ready", ready);
     hint.classList.add("show");
 
-    /* 位置を更新（サイドバー右端の少し右） */
     const sidebar = $("sidebar");
     const r = sidebar.getBoundingClientRect();
     const hw = hint.offsetWidth || 120;
@@ -1018,7 +1074,7 @@ textarea:focus{border-color:var(--accent)}
   /* =========================================================
      render
   ========================================================= */
-  function render(){
+  function render(animate, dir){
     const list = $("sideList");
     const isRoot = currentFolderId === null;
 
@@ -1049,8 +1105,17 @@ textarea:focus{border-color:var(--accent)}
 
     list.innerHTML = html;
 
+    if(animate){
+      list.classList.remove("anim-in", "anim-in-right");
+      void list.offsetWidth;
+      list.classList.add(dir === "back" ? "anim-in-right" : "anim-in");
+      setTimeout(() => {
+        list.classList.remove("anim-in", "anim-in-right");
+      }, 280);
+    }
+
     const back = $("rowBack");
-    if(back) back.onclick = goRoot;
+    if(back) back.onclick = () => goRoot(true);
 
     list.querySelectorAll(".swipe").forEach(attachRow);
   }
@@ -1071,11 +1136,11 @@ textarea:focus{border-color:var(--accent)}
     return `
     <div class="swipe" data-type="folder" data-id="${f.id}" data-index="${index}">
       <div class="swipe-actions">
-        <button class="act-rename" data-act="rename">${ICON.edit}<span>名称</span></button>
+        <button class="act-rename" data-act="rename">${ICON.edit}<span>編集</span></button>
         <button class="act-del"    data-act="del">${ICON.trash}<span>削除</span></button>
       </div>
       <div class="srow">
-        <div class="row-icon">${ICON.folder}</div>
+        <div class="row-icon folder-icon">${folderIconInner(f)}</div>
         <div class="row-main">
           <div class="row-title">${escapeHtml(f.name)}</div>
           <div class="row-sub">${n}件のメモ</div>
@@ -1109,22 +1174,23 @@ textarea:focus{border-color:var(--accent)}
 
   /* =========================================================
      サイドバージェスチャ
-      ・コンパクト時：短め→フォルダ一覧へ戻る ／ 長め→展開
-      ・標準時：短め→フォルダ一覧へ戻る（ルートならコンパクトへ）
+      ・コンパクト時：
+          フォルダ内 → 右スワイプで一覧へ戻る
+          ルート   → 右スワイプでメニュー展開
+      ・標準時：
+          フォルダ内 → 一覧へ戻る
+          ルート   → メニューを閉じる
   ========================================================= */
   function handleSidebarSwipe(dx){
     if(!sidebarOpen){
-      if(dx >= SB_EXPAND_DX){
-        setSidebar(true);
-        return;
-      }
-      if(dx >= SB_BACK_DX){
-        if(currentFolderId !== null) goRoot();
-        return;
+      if(currentFolderId !== null){
+        if(dx >= SB_BACK_DX) goRoot(true);
+      }else{
+        if(dx >= SB_EXPAND_DX) setSidebar(true);
       }
     }else{
       if(dx >= SB_BACK_DX){
-        if(currentFolderId !== null) goRoot();
+        if(currentFolderId !== null) goRoot(true);
         else setSidebar(false);
       }
     }
@@ -1353,7 +1419,6 @@ textarea:focus{border-color:var(--accent)}
       if(!t){ edgeTouch = null; return; }
       const dx = t.clientX - edgeTouch.x;
       const dyAbs = Math.abs(t.clientY - edgeTouch.y);
-      /* 左端から右方向への横移動はSafariの戻るをキャンセル */
       if(dx > 3 && dx >= dyAbs * 0.5){
         if(e.cancelable) e.preventDefault();
       }
@@ -1549,12 +1614,12 @@ textarea:focus{border-color:var(--accent)}
   function openFolder(id){
     currentFolderId = id;
     closeAllSwipes();
-    render();
+    render(true, "open");
   }
-  function goRoot(){
+  function goRoot(animate){
     currentFolderId = null;
     closeAllSwipes();
-    render();
+    render(!!animate, "back");
   }
   function selectNote(id){
     selectedId = id;
@@ -1564,7 +1629,7 @@ textarea:focus{border-color:var(--accent)}
 
   function handleAction(type, id, act){
     if(type === "folder"){
-      if(act === "rename") renameFolder(id);
+      if(act === "rename") openFolderEdit(id);
       else if(act === "del") deleteFolder(id);
       return;
     }
@@ -1573,16 +1638,55 @@ textarea:focus{border-color:var(--accent)}
     else if(act === "del") deleteNote(id);
   }
 
-  function renameFolder(id){
+  /* =========================================================
+     folder edit sheet
+  ========================================================= */
+  let editingFolderId = null;
+
+  function openFolderEdit(id){
     const f = folders.find(x => x.id === id);
     if(!f) return;
-    const name = prompt("フォルダ名", f.name);
-    if(name === null) return;
-    const trimmed = name.trim();
-    if(!trimmed) return;
-    f.name = trimmed;
+    editingFolderId = id;
+    $("folderSheetTitle").textContent = "フォルダ編集";
+    $("folderNameInput").value = f.name || "";
+    $("folderEmojiInput").value = f.emoji || "";
+    $("folderOverlay").classList.add("show");
+    setTimeout(() => { try{ $("folderNameInput").focus(); }catch(_){} }, 60);
+  }
+
+  function openNewFolderSheet(){
+    editingFolderId = null;
+    $("folderSheetTitle").textContent = "新規フォルダ";
+    $("folderNameInput").value = "";
+    $("folderEmojiInput").value = "";
+    $("folderOverlay").classList.add("show");
+    setTimeout(() => { try{ $("folderNameInput").focus(); }catch(_){} }, 60);
+  }
+
+  function closeFolderEdit(){
+    $("folderOverlay").classList.remove("show");
+    editingFolderId = null;
+  }
+
+  function saveFolderEdit(){
+    const name = ($("folderNameInput").value || "").trim();
+    const rawEmoji = ($("folderEmojiInput").value || "").trim();
+    const emoji = rawEmoji ? firstGrapheme(rawEmoji) : "";
+
+    if(editingFolderId){
+      const f = folders.find(x => x.id === editingFolderId);
+      if(!f){ closeFolderEdit(); return; }
+      f.name = name || "無題のフォルダ";
+      if(emoji) f.emoji = emoji; else delete f.emoji;
+    }else{
+      const f = { id: uid(), name: name || "新規フォルダ" };
+      if(emoji) f.emoji = emoji;
+      folders.push(f);
+    }
     persist();
-    render();
+    closeFolderEdit();
+    render(true, "open");
+    showToast("保存しました");
   }
 
   function deleteFolder(id){
@@ -1603,7 +1707,7 @@ textarea:focus{border-color:var(--accent)}
     if(currentFolderId === id) currentFolderId = null;
 
     persist();
-    render();
+    render(true, "back");
     updatePreview();
   }
 
@@ -1944,7 +2048,11 @@ textarea:focus{border-color:var(--accent)}
       app: "pwa-previewer",
       version: 2,
       exportedAt: Date.now(),
-      folders: folders.map(f => ({ id: f.id, name: f.name })),
+      folders: folders.map(f => {
+        const o = { id: f.id, name: f.name };
+        if(f.emoji) o.emoji = f.emoji;
+        return o;
+      }),
       items: items.map(it => {
         const o = {
           id: it.id,
@@ -1986,10 +2094,12 @@ textarea:focus{border-color:var(--accent)}
 
     srcF.forEach(f => {
       if(!f || typeof f !== "object") return;
-      outF.push({
+      const o = {
         id: typeof f.id === "string" && f.id ? f.id : uid(),
         name: typeof f.name === "string" && f.name ? f.name : "無題のフォルダ"
-      });
+      };
+      if(typeof f.emoji === "string" && f.emoji) o.emoji = firstGrapheme(f.emoji);
+      outF.push(o);
     });
     srcI.forEach(it => {
       if(!it || typeof it !== "object") return;
@@ -2030,7 +2140,9 @@ textarea:focus{border-color:var(--accent)}
         parsed.folders.forEach(f => {
           const nid = uid();
           idMap[f.id] = nid;
-          folders.push({ id: nid, name: (f.name || "無題のフォルダ") + " (取込)" });
+          const nf = { id: nid, name: (f.name || "無題のフォルダ") + " (取込)" };
+          if(f.emoji) nf.emoji = f.emoji;
+          folders.push(nf);
         });
         if(folders.length === 0) folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
         const fallback = folders[0].id;
@@ -2061,7 +2173,7 @@ textarea:focus{border-color:var(--accent)}
       persist();
       selectedId = items.length ? items[0].id : null;
       currentFolderId = null;
-      render();
+      render(true, "open");
       updatePreview();
       showToast(`インポート完了（${items.length}件）`);
     }catch(err){
@@ -2073,20 +2185,13 @@ textarea:focus{border-color:var(--accent)}
   /* =========================================================
      events
   ========================================================= */
-  $("btnSideToggle").onclick = () => setSidebar(!sidebarOpen);
-
   document.querySelectorAll(".dev-btn").forEach(b => {
     b.onclick = () => setDevice(b.dataset.dev);
   });
 
   $("btnNew").onclick = () => {
     if(currentFolderId === null){
-      const name = prompt("フォルダ名", "新規フォルダ");
-      if(name === null) return;
-      folders.push({ id: uid(), name: name.trim() || "新規フォルダ" });
-      persist();
-      render();
-      showToast("フォルダを作成しました");
+      openNewFolderSheet();
     }else{
       openEditor(null, true);
     }
@@ -2103,6 +2208,18 @@ textarea:focus{border-color:var(--accent)}
     e.target.value = "";
     if(!file) return;
     await importAll(file);
+  });
+
+  $("folderSave").onclick = saveFolderEdit;
+  $("folderCancel").onclick = closeFolderEdit;
+  $("folderOverlay").addEventListener("click", e => {
+    if(e.target === $("folderOverlay")) closeFolderEdit();
+  });
+  $("folderNameInput").addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); saveFolderEdit(); }
+  });
+  $("folderEmojiInput").addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); saveFolderEdit(); }
   });
 
   $("btnFullscreen").onclick = openFullscreen;
