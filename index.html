@@ -149,9 +149,9 @@ button:disabled{opacity:.4;pointer-events:none}
 .sidebar:not(.open) .srow{
   flex-direction:column;
   justify-content:center;
-  padding:10px 4px;
-  gap:6px;
-  min-height:104px;
+  padding:6px 2px;
+  gap:2px;
+  min-height:auto;
 }
 
 .row-icon{
@@ -159,14 +159,16 @@ button:disabled{opacity:.4;pointer-events:none}
   display:flex;align-items:center;justify-content:center;
   color:#ffd60a;overflow:hidden;background:transparent;
 }
-.sidebar:not(.open) .row-icon{width:60px;height:60px}
+.sidebar:not(.open) .row-icon{width:48px;height:48px;border-radius:12px}
 .row-icon svg{width:46px;height:46px;display:block}
+.sidebar:not(.open) .row-icon svg{width:34px;height:34px}
 .row-icon img{width:100%;height:100%;object-fit:cover;display:block}
 .row-icon .ico-letter{
   width:100%;height:100%;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
   font-size:24px;font-weight:700;color:#fff;
 }
+.sidebar:not(.open) .row-icon .ico-letter{border-radius:12px;font-size:20px}
 .row-main{flex:1;min-width:0}
 .row-title{
   font-size:15px;font-weight:600;line-height:1.25;
@@ -212,6 +214,14 @@ button:disabled{opacity:.4;pointer-events:none}
 .sidebar:not(.open) .row-sub2,
 .sidebar:not(.open) .row-apps,
 .sidebar:not(.open) .row-chev{display:none}
+
+/* コンパクト時は余白を詰める */
+.sidebar:not(.open) .side-scroll{
+  padding:0 5px 5px;
+}
+.sidebar:not(.open) .swipe{
+  margin-bottom:1px;
+}
 
 .srow.selected{background:var(--sel)}
 .srow.selected::after{
@@ -649,7 +659,7 @@ textarea:focus{border-color:var(--accent)}
   const DEFAULT_FOLDER_NAME = "マイメモ";
 
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
-  const IPAD_W  = 1080, IPAD_H = 810, IPAD_B = 10;
+  const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
 
   /* サイドバージェスチャ閾値 */
   const SB_EXPAND_DX = 40;   // コンパクト→標準
