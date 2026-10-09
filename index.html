@@ -134,7 +134,7 @@ button:disabled{opacity:.4;pointer-events:none}
   margin:0 auto;
 }
 
-/* rows — 標準は大きめアイコン */
+/* rows — 縦幅広め・アイコン大きめ */
 .srow{
   display:flex;align-items:center;gap:12px;
   padding:12px 12px;min-height:84px;
@@ -146,15 +146,12 @@ button:disabled{opacity:.4;pointer-events:none}
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   cursor:pointer;
 }
-
-/* コンパクト：アイコン元サイズ・間隔を詰める */
 .sidebar:not(.open) .srow{
   flex-direction:column;
   justify-content:center;
-  padding:6px 4px;
-  gap:2px;
-  min-height:72px;
-  border-radius:10px;
+  padding:10px 4px;
+  gap:6px;
+  min-height:104px;
 }
 
 .row-icon{
@@ -162,21 +159,14 @@ button:disabled{opacity:.4;pointer-events:none}
   display:flex;align-items:center;justify-content:center;
   color:#ffd60a;overflow:hidden;background:transparent;
 }
-.sidebar:not(.open) .row-icon{
-  width:46px;height:46px;border-radius:12px;
-}
+.sidebar:not(.open) .row-icon{width:60px;height:60px}
 .row-icon svg{width:46px;height:46px;display:block}
-.sidebar:not(.open) .row-icon svg{width:34px;height:34px}
 .row-icon img{width:100%;height:100%;object-fit:cover;display:block}
 .row-icon .ico-letter{
   width:100%;height:100%;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
   font-size:24px;font-weight:700;color:#fff;
 }
-.sidebar:not(.open) .row-icon .ico-letter{
-  font-size:17px;border-radius:12px;
-}
-
 .row-main{flex:1;min-width:0}
 .row-title{
   font-size:15px;font-weight:600;line-height:1.25;
@@ -203,7 +193,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
 .row-chev svg{width:16px;height:16px;display:block}
 
-/* コンパクト時：名前をアイコン下に小さく、ぎゅっと */
+/* コンパクト時：名前をアイコン下に小さく */
 .sidebar:not(.open) .row-main{
   width:100%;
   text-align:center;
@@ -213,7 +203,7 @@ button:disabled{opacity:.4;pointer-events:none}
   font-size:10px;
   font-weight:500;
   color:var(--muted);
-  line-height:1.1;
+  line-height:1.15;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -227,16 +217,12 @@ button:disabled{opacity:.4;pointer-events:none}
 .srow.selected::after{
   content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--accent);
 }
-.sidebar:not(.open) .srow.selected::after{top:8px;bottom:8px}
+.sidebar:not(.open) .srow.selected::after{top:12px;bottom:12px}
 
 /* swipe */
 .swipe{
   position:relative;overflow:hidden;background:#000;border-radius:14px;
   margin-bottom:3px;
-}
-.sidebar:not(.open) .swipe{
-  margin-bottom:0;
-  border-radius:10px;
 }
 .swipe-actions{
   position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1;
@@ -462,7 +448,7 @@ textarea:focus{border-color:var(--accent)}
 
 /* picker / settings */
 .picker-sheet{
-  width:100%;max-width:520px;max-height:78vh;
+  width:100%;max-width:520px;max-height:72vh;
   background:var(--bg);border-radius:20px 20px 0 0;
   padding:14px 14px calc(14px + env(safe-area-inset-bottom));
   display:flex;flex-direction:column;gap:12px;
@@ -483,64 +469,15 @@ textarea:focus{border-color:var(--accent)}
 .picker-item.current{border-color:var(--accent);background:#0a84ff18}
 .picker-item:active{background:var(--panel2)}
 
-/* toggle switch */
-.switch{
-  margin-left:auto;
-  width:46px;height:28px;border-radius:14px;
-  background:var(--panel3);
-  position:relative;flex:0 0 auto;
-  transition:background .18s;
-}
-.switch::after{
-  content:"";position:absolute;
-  top:2px;left:2px;
-  width:24px;height:24px;border-radius:50%;
-  background:#fff;
-  transition:transform .18s;
-  box-shadow:0 1px 3px rgba(0,0,0,.4);
-}
-.switch.on{background:var(--ok)}
-.switch.on::after{transform:translateX(18px)}
-
 /* ================= FULLSCREEN ================= */
 .fullscreen{position:fixed;inset:0;z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;}
 .fullscreen.show{display:block}
-.fullscreen-stage{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;overscroll-behavior:none;
-}
-.fullscreen.below-status .fullscreen-stage{
-  padding-top:env(safe-area-inset-top, 44px);
-  box-sizing:border-box;
-}
+.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
 .fullscreen iframe{border:0;background:#000;color-scheme:dark}
-
-/* 右側面に貼り付く縦長タブ型の閉じるボタン */
 .fullscreen .exit{
-  position:absolute;
-  z-index:10;
-  top:50%;
-  right:0;
-  transform:translateY(-50%);
-  width:34px;
-  height:76px;
-  padding:0;
-  margin:0;
-  border-radius:18px 0 0 18px;
-  background:rgba(255,255,255,.14);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  color:#fff;
-  font-size:20px;
-  font-weight:400;
-  line-height:1;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:-2px 0 12px rgba(0,0,0,.35);
-}
-.fullscreen .exit:active{
-  transform:translateY(-50%) scale(.94);
-  opacity:.85;
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
+  width:40px;height:40px;padding:0;border-radius:50%;
+  background:rgba(0,0,0,.40);color:#fff;font-size:19px;
 }
 </style>
 </head>
@@ -688,17 +625,13 @@ textarea:focus{border-color:var(--accent)}
       <div class="picker-item" id="setImport">
         <span>インポート</span>
       </div>
-      <div class="picker-item" id="setStatusBar">
-        <span>全画面をステータスバー下に表示</span>
-        <span class="switch" id="swStatusBar"></span>
-      </div>
     </div>
   </div>
 </div>
 
 <!-- FULLSCREEN PREVIEW -->
 <div id="fullscreen" class="fullscreen">
-  <button class="exit" id="exit" aria-label="閉じる">×</button>
+  <button class="exit" id="exit">×</button>
   <div class="fullscreen-stage" id="fsStage">
     <iframe id="fullFrame" title="Full screen preview"
       sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
@@ -713,7 +646,6 @@ textarea:focus{border-color:var(--accent)}
   const NOTES_KEY   = "pwa-previewer-items-v2";
   const FOLDERS_KEY = "pwa-previewer-folders-v1";
   const OLD_KEY     = "iphone17pro-pwa-preview-html-v1";
-  const FULL_BELOW_KEY = "pwa-previewer-below-statusbar";
   const DEFAULT_FOLDER_NAME = "マイメモ";
 
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
@@ -730,10 +662,6 @@ textarea:focus{border-color:var(--accent)}
   let currentFolderId = null;
   let sidebarOpen = window.innerWidth >= 760;
   let currentDevice = "phone";
-
-  /* 全画面時にステータスバー下へ表示するか */
-  let fullscreenBelowStatusBar =
-    localStorage.getItem(FULL_BELOW_KEY) === "1";
 
   const source     = $("source");
   const nameInput  = $("nameInput");
@@ -926,15 +854,8 @@ textarea:focus{border-color:var(--accent)}
   function resizeFullscreen(){
     if(!$("fullscreen").classList.contains("show")) return;
     const stage = $("fsStage");
-    const cs = getComputedStyle(stage);
-    const padT = parseFloat(cs.paddingTop)  || 0;
-    const padB = parseFloat(cs.paddingBottom) || 0;
-    const padL = parseFloat(cs.paddingLeft) || 0;
-    const padR = parseFloat(cs.paddingRight) || 0;
-    const availW = Math.max(1, stage.clientWidth  - padL - padR);
-    const availH = Math.max(1, stage.clientHeight - padT - padB);
     const dW = PHONE_W, dH = PHONE_H;
-    const scale = Math.min(availW / dW, availH / dH);
+    const scale = Math.min(stage.clientWidth / dW, stage.clientHeight / dH);
     fullFrame.style.width  = dW + "px";
     fullFrame.style.height = dH + "px";
     fullFrame.style.transform = `scale(${scale})`;
@@ -1078,6 +999,8 @@ textarea:focus{border-color:var(--accent)}
 
   /* =========================================================
      サイドバージェスチャ
+      ・コンパクト時：短め→フォルダ一覧へ戻る ／ 長め→展開
+      ・標準時：短め→フォルダ一覧へ戻る（ルートならコンパクトへ）
   ========================================================= */
   function handleSidebarSwipe(dx){
     if(!sidebarOpen){
@@ -1577,18 +1500,8 @@ textarea:focus{border-color:var(--accent)}
   /* =========================================================
      settings
   ========================================================= */
-  function openSettings(){
-    applyFullscreenMode();
-    $("settingsOverlay").classList.add("show");
-  }
-  function closeSettings(){
-    $("settingsOverlay").classList.remove("show");
-  }
-
-  function applyFullscreenMode(){
-    $("fullscreen").classList.toggle("below-status", fullscreenBelowStatusBar);
-    $("swStatusBar").classList.toggle("on", fullscreenBelowStatusBar);
-  }
+  function openSettings(){ $("settingsOverlay").classList.add("show"); }
+  function closeSettings(){ $("settingsOverlay").classList.remove("show"); }
 
   /* =========================================================
      editor
@@ -1824,7 +1737,6 @@ textarea:focus{border-color:var(--accent)}
     const it = items.find(x => x.id === selectedId);
     if(!it){ alert("表示するメモを一覧から選んでください"); return; }
     fullFrame.srcdoc = it.html || "";
-    applyFullscreenMode();
     $("fullscreen").classList.add("show");
     requestAnimationFrame(resizeFullscreen);
   }
@@ -2016,16 +1928,6 @@ textarea:focus{border-color:var(--accent)}
   });
   $("setExport").onclick = () => { closeSettings(); exportAll(); };
   $("setImport").onclick = () => { closeSettings(); $("importFile").click(); };
-
-  $("setStatusBar").onclick = () => {
-    fullscreenBelowStatusBar = !fullscreenBelowStatusBar;
-    localStorage.setItem(FULL_BELOW_KEY, fullscreenBelowStatusBar ? "1" : "0");
-    applyFullscreenMode();
-    if($("fullscreen").classList.contains("show")){
-      requestAnimationFrame(resizeFullscreen);
-    }
-  };
-
   $("importFile").addEventListener("change", async e => {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
@@ -2069,7 +1971,7 @@ textarea:focus{border-color:var(--accent)}
     if(e.target === $("pickerOverlay")) closePicker();
   });
 
-  /* 右エリアタップでコンパクト */
+  /* 右エリア（ステージ・ツールバー余白）タップでコンパクト */
   $("stage").addEventListener("click", () => {
     if(sidebarOpen) setSidebar(false);
   });
@@ -2100,7 +2002,6 @@ textarea:focus{border-color:var(--accent)}
      init
   ========================================================= */
   load();
-  applyFullscreenMode();
   setSidebar(sidebarOpen);
   render();
   setDevice("phone");
