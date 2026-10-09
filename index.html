@@ -188,6 +188,8 @@ button:disabled{opacity:.4;pointer-events:none}
   width:26px;height:26px;border-radius:8px;overflow:hidden;
   background:var(--panel3);display:flex;align-items:center;justify-content:center;
   flex:0 0 auto;
+  font-size:14px;font-weight:700;color:#fff;line-height:1;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
 }
 .mini-app img{width:100%;height:100%;object-fit:cover;display:block}
 .row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
@@ -682,7 +684,7 @@ textarea:focus{border-color:var(--accent)}
     <div class="sheet-handle"></div>
     <h3 id="folderSheetTitle">フォルダ編集</h3>
     <div class="folder-edit-row">
-      <input id="folderEmojiInput" class="emoji-input" type="text" placeholder="絵文字" maxlength="8" autocomplete="off">
+      <input id="folderEmojiInput" class="emoji-input" type="text" placeholder="絵" maxlength="8" autocomplete="off">
       <input id="folderNameInput" class="name-input" type="text" placeholder="フォルダ名" maxlength="80" autocomplete="off">
     </div>
     <div class="editor-actions" style="margin:0">
@@ -730,9 +732,11 @@ textarea:focus{border-color:var(--accent)}
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
   const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
 
-  /* サイドバージェスチャ閾値（誤操作防止のため長めに設定） */
-  const SB_BACK_DX   = 55;   // 一覧に戻る / メニューを閉じる
-  const SB_EXPAND_DX = 55;   // メニューを開く
+  /* サイドバージェスチャ閾値
+     ・SB_BACK_DX   : 短めスワイプ（一覧に戻る / メニューを閉じる）
+     ・SB_EXPAND_DX : 長めスワイプ（メニューを開く） */
+  const SB_BACK_DX   = 45;
+  const SB_EXPAND_DX = 110;
 
   let items = [];
   let folders = [];
@@ -1024,6 +1028,11 @@ textarea:focus{border-color:var(--accent)}
 
   /* =========================================================
      sidebar swipe hint
+      コンパクト時：
+        フォルダ内 → 短め：一覧に戻る ／ 長め：メニューを開く
+        ルート     → 長め：メニューを開く
+      標準時：
+        フォルダ内 → 一覧に戻る ／ ルート → メニューを閉じる
   ========================================================= */
   function updateSwipeHint(dx){
     const hint = $("swipeHint");
@@ -1033,8 +1042,13 @@ textarea:focus{border-color:var(--accent)}
       show = true;
       if(!sidebarOpen){
         if(currentFolderId !== null){
-          text = "一覧に戻る";
-          ready = dx >= SB_BACK_DX;
+          if(dx >= SB_EXPAND_DX){
+            text = "メニューを開く";
+            ready = true;
+          }else{
+            text = "一覧に戻る";
+            ready = dx >= SB_BACK_DX;
+          }
         }else{
           text = "メニューを開く";
           ready = dx >= SB_EXPAND_DX;
@@ -1127,7 +1141,9 @@ textarea:focus{border-color:var(--accent)}
       if(validIcon(it.icon)){
         return `<span class="mini-app"><img src="${it.icon}" alt=""></span>`;
       }
-      return `<span class="mini-app" style="background:${colorFor(it.name || "")}"></span>`;
+      const name = (it.name || "無").trim();
+      const ch = firstGrapheme(name) || "無";
+      return `<span class="mini-app" style="background:${colorFor(name)}">${escapeHtml(ch)}</span>`;
     }).join("")}</div>`;
   }
 
@@ -1175,18 +1191,20 @@ textarea:focus{border-color:var(--accent)}
   /* =========================================================
      サイドバージェスチャ
       ・コンパクト時：
-          フォルダ内 → 右スワイプで一覧へ戻る
-          ルート   → 右スワイプでメニュー展開
+          長め右スワイプ → メニューを開く
+          フォルダ内で短め右スワイプ → 一覧へ戻る
       ・標準時：
           フォルダ内 → 一覧へ戻る
           ルート   → メニューを閉じる
   ========================================================= */
   function handleSidebarSwipe(dx){
     if(!sidebarOpen){
-      if(currentFolderId !== null){
-        if(dx >= SB_BACK_DX) goRoot(true);
-      }else{
-        if(dx >= SB_EXPAND_DX) setSidebar(true);
+      if(dx >= SB_EXPAND_DX){
+        setSidebar(true);
+        return;
+      }
+      if(currentFolderId !== null && dx >= SB_BACK_DX){
+        goRoot(true);
       }
     }else{
       if(dx >= SB_BACK_DX){
