@@ -19,6 +19,7 @@
   --accent:#0a84ff;
   --danger:#ff453a;
   --ok:#30d158;
+  --menu:#bf5af2;
   --sep:#38383c;
   --sel:#1a293a;
   --side:70px;
@@ -335,6 +336,7 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .swipe-hint.show{opacity:1;transform:translateY(-50%) translateX(0) scale(1)}
 .swipe-hint.ready{background:var(--ok)}
+.swipe-hint.menu-ready{background:var(--menu)}
 
 /* ================= MAIN / PREVIEW ================= */
 .main{
@@ -600,7 +602,7 @@ textarea:focus{border-color:var(--accent)}
         <div class="island"></div>
         <div class="phone-viewport">
           <iframe id="framePhone" title="iPhone preview"
-            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
         </div>
         <div class="homebar"></div>
       </div>
@@ -608,7 +610,7 @@ textarea:focus{border-color:var(--accent)}
       <div class="ipad" id="ipad" hidden>
         <div class="ipad-viewport">
           <iframe id="frameIpad" title="iPad preview"
-            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
         </div>
       </div>
     </div>
@@ -715,7 +717,7 @@ textarea:focus{border-color:var(--accent)}
   <button class="exit" id="exit">×</button>
   <div class="fullscreen-stage" id="fsStage">
     <iframe id="fullFrame" title="Full screen preview"
-      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
   </div>
 </div>
 
@@ -733,10 +735,12 @@ textarea:focus{border-color:var(--accent)}
   const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
 
   /* サイドバージェスチャ閾値
-     ・SB_BACK_DX   : 短めスワイプ（一覧に戻る / メニューを閉じる）
-     ・SB_EXPAND_DX : 長めスワイプ（メニューを開く） */
-  const SB_BACK_DX   = 45;
-  const SB_EXPAND_DX = 110;
+     ・SB_BACK_DX          : 短めスワイプ（一覧に戻る / メニューを閉じる）
+     ・SB_EXPAND_DX_FOLDER : フォルダ内での長めスワイプ（メニューを開く）
+     ・SB_EXPAND_DX_ROOT   : ルートでのスワイプ（メニューを開く） */
+  const SB_BACK_DX          = 45;
+  const SB_EXPAND_DX_FOLDER = 200;
+  const SB_EXPAND_DX_ROOT   = 45;
 
   let items = [];
   let folders = [];
@@ -773,7 +777,6 @@ textarea:focus{border-color:var(--accent)}
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
-  /* サロゲートペア・ZWJ結合絵文字も1文字として扱う */
   function firstGrapheme(s){
     if(!s) return "";
     if(typeof Intl !== "undefined" && Intl.Segmenter){
@@ -942,7 +945,6 @@ textarea:focus{border-color:var(--accent)}
       const vp = phone.querySelector(".phone-viewport");
       vp.style.borderRadius = Math.max(0, rad - 7).toFixed(1) + "px";
 
-      /* ダイナミックアイランドとホームバーを枠の縮小に合わせてスケール */
       const island = phone.querySelector(".island");
       if(island){
         island.style.height = Math.max(10, 34 * k).toFixed(2) + "px";
@@ -1028,45 +1030,53 @@ textarea:focus{border-color:var(--accent)}
 
   /* =========================================================
      sidebar swipe hint
-      コンパクト時：
-        フォルダ内 → 短め：一覧に戻る ／ 長め：メニューを開く
-        ルート     → 長め：メニューを開く
-      標準時：
-        フォルダ内 → 一覧に戻る ／ ルート → メニューを閉じる
+      - フォルダ内（アプリ一覧）: 短め=一覧に戻る / 長め=メニューを開く
+      - ルート（フォルダ一覧）:  少しスワイプ=メニューを開く
+      - 展開時: 短め=一覧に戻る or 閉じる
   ========================================================= */
   function updateSwipeHint(dx){
     const hint = $("swipeHint");
-    let text = "", ready = false, show = false;
+    let text = "", ready = false, show = false, action = "";
 
     if(dx >= 5){
       show = true;
       if(!sidebarOpen){
         if(currentFolderId !== null){
-          if(dx >= SB_EXPAND_DX){
+          if(dx >= SB_EXPAND_DX_FOLDER){
             text = "メニューを開く";
             ready = true;
+            action = "menu";
           }else{
             text = "一覧に戻る";
             ready = dx >= SB_BACK_DX;
+            action = "back";
           }
         }else{
           text = "メニューを開く";
-          ready = dx >= SB_EXPAND_DX;
+          ready = dx >= SB_EXPAND_DX_ROOT;
+          action = "menu";
         }
       }else{
-        const label = currentFolderId !== null ? "一覧に戻る" : "メニューを閉じる";
-        text = label;
-        ready = dx >= SB_BACK_DX;
+        if(currentFolderId !== null){
+          text = "一覧に戻る";
+          ready = dx >= SB_BACK_DX;
+          action = "back";
+        }else{
+          text = "メニューを閉じる";
+          ready = dx >= SB_BACK_DX;
+          action = "close";
+        }
       }
     }
 
     if(!show){
-      hint.classList.remove("show", "ready");
+      hint.classList.remove("show", "ready", "menu-ready");
       return;
     }
 
     hint.textContent = text;
-    hint.classList.toggle("ready", ready);
+    hint.classList.toggle("ready", ready && action !== "menu");
+    hint.classList.toggle("menu-ready", ready && action === "menu");
     hint.classList.add("show");
 
     const sidebar = $("sidebar");
@@ -1082,7 +1092,7 @@ textarea:focus{border-color:var(--accent)}
 
   function hideSwipeHint(){
     const hint = $("swipeHint");
-    hint.classList.remove("show", "ready");
+    hint.classList.remove("show", "ready", "menu-ready");
   }
 
   /* =========================================================
@@ -1190,21 +1200,23 @@ textarea:focus{border-color:var(--accent)}
 
   /* =========================================================
      サイドバージェスチャ
-      ・コンパクト時：
-          長め右スワイプ → メニューを開く
-          フォルダ内で短め右スワイプ → 一覧へ戻る
-      ・標準時：
-          フォルダ内 → 一覧へ戻る
-          ルート   → メニューを閉じる
   ========================================================= */
   function handleSidebarSwipe(dx){
     if(!sidebarOpen){
-      if(dx >= SB_EXPAND_DX){
-        setSidebar(true);
-        return;
-      }
-      if(currentFolderId !== null && dx >= SB_BACK_DX){
-        goRoot(true);
+      if(currentFolderId !== null){
+        /* フォルダ内：長め→メニューを開く、短め→一覧に戻る */
+        if(dx >= SB_EXPAND_DX_FOLDER){
+          setSidebar(true);
+          return;
+        }
+        if(dx >= SB_BACK_DX){
+          goRoot(true);
+        }
+      }else{
+        /* ルート：短め→メニューを開く */
+        if(dx >= SB_EXPAND_DX_ROOT){
+          setSidebar(true);
+        }
       }
     }else{
       if(dx >= SB_BACK_DX){
