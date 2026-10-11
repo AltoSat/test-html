@@ -754,9 +754,11 @@ textarea:focus{border-color:var(--accent)}
 
   /* プレビュー内タップを親へ通知するブリッジ（srcdoc に追記） */
   const TAP_BRIDGE =
-    '<script>(function(){document.addEventListener("click",function(){' +
-    'try{parent.postMessage({__pwaPreviewTap:1},"*");}catch(e){}' +
-    '},true);})();<\/script>';
+    '<script>(function(){' +
+    'var send=function(){try{parent.postMessage({__pwaPreviewTap:1},"*");}catch(e){}};' +
+    'document.addEventListener("click",send,true);' +
+    'document.addEventListener("pointerup",send,true);' +
+    '})();<\/script>';
 
   let items = [];
   let folders = [];
@@ -1061,20 +1063,21 @@ textarea:focus{border-color:var(--accent)}
     requestAnimationFrame(resizeAllPreviews);
   }
 
-  /* ---- プレビュー内（iframe）タップ通知の受け取り ---- */
-  function handlePreviewInnerTap(){
-    /* 1. スワイプで開いている行があれば、まずそれを閉じる */
+  /* =========================================================
+     共通：外側タップ時の処理
+     - 開いているスワイプがあれば閉じる（それだけ）
+     - 無ければサイドバーをコンパクトに（開いていれば）
+  ========================================================= */
+  function handleOutsideTap(){
     const openSwipes = $("sideList").querySelectorAll(".swipe.open");
     if(openSwipes.length > 0){
       closeAllSwipes();
       return;
     }
-    /* 2. コンパクト時はサイドバーを展開 */
-    if(!sidebarOpen){
-      setSidebar(true);
-    }
+    if(sidebarOpen) setSidebar(false);
   }
 
+  /* プレビュー内（iframe）タップも「外側タップ」と同じ挙動にする */
   window.addEventListener("message", e => {
     const d = e.data;
     if(!d || typeof d !== "object" || !d.__pwaPreviewTap) return;
@@ -1083,7 +1086,11 @@ textarea:focus{border-color:var(--accent)}
       ok = (e.source === framePhone.contentWindow) || (e.source === frameIpad.contentWindow);
     }catch(_){ ok = true; }
     if(!ok) return;
-    handlePreviewInnerTap();
+    /* 連打で連続発火しないよう少し抑制 */
+    const now = Date.now();
+    if(now - (handleOutsideTap.__last || 0) < 120) return;
+    handleOutsideTap.__last = now;
+    handleOutsideTap();
   });
 
   /* =========================================================
@@ -1309,6 +1316,9 @@ textarea:focus{border-color:var(--accent)}
   function closeAllSwipes(){
     $("sideList").querySelectorAll(".swipe.open").forEach(closeSwipe);
   }
+  function anySwipeOpen(){
+    return $("sideList").querySelectorAll(".swipe.open").length > 0;
+  }
 
   function attachRow(wrap){
     const row     = wrap.querySelector(".srow");
@@ -1436,13 +1446,31 @@ textarea:focus{border-color:var(--accent)}
     row.addEventListener("click", () => {
       if(Date.now() - dragEndedAt < 350) return;
       if(longPressed){ longPressed = false; return; }
-      if(wrap.classList.contains("open")){ closeSwipe(wrap); return; }
+      /* 自分自身が開いている時 or どれか開いている時は、閉じるだけ */
+      if(wrap.classList.contains("open") || anySwipeOpen()){
+        closeAllSwipes();
+        return;
+      }
       if(type === "folder") openFolder(id);
       else selectNote(id);
     });
 
     row.addEventListener("contextmenu", e => e.preventDefault());
   }
+
+  /* =========================================================
+     どこかをタップしたら、開いているスワイプを閉じる
+     - スワイプ内のアクションボタンは除外
+     - 行本体のクリックは行側のハンドラで処理済み
+     - キャプチャ段階で先に処理して、他への副作用を抑える
+  ========================================================= */
+  document.addEventListener("click", e => {
+    if(!anySwipeOpen()) return;
+    if(e.target.closest(".swipe-actions button")) return;
+    /* 開いている行の中の srow は行側ハンドラに任せる */
+    if(e.target.closest(".swipe.open .srow")) return;
+    closeAllSwipes();
+  }, true);
 
   /* 空エリアのスワイプもサポート */
   (function attachScrollGesture(){
@@ -2373,22 +2401,13 @@ textarea:focus{border-color:var(--accent)}
     if(e.target === $("pickerOverlay")) closePicker();
   });
 
-  /* 右エリア（ステージ・ツールバー余白）タップ時の挙動
-     - スワイプ開きっぱなしがあれば、まずそれを閉じる
-     - サイドバーが開いていればコンパクトに
-     - サイドバーが閉じていれば（メニュー余白タップでは）何もしない
-       ※コンパクト解除はプレビュー（iframe）タップで行う */
-  $("stage").addEventListener("click", () => {
-    const openSwipes = $("sideList").querySelectorAll(".swipe.open");
-    if(openSwipes.length > 0){
-      closeAllSwipes();
-      return;
-    }
-    if(sidebarOpen) setSidebar(false);
-  });
+  /* 右エリア（ステージ・ツールバー余白）タップ
+     - 開いているスワイプがあれば閉じる
+     - サイドバーが開いていればコンパクトに */
+  $("stage").addEventListener("click", handleOutsideTap);
   $("toolbar").addEventListener("click", e => {
     if(e.target.closest("button")) return;
-    if(sidebarOpen) setSidebar(false);
+    handleOutsideTap();
   });
 
   $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
