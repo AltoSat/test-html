@@ -355,18 +355,11 @@ button:disabled{opacity:.4;pointer-events:none}
 .dev-btn.on{background:var(--accent);color:#fff}
 .toolbar .spacer{flex:1}
 .tool-btn{
-  width:36px;
-  height:36px;
-  min-width:36px;
-  min-height:36px;
-  border-radius:50%;
-  padding:0;
+  min-height:36px;border-radius:18px;padding:0 14px;font-size:13px;font-weight:700;
   background:var(--panel2);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+  display:inline-flex;align-items:center;gap:6px;
 }
-.tool-btn svg{width:18px;height:18px}
+.tool-btn svg{width:16px;height:16px}
 
 .stage{
   flex:1;min-height:0;min-width:0;
@@ -595,18 +588,12 @@ textarea:focus{border-color:var(--accent)}
       <button class="dev-btn on" data-dev="phone">iPhone</button>
       <button class="dev-btn" data-dev="ipad">iPad</button>
       <div class="spacer"></div>
-      <button id="btnEdit" class="tool-btn" aria-label="編集">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 20h9"/>
-          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
-        </svg>
-      </button>
       <button id="btnFullscreen" class="tool-btn" aria-label="拡大表示">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
              stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
+        拡大
       </button>
     </div>
 
@@ -747,16 +734,13 @@ textarea:focus{border-color:var(--accent)}
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
   const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
 
-  /* サイドバージェスチャ閾値 */
+  /* サイドバージェスチャ閾値
+     ・SB_BACK_DX          : 短めスワイプ（一覧に戻る / メニューを閉じる）
+     ・SB_EXPAND_DX_FOLDER : フォルダ内での長めスワイプ（メニューを開く）
+     ・SB_EXPAND_DX_ROOT   : ルートでのスワイプ（メニューを開く） */
   const SB_BACK_DX          = 45;
   const SB_EXPAND_DX_FOLDER = 200;
   const SB_EXPAND_DX_ROOT   = 45;
-
-  /* プレビュー内タップを親へ通知するブリッジ（srcdoc に追記） */
-  const TAP_BRIDGE =
-    '<script>(function(){document.addEventListener("click",function(){' +
-    'try{parent.postMessage({__pwaPreviewTap:1},"*");}catch(e){}' +
-    '},true);})();<\/script>';
 
   let items = [];
   let folders = [];
@@ -858,35 +842,6 @@ textarea:focus{border-color:var(--accent)}
       return `<span class="ico-emoji">${escapeHtml(f.emoji)}</span>`;
     }
     return ICON.folder;
-  }
-
-  /* ---- HTML タイトル抽出 ---- */
-  const ENTITIES = {
-    amp:"&", lt:"<", gt:">", quot:'"', apos:"'", nbsp:" ",
-    copy:"©", reg:"®", trade:"™", hellip:"…", mdash:"—", ndash:"–",
-    laquo:"«", raquo:"»", yen:"¥", middot:"·"
-  };
-  function decodeEntities(s){
-    return String(s).replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z][a-zA-Z0-9]*);/g, (m, e) => {
-      if(e.charAt(0) === "#"){
-        const hex = e.charAt(1).toLowerCase() === "x";
-        const code = hex ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-        if(!isNaN(code) && code > 0 && code <= 0x10FFFF){
-          try{ return String.fromCodePoint(code); }catch(_){ return m; }
-        }
-        return m;
-      }
-      const key = e.toLowerCase();
-      return Object.prototype.hasOwnProperty.call(ENTITIES, key) ? ENTITIES[key] : m;
-    });
-  }
-  function extractHtmlTitle(html){
-    if(!html) return "";
-    const m = String(html).match(/<title[^>]*>([\s\S]*?)<\/title\s*>/i);
-    if(!m) return "";
-    let t = m[1].replace(/<[^>]*>/g, "");
-    t = decodeEntities(t).replace(/\s+/g, " ").trim();
-    return t.slice(0, 80);
   }
 
   /* =========================================================
@@ -1055,36 +1010,11 @@ textarea:focus{border-color:var(--accent)}
   function updatePreview(){
     const it = items.find(x => x.id === selectedId);
     if(!it){ clearPreviews(); return; }
-    const html = (it.html || "") + TAP_BRIDGE;
+    const html = it.html || "";
     framePhone.srcdoc = html;
     frameIpad.srcdoc = html;
     requestAnimationFrame(resizeAllPreviews);
   }
-
-  /* ---- プレビュー内（iframe）タップ通知の受け取り ---- */
-  function handlePreviewInnerTap(){
-    /* 1. スワイプで開いている行があれば、まずそれを閉じる */
-    const openSwipes = $("sideList").querySelectorAll(".swipe.open");
-    if(openSwipes.length > 0){
-      closeAllSwipes();
-      return;
-    }
-    /* 2. コンパクト時はサイドバーを展開 */
-    if(!sidebarOpen){
-      setSidebar(true);
-    }
-  }
-
-  window.addEventListener("message", e => {
-    const d = e.data;
-    if(!d || typeof d !== "object" || !d.__pwaPreviewTap) return;
-    let ok = false;
-    try{
-      ok = (e.source === framePhone.contentWindow) || (e.source === frameIpad.contentWindow);
-    }catch(_){ ok = true; }
-    if(!ok) return;
-    handlePreviewInnerTap();
-  });
 
   /* =========================================================
      toast
@@ -1100,6 +1030,9 @@ textarea:focus{border-color:var(--accent)}
 
   /* =========================================================
      sidebar swipe hint
+      - フォルダ内（アプリ一覧）: 短め=一覧に戻る / 長め=メニューを開く
+      - ルート（フォルダ一覧）:  少しスワイプ=メニューを開く
+      - 展開時: 短め=一覧に戻る or 閉じる
   ========================================================= */
   function updateSwipeHint(dx){
     const hint = $("swipeHint");
@@ -1271,6 +1204,7 @@ textarea:focus{border-color:var(--accent)}
   function handleSidebarSwipe(dx){
     if(!sidebarOpen){
       if(currentFolderId !== null){
+        /* フォルダ内：長め→メニューを開く、短め→一覧に戻る */
         if(dx >= SB_EXPAND_DX_FOLDER){
           setSidebar(true);
           return;
@@ -1279,6 +1213,7 @@ textarea:focus{border-color:var(--accent)}
           goRoot(true);
         }
       }else{
+        /* ルート：短め→メニューを開く */
         if(dx >= SB_EXPAND_DX_ROOT){
           setSidebar(true);
         }
@@ -1920,19 +1855,8 @@ textarea:focus{border-color:var(--accent)}
   }
 
   function saveCurrent(){
-    let name = (nameInput.value || "").trim();
+    const name = (nameInput.value || "").trim() || "無題";
     const html = source.value;
-
-    /* 名前が未入力なら HTML の <title> から取得を試みる */
-    if(!name){
-      const auto = extractHtmlTitle(html);
-      if(auto){
-        name = auto;
-        nameInput.value = auto;
-        if(!validIcon(editingIcon)) renderIconPreview();
-      }
-    }
-    if(!name) name = "無題";
 
     if(editingId){
       const it = items.find(x => x.id === editingId);
@@ -2334,15 +2258,6 @@ textarea:focus{border-color:var(--accent)}
     fullFrame.srcdoc = "";
   };
 
-  /* 編集ボタン：選択中のメモを編集 */
-  $("btnEdit").onclick = () => {
-    if(!selectedId){
-      showToast("編集するメモを選択してください");
-      return;
-    }
-    openEditor(selectedId, false);
-  };
-
   $("btnSave").onclick = saveCurrent;
   $("btnCancel").onclick = closeEditor;
 
@@ -2373,17 +2288,8 @@ textarea:focus{border-color:var(--accent)}
     if(e.target === $("pickerOverlay")) closePicker();
   });
 
-  /* 右エリア（ステージ・ツールバー余白）タップ時の挙動
-     - スワイプ開きっぱなしがあれば、まずそれを閉じる
-     - サイドバーが開いていればコンパクトに
-     - サイドバーが閉じていれば（メニュー余白タップでは）何もしない
-       ※コンパクト解除はプレビュー（iframe）タップで行う */
+  /* 右エリア（ステージ・ツールバー余白）タップでコンパクト */
   $("stage").addEventListener("click", () => {
-    const openSwipes = $("sideList").querySelectorAll(".swipe.open");
-    if(openSwipes.length > 0){
-      closeAllSwipes();
-      return;
-    }
     if(sidebarOpen) setSidebar(false);
   });
   $("toolbar").addEventListener("click", e => {
