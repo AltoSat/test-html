@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>PWA Previewer</title>
+<title>Myアプリ</title>
 <style>
 :root{
   color-scheme:dark;
@@ -27,7 +27,21 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none !important}
-html,body{
+
+/* ===== iOS PWA 黒帯対策 ===== */
+html{
+  height:100%;
+  height:-webkit-fill-available;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:#000;
+  overscroll-behavior:none;
+}
+body{
+  position:fixed;
+  inset:0;
+  width:100%;
   height:100%;
   margin:0;
   padding:0;
@@ -38,9 +52,7 @@ html,body{
   -webkit-tap-highlight-color:transparent;
   overscroll-behavior:none;
 }
-@supports (height: 100dvh){
-  html,body{height:100dvh}
-}
+
 button,textarea,input{font:inherit}
 button{
   border:0;color:var(--text);background:var(--panel2);
@@ -92,6 +104,7 @@ button:disabled{opacity:.4;pointer-events:none}
   flex-wrap:wrap;
 }
 .foot-btn{
+  position:relative;
   flex:1;min-width:0;
   min-height:46px;
   border-radius:12px;
@@ -101,6 +114,28 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .foot-btn:hover{color:var(--text)}
 .foot-btn svg{width:20px;height:20px;display:block}
+
+/* 通知バッジ */
+.foot-btn .badge{
+  position:absolute;
+  top:4px;
+  right:4px;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:9px;
+  background:var(--danger);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 0 2px var(--panel);
+  pointer-events:none;
+  z-index:5;
+}
 
 .sidebar:not(.open) .side-foot{
   flex-direction:column;
@@ -114,6 +149,15 @@ button:disabled{opacity:.4;pointer-events:none}
   min-height:46px;
   border-radius:50%;
   margin:0 auto;
+}
+.sidebar:not(.open) .foot-btn .badge{
+  top:0;
+  right:0;
+  min-width:16px;
+  height:16px;
+  font-size:10px;
+  padding:0 4px;
+  border-radius:8px;
 }
 
 /* rows */
@@ -153,7 +197,6 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .sidebar:not(.open) .row-icon .ico-letter{border-radius:12px;font-size:34px}
 
-/* フォルダアイコン：大きめ・絵文字対応 */
 .row-icon.folder-icon{
   width:64px;height:64px;border-radius:16px;
 }
@@ -196,7 +239,6 @@ button:disabled{opacity:.4;pointer-events:none}
 .row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
 .row-chev svg{width:16px;height:16px;display:block}
 
-/* コンパクト時：名前をアイコン下に小さく（最大2行） */
 .sidebar:not(.open) .row-main{
   width:100%;
   text-align:center;
@@ -263,7 +305,6 @@ button:disabled{opacity:.4;pointer-events:none}
   transform:scale(1.02);
 }
 
-/* 一覧切替アニメーション */
 @keyframes listFadeIn{
   0%   { opacity:0; transform:translateX(-16px); }
   100% { opacity:1; transform:translateX(0); }
@@ -279,7 +320,6 @@ button:disabled{opacity:.4;pointer-events:none}
   animation:listFadeInRight .24s cubic-bezier(.22,.8,.24,1) both;
 }
 
-/* drag target folder bar */
 .drag-folders{
   position:fixed;top:0;left:0;right:0;z-index:80;
   display:none;gap:8px;flex-wrap:nowrap;align-items:center;
@@ -302,7 +342,6 @@ button:disabled{opacity:.4;pointer-events:none}
 .chip.current{background:#3a3a3c;color:var(--muted)}
 .chip.over{background:var(--accent);color:#fff;transform:scale(1.08)}
 
-/* toast */
 .toast{
   position:fixed;left:50%;
   bottom:calc(28px + env(safe-area-inset-bottom));
@@ -314,7 +353,6 @@ button:disabled{opacity:.4;pointer-events:none}
 }
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* sidebar swipe hint */
 .swipe-hint{
   position:fixed;
   top:50%;
@@ -372,7 +410,7 @@ button:disabled{opacity:.4;pointer-events:none}
   flex:1;min-height:0;min-width:0;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
-  padding:4px 8px 6px;
+  padding:4px 8px calc(6px + env(safe-area-inset-bottom));
 }
 
 .phone{
@@ -456,7 +494,7 @@ button:disabled{opacity:.4;pointer-events:none}
 .sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 
 .editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.editor-actions button{flex:1;min-width:70px;white-space:nowrap;font-size:13.5px}
+.editor-actions button{flex:1;min-width:62px;white-space:nowrap;font-size:13px}
 
 .editor-title-row{
   display:flex;align-items:center;gap:8px;margin-bottom:10px;
@@ -509,7 +547,6 @@ textarea:focus{border-color:var(--accent)}
 .search-box .nav-btn{min-height:42px;min-width:44px;padding:0 8px;font-size:15px}
 .search-box #btnSave{min-height:42px;min-width:66px;font-size:14px;font-weight:700}
 
-/* picker / settings / folder edit */
 .picker-sheet{
   width:100%;max-width:520px;max-height:72vh;
   background:var(--bg);border-radius:20px 20px 0 0;
@@ -532,7 +569,6 @@ textarea:focus{border-color:var(--accent)}
 .picker-item.current{border-color:var(--accent);background:#0a84ff18}
 .picker-item:active{background:var(--panel2)}
 
-/* folder edit */
 .folder-edit-row{display:flex;gap:8px;align-items:center}
 .folder-edit-row .emoji-input{
   width:64px;height:52px;flex:0 0 auto;
@@ -631,13 +667,8 @@ textarea:focus{border-color:var(--accent)}
 
 </div>
 
-<!-- drag target folder bar -->
 <div id="dragFolders" class="drag-folders"></div>
-
-<!-- toast -->
 <div id="toast" class="toast"></div>
-
-<!-- sidebar swipe hint -->
 <div id="swipeHint" class="swipe-hint"></div>
 
 <!-- ================= EDITOR SHEET ================= -->
@@ -649,6 +680,7 @@ textarea:focus{border-color:var(--accent)}
       <div class="editor-actions">
         <button id="btnCancel" class="ghost">キャンセル</button>
         <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnRevert" class="ghost">1つ前</button>
         <button id="btnCopy" class="ghost">コピー</button>
         <button id="btnPickIcon" class="ghost">アイコン</button>
       </div>
@@ -739,20 +771,19 @@ textarea:focus{border-color:var(--accent)}
   const $ = id => document.getElementById(id);
 
   /* ---- storage keys ---- */
-  const NOTES_KEY   = "pwa-previewer-items-v2";
-  const FOLDERS_KEY = "pwa-previewer-folders-v1";
-  const OLD_KEY     = "iphone17pro-pwa-preview-html-v1";
+  const NOTES_KEY        = "pwa-previewer-items-v2";
+  const FOLDERS_KEY      = "pwa-previewer-folders-v1";
+  const OLD_KEY          = "iphone17pro-pwa-preview-html-v1";
+  const LAST_EXPORT_KEY  = "pwa-previewer-last-export-v1";
   const DEFAULT_FOLDER_NAME = "マイメモ";
 
   const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
   const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
 
-  /* サイドバージェスチャ閾値 */
   const SB_BACK_DX          = 45;
   const SB_EXPAND_DX_FOLDER = 200;
   const SB_EXPAND_DX_ROOT   = 45;
 
-  /* プレビュー内タップを親へ通知するブリッジ（srcdoc に追記） */
   const TAP_BRIDGE =
     '<script>(function(){' +
     'var send=function(){try{parent.postMessage({__pwaPreviewTap:1},"*");}catch(e){}};' +
@@ -862,7 +893,6 @@ textarea:focus{border-color:var(--accent)}
     return ICON.folder;
   }
 
-  /* ---- HTML タイトル抽出 ---- */
   const ENTITIES = {
     amp:"&", lt:"<", gt:">", quot:'"', apos:"'", nbsp:" ",
     copy:"©", reg:"®", trade:"™", hellip:"…", mdash:"—", ndash:"–",
@@ -894,6 +924,33 @@ textarea:focus{border-color:var(--accent)}
   /* =========================================================
      persistence
   ========================================================= */
+  function getLastExportAt(){
+    const v = localStorage.getItem(LAST_EXPORT_KEY);
+    const n = v ? Number(v) : 0;
+    return isNaN(n) ? 0 : n;
+  }
+  function setLastExportAt(t){
+    try{ localStorage.setItem(LAST_EXPORT_KEY, String(t)); }catch(_){}
+  }
+
+  function updateExportBadge(){
+    const btn = $("btnSettings");
+    if(!btn) return;
+    const last = getLastExportAt();
+    const count = items.filter(it => (it.updated || 0) > last).length;
+    let badge = btn.querySelector(".badge");
+    if(count > 0){
+      if(!badge){
+        badge = document.createElement("span");
+        badge.className = "badge";
+        btn.appendChild(badge);
+      }
+      badge.textContent = count > 99 ? "99+" : String(count);
+    }else if(badge){
+      badge.remove();
+    }
+  }
+
   function persist(){
     try{
       localStorage.setItem(NOTES_KEY, JSON.stringify(items));
@@ -902,6 +959,7 @@ textarea:focus{border-color:var(--accent)}
       console.warn("persist failed", e);
       showToast("保存容量が不足しています");
     }
+    updateExportBadge();
   }
 
   function load(){
@@ -947,6 +1005,8 @@ textarea:focus{border-color:var(--accent)}
       if(typeof it.updated !== "number") it.updated = Date.now();
       if(!it.folderId || !fids.has(it.folderId)) it.folderId = folders[0].id;
       if(it.icon !== undefined && !validIcon(it.icon)) delete it.icon;
+      if(it.prevHtml !== undefined && typeof it.prevHtml !== "string") delete it.prevHtml;
+      if(it.prevUpdated !== undefined && typeof it.prevUpdated !== "number") delete it.prevUpdated;
     });
 
     selectedId = items.length ? items[0].id : null;
@@ -1040,6 +1100,10 @@ textarea:focus{border-color:var(--accent)}
 
   window.addEventListener("resize", relayout);
   window.addEventListener("orientationchange", () => setTimeout(relayout, 120));
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", relayout);
+    window.visualViewport.addEventListener("scroll", relayout);
+  }
 
   if(window.ResizeObserver){
     const ro = new ResizeObserver(() => {
@@ -1064,9 +1128,7 @@ textarea:focus{border-color:var(--accent)}
   }
 
   /* =========================================================
-     共通：外側タップ時の処理
-     - 開いているスワイプがあれば閉じる（それだけ）
-     - 無ければサイドバーをコンパクトに（開いていれば）
+     外側タップ処理
   ========================================================= */
   function handleOutsideTap(){
     const openSwipes = $("sideList").querySelectorAll(".swipe.open");
@@ -1077,7 +1139,6 @@ textarea:focus{border-color:var(--accent)}
     if(sidebarOpen) setSidebar(false);
   }
 
-  /* プレビュー内（iframe）タップも「外側タップ」と同じ挙動にする */
   window.addEventListener("message", e => {
     const d = e.data;
     if(!d || typeof d !== "object" || !d.__pwaPreviewTap) return;
@@ -1086,7 +1147,6 @@ textarea:focus{border-color:var(--accent)}
       ok = (e.source === framePhone.contentWindow) || (e.source === frameIpad.contentWindow);
     }catch(_){ ok = true; }
     if(!ok) return;
-    /* 連打で連続発火しないよう少し抑制 */
     const now = Date.now();
     if(now - (handleOutsideTap.__last || 0) < 120) return;
     handleOutsideTap.__last = now;
@@ -1446,7 +1506,6 @@ textarea:focus{border-color:var(--accent)}
     row.addEventListener("click", () => {
       if(Date.now() - dragEndedAt < 350) return;
       if(longPressed){ longPressed = false; return; }
-      /* 自分自身が開いている時 or どれか開いている時は、閉じるだけ */
       if(wrap.classList.contains("open") || anySwipeOpen()){
         closeAllSwipes();
         return;
@@ -1458,21 +1517,13 @@ textarea:focus{border-color:var(--accent)}
     row.addEventListener("contextmenu", e => e.preventDefault());
   }
 
-  /* =========================================================
-     どこかをタップしたら、開いているスワイプを閉じる
-     - スワイプ内のアクションボタンは除外
-     - 行本体のクリックは行側のハンドラで処理済み
-     - キャプチャ段階で先に処理して、他への副作用を抑える
-  ========================================================= */
   document.addEventListener("click", e => {
     if(!anySwipeOpen()) return;
     if(e.target.closest(".swipe-actions button")) return;
-    /* 開いている行の中の srow は行側ハンドラに任せる */
     if(e.target.closest(".swipe.open .srow")) return;
     closeAllSwipes();
   }, true);
 
-  /* 空エリアのスワイプもサポート */
   (function attachScrollGesture(){
     const sc = $("sideScroll");
     let pid = null, sx = 0, sy = 0;
@@ -1517,9 +1568,6 @@ textarea:focus{border-color:var(--accent)}
     });
   })();
 
-  /* =========================================================
-     Safari左端戻るジェスチャ無効化
-  ========================================================= */
   (function preventEdgeBackSwipe(){
     let edgeTouch = null;
 
@@ -1552,7 +1600,6 @@ textarea:focus{border-color:var(--accent)}
     document.addEventListener("touchcancel", clear, { passive: true });
   })();
 
-  /* ---------- drag ---------- */
   function beginDrag(wrap, row, type, index, startY){
     const wraps = [...$("sideList").querySelectorAll(".swipe")];
     const rowH  = wrap.offsetHeight || 60;
@@ -1643,7 +1690,6 @@ textarea:focus{border-color:var(--accent)}
     render();
   }
 
-  /* ---------- drag target folder chips ---------- */
   function buildDragFolders(){
     const bar = $("dragFolders");
     bar.innerHTML = folders.map(f => {
@@ -1921,6 +1967,18 @@ textarea:focus{border-color:var(--accent)}
     }
   }
 
+  function updateRevertButtonState(){
+    const btn = $("btnRevert");
+    if(!btn) return;
+    let canRevert = false;
+    if(editingId){
+      const it = items.find(x => x.id === editingId);
+      if(it && typeof it.prevHtml === "string") canRevert = true;
+    }
+    btn.disabled = !canRevert;
+    btn.style.opacity = canRevert ? "" : "0.4";
+  }
+
   function openEditor(id, isNew){
     editingId = isNew ? null : id;
     if(isNew){
@@ -1934,6 +1992,7 @@ textarea:focus{border-color:var(--accent)}
       editingIcon = it && validIcon(it.icon) ? it.icon : null;
     }
     renderIconPreview();
+    updateRevertButtonState();
     $("search").value = "";
     $("searchResult").textContent = "";
     clearSearchHighlight();
@@ -1951,7 +2010,6 @@ textarea:focus{border-color:var(--accent)}
     let name = (nameInput.value || "").trim();
     const html = source.value;
 
-    /* 名前が未入力なら HTML の <title> から取得を試みる */
     if(!name){
       const auto = extractHtmlTitle(html);
       if(auto){
@@ -1965,6 +2023,10 @@ textarea:focus{border-color:var(--accent)}
     if(editingId){
       const it = items.find(x => x.id === editingId);
       if(it){
+        /* 1つ前のバージョンを記憶（現在の内容を prev に退避） */
+        it.prevHtml = it.html || "";
+        it.prevUpdated = it.updated || Date.now();
+
         it.name = name;
         it.html = html;
         it.updated = Date.now();
@@ -1989,7 +2051,21 @@ textarea:focus{border-color:var(--accent)}
     showToast("保存しました");
   }
 
-  /* ---------- icon pick ---------- */
+  function revertToPrevious(){
+    if(!editingId){
+      showToast("新規作成時は戻せません");
+      return;
+    }
+    const it = items.find(x => x.id === editingId);
+    if(!it || typeof it.prevHtml !== "string"){
+      showToast("戻せるバージョンがありません");
+      return;
+    }
+    if(!confirm("1つ前のバージョンを読み込みますか？\n（現在の編集内容は破棄されます）")) return;
+    source.value = it.prevHtml;
+    showToast("1つ前のバージョンを読み込みました");
+  }
+
   function readImageFile(file, maxSize){
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -2196,6 +2272,8 @@ textarea:focus{border-color:var(--accent)}
           folderId: it.folderId
         };
         if(validIcon(it.icon)) o.icon = it.icon;
+        if(typeof it.prevHtml === "string") o.prevHtml = it.prevHtml;
+        if(typeof it.prevUpdated === "number") o.prevUpdated = it.prevUpdated;
         return o;
       })
     };
@@ -2204,14 +2282,17 @@ textarea:focus{border-color:var(--accent)}
       const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const d = new Date();
-      const ts = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}`;
       a.href = url;
-      a.download = `pwa-previewer-${ts}.json`;
+      a.download = "MyApp-BackUp.json";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+      /* エクスポート時刻を記録 → バッジをリセット */
+      setLastExportAt(Date.now());
+      updateExportBadge();
+
       showToast(`エクスポート完了（${items.length}件）`);
     }catch(e){
       alert("エクスポートに失敗しました");
@@ -2246,6 +2327,8 @@ textarea:focus{border-color:var(--accent)}
         folderId: typeof it.folderId === "string" ? it.folderId : null
       };
       if(validIcon(it.icon)) o.icon = it.icon;
+      if(typeof it.prevHtml === "string") o.prevHtml = it.prevHtml;
+      if(typeof it.prevUpdated === "number") o.prevUpdated = it.prevUpdated;
       outI.push(o);
     });
     return { folders: outF, items: outI };
@@ -2290,6 +2373,8 @@ textarea:focus{border-color:var(--accent)}
             folderId: fid
           };
           if(it.icon) note.icon = it.icon;
+          if(typeof it.prevHtml === "string") note.prevHtml = it.prevHtml;
+          if(typeof it.prevUpdated === "number") note.prevUpdated = it.prevUpdated;
           items.push(note);
         });
       }
@@ -2362,7 +2447,6 @@ textarea:focus{border-color:var(--accent)}
     fullFrame.srcdoc = "";
   };
 
-  /* 編集ボタン：選択中のメモを編集 */
   $("btnEdit").onclick = () => {
     if(!selectedId){
       showToast("編集するメモを選択してください");
@@ -2373,6 +2457,7 @@ textarea:focus{border-color:var(--accent)}
 
   $("btnSave").onclick = saveCurrent;
   $("btnCancel").onclick = closeEditor;
+  $("btnRevert").onclick = revertToPrevious;
 
   $("btnClear").onclick = () => {
     source.value = "";
@@ -2401,9 +2486,6 @@ textarea:focus{border-color:var(--accent)}
     if(e.target === $("pickerOverlay")) closePicker();
   });
 
-  /* 右エリア（ステージ・ツールバー余白）タップ
-     - 開いているスワイプがあれば閉じる
-     - サイドバーが開いていればコンパクトに */
   $("stage").addEventListener("click", handleOutsideTap);
   $("toolbar").addEventListener("click", e => {
     if(e.target.closest("button")) return;
@@ -2436,6 +2518,7 @@ textarea:focus{border-color:var(--accent)}
   render();
   setDevice("phone");
   updatePreview();
+  updateExportBadge();
 
   requestAnimationFrame(() => {
     fitDevices();
