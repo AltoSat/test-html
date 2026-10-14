@@ -1,2132 +1,2570 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#2c2c2e">
-  <title>ココマーク</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ココマーク">
-  <style>
-    :root {
-      --bg-color: #1c1c1e;
-      --panel-bg: rgba(16, 16, 18, 0.78);
-      --header-bg: rgba(30, 30, 32, 0.85);
-      --accent-color: #0a84ff;
-      --text-color: #ffffff;
-      --border-color: rgba(255, 255, 255, 0.2);
-      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-area-top: env(safe-area-inset-top, 0px);
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Myアプリ">
+<title>Myアプリ</title>
 
-    * {
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
-      margin: 0;
-      padding: 0;
-    }
+<!-- ===== PWA アイコン ===== -->
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
 
-    input[type="range"],
-    input[type="color"],
-    input[type="text"] {
-      touch-action: auto;
-      user-select: auto;
-      -webkit-user-select: auto;
-    }
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#000;
+  --panel:#1c1c1e;
+  --panel2:#2c2c2e;
+  --panel3:#3a3a3c;
+  --text:#f5f5f7;
+  --muted:#98989f;
+  --accent:#0a84ff;
+  --danger:#ff453a;
+  --ok:#30d158;
+  --menu:#bf5af2;
+  --sep:#38383c;
+  --sel:#1a293a;
+  --side:70px;
+  --side-open:min(280px,72vw);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
-      position: fixed;
-      width: 100vw;
-      height: 100vh;
-      width: 100dvw;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
+/* ===== iOS PWA 黒帯対策（CSSファースト） =====
+   1) 画面高さの基準は 100dvh に一本化する。
+      iOS 15.4+ のスタンドアロン（viewport-fit=cover）では
+      100dvh が「実際に見えている画面全体の高さ」を返すため、
+      JS で innerHeight + safe-area を足し込む必要はない。
+   2) html は overflow:hidden、body は overflow:visible。
+      これにより、万一 .app が画面より大きくなっても
+      上端が押し下げられず（＝上部の黒帯が出ず）、
+      はみ出し分は下端だけがクリップされる。
+   3) セーフエリアの余白は「各ペインの内側」で確保し、
+      背景色はペインの端（＝画面端）まで描画させる。
+   4) JS は「100dvh がセーフエリア分だけ短く報告される」
+      既知のズレを検出したときだけ html.app-h を付けて
+      実測値で上書きする保険として働く（通常は何もしない）。 */
+html{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  background:#000;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
+}
 
-    /* ヘッダー領域 */
-    header {
-      height: calc(44px + var(--safe-area-top));
-      padding-top: var(--safe-area-top);
-      background: var(--header-bg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-left: 12px;
-      padding-right: 12px;
-      border-bottom: 0.5px solid var(--border-color);
-      z-index: 100;
-      flex-shrink: 0;
-    }
+button,textarea,input{font:inherit}
+button{
+  border:0;color:var(--text);background:var(--panel2);
+  border-radius:12px;min-height:40px;padding:0 14px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;text-align:center;
+}
+button.primary{background:var(--accent)}
+button.danger{background:var(--danger)}
+button.ghost{background:transparent;border:1px solid var(--sep)}
+button:active{transform:scale(.97);opacity:.85}
+button:disabled{opacity:.4;pointer-events:none}
 
-    header h1 {
-      font-size: 16px;
-      font-weight: 600;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    }
+/* ===== ルート ===== */
+.app{
+  position:relative;
+  width:100%;
+  height:100vh;                 /* フォールバック */
+  height:100dvh;                /* 現代のiOS PWAではこれで画面全体を覆える */
+  display:flex;
+  overflow:hidden;
+  background:#000;
+  /* 左右のセーフエリアのみここで確保（上下は各ペインの内側） */
+  padding-left:env(safe-area-inset-left, 0px);
+  padding-right:env(safe-area-inset-right, 0px);
+}
+/* JS が「ズレ」を検出したときだけ有効になる上書き */
+html.app-h .app{height:var(--app-h)}
 
-    .btn-icon {
-      background: none;
-      border: none;
-      color: var(--accent-color);
-      font-size: 15px;
-      font-weight: 500;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+/* ================= SIDEBAR ================= */
+.sidebar{
+  flex:0 0 auto;
+  width:var(--side);
+  background:var(--panel);
+  border-right:1px solid #2c2c2e;
+  display:flex;flex-direction:column;
+  transition:width .22s cubic-bezier(.22,.8,.24,1);
+  overflow:hidden;
+  position:relative;z-index:20;
+  /* Dynamic Island / ステータスバー・Home Bar 分を内側に確保（背景は端まで） */
+  padding-top:env(safe-area-inset-top, 0px);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+.sidebar.open{width:var(--side-open)}
 
-    .btn-icon:disabled {
-      color: #636366;
-    }
+.side-scroll{
+  flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding:10px 8px 8px;
+  touch-action:pan-y;
+}
+.side-scroll::-webkit-scrollbar{width:0}
+.side-empty{
+  padding:22px 10px;color:var(--muted);font-size:12.5px;line-height:1.7;text-align:center;
+  display:none;
+}
+.sidebar.open .side-empty{display:block}
 
-    .btn-primary {
-      background-color: var(--accent-color);
-      color: #fff;
-      border-radius: 18px;
-      padding: 6px 14px;
-      font-weight: 600;
-    }
+.side-foot{
+  flex:0 0 auto;
+  padding:8px 8px 8px;
+  border-top:1px solid #2c2c2e;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.foot-btn{
+  position:relative;
+  flex:1;min-width:0;
+  min-height:46px;
+  border-radius:12px;
+  padding:0;
+  background:var(--panel2);
+  color:var(--muted);
+}
+.foot-btn:hover{color:var(--text)}
+.foot-btn svg{width:20px;height:20px;display:block}
 
-    #editor-container {
-      flex: 1;
-      position: relative;
-      overflow: visible;
-      background-color: #121212;
-      min-height: 0;
-      touch-action: none;
-    }
+/* 通知バッジ */
+.foot-btn .badge{
+  position:absolute;
+  top:4px;
+  right:4px;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:9px;
+  background:var(--danger);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 0 2px var(--panel);
+  pointer-events:none;
+  z-index:5;
+}
 
-    #start-screen {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-color);
-      z-index: 50;
-      gap: 20px;
-    }
+.sidebar:not(.open) .side-foot{
+  flex-direction:column;
+  flex-wrap:nowrap;
+  gap:8px;
+}
+.sidebar:not(.open) .foot-btn{
+  flex:0 0 auto;
+  width:46px;
+  height:46px;
+  min-height:46px;
+  border-radius:50%;
+  margin:0 auto;
+}
+.sidebar:not(.open) .foot-btn .badge{
+  top:0;
+  right:0;
+  min-width:16px;
+  height:16px;
+  font-size:10px;
+  padding:0 4px;
+  border-radius:8px;
+}
 
-    .file-select-label {
-      background-color: var(--accent-color);
-      color: white;
-      padding: 14px 28px;
-      border-radius: 24px;
-      font-weight: 600;
-      font-size: 17px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
-    }
+/* rows */
+.srow{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 12px;min-height:84px;
+  border-radius:14px;
+  position:relative;z-index:2;
+  background:var(--panel);
+  touch-action:pan-y;
+  transition:transform .24s cubic-bezier(.22,.8,.24,1),background .15s;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  cursor:pointer;
+}
+.sidebar:not(.open) .srow{
+  flex-direction:column;
+  justify-content:center;
+  padding:6px 2px;
+  gap:2px;
+  min-height:auto;
+}
 
-    #image-input {
-      display: none;
-    }
+.row-icon{
+  width:56px;height:56px;flex:0 0 auto;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  color:#ffd60a;overflow:hidden;background:transparent;
+}
+.sidebar:not(.open) .row-icon{width:48px;height:48px;border-radius:12px}
+.row-icon svg{width:46px;height:46px;display:block}
+.sidebar:not(.open) .row-icon svg{width:34px;height:34px}
+.row-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.row-icon .ico-letter{
+  width:100%;height:100%;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;font-weight:700;color:#fff;line-height:1;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.sidebar:not(.open) .row-icon .ico-letter{border-radius:12px;font-size:34px}
 
-    #viewport {
-      position: absolute;
-      top: 0;
-      left: 0;
-      transform-origin: 0 0;
-      will-change: transform;
-      overflow: visible;
-    }
+.row-icon.folder-icon{
+  width:64px;height:64px;border-radius:16px;
+}
+.row-icon.folder-icon svg{width:54px;height:54px}
+.row-icon.folder-icon .ico-emoji{
+  font-size:44px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.sidebar:not(.open) .row-icon.folder-icon{width:52px;height:52px;border-radius:13px}
+.sidebar:not(.open) .row-icon.folder-icon svg{width:42px;height:42px}
+.sidebar:not(.open) .row-icon.folder-icon .ico-emoji{font-size:38px}
 
-    canvas {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      overflow: visible;
-    }
+.row-main{flex:1;min-width:0}
+.row-title{
+  font-size:15px;font-weight:600;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-sub{
+  font-size:12px;color:var(--muted);line-height:1.3;margin-top:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-sub2{
+  font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:.85;
+}
+.row-apps{
+  flex:0 0 auto;display:flex;gap:3px;align-items:center;
+}
+.mini-app{
+  width:26px;height:26px;border-radius:8px;overflow:hidden;
+  background:var(--panel3);display:flex;align-items:center;justify-content:center;
+  flex:0 0 auto;
+  font-size:14px;font-weight:700;color:#fff;line-height:1;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.mini-app img{width:100%;height:100%;object-fit:cover;display:block}
+.row-chev{color:#5a5a5e;flex:0 0 auto;display:flex;align-items:center}
+.row-chev svg{width:16px;height:16px;display:block}
 
-    /* オブジェクトツール（4列構成レイアウト） */
-    #properties-panel {
-      position: absolute;
-      bottom: calc(52px + (var(--safe-area-bottom) / 2));
-      left: 6px;
-      right: 6px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(3px);
-      -webkit-backdrop-filter: blur(3px);
-      border-radius: 14px;
-      padding: 6px;
-      display: grid;
-      grid-template-columns: auto auto auto minmax(0, 1fr);
-      gap: 6px;
-      align-items: center;
-      border: 0.5px solid var(--border-color);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-      z-index: 90;
-      transition: top 0.18s ease, bottom 0.18s ease;
-    }
+.sidebar:not(.open) .row-main{
+  width:100%;
+  text-align:center;
+  flex:0 0 auto;
+  min-height:24px;
+}
+.sidebar:not(.open) .row-title{
+  font-size:10px;
+  font-weight:500;
+  color:var(--muted);
+  line-height:1.15;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  white-space:normal;
+  word-break:break-all;
+  overflow-wrap:anywhere;
+  padding:0 2px;
+}
+.sidebar:not(.open) .row-sub,
+.sidebar:not(.open) .row-sub2,
+.sidebar:not(.open) .row-apps,
+.sidebar:not(.open) .row-chev{display:none}
 
-    #properties-panel.at-top {
-      bottom: auto;
-      top: calc(52px + var(--safe-area-top));
-    }
+.sidebar:not(.open) .side-scroll{
+  padding:8px 5px 5px;
+}
+.sidebar:not(.open) .swipe{
+  margin-bottom:1px;
+}
 
-    #properties-panel.hidden {
-      display: none;
-    }
+.srow.selected{background:var(--sel)}
+.srow.selected::after{
+  content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--accent);
+}
+.sidebar:not(.open) .srow.selected::after{top:12px;bottom:12px}
 
-    /* 各列の共通スタイル */
-    .panel-col {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 0;
-    }
+/* swipe */
+.swipe{
+  position:relative;overflow:hidden;background:#000;border-radius:14px;
+  margin-bottom:3px;
+}
+.swipe-actions{
+  position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1;
+}
+.swipe-actions button{
+  width:76px;min-height:100%;border-radius:0;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  font-size:11px;font-weight:600;color:#fff;background:#48484a;
+}
+.swipe-actions button:active{transform:none;opacity:.75}
+.swipe-actions button svg{width:20px;height:20px}
+.swipe-actions .act-edit{background:#0a84ff}
+.swipe-actions .act-move{background:#5e5ce6}
+.swipe-actions .act-rename{background:#5e5ce6}
+.swipe-actions .act-del{background:#ff453a}
+.sidebar:not(.open) .swipe-actions{display:none}
 
-    /* 1列目: その他ボタン */
-    .panel-col-tools {
-      flex-direction: column;
-      gap: 4px;
-      align-self: stretch;
-      justify-content: center;
-      padding-right: 5px;
-      border-right: 1px solid rgba(255,255,255,0.1);
-    }
+.swipe.dragging{overflow:visible;z-index:40;transition:none}
+.swipe.dragging .srow{
+  transition:none;background:var(--panel2);
+  box-shadow:0 12px 34px rgba(0,0,0,.7),0 0 0 1px #4a4a4e;
+  transform:scale(1.02);
+}
 
-    /* 2列目: カラー 3x3 */
-    .panel-col-colors {
-      padding-right: 5px;
-      border-right: 1px solid rgba(255,255,255,0.1);
-    }
+@keyframes listFadeIn{
+  0%   { opacity:0; transform:translateX(-16px); }
+  100% { opacity:1; transform:translateX(0); }
+}
+@keyframes listFadeInRight{
+  0%   { opacity:0; transform:translateX(16px); }
+  100% { opacity:1; transform:translateX(0); }
+}
+.side-list.anim-in{
+  animation:listFadeIn .24s cubic-bezier(.22,.8,.24,1) both;
+}
+.side-list.anim-in-right{
+  animation:listFadeInRight .24s cubic-bezier(.22,.8,.24,1) both;
+}
 
-    /* 3列目: 十字キー */
-    .panel-col-nudge {
-      padding-right: 5px;
-      border-right: 1px solid rgba(255,255,255,0.1);
-    }
+/* drag-folders は .app の外にあるため env() を維持 */
+.drag-folders{
+  position:fixed;top:0;left:0;right:0;z-index:80;
+  display:none;gap:8px;flex-wrap:nowrap;align-items:center;
+  padding:calc(12px + env(safe-area-inset-top)) 12px 12px;
+  background:rgba(28,28,30,.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--sep);
+  overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+.drag-folders.show{display:flex}
+.drag-folders::-webkit-scrollbar{height:0}
+.chip{
+  flex:0 0 auto;height:36px;border-radius:18px;padding:0 16px;
+  background:var(--panel3);color:var(--text);
+  display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;
+  transition:transform .12s,background .12s;
+  white-space:nowrap;
+}
+.chip.current{background:#3a3a3c;color:var(--muted)}
+.chip.over{background:var(--accent);color:#fff;transform:scale(1.08)}
 
-    /* 4列目: スライダー縦並び */
-    .panel-col-sliders {
-      flex-direction: column;
-      gap: 3px;
-      align-items: stretch;
-      justify-content: center;
-      min-width: 0;
-    }
+.toast{
+  position:fixed;left:50%;
+  bottom:calc(28px + env(safe-area-inset-bottom));
+  transform:translate(-50%,20px);
+  background:rgba(60,60,65,.96);color:#fff;padding:9px 16px;border-radius:20px;
+  font-size:13px;font-weight:600;z-index:120;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;white-space:nowrap;
+  box-shadow:0 6px 24px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 
-    /* 項目名やテキストの可読性向上 */
-    .panel-label {
-      font-size: 10px;
-      color: #e0e0e5;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-      white-space: nowrap;
-      flex-shrink: 0;
-      font-weight: 500;
-      min-width: 28px;
-    }
+.swipe-hint{
+  position:fixed;
+  top:calc(var(--app-h, 100dvh) / 2);
+  left:90px;
+  transform:translateY(-50%) translateX(-10px) scale(.85);
+  background:var(--accent);
+  color:#fff;
+  padding:8px 15px;
+  border-radius:20px;
+  font-size:12.5px;
+  font-weight:700;
+  letter-spacing:.02em;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .16s ease, transform .16s cubic-bezier(.22,.8,.24,1), background .16s;
+  z-index:60;
+  white-space:nowrap;
+  box-shadow:0 8px 26px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);
+}
+.swipe-hint.show{opacity:1;transform:translateY(-50%) translateX(0) scale(1)}
+.swipe-hint.ready{background:var(--ok)}
+.swipe-hint.menu-ready{background:var(--menu)}
 
-    /* カラー 3x3 グリッド */
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 20px);
-      grid-template-rows: repeat(3, 20px);
-      gap: 3px;
-    }
+/* ================= MAIN / PREVIEW ================= */
+.main{
+  flex:1;min-width:0;display:flex;flex-direction:column;
+  min-height:0;
+  background:#000;
+  /* Dynamic Island / Home Bar 分を内側に確保 */
+  padding-top:env(safe-area-inset-top, 0px);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+.toolbar{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px 6px;
+}
+.dev-btn{
+  min-height:36px;border-radius:18px;padding:0 16px;font-size:13px;font-weight:700;
+  background:var(--panel2);color:var(--muted);
+}
+.dev-btn.on{background:var(--accent);color:#fff}
+.toolbar .spacer{flex:1}
+.tool-btn{
+  width:36px;
+  height:36px;
+  min-width:36px;
+  min-height:36px;
+  border-radius:50%;
+  padding:0;
+  background:var(--panel2);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.tool-btn svg{width:18px;height:18px}
 
-    .color-swatch {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
-      box-sizing: border-box;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
+.stage{
+  flex:1;min-height:0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  padding:4px 8px 6px;
+}
 
-    .color-swatch.selected {
-      border-color: #ffffff;
-      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.9);
-    }
+.phone{
+  position:relative;
+  width:300px;height:652px;
+  background:#000;
+  border:6px solid #202023;
+  border-radius:48px;
+  overflow:hidden;
+  box-shadow:0 14px 40px #000,0 0 0 1px #444;
+  flex:0 0 auto;
+}
+.phone-viewport{
+  position:absolute;inset:0;
+  overflow:hidden;
+  border-radius:42px;
+  background:#000;
+}
+.phone-viewport iframe{
+  position:absolute;top:50%;left:50%;
+  width:402px;height:874px;border:0;background:#000;color-scheme:dark;
+  transform-origin:center center;
+  margin-left:-201px;margin-top:-437px;
+}
+.island{
+  position:absolute;z-index:5;top:11px;left:50%;transform:translateX(-50%);
+  width:33.5%;
+  height:34px;
+  background:#000;border-radius:100px;pointer-events:none;
+}
+.homebar{
+  position:absolute;z-index:6;bottom:8px;left:50%;transform:translateX(-50%);
+  width:36%;height:4px;border-radius:4px;background:#fff;pointer-events:none;opacity:.9;
+}
 
-    .color-swatch.color-swatch-empty {
-      border-style: dashed;
-      border-color: rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
-      cursor: default;
-    }
+.ipad{
+  position:relative;
+  width:460px;height:345px;
+  background:#000;
+  border:10px solid #2a2a2e;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:0 14px 40px #000,0 0 0 1px #444;
+  flex:0 0 auto;
+}
+.ipad-viewport{
+  position:absolute;inset:0;
+  overflow:hidden;
+  border-radius:14px;
+  background:#000;
+}
+.ipad-viewport iframe{
+  position:absolute;top:50%;left:50%;
+  width:1080px;height:810px;border:0;background:#000;color-scheme:dark;
+  transform-origin:center center;
+  margin-left:-540px;margin-top:-405px;
+}
 
-    /* カスタムカラーピッカー（改善版） */
-    .color-picker-wrapper {
-      position: relative;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: conic-gradient(from 0deg,
-        #ff3b30, #ff9500, #ffcc00, #34c759,
-        #00c7be, #0a84ff, #af52de, #ff3b30);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      overflow: hidden;
-      border: 1.5px solid rgba(255, 255, 255, 0.5);
-      cursor: pointer;
-    }
+/* ================= SHEETS ================= */
+/* 高さの基準は 100dvh。JS がズレを検出したときのみ --app-h で上書き。 */
+.editor-overlay{
+  position:fixed;top:0;left:0;right:0;
+  height:100vh;
+  height:100dvh;
+  z-index:90;background:rgba(0,0,0,.55);
+  display:none;align-items:flex-end;justify-content:center;
+  overscroll-behavior:none;
+}
+html.app-h .editor-overlay{height:var(--app-h)}
+.editor-overlay.show{display:flex}
+.editor-sheet{
+  width:100%;max-width:900px;max-height:92%;
+  background:var(--bg);border-radius:20px 20px 0 0;
+  box-shadow:0 -10px 40px #000;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.editor-scroll{
+  flex:1;overflow:auto;min-height:0;padding:14px 14px 0;
+}
+.editor-search-wrap{
+  flex-shrink:0;background:var(--bg);border-top:1px solid var(--sep);
+  padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+}
+.sheet-handle{width:36px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 12px}
 
-    .picker-current {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #e63946;
-      border: 1px solid rgba(255, 255, 255, 0.95);
-      box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
-      pointer-events: none;
-    }
+.editor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.editor-actions button{flex:1;min-width:62px;white-space:nowrap;font-size:13px}
 
-    .color-picker-wrapper input[type="color"] {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-    }
+.editor-title-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.icon-preview{
+  width:46px;height:46px;flex:0 0 auto;border-radius:13px;
+  background:#111113;border:1px solid var(--sep);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.icon-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.icon-preview .ico-letter{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;color:#fff;line-height:1;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.icon-preview .ico-none{font-size:19px;color:var(--muted)}
 
-    /* 十字キー (十字レイアウト) */
-    .nudge-cross {
-      display: grid;
-      grid-template-columns: repeat(3, 20px);
-      grid-template-rows: repeat(3, 20px);
-      gap: 1px;
-      align-items: center;
-      justify-items: center;
-    }
+.editor-title-row .name-input{
+  flex:1;min-width:80px;height:46px;border:1px solid var(--sep);border-radius:13px;
+  background:#111113;color:#fff;padding:0 12px;outline:none;
+  -webkit-user-select:text;user-select:text;
+}
+.editor-title-row .name-input:focus{border-color:var(--accent)}
 
-    .nudge-btn {
-      width: 20px;
-      height: 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #fff;
-      border-radius: 4px;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    }
+textarea{
+  width:100%;height:min(42vh,360px);resize:vertical;
+  background:#111113;color:#f5f5f7;border:1px solid var(--sep);border-radius:14px;
+  padding:14px;outline:none;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;overflow:auto;
+  -webkit-user-select:text;user-select:text;
+}
+textarea:focus{border-color:var(--accent)}
 
-    .nudge-btn:active {
-      background: rgba(255, 255, 255, 0.4);
-    }
+.search-section{margin-top:0;padding-top:0;border-top:none}
+.search-box{display:flex;align-items:center;gap:6px}
+.search-field{position:relative;flex:1;min-width:0}
+.search-field input{
+  width:100%;height:42px;border:1px solid var(--sep);border-radius:12px;
+  background:#111113;color:#fff;padding:0 62px 0 11px;outline:none;
+  -webkit-user-select:text;user-select:text;
+  -webkit-appearance:none;appearance:none;
+  caret-color:#f5f5f7;font-size:16px;
+}
+.search-field input:focus{border-color:var(--accent)}
+.search-count{
+  position:absolute;right:9px;top:50%;transform:translateY(-50%);
+  font-size:11.5px;color:var(--muted);pointer-events:none;white-space:nowrap;
+}
+.search-box .nav-btn{min-height:42px;min-width:44px;padding:0 8px;font-size:15px}
+.search-box #btnSave{min-height:42px;min-width:66px;font-size:14px;font-weight:700}
 
-    #nudge-up { grid-column: 2; grid-row: 1; }
-    #nudge-left { grid-column: 1; grid-row: 2; }
-    #nudge-right { grid-column: 3; grid-row: 2; }
-    #nudge-down { grid-column: 2; grid-row: 3; }
+.picker-sheet{
+  width:100%;max-width:520px;max-height:72%;
+  background:var(--bg);border-radius:20px 20px 0 0;
+  padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:12px;
+  box-shadow:0 -10px 40px #000;
+}
+.picker-sheet h3{margin:0;font-size:16px;font-weight:700;text-align:center}
+.picker-list{
+  overflow:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:8px;min-height:0;
+}
+.picker-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--panel);border-radius:14px;padding:16px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  border:1px solid transparent;
+}
+.picker-item .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+.picker-item.current{border-color:var(--accent);background:#0a84ff18}
+.picker-item:active{background:var(--panel2)}
 
-    /* スライダー行 */
-    .panel-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      min-height: 20px;
-      min-width: 0;
-    }
+.folder-edit-row{display:flex;gap:8px;align-items:center}
+.folder-edit-row .emoji-input{
+  width:64px;height:52px;flex:0 0 auto;
+  border:1px solid var(--sep);border-radius:13px;
+  background:#111113;color:#fff;padding:0;outline:none;
+  text-align:center;font-size:26px;line-height:1;
+  -webkit-user-select:text;user-select:text;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Helvetica Neue",sans-serif;
+}
+.folder-edit-row .emoji-input:focus{border-color:var(--accent)}
+.folder-edit-row .name-input{
+  flex:1;min-width:0;height:52px;border:1px solid var(--sep);border-radius:13px;
+  background:#111113;color:#fff;padding:0 12px;outline:none;
+  -webkit-user-select:text;user-select:text;
+}
+.folder-edit-row .name-input:focus{border-color:var(--accent)}
 
-    .panel-row[hidden],
-    .panel-row.hidden-row {
-      display: none;
-    }
-
-    /* 文字入力ラッパー */
-    .input-wrapper {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      min-width: 0;
-    }
-
-    .text-input-field {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid var(--border-color);
-      color: #fff;
-      padding: 3px 20px 3px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      line-height: 1.2;
-    }
-
-    .btn-clear-text {
-      position: absolute;
-      right: 4px;
-      width: 14px;
-      height: 14px;
-      background: rgba(255, 255, 255, 0.4);
-      color: #000;
-      border-radius: 50%;
-      border: none;
-      font-size: 9px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    /* スライダー調整 */
-    input[type="range"] {
-      flex: 1 1 auto;
-      min-width: 0;
-      width: 100%;
-      accent-color: var(--accent-color);
-      height: 18px;
-    }
-
-    .toggle-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #fff;
-      padding: 3px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      flex-shrink: 0;
-      line-height: 1.1;
-      cursor: pointer;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-      white-space: nowrap;
-    }
-
-    .toggle-btn.active {
-      background: var(--accent-color);
-    }
-
-    /* ゴミ箱ボタン */
-    .btn-icon-delete {
-      background: rgba(255, 69, 58, 0.35);
-      color: #ff453a;
-      border: 1px solid rgba(255, 69, 58, 0.5);
-      width: 26px;
-      height: 24px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
-
-    .btn-icon-delete:active {
-      background: rgba(255, 69, 58, 0.6);
-    }
-
-    /* フッターメニュー */
-    toolbar {
-      height: calc(48px + (var(--safe-area-bottom) / 2));
-      padding-bottom: calc(var(--safe-area-bottom) / 2);
-      background: var(--header-bg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      border-top: 0.5px solid var(--border-color);
-      z-index: 100;
-      flex-shrink: 0;
-    }
-
-    .tool-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      color: #a0a0a5;
-      font-size: 10px;
-      gap: 2px;
-      width: 60px;
-      height: 100%;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    }
-
-    .tool-item svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
-
-    .tool-item.active {
-      color: var(--accent-color);
-    }
-
-    #save-modal {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      gap: 15px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-    }
-
-    #save-modal.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #save-modal img {
-      max-width: 90%;
-      max-height: 70vh;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      object-fit: contain;
-    }
-
-    #save-modal p {
-      color: #fff;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .close-modal-btn {
-      background: #3a3a3c;
-      color: white;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 20px;
-      font-size: 15px;
-      font-weight: 600;
-    }
-  </style>
+/* ================= FULLSCREEN ================= */
+.fullscreen{
+  position:fixed;top:0;left:0;right:0;
+  height:100vh;
+  height:100dvh;
+  z-index:100;background:#000;padding:0;display:none;overscroll-behavior:none;
+}
+html.app-h .fullscreen{height:var(--app-h)}
+.fullscreen.show{display:block}
+.fullscreen-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;overscroll-behavior:none;}
+.fullscreen iframe{border:0;background:#000;color-scheme:dark}
+.fullscreen .exit{
+  position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));right:14px;
+  width:40px;height:40px;padding:0;border-radius:50%;
+  background:rgba(0,0,0,.40);color:#fff;font-size:19px;
+}
+</style>
 </head>
 <body>
 
-  <header>
-    <div style="display: flex; gap: 4px;">
-      <button id="btn-undo" class="btn-icon" disabled>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-scroll" id="sideScroll">
+      <div class="side-list" id="sideList"></div>
+    </div>
+
+    <div class="side-foot">
+      <button id="btnNew" class="foot-btn" aria-label="追加">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
       </button>
-      <button id="btn-redo" class="btn-icon" disabled>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg>
+      <button id="btnSettings" class="foot-btn" aria-label="設定">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
       </button>
     </div>
-    <h1>ココマーク</h1>
-    <button id="btn-export" class="btn-icon btn-primary">保存</button>
-  </header>
+  </aside>
 
-  <div id="editor-container">
-    <div id="start-screen">
-      <label class="file-select-label" for="image-input">写真を選択</label>
-      <input type="file" id="image-input" accept="image/*">
-    </div>
-
-    <div id="viewport">
-      <canvas id="bg-canvas"></canvas>
-      <canvas id="annotation-canvas"></canvas>
-    </div>
-  </div>
-
-  <!-- オブジェクト操作用ツールパネル（4列構成） -->
-  <div id="properties-panel" class="hidden">
-
-    <!-- 1列目: その他のボタン -->
-    <div class="panel-col panel-col-tools">
-      <button class="btn-icon-delete" id="btn-delete" title="削除">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <div class="toolbar" id="toolbar">
+      <button class="dev-btn on" data-dev="phone">iPhone</button>
+      <button class="dev-btn" data-dev="ipad">iPad</button>
+      <div class="spacer"></div>
+      <button id="btnEdit" class="tool-btn" aria-label="編集">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+        </svg>
       </button>
-      <button id="btn-shadow-toggle" class="toggle-btn active" title="影">影</button>
+      <button id="btnFullscreen" class="tool-btn" aria-label="拡大表示">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
     </div>
 
-    <!-- 2列目: カラー (3x3) -->
-    <div class="panel-col panel-col-colors">
-      <div id="color-presets" class="color-grid"></div>
-    </div>
-
-    <!-- 3列目: 十字キー -->
-    <div class="panel-col panel-col-nudge">
-      <div class="nudge-cross">
-        <button class="nudge-btn" id="nudge-up">↑</button>
-        <button class="nudge-btn" id="nudge-left">←</button>
-        <button class="nudge-btn" id="nudge-right">→</button>
-        <button class="nudge-btn" id="nudge-down">↓</button>
-      </div>
-    </div>
-
-    <!-- 4列目: スライダー（縦並び） -->
-    <div class="panel-col panel-col-sliders">
-      <!-- テキスト操作用 -->
-      <div class="panel-row" id="text-prop-row" style="display:none;">
-        <div class="input-wrapper">
-          <input type="text" id="text-content-input" class="text-input-field" placeholder="テキスト">
-          <button id="btn-clear-text" class="btn-clear-text">✕</button>
+    <div class="stage" id="stage">
+      <div class="phone" id="phone">
+        <div class="island"></div>
+        <div class="phone-viewport">
+          <iframe id="framePhone" title="iPhone preview"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
         </div>
-        <button id="btn-bold" class="toggle-btn">B</button>
+        <div class="homebar"></div>
       </div>
 
-      <!-- サイズ / 線幅 -->
-      <div class="panel-row" id="size-prop-row">
-        <span class="panel-label" id="size-label">サイズ</span>
-        <input type="range" id="size-slider" min="1" max="100" value="100">
+      <div class="ipad" id="ipad" hidden>
+        <div class="ipad-viewport">
+          <iframe id="frameIpad" title="iPad preview"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<div id="dragFolders" class="drag-folders"></div>
+<div id="toast" class="toast"></div>
+<div id="swipeHint" class="swipe-hint"></div>
+
+<!-- ================= EDITOR SHEET ================= -->
+<div id="editorOverlay" class="editor-overlay">
+  <div class="editor-sheet">
+    <div class="editor-scroll">
+      <div class="sheet-handle"></div>
+
+      <div class="editor-actions">
+        <button id="btnCancel" class="ghost">キャンセル</button>
+        <button id="btnClear" class="ghost">クリア</button>
+        <button id="btnRevert" class="ghost">1つ前</button>
+        <button id="btnCopy" class="ghost">コピー</button>
+        <button id="btnPickIcon" class="ghost">アイコン</button>
       </div>
 
-      <!-- フチ -->
-      <div class="panel-row" id="outline-prop-row">
-        <span class="panel-label">フチ</span>
-        <input type="range" id="outline-slider" min="0" max="20" value="20">
+      <div class="editor-title-row">
+        <div class="icon-preview" id="iconPreview" title="タップしてアイコンを選択"></div>
+        <input id="nameInput" class="name-input" type="text" placeholder="名前を入力"
+               maxlength="80" autocomplete="off">
       </div>
 
-      <!-- 四角形用: 角丸 & 正方形固定 -->
-      <div class="panel-row" id="radius-prop-row" style="display:none;">
-        <span class="panel-label">角丸</span>
-        <input type="range" id="radius-slider" min="0" max="100" value="100">
-        <button id="btn-aspect-square" class="toggle-btn">正方</button>
+      <div class="editor-textwrap">
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off"
+                  autocorrect="off" placeholder="<!doctype html> ..."></textarea>
       </div>
+    </div>
 
-      <!-- 矢印用: 先端サイズ -->
-      <div class="panel-row" id="arrow-prop-row" style="display:none;">
-        <span class="panel-label">先端</span>
-        <input type="range" id="arrow-slider" min="5" max="90" value="90">
+    <div class="editor-search-wrap">
+      <div class="search-section">
+        <div class="search-box">
+          <div class="search-field">
+            <input id="search" type="text" placeholder="検索" autocomplete="off">
+            <span id="searchResult" class="search-count"></span>
+          </div>
+          <button id="btnSearchPrev" class="ghost nav-btn">▲</button>
+          <button id="btnSearchNext" class="ghost nav-btn">▼</button>
+          <button id="btnSave" class="primary">保存</button>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-  <toolbar>
-    <button class="tool-item active" data-tool="select">
-      <svg viewBox="0 0 24 24"><path d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2 1-3.2-7.4L7 18.5V2z"/></svg>
-      選択
-    </button>
-    <button class="tool-item" data-tool="text">
-      <svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4H5z"/></svg>
-      文字
-    </button>
-    <button class="tool-item" data-tool="rect">
-      <svg viewBox="0 0 24 24"><path d="M3 5v14h18V5H3zm16 12H5V7h14v10z"/></svg>
-      四角
-    </button>
-    <button class="tool-item" data-tool="arrow">
-      <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
-      矢印
-    </button>
-  </toolbar>
+<input type="file" id="iconFile" accept="image/*" hidden>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
 
-  <div id="save-modal">
-    <img id="save-preview" src="" alt="完成画像">
-    <p>画像を長押しして「"写真"に保存」を選択してください</p>
-    <button class="close-modal-btn" id="btn-close-modal">閉じる</button>
+<!-- FOLDER PICKER -->
+<div id="pickerOverlay" class="editor-overlay">
+  <div class="picker-sheet">
+    <div class="sheet-handle"></div>
+    <h3>移動先のフォルダ</h3>
+    <div id="pickerList" class="picker-list"></div>
   </div>
+</div>
 
-  <script>
-    // -------------------------------------------------------------
-    // 定数
-    // -------------------------------------------------------------
-    const PRESET_COLORS = [
-      { name: '赤', val: '#e63946' },
-      { name: '黒', val: '#000000' }
-    ];
+<!-- FOLDER EDIT -->
+<div id="folderOverlay" class="editor-overlay">
+  <div class="picker-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="folderSheetTitle">フォルダ編集</h3>
+    <div class="folder-edit-row">
+      <input id="folderEmojiInput" class="emoji-input" type="text" placeholder="絵" maxlength="8" autocomplete="off">
+      <input id="folderNameInput" class="name-input" type="text" placeholder="フォルダ名" maxlength="80" autocomplete="off">
+    </div>
+    <div class="editor-actions" style="margin:0">
+      <button id="folderCancel" class="ghost">キャンセル</button>
+      <button id="folderSave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
 
-    const RECENT_COLORS_KEY = 'cocomark_recent_colors';
-    const MAX_RECENT_COLORS = 6;   // 3x3 グリッド（プリセット2 + 履歴6 + カスタム1 = 9）
+<!-- SETTINGS -->
+<div id="settingsOverlay" class="editor-overlay">
+  <div class="picker-sheet">
+    <div class="sheet-handle"></div>
+    <h3>設定</h3>
+    <div class="picker-list">
+      <div class="picker-item" id="setExport">
+        <span>エクスポート</span>
+      </div>
+      <div class="picker-item" id="setImport">
+        <span>インポート</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-    const MAX_TEXT_SIZE = 160;
-    const MAX_STROKE_WIDTH = 40;
-    const MAX_OUTLINE_WIDTH = 20;
-    const MAX_ARROW_SIZE = 90;
-    const MAX_BORDER_RADIUS_PERCENT = 100;
+<!-- FULLSCREEN PREVIEW -->
+<div id="fullscreen" class="fullscreen">
+  <button class="exit" id="exit">×</button>
+  <div class="fullscreen-stage" id="fsStage">
+    <iframe id="fullFrame" title="Full screen preview"
+      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin"></iframe>
+  </div>
+</div>
 
-    // 画像の外側にもオブジェクトを描画できるようにするための余白（画像座標系）
-    const ANNO_PADDING = 300;
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
 
-    // -------------------------------------------------------------
-    // 状態
-    // -------------------------------------------------------------
-    const state = {
-      image: null,
-      imgWidth: 0,
-      imgHeight: 0,
-      scale: 1,
-      panX: 0,
-      panY: 0,
-      activeTool: 'select',
-      annotations: [],
-      selectedId: null,
-      history: [],
-      historyIndex: -1,
-      recentColors: [],
-      defaults: {
-        color: '#e63946',
-        strokeWidth: MAX_STROKE_WIDTH,
-        textSize: MAX_TEXT_SIZE,
-        borderRadius: MAX_BORDER_RADIUS_PERCENT,
-        outlineWidth: MAX_OUTLINE_WIDTH,
-        arrowSize: MAX_ARROW_SIZE,
-        isBold: true,
-        hasShadow: true,
-        text: '文字入力'
+  const NOTES_KEY        = "pwa-previewer-items-v2";
+  const FOLDERS_KEY      = "pwa-previewer-folders-v1";
+  const OLD_KEY          = "iphone17pro-pwa-preview-html-v1";
+  const LAST_EXPORT_KEY  = "pwa-previewer-last-export-v1";
+  const DEFAULT_FOLDER_NAME = "マイメモ";
+
+  const PHONE_W = 402, PHONE_H = 874, PHONE_B = 6;
+  const IPAD_W  = 1080, IPAD_H  = 810, IPAD_B  = 10;
+
+  const SB_BACK_DX          = 45;
+  const SB_EXPAND_DX_FOLDER = 200;
+  const SB_EXPAND_DX_ROOT   = 45;
+
+  const TAP_BRIDGE =
+    '<script>(function(){' +
+    'var send=function(){try{parent.postMessage({__pwaPreviewTap:1},"*");}catch(e){}};' +
+    'document.addEventListener("click",send,true);' +
+    'document.addEventListener("pointerup",send,true);' +
+    '})();<\/script>';
+
+  let items = [];
+  let folders = [];
+  let selectedId = null;
+  let editingId = null;
+  let currentFolderId = null;
+  let sidebarOpen = window.innerWidth >= 760;
+  let currentDevice = "phone";
+
+  const source     = $("source");
+  const nameInput  = $("nameInput");
+  const framePhone = $("framePhone");
+  const frameIpad  = $("frameIpad");
+  const fullFrame  = $("fullFrame");
+
+  const WEEKDAYS = ["日","月","火","水","木","金","土"];
+
+  const ICON = {
+    folder: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.6A2.6 2.6 0 0 1 5.6 4h3.1c.55 0 1.07.24 1.43.66l1.02 1.2c.2.23.48.36.79.36h6.46A2.6 2.6 0 0 1 21 8.82V17.4A2.6 2.6 0 0 1 18.4 20H5.6A2.6 2.6 0 0 1 3 17.4V6.6z"/></svg>`,
+    back:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>`,
+    edit:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
+    move:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M12.5 6l6 6-6 6"/></svg>`,
+    trash:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>`
+  };
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function firstGrapheme(s){
+    if(!s) return "";
+    if(typeof Intl !== "undefined" && Intl.Segmenter){
+      try{
+        const seg = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+        const it = seg.segment(s)[Symbol.iterator]().next();
+        if(!it.done) return it.value.segment;
+      }catch(_){}
+    }
+    const arr = Array.from(s);
+    return arr.length ? arr[0] : "";
+  }
+
+  function formatDate(ts){
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const w = WEEKDAYS[d.getDay()];
+    const h = String(d.getHours()).padStart(2,"0");
+    const min = String(d.getMinutes()).padStart(2,"0");
+    return `${y}/${m}/${day}（${w}）${h}:${min}`;
+  }
+
+  function byteLength(s){
+    let n = 0;
+    for(let i = 0; i < s.length; i++){
+      const c = s.charCodeAt(i);
+      if(c < 0x80) n += 1;
+      else if(c < 0x800) n += 2;
+      else if(c >= 0xD800 && c <= 0xDBFF){ n += 4; i++; }
+      else n += 3;
+    }
+    return n;
+  }
+  function formatBytes(n){
+    if(n < 1024) return n + " B";
+    if(n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1024 / 1024).toFixed(2) + " MB";
+  }
+
+  function colorFor(s){
+    let h = 0;
+    for(let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+    return `hsl(${h} 62% 42%)`;
+  }
+
+  function validIcon(v){
+    return typeof v === "string" && /^data:image\//.test(v);
+  }
+
+  function iconInner(it){
+    if(validIcon(it.icon)){
+      return `<img src="${it.icon}" alt="">`;
+    }
+    const name = (it.name || "無").trim();
+    const ch = firstGrapheme(name) || "無";
+    return `<span class="ico-letter" style="background:${colorFor(name)}">${escapeHtml(ch)}</span>`;
+  }
+
+  function folderIconInner(f){
+    if(f && typeof f.emoji === "string" && f.emoji){
+      return `<span class="ico-emoji">${escapeHtml(f.emoji)}</span>`;
+    }
+    return ICON.folder;
+  }
+
+  const ENTITIES = {
+    amp:"&", lt:"<", gt:">", quot:'"', apos:"'", nbsp:" ",
+    copy:"©", reg:"®", trade:"™", hellip:"…", mdash:"—", ndash:"–",
+    laquo:"«", raquo:"»", yen:"¥", middot:"·"
+  };
+  function decodeEntities(s){
+    return String(s).replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z][a-zA-Z0-9]*);/g, (m, e) => {
+      if(e.charAt(0) === "#"){
+        const hex = e.charAt(1).toLowerCase() === "x";
+        const code = hex ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+        if(!isNaN(code) && code > 0 && code <= 0x10FFFF){
+          try{ return String.fromCodePoint(code); }catch(_){ return m; }
+        }
+        return m;
       }
+      const key = e.toLowerCase();
+      return Object.prototype.hasOwnProperty.call(ENTITIES, key) ? ENTITIES[key] : m;
+    });
+  }
+  function extractHtmlTitle(html){
+    if(!html) return "";
+    const m = String(html).match(/<title[^>]*>([\s\S]*?)<\/title\s*>/i);
+    if(!m) return "";
+    let t = m[1].replace(/<[^>]*>/g, "");
+    t = decodeEntities(t).replace(/\s+/g, " ").trim();
+    return t.slice(0, 80);
+  }
+
+  function getLastExportAt(){
+    const v = localStorage.getItem(LAST_EXPORT_KEY);
+    const n = v ? Number(v) : 0;
+    return isNaN(n) ? 0 : n;
+  }
+  function setLastExportAt(t){
+    try{ localStorage.setItem(LAST_EXPORT_KEY, String(t)); }catch(_){}
+  }
+
+  function updateExportBadge(){
+    const btn = $("btnSettings");
+    if(!btn) return;
+    const last = getLastExportAt();
+    const count = items.filter(it => (it.updated || 0) > last).length;
+    let badge = btn.querySelector(".badge");
+    if(count > 0){
+      if(!badge){
+        badge = document.createElement("span");
+        badge.className = "badge";
+        btn.appendChild(badge);
+      }
+      badge.textContent = count > 99 ? "99+" : String(count);
+    }else if(badge){
+      badge.remove();
+    }
+  }
+
+  function persist(){
+    try{
+      localStorage.setItem(NOTES_KEY, JSON.stringify(items));
+      localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
+    }catch(e){
+      console.warn("persist failed", e);
+      showToast("保存容量が不足しています");
+    }
+    updateExportBadge();
+  }
+
+  function load(){
+    folders = [];
+    try{
+      const rawF = localStorage.getItem(FOLDERS_KEY);
+      if(rawF){
+        const p = JSON.parse(rawF);
+        if(Array.isArray(p)) folders = p.filter(f => f && typeof f === "object" && f.id);
+      }
+    }catch(e){ folders = []; }
+    folders.forEach(f => {
+      if(typeof f.name !== "string" || !f.name) f.name = "無題のフォルダ";
+      if(f.emoji !== undefined && typeof f.emoji !== "string") delete f.emoji;
+      if(typeof f.emoji === "string" && f.emoji) f.emoji = firstGrapheme(f.emoji);
+    });
+
+    items = [];
+    try{
+      const raw = localStorage.getItem(NOTES_KEY);
+      if(raw){
+        const p = JSON.parse(raw);
+        if(Array.isArray(p)) items = p;
+      }else{
+        const old = localStorage.getItem(OLD_KEY);
+        if(old){
+          items = [{ id: uid(), name: "移行したHTML", html: old, updated: Date.now() }];
+        }
+      }
+    }catch(e){ items = []; }
+    if(!Array.isArray(items)) items = [];
+    items = items.filter(it => it && typeof it === "object");
+
+    if(folders.length === 0){
+      folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
+    }
+
+    const fids = new Set(folders.map(f => f.id));
+    items.forEach(it => {
+      if(!it.id) it.id = uid();
+      if(typeof it.name !== "string") it.name = "無題";
+      if(typeof it.html !== "string") it.html = "";
+      if(typeof it.updated !== "number") it.updated = Date.now();
+      if(!it.folderId || !fids.has(it.folderId)) it.folderId = folders[0].id;
+      if(it.icon !== undefined && !validIcon(it.icon)) delete it.icon;
+      if(it.prevHtml !== undefined && typeof it.prevHtml !== "string") delete it.prevHtml;
+      if(it.prevUpdated !== undefined && typeof it.prevUpdated !== "number") delete it.prevUpdated;
+    });
+
+    selectedId = items.length ? items[0].id : null;
+    currentFolderId = null;
+    persist();
+  }
+
+  function fitIframe(iframe, wrapEl, deviceW, deviceH){
+    if(!wrapEl) return;
+    const rect = wrapEl.getBoundingClientRect();
+    if(!rect.width || !rect.height) return;
+    const scale = Math.max(rect.width / deviceW, rect.height / deviceH) * 1.002;
+    iframe.style.transform = `scale(${scale})`;
+  }
+
+  function resizeAllPreviews(){
+    fitIframe(framePhone, document.querySelector(".phone-viewport"), PHONE_W, PHONE_H);
+    fitIframe(frameIpad,  document.querySelector(".ipad-viewport"),  IPAD_W,  IPAD_H);
+  }
+
+  function fitDevices(){
+    const stage = $("stage");
+    const sw = Math.max(80, stage.clientWidth  - 16);
+    const sh = Math.max(80, stage.clientHeight - 10);
+
+    const phone = $("phone");
+    const ipad  = $("ipad");
+
+    if(!phone.hidden){
+      const k = Math.min(
+        (sw - 2*PHONE_B) / PHONE_W,
+        (sh - 2*PHONE_B) / PHONE_H
+      );
+      const w = PHONE_W * k + 2*PHONE_B;
+      const h = PHONE_H * k + 2*PHONE_B;
+      phone.style.width  = w.toFixed(2) + "px";
+      phone.style.height = h.toFixed(2) + "px";
+      const rad = Math.max(20, w * 0.135);
+      phone.style.borderRadius = rad.toFixed(1) + "px";
+      const vp = phone.querySelector(".phone-viewport");
+      vp.style.borderRadius = Math.max(0, rad - 7).toFixed(1) + "px";
+
+      const island = phone.querySelector(".island");
+      if(island){
+        island.style.height = Math.max(10, 34 * k).toFixed(2) + "px";
+        island.style.top    = Math.max(3, 11 * k).toFixed(2) + "px";
+        island.style.borderRadius = Math.max(6, 100 * k).toFixed(1) + "px";
+      }
+      const homebar = phone.querySelector(".homebar");
+      if(homebar){
+        homebar.style.height = Math.max(2, 4 * k).toFixed(2) + "px";
+        homebar.style.bottom = Math.max(3, 8 * k).toFixed(2) + "px";
+      }
+    }
+
+    if(!ipad.hidden){
+      const k = Math.min(
+        (sw - 2*IPAD_B) / IPAD_W,
+        (sh - 2*IPAD_B) / IPAD_H
+      );
+      const w = IPAD_W * k + 2*IPAD_B;
+      const h = IPAD_H * k + 2*IPAD_B;
+      ipad.style.width  = w.toFixed(2) + "px";
+      ipad.style.height = h.toFixed(2) + "px";
+      const rad = Math.max(10, Math.min(w, h) * 0.06);
+      ipad.style.borderRadius = rad.toFixed(1) + "px";
+      const vp = ipad.querySelector(".ipad-viewport");
+      vp.style.borderRadius = Math.max(0, rad - 8).toFixed(1) + "px";
+    }
+  }
+
+  function resizeFullscreen(){
+    if(!$("fullscreen").classList.contains("show")) return;
+    const stage = $("fsStage");
+    const dW = PHONE_W, dH = PHONE_H;
+    const scale = Math.min(stage.clientWidth / dW, stage.clientHeight / dH);
+    fullFrame.style.width  = dW + "px";
+    fullFrame.style.height = dH + "px";
+    fullFrame.style.transform = `scale(${scale})`;
+    fullFrame.style.transformOrigin = "center center";
+  }
+
+  /* ===== iOS PWA: 画面高さの同期（保険） =====
+     基本は CSS の 100dvh に任せる。ここでは
+     「スタンドアロンなのに 100dvh が実画面よりセーフエリア分だけ
+       短く報告されている」という iOS の既知のズレだけを検出し、
+     そのときだけ html.app-h を付けて --app-h で上書きする。
+     通常（ズレがない／PCブラウザ）は何もしない。 */
+  function isStandalone(){
+    try{
+      if(window.navigator.standalone === true) return true;
+      if(window.matchMedia){
+        if(window.matchMedia("(display-mode: standalone)").matches) return true;
+        if(window.matchMedia("(display-mode: fullscreen)").matches) return true;
+        if(window.matchMedia("(display-mode: minimal-ui)").matches) return true;
+      }
+    }catch(_){}
+    return false;
+  }
+
+  function syncAppHeight(){
+    const de = document.documentElement;
+
+    // CSS の 100dvh が実際に解決する高さを実測する
+    const probe = document.createElement("div");
+    probe.style.cssText =
+      "position:fixed;top:0;left:0;width:0;" +
+      "height:100vh;height:100dvh;" +
+      "visibility:hidden;pointer-events:none;";
+    document.body.appendChild(probe);
+    const dvh = Math.round(probe.getBoundingClientRect().height);
+    probe.remove();
+
+    const sh = Math.round((window.screen && window.screen.height) || 0);
+    const diff = sh - dvh;
+
+    // セーフエリア分（〜180px）だけ短く報告されている場合のみ補正する。
+    // それ以上の差は「ウィンドウが小さい」等の正常な状態なので触らない。
+    if(isStandalone() && dvh > 0 && sh > 0 && diff > 0 && diff <= 180){
+      de.style.setProperty("--app-h", sh + "px");
+      de.classList.add("app-h");
+    }else{
+      de.style.removeProperty("--app-h");
+      de.classList.remove("app-h");
+    }
+  }
+
+  function relayout(){
+    syncAppHeight();
+    fitDevices();
+    resizeAllPreviews();
+    resizeFullscreen();
+  }
+
+  window.addEventListener("resize", relayout);
+  window.addEventListener("orientationchange", () => setTimeout(relayout, 120));
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", relayout);
+  }
+
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(() => {
+      fitDevices();
+      resizeAllPreviews();
+    });
+    ro.observe($("stage"));
+  }
+
+  function clearPreviews(){
+    framePhone.srcdoc = "";
+    frameIpad.srcdoc = "";
+  }
+
+  function updatePreview(){
+    const it = items.find(x => x.id === selectedId);
+    if(!it){ clearPreviews(); return; }
+    const html = (it.html || "") + TAP_BRIDGE;
+    framePhone.srcdoc = html;
+    frameIpad.srcdoc = html;
+    requestAnimationFrame(resizeAllPreviews);
+  }
+
+  function handleOutsideTap(){
+    const openSwipes = $("sideList").querySelectorAll(".swipe.open");
+    if(openSwipes.length > 0){
+      closeAllSwipes();
+      return;
+    }
+    if(sidebarOpen) setSidebar(false);
+  }
+
+  window.addEventListener("message", e => {
+    const d = e.data;
+    if(!d || typeof d !== "object" || !d.__pwaPreviewTap) return;
+    let ok = false;
+    try{
+      ok = (e.source === framePhone.contentWindow) || (e.source === frameIpad.contentWindow);
+    }catch(_){ ok = true; }
+    if(!ok) return;
+    const now = Date.now();
+    if(now - (handleOutsideTap.__last || 0) < 120) return;
+    handleOutsideTap.__last = now;
+    handleOutsideTap();
+  });
+
+  let toastTimer = null;
+  function showToast(msg){
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 1300);
+  }
+
+  function updateSwipeHint(dx){
+    const hint = $("swipeHint");
+    let text = "", ready = false, show = false, action = "";
+
+    if(dx >= 5){
+      show = true;
+      if(!sidebarOpen){
+        if(currentFolderId !== null){
+          if(dx >= SB_EXPAND_DX_FOLDER){
+            text = "メニューを開く";
+            ready = true;
+            action = "menu";
+          }else{
+            text = "一覧に戻る";
+            ready = dx >= SB_BACK_DX;
+            action = "back";
+          }
+        }else{
+          text = "メニューを開く";
+          ready = dx >= SB_EXPAND_DX_ROOT;
+          action = "menu";
+        }
+      }else{
+        if(currentFolderId !== null){
+          text = "一覧に戻る";
+          ready = dx >= SB_BACK_DX;
+          action = "back";
+        }else{
+          text = "メニューを閉じる";
+          ready = dx >= SB_BACK_DX;
+          action = "close";
+        }
+      }
+    }
+
+    if(!show){
+      hint.classList.remove("show", "ready", "menu-ready");
+      return;
+    }
+
+    hint.textContent = text;
+    hint.classList.toggle("ready", ready && action !== "menu");
+    hint.classList.toggle("menu-ready", ready && action === "menu");
+    hint.classList.add("show");
+
+    const sidebar = $("sidebar");
+    const r = sidebar.getBoundingClientRect();
+    const hw = hint.offsetWidth || 120;
+    let left = r.right + 10;
+    if(left + hw > window.innerWidth - 10){
+      left = window.innerWidth - hw - 10;
+    }
+    if(left < 10) left = 10;
+    hint.style.left = left + "px";
+  }
+
+  function hideSwipeHint(){
+    const hint = $("swipeHint");
+    hint.classList.remove("show", "ready", "menu-ready");
+  }
+
+  function render(animate, dir){
+    const list = $("sideList");
+    const isRoot = currentFolderId === null;
+
+    let html = "";
+
+    if(!isRoot){
+      html += `
+        <div class="srow" id="rowBack">
+          <div class="row-icon" style="color:var(--accent)">${ICON.back}</div>
+          <div class="row-main"><div class="row-title">フォルダ一覧</div></div>
+        </div>`;
+    }
+
+    if(isRoot){
+      if(folders.length === 0){
+        html += `<div class="side-empty">フォルダがありません</div>`;
+      }else{
+        html += folders.map((f,i) => folderRowHtml(f,i)).join("");
+      }
+    }else{
+      const listNotes = items.filter(x => x.folderId === currentFolderId);
+      if(listNotes.length === 0){
+        html += `<div class="side-empty">メモがありません<br>「＋」から追加</div>`;
+      }else{
+        html += listNotes.map((it,i) => noteRowHtml(it,i)).join("");
+      }
+    }
+
+    list.innerHTML = html;
+
+    if(animate){
+      list.classList.remove("anim-in", "anim-in-right");
+      void list.offsetWidth;
+      list.classList.add(dir === "back" ? "anim-in-right" : "anim-in");
+      setTimeout(() => {
+        list.classList.remove("anim-in", "anim-in-right");
+      }, 280);
+    }
+
+    const back = $("rowBack");
+    if(back) back.onclick = () => goRoot(true);
+
+    list.querySelectorAll(".swipe").forEach(attachRow);
+  }
+
+  function miniIconsHtml(folderId){
+    const list = items.filter(x => x.folderId === folderId).slice(0, 3);
+    if(!list.length) return "";
+    return `<div class="row-apps">${list.map(it => {
+      if(validIcon(it.icon)){
+        return `<span class="mini-app"><img src="${it.icon}" alt=""></span>`;
+      }
+      const name = (it.name || "無").trim();
+      const ch = firstGrapheme(name) || "無";
+      return `<span class="mini-app" style="background:${colorFor(name)}">${escapeHtml(ch)}</span>`;
+    }).join("")}</div>`;
+  }
+
+  function folderRowHtml(f, index){
+    const n = items.filter(x => x.folderId === f.id).length;
+    return `
+    <div class="swipe" data-type="folder" data-id="${f.id}" data-index="${index}">
+      <div class="swipe-actions">
+        <button class="act-rename" data-act="rename">${ICON.edit}<span>編集</span></button>
+        <button class="act-del"    data-act="del">${ICON.trash}<span>削除</span></button>
+      </div>
+      <div class="srow">
+        <div class="row-icon folder-icon">${folderIconInner(f)}</div>
+        <div class="row-main">
+          <div class="row-title">${escapeHtml(f.name)}</div>
+          <div class="row-sub">${n}件のメモ</div>
+        </div>
+        ${miniIconsHtml(f.id)}
+      </div>
+    </div>`;
+  }
+
+  function noteRowHtml(it, index){
+    const sel = it.id === selectedId;
+    const html = it.html || "";
+    const sizeText = `${html.length.toLocaleString()}字 ・ ${formatBytes(byteLength(html))}`;
+    return `
+    <div class="swipe" data-type="note" data-id="${it.id}" data-index="${index}">
+      <div class="swipe-actions">
+        <button class="act-edit" data-act="edit">${ICON.edit}<span>編集</span></button>
+        <button class="act-move" data-act="move">${ICON.move}<span>移動</span></button>
+        <button class="act-del"  data-act="del">${ICON.trash}<span>削除</span></button>
+      </div>
+      <div class="srow${sel ? " selected" : ""}">
+        <div class="row-icon">${iconInner(it)}</div>
+        <div class="row-main">
+          <div class="row-title">${escapeHtml(it.name || "無題")}</div>
+          <div class="row-sub">${formatDate(it.updated)}</div>
+          <div class="row-sub2">${sizeText}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function handleSidebarSwipe(dx){
+    if(!sidebarOpen){
+      if(currentFolderId !== null){
+        if(dx >= SB_EXPAND_DX_FOLDER){
+          setSidebar(true);
+          return;
+        }
+        if(dx >= SB_BACK_DX){
+          goRoot(true);
+        }
+      }else{
+        if(dx >= SB_EXPAND_DX_ROOT){
+          setSidebar(true);
+        }
+      }
+    }else{
+      if(dx >= SB_BACK_DX){
+        if(currentFolderId !== null) goRoot(true);
+        else setSidebar(false);
+      }
+    }
+  }
+
+  let dragActive = false;
+  let dragEndedAt = 0;
+  let dragCtx = null;
+  let chipEls = [];
+  let chipScrollDir = 0;
+  let chipRAF = null;
+
+  function closeSwipe(wrap){
+    wrap.classList.remove("open");
+    const row = wrap.querySelector(".srow");
+    if(row){ row.style.transition = ""; row.style.transform = ""; }
+  }
+  function closeAllSwipes(){
+    $("sideList").querySelectorAll(".swipe.open").forEach(closeSwipe);
+  }
+  function anySwipeOpen(){
+    return $("sideList").querySelectorAll(".swipe.open").length > 0;
+  }
+
+  function attachRow(wrap){
+    const row     = wrap.querySelector(".srow");
+    const actions = wrap.querySelector(".swipe-actions");
+    if(!row || !actions) return;
+
+    const type  = wrap.dataset.type;
+    const id    = wrap.dataset.id;
+    const index = Number(wrap.dataset.index) || 0;
+
+    actions.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", ev => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        closeAllSwipes();
+        handleAction(type, id, btn.dataset.act);
+      });
+    });
+
+    let pid = null, sx = 0, sy = 0, baseX = 0, curX = 0, maxOpen = 0;
+    let mode = null;
+    let lastDx = 0;
+    let pressTimer = null;
+    let longPressed = false;
+
+    const clearPress = () => { if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+
+    row.addEventListener("pointerdown", e => {
+      if(dragActive) return;
+      if(e.pointerType === "mouse" && e.button !== 0) return;
+
+      pid = e.pointerId;
+      sx = e.clientX; sy = e.clientY;
+      mode = null;
+      lastDx = 0;
+      longPressed = false;
+      maxOpen = actions.offsetWidth || 0;
+      baseX = wrap.classList.contains("open") ? -maxOpen : 0;
+      curX = baseX;
+      row.style.transition = "none";
+
+      if(baseX === 0){
+        clearPress();
+        pressTimer = setTimeout(() => {
+          pressTimer = null;
+          if(dragActive) return;
+          longPressed = true;
+          mode = "drag";
+          try{ row.setPointerCapture(pid); }catch(_){}
+          beginDrag(wrap, row, type, index, sy);
+        }, 420);
+      }
+    });
+
+    row.addEventListener("pointermove", e => {
+      if(pid === null || e.pointerId !== pid) return;
+      const dx = e.clientX - sx;
+      const dy = e.clientY - sy;
+      lastDx = dx;
+
+      if(mode === "drag"){
+        updateDrag(e.clientX, e.clientY);
+        return;
+      }
+      if(mode === null){
+        if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
+          clearPress();
+          mode = (dx > 0 && baseX === 0) ? "sb" : "h";
+          try{ row.setPointerCapture(pid); }catch(_){}
+        }else if(Math.abs(dy) > 10){
+          clearPress();
+          mode = "v";
+          row.style.transition = "";
+          return;
+        }else{
+          return;
+        }
+      }
+      if(mode === "h"){
+        curX = Math.max(-maxOpen, Math.min(0, baseX + dx));
+        row.style.transform = `translateX(${curX}px)`;
+      }else if(mode === "sb"){
+        updateSwipeHint(dx);
+      }
+    });
+
+    const finish = e => {
+      if(pid === null) return;
+      if(e && e.pointerId !== undefined && e.pointerId !== pid) return;
+
+      clearPress();
+      const wasMode = mode;
+      const releaseId = pid;
+      pid = null;
+      row.style.transition = "";
+
+      if(wasMode === "h"){
+        if(curX < -maxOpen * 0.45){
+          wrap.classList.add("open");
+          row.style.transform = `translateX(${-maxOpen}px)`;
+        }else{
+          wrap.classList.remove("open");
+          row.style.transform = "";
+        }
+      }else if(wasMode === "drag"){
+        endDrag();
+      }else if(wasMode === "sb"){
+        hideSwipeHint();
+        handleSidebarSwipe(lastDx);
+      }
+      mode = null;
+      try{ row.releasePointerCapture(releaseId); }catch(_){}
     };
 
-    // -------------------------------------------------------------
-    // DOM
-    // -------------------------------------------------------------
-    const editorContainer = document.getElementById('editor-container');
-    const viewport = document.getElementById('viewport');
-    const bgCanvas = document.getElementById('bg-canvas');
-    const bgCtx = bgCanvas.getContext('2d');
-    const annoCanvas = document.getElementById('annotation-canvas');
-    const annoCtx = annoCanvas.getContext('2d');
-    const imageInput = document.getElementById('image-input');
-    const startScreen = document.getElementById('start-screen');
-    const propertiesPanel = document.getElementById('properties-panel');
+    row.addEventListener("pointerup", finish);
+    row.addEventListener("pointercancel", () => {
+      clearPress();
+      if(mode === "drag") endDrag();
+      if(mode === "sb") hideSwipeHint();
+      mode = null; pid = null;
+      row.style.transition = "";
+    });
+    row.addEventListener("pointerleave", () => { if(!dragActive) clearPress(); });
 
-    const btnUndo = document.getElementById('btn-undo');
-    const btnRedo = document.getElementById('btn-redo');
-    const btnExport = document.getElementById('btn-export');
-    const btnDelete = document.getElementById('btn-delete');
-    const colorPresetsContainer = document.getElementById('color-presets');
-    const textContentInput = document.getElementById('text-content-input');
-    const btnClearText = document.getElementById('btn-clear-text');
-    const btnBold = document.getElementById('btn-bold');
-    const sizeSlider = document.getElementById('size-slider');
-    const sizeLabel = document.getElementById('size-label');
-    const outlineSlider = document.getElementById('outline-slider');
-    const radiusSlider = document.getElementById('radius-slider');
-    const arrowSlider = document.getElementById('arrow-slider');
-    const btnAspectSquare = document.getElementById('btn-aspect-square');
-    const btnShadowToggle = document.getElementById('btn-shadow-toggle');
-    const saveModal = document.getElementById('save-modal');
-    const savePreview = document.getElementById('save-preview');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-
-    // カスタムカラーピッカー関連（動的生成）
-    let customColorPicker = null;
-    let customPickerWrapper = null;
-    let pickerCurrentEl = null;
-
-    const measureCtx = document.createElement('canvas').getContext('2d');
-
-    // -------------------------------------------------------------
-    // 最前面へ移動
-    // -------------------------------------------------------------
-    function bringToFront(id) {
-      if (!id) return;
-      const idx = state.annotations.findIndex(a => a.id === id);
-      if (idx !== -1 && idx !== state.annotations.length - 1) {
-        const [item] = state.annotations.splice(idx, 1);
-        state.annotations.push(item);
+    row.addEventListener("click", () => {
+      if(Date.now() - dragEndedAt < 350) return;
+      if(longPressed){ longPressed = false; return; }
+      if(wrap.classList.contains("open") || anySwipeOpen()){
+        closeAllSwipes();
+        return;
       }
-    }
+      if(type === "folder") openFolder(id);
+      else selectNote(id);
+    });
 
-    // -------------------------------------------------------------
-    // カスタムカラーピッカー生成
-    // -------------------------------------------------------------
-    function createCustomPicker() {
-      const wrap = document.createElement('div');
-      wrap.className = 'color-picker-wrapper';
-      wrap.title = 'カスタムカラー';
+    row.addEventListener("contextmenu", e => e.preventDefault());
+  }
 
-      const current = document.createElement('span');
-      current.className = 'picker-current';
-      current.style.background = state.defaults.color;
+  document.addEventListener("click", e => {
+    if(!anySwipeOpen()) return;
+    if(e.target.closest(".swipe-actions button")) return;
+    if(e.target.closest(".swipe.open .srow")) return;
+    closeAllSwipes();
+  }, true);
 
-      const input = document.createElement('input');
-      input.type = 'color';
-      input.value = state.defaults.color;
+  (function attachScrollGesture(){
+    const sc = $("sideScroll");
+    let pid = null, sx = 0, sy = 0;
+    let hintOn = false;
 
-      input.addEventListener('input', (e) => {
-        applyCustomColor(e.target.value, false);
-      });
-      input.addEventListener('change', (e) => {
-        applyCustomColor(e.target.value, true);
-      });
+    sc.addEventListener("pointerdown", e => {
+      if(e.target.closest(".srow")) return;
+      if(e.target.closest("button")) return;
+      pid = e.pointerId;
+      sx = e.clientX; sy = e.clientY;
+      hintOn = false;
+    });
 
-      wrap.appendChild(current);
-      wrap.appendChild(input);
-
-      customPickerWrapper = wrap;
-      customColorPicker = input;
-      pickerCurrentEl = current;
-    }
-
-    function applyCustomColor(color, commit) {
-      if (!color) return;
-      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
-
-      if (selectedAnno) {
-        selectedAnno.color = color;
+    sc.addEventListener("pointermove", e => {
+      if(pid === null || e.pointerId !== pid) return;
+      const dx = e.clientX - sx;
+      const dy = e.clientY - sy;
+      if(dx > 5 && Math.abs(dx) > Math.abs(dy) * 1.2){
+        hintOn = true;
+        updateSwipeHint(dx);
+      }else if(Math.abs(dy) > Math.abs(dx)){
+        if(hintOn){ hintOn = false; hideSwipeHint(); }
       }
-      state.defaults.color = color;
+    });
 
-      if (pickerCurrentEl) pickerCurrentEl.style.background = color;
-
-      if (commit) {
-        pushRecentColor(color);
-        if (selectedAnno) saveHistory();
-        renderAnnotations();
-        updateUI();
-      } else {
-        renderAnnotations();
+    sc.addEventListener("pointerup", e => {
+      if(pid === null || e.pointerId !== pid) return;
+      const dx = e.clientX - sx;
+      const dy = e.clientY - sy;
+      pid = null;
+      if(hintOn) hideSwipeHint();
+      hintOn = false;
+      if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20){
+        handleSidebarSwipe(dx);
       }
-    }
+    });
 
-    // -------------------------------------------------------------
-    // 最近使った色
-    // -------------------------------------------------------------
-    function loadRecentColors() {
-      try {
-        const raw = localStorage.getItem(RECENT_COLORS_KEY);
-        const arr = raw ? JSON.parse(raw) : [];
-        state.recentColors = Array.isArray(arr) ? arr.slice(0, MAX_RECENT_COLORS) : [];
-      } catch (err) {
-        state.recentColors = [];
+    sc.addEventListener("pointercancel", () => {
+      pid = null;
+      if(hintOn) hideSwipeHint();
+      hintOn = false;
+    });
+  })();
+
+  (function preventEdgeBackSwipe(){
+    let edgeTouch = null;
+
+    document.addEventListener("touchstart", e => {
+      if(e.touches.length !== 1){ edgeTouch = null; return; }
+      const t = e.touches[0];
+      if(t.clientX <= 22){
+        edgeTouch = { id: t.identifier, x: t.clientX, y: t.clientY };
+      }else{
+        edgeTouch = null;
       }
-    }
+    }, { passive: true });
 
-    function saveRecentColors() {
-      try {
-        localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(state.recentColors));
-      } catch (err) {}
-    }
-
-    function pushRecentColor(color) {
-      if (!color) return;
-      const c = color.toLowerCase();
-      if (PRESET_COLORS.some(p => p.val.toLowerCase() === c)) return;
-      state.recentColors = state.recentColors.filter(x => x.toLowerCase() !== c);
-      state.recentColors.unshift(c);
-      if (state.recentColors.length > MAX_RECENT_COLORS) {
-        state.recentColors.length = MAX_RECENT_COLORS;
+    document.addEventListener("touchmove", e => {
+      if(!edgeTouch) return;
+      let t = null;
+      for(const tt of e.touches){
+        if(tt.identifier === edgeTouch.id){ t = tt; break; }
       }
-      saveRecentColors();
-      renderColorPalette();
+      if(!t){ edgeTouch = null; return; }
+      const dx = t.clientX - edgeTouch.x;
+      const dyAbs = Math.abs(t.clientY - edgeTouch.y);
+      if(dx > 3 && dx >= dyAbs * 0.5){
+        if(e.cancelable) e.preventDefault();
+      }
+    }, { passive: false });
+
+    const clear = () => { edgeTouch = null; };
+    document.addEventListener("touchend", clear, { passive: true });
+    document.addEventListener("touchcancel", clear, { passive: true });
+  })();
+
+  function beginDrag(wrap, row, type, index, startY){
+    const wraps = [...$("sideList").querySelectorAll(".swipe")];
+    const rowH  = wrap.offsetHeight || 60;
+
+    dragActive = true;
+    dragCtx = {
+      wrap, row, type, index,
+      from: index, to: index, startY,
+      wraps, rowH, moved: false, targetFolder: null,
+      px: 0, py: 0
+    };
+    wrap.classList.add("dragging");
+    if(type === "note") buildDragFolders();
+  }
+
+  function updateDrag(x, y){
+    const c = dragCtx;
+    if(!c) return;
+    c.px = x; c.py = y;
+
+    const dy = y - c.startY;
+    if(Math.abs(dy) > 4) c.moved = true;
+
+    c.to = Math.max(0, Math.min(c.wraps.length - 1, c.from + Math.round(dy / c.rowH)));
+    c.wrap.style.transform = `translateY(${dy}px)`;
+
+    c.wraps.forEach((w, i) => {
+      if(w === c.wrap) return;
+      let shift = 0;
+      if(c.from < c.to && i > c.from && i <= c.to) shift = -c.rowH;
+      else if(c.from > c.to && i < c.from && i >= c.to) shift = c.rowH;
+      w.style.transform = shift ? `translateY(${shift}px)` : "";
+    });
+
+    if(c.type === "note"){
+      updateChipAutoScroll(x, y);
+      const hit = chipAt(x, y);
+      c.targetFolder = hit ? hit.id : null;
+      updateChipHighlight(c.targetFolder);
     }
+  }
 
-    // 3x3 グリッドを常に構築（空きスロットはプレースホルダ）
-    function renderColorPalette() {
-      colorPresetsContainer.innerHTML = '';
+  function endDrag(){
+    const c = dragCtx;
+    dragCtx = null;
+    dragActive = false;
+    dragEndedAt = Date.now();
+    if(!c) return;
 
-      const list = [
-        ...PRESET_COLORS.map(p => p.val),
-        ...state.recentColors
-      ];
+    c.wrap.classList.remove("dragging");
+    c.wrap.style.transform = "";
+    c.wraps.forEach(w => { w.style.transform = ""; });
 
-      const COLOR_SLOTS = 8; // 3x3 のうち1マスはカスタムピッカー
+    stopChipAutoScroll();
+    if(c.type === "note") hideDragFolders();
 
-      for (let i = 0; i < COLOR_SLOTS; i++) {
-        const val = list[i];
-        const cell = document.createElement('div');
+    if(!c.moved) return;
 
-        if (val) {
-          cell.className = 'color-swatch';
-          cell.style.backgroundColor = val;
-          cell.dataset.color = val;
-          cell.addEventListener('click', (e) => {
-            e.preventDefault();
-            selectColor(val);
-          });
-        } else {
-          cell.className = 'color-swatch color-swatch-empty';
+    if(c.type === "note" && c.targetFolder && c.targetFolder !== currentFolderId){
+      moveNoteToFolder(c.wrap.dataset.id, c.targetFolder);
+      return;
+    }
+    if(c.to !== c.from){
+      if(c.type === "folder") reorderFolders(c.from, c.to);
+      else reorderNotes(c.from, c.to);
+    }
+  }
+
+  function reorderFolders(from, to){
+    if(from < 0 || from >= folders.length) return;
+    if(to   < 0 || to   >= folders.length) return;
+    const [m] = folders.splice(from, 1);
+    folders.splice(to, 0, m);
+    persist();
+    render();
+  }
+
+  function reorderNotes(from, to){
+    const idxs = [];
+    items.forEach((it, i) => { if(it.folderId === currentFolderId) idxs.push(i); });
+    const list = idxs.map(i => items[i]);
+    if(from < 0 || from >= list.length) return;
+    if(to   < 0 || to   >= list.length) return;
+    const [m] = list.splice(from, 1);
+    list.splice(to, 0, m);
+    idxs.forEach((gi, k) => { items[gi] = list[k]; });
+    persist();
+    render();
+  }
+
+  function buildDragFolders(){
+    const bar = $("dragFolders");
+    bar.innerHTML = folders.map(f => {
+      const cur = f.id === currentFolderId;
+      return `<div class="chip${cur ? " current" : ""}" data-folder="${f.id}">${escapeHtml(f.name)}</div>`;
+    }).join("");
+    bar.classList.add("show");
+    bar.scrollLeft = 0;
+
+    requestAnimationFrame(() => {
+      chipEls = [...bar.querySelectorAll(".chip")].map(el => ({
+        id: el.dataset.folder,
+        el
+      }));
+      const cur = chipEls.find(c => c.id === currentFolderId);
+      if(cur){
+        const r = cur.el.getBoundingClientRect();
+        const br = bar.getBoundingClientRect();
+        if(r.left < br.left || r.right > br.right){
+          bar.scrollLeft += (r.left - br.left) - 12;
         }
-
-        colorPresetsContainer.appendChild(cell);
       }
+    });
+  }
 
-      // カスタムピッカーを9マス目に配置
-      if (customPickerWrapper) {
-        colorPresetsContainer.appendChild(customPickerWrapper);
+  function hideDragFolders(){
+    const bar = $("dragFolders");
+    bar.classList.remove("show");
+    bar.innerHTML = "";
+    chipEls = [];
+    stopChipAutoScroll();
+  }
+
+  function chipAt(x, y){
+    for(const c of chipEls){
+      const r = c.el.getBoundingClientRect();
+      if(x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 34 && y <= r.bottom + 26){
+        return c;
       }
     }
+    return null;
+  }
 
-    // -------------------------------------------------------------
-    // 初期化
-    // -------------------------------------------------------------
-    function init() {
-      createCustomPicker();
-      loadRecentColors();
-      renderColorPalette();
+  function updateChipHighlight(id){
+    chipEls.forEach(c => c.el.classList.toggle("over", !!id && c.id === id));
+  }
 
-      document.querySelectorAll('.tool-item[data-tool]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tool-item[data-tool]').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          state.activeTool = btn.dataset.tool;
-          if (state.activeTool !== 'select') {
-            state.selectedId = null;
-          }
-          updateUI();
-          renderAnnotations();
-        });
+  function updateChipAutoScroll(x, y){
+    const bar = $("dragFolders");
+    if(!bar.classList.contains("show")) return;
+    const r = bar.getBoundingClientRect();
+    if(y < r.top - 40 || y > r.bottom + 60){ chipScrollDir = 0; return; }
+    const edge = 80;
+    if(x < r.left + edge) chipScrollDir = -1;
+    else if(x > r.right - edge) chipScrollDir = 1;
+    else chipScrollDir = 0;
+    if(chipScrollDir !== 0) startChipAutoScroll();
+  }
+
+  function startChipAutoScroll(){
+    if(chipRAF) return;
+    const step = () => {
+      if(!dragActive){ chipRAF = null; return; }
+      const bar = $("dragFolders");
+      if(chipScrollDir !== 0 && bar.classList.contains("show")){
+        const before = bar.scrollLeft;
+        bar.scrollLeft += chipScrollDir * 10;
+        if(bar.scrollLeft !== before && dragCtx){
+          const hit = chipAt(dragCtx.px, dragCtx.py);
+          dragCtx.targetFolder = hit ? hit.id : null;
+          updateChipHighlight(dragCtx.targetFolder);
+        }
+      }
+      chipRAF = requestAnimationFrame(step);
+    };
+    chipRAF = requestAnimationFrame(step);
+  }
+
+  function stopChipAutoScroll(){
+    chipScrollDir = 0;
+    if(chipRAF){ cancelAnimationFrame(chipRAF); chipRAF = null; }
+  }
+
+  document.addEventListener("touchmove", e => {
+    if(dragActive && e.cancelable) e.preventDefault();
+  }, { passive: false });
+
+  function openFolder(id){
+    currentFolderId = id;
+    closeAllSwipes();
+    render(true, "open");
+  }
+  function goRoot(animate){
+    currentFolderId = null;
+    closeAllSwipes();
+    render(!!animate, "back");
+  }
+  function selectNote(id){
+    selectedId = id;
+    updatePreview();
+    render();
+  }
+
+  function handleAction(type, id, act){
+    if(type === "folder"){
+      if(act === "rename") openFolderEdit(id);
+      else if(act === "del") deleteFolder(id);
+      return;
+    }
+    if(act === "edit") openEditor(id, false);
+    else if(act === "move") openFolderPicker(id);
+    else if(act === "del") deleteNote(id);
+  }
+
+  let editingFolderId = null;
+
+  function openFolderEdit(id){
+    const f = folders.find(x => x.id === id);
+    if(!f) return;
+    editingFolderId = id;
+    $("folderSheetTitle").textContent = "フォルダ編集";
+    $("folderNameInput").value = f.name || "";
+    $("folderEmojiInput").value = f.emoji || "";
+    $("folderOverlay").classList.add("show");
+    setTimeout(() => { try{ $("folderNameInput").focus(); }catch(_){} }, 60);
+  }
+
+  function openNewFolderSheet(){
+    editingFolderId = null;
+    $("folderSheetTitle").textContent = "新規フォルダ";
+    $("folderNameInput").value = "";
+    $("folderEmojiInput").value = "";
+    $("folderOverlay").classList.add("show");
+    setTimeout(() => { try{ $("folderNameInput").focus(); }catch(_){} }, 60);
+  }
+
+  function closeFolderEdit(){
+    $("folderOverlay").classList.remove("show");
+    editingFolderId = null;
+  }
+
+  function saveFolderEdit(){
+    const name = ($("folderNameInput").value || "").trim();
+    const rawEmoji = ($("folderEmojiInput").value || "").trim();
+    const emoji = rawEmoji ? firstGrapheme(rawEmoji) : "";
+
+    if(editingFolderId){
+      const f = folders.find(x => x.id === editingFolderId);
+      if(!f){ closeFolderEdit(); return; }
+      f.name = name || "無題のフォルダ";
+      if(emoji) f.emoji = emoji; else delete f.emoji;
+    }else{
+      const f = { id: uid(), name: name || "新規フォルダ" };
+      if(emoji) f.emoji = emoji;
+      folders.push(f);
+    }
+    persist();
+    closeFolderEdit();
+    render(true, "open");
+    showToast("保存しました");
+  }
+
+  function deleteFolder(id){
+    const f = folders.find(x => x.id === id);
+    if(!f) return;
+    const n = items.filter(x => x.folderId === id).length;
+    const msg = n > 0
+      ? `フォルダ「${f.name}」と、中のメモ${n}件を削除しますか？`
+      : `フォルダ「${f.name}」を削除しますか？`;
+    if(!confirm(msg)) return;
+
+    const removedIds = items.filter(x => x.folderId === id).map(x => x.id);
+    items   = items.filter(x => x.folderId !== id);
+    folders = folders.filter(x => x.id !== id);
+
+    if(removedIds.includes(selectedId)) selectedId = items.length ? items[0].id : null;
+    if(folders.length === 0) folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
+    if(currentFolderId === id) currentFolderId = null;
+
+    persist();
+    render(true, "back");
+    updatePreview();
+  }
+
+  function deleteNote(id){
+    const it = items.find(x => x.id === id);
+    if(!it) return;
+    if(!confirm(`「${it.name || "無題"}」を削除しますか？`)) return;
+    items = items.filter(x => x.id !== id);
+    if(selectedId === id) selectedId = items.length ? items[0].id : null;
+    persist();
+    render();
+    updatePreview();
+  }
+
+  function moveNoteToFolder(noteId, folderId){
+    const it = items.find(x => x.id === noteId);
+    if(!it) return;
+    if(it.folderId === folderId){
+      showToast("同じフォルダです");
+      return;
+    }
+    items = items.filter(x => x.id !== noteId);
+    const idx = items.findIndex(x => x.folderId === folderId);
+    if(idx === -1) items.push(it);
+    else items.splice(idx, 0, it);
+    it.folderId = folderId;
+    persist();
+    render();
+    showToast("移動しました");
+  }
+
+  let pickerNoteId = null;
+
+  function openFolderPicker(noteId){
+    pickerNoteId = noteId;
+    const it = items.find(x => x.id === noteId);
+    $("pickerList").innerHTML = folders.map(f => {
+      const cur = it && it.folderId === f.id;
+      const n = items.filter(x => x.folderId === f.id).length;
+      return `<div class="picker-item${cur ? " current" : ""}" data-folder="${f.id}">
+        <span>${escapeHtml(f.name)}</span>
+        <span class="cnt">${n}件</span>
+      </div>`;
+    }).join("");
+
+    $("pickerList").querySelectorAll(".picker-item").forEach(el => {
+      el.addEventListener("click", () => {
+        moveNoteToFolder(pickerNoteId, el.dataset.folder);
+        closePicker();
       });
+    });
 
-      setupNudgeButtons();
+    $("pickerOverlay").classList.add("show");
+  }
 
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+  function closePicker(){
+    $("pickerOverlay").classList.remove("show");
+  }
+
+  function openSettings(){ $("settingsOverlay").classList.add("show"); }
+  function closeSettings(){ $("settingsOverlay").classList.remove("show"); }
+
+  let searchMatches = [];
+  let searchIndex = -1;
+  let editingIcon = null;
+
+  function renderIconPreview(){
+    const box = $("iconPreview");
+    if(validIcon(editingIcon)){
+      box.innerHTML = `<img src="${editingIcon}" alt="">`;
+    }else{
+      const name = (nameInput.value || "").trim();
+      if(name){
+        const ch = firstGrapheme(name) || "無";
+        box.innerHTML = `<span class="ico-letter" style="background:${colorFor(name)}">${escapeHtml(ch)}</span>`;
+      }else{
+        box.innerHTML = `<span class="ico-none">＋</span>`;
       }
+    }
+  }
 
-      saveHistory();
+  function updateRevertButtonState(){
+    const btn = $("btnRevert");
+    if(!btn) return;
+    let canRevert = false;
+    if(editingId){
+      const it = items.find(x => x.id === editingId);
+      if(it && typeof it.prevHtml === "string") canRevert = true;
+    }
+    btn.disabled = !canRevert;
+    btn.style.opacity = canRevert ? "" : "0.4";
+  }
+
+  function openEditor(id, isNew){
+    editingId = isNew ? null : id;
+    if(isNew){
+      nameInput.value = "";
+      source.value = "";
+      editingIcon = null;
+    }else{
+      const it = items.find(x => x.id === id);
+      nameInput.value = it ? (it.name || "") : "";
+      source.value   = it ? (it.html || "") : "";
+      editingIcon = it && validIcon(it.icon) ? it.icon : null;
+    }
+    renderIconPreview();
+    updateRevertButtonState();
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    clearSearchHighlight();
+    $("editorOverlay").classList.add("show");
+    adjustEditorForKeyboard();
+    setTimeout(() => { try{ nameInput.focus(); }catch(_){} }, 60);
+  }
+
+  function closeEditor(){
+    $("editorOverlay").classList.remove("show");
+    document.querySelector(".editor-sheet").style.maxHeight = "";
+  }
+
+  function saveCurrent(){
+    let name = (nameInput.value || "").trim();
+    const html = source.value;
+
+    if(!name){
+      const auto = extractHtmlTitle(html);
+      if(auto){
+        name = auto;
+        nameInput.value = auto;
+        if(!validIcon(editingIcon)) renderIconPreview();
+      }
+    }
+    if(!name) name = "無題";
+
+    if(editingId){
+      const it = items.find(x => x.id === editingId);
+      if(it){
+        it.prevHtml = it.html || "";
+        it.prevUpdated = it.updated || Date.now();
+
+        it.name = name;
+        it.html = html;
+        it.updated = Date.now();
+        if(validIcon(editingIcon)) it.icon = editingIcon;
+        else delete it.icon;
+      }
+      selectedId = editingId;
+    }else{
+      const fid = currentFolderId || (folders[0] && folders[0].id);
+      const note = { id: uid(), name, html, updated: Date.now(), folderId: fid };
+      if(validIcon(editingIcon)) note.icon = editingIcon;
+      const idx = items.findIndex(x => x.folderId === fid);
+      if(idx === -1) items.push(note);
+      else items.splice(idx, 0, note);
+      selectedId = note.id;
     }
 
-    // -------------------------------------------------------------
-    // 画像読み込み
-    // -------------------------------------------------------------
-    imageInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    persist();
+    closeEditor();
+    render();
+    updatePreview();
+    showToast("保存しました");
+  }
 
+  function revertToPrevious(){
+    if(!editingId){
+      showToast("新規作成時は戻せません");
+      return;
+    }
+    const it = items.find(x => x.id === editingId);
+    if(!it || typeof it.prevHtml !== "string"){
+      showToast("戻せるバージョンがありません");
+      return;
+    }
+    if(!confirm("1つ前のバージョンを読み込みますか？\n（現在の編集内容は破棄されます）")) return;
+    source.value = it.prevHtml;
+    showToast("1つ前のバージョンを読み込みました");
+  }
+
+  function readImageFile(file, maxSize){
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          state.image = img;
-          state.imgWidth = img.width;
-          state.imgHeight = img.height;
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+          if(!w || !h){ reject(new Error("サイズ不明")); return; }
+          const scale = Math.min(1, maxSize / Math.max(w, h));
+          w = Math.max(1, Math.round(w * scale));
+          h = Math.max(1, Math.round(h * scale));
 
-          bgCanvas.width = img.width;
-          bgCanvas.height = img.height;
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
 
-          // アノテーション用キャンバスは画像より広く取り、外側にも描画可能にする
-          annoCanvas.width = img.width + ANNO_PADDING * 2;
-          annoCanvas.height = img.height + ANNO_PADDING * 2;
-          annoCanvas.style.left = (-ANNO_PADDING) + 'px';
-          annoCanvas.style.top = (-ANNO_PADDING) + 'px';
-
-          bgCtx.drawImage(img, 0, 0);
-
-          startScreen.style.display = 'none';
-          state.annotations = [];
-          state.selectedId = null;
-
-          requestAnimationFrame(() => {
-            fitViewportToScreen();
-            updateUI();
-            renderAnnotations();
-          });
-
-          saveHistory();
+          let out = null;
+          try{
+            if(file.type === "image/png"){
+              out = canvas.toDataURL("image/png");
+            }else{
+              out = canvas.toDataURL("image/jpeg", 0.85);
+            }
+          }catch(e){ out = null; }
+          if(!out) out = reader.result;
+          resolve(out);
         };
-        img.src = event.target.result;
+        img.onerror = () => reject(new Error("画像を読み込めません"));
+        img.src = reader.result;
       };
+      reader.onerror = () => reject(new Error("ファイルを読み込めません"));
       reader.readAsDataURL(file);
     });
+  }
 
-    function fitViewportToScreen() {
-      const containerW = editorContainer.clientWidth;
-      const containerH = editorContainer.clientHeight;
-      if (!containerW || !containerH || !state.imgWidth || !state.imgHeight) return;
+  $("iconFile").addEventListener("change", async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if(!file) return;
+    try{
+      const dataUrl = await readImageFile(file, 160);
+      editingIcon = dataUrl;
+      renderIconPreview();
+      showToast("アイコンを設定しました");
+    }catch(err){
+      alert("画像を読み込めませんでした");
+    }
+  });
 
-      const padding = 20;
-      const scale = Math.min(
-        (containerW - padding) / state.imgWidth,
-        (containerH - padding) / state.imgHeight
+  $("btnPickIcon").onclick = () => $("iconFile").click();
+  $("iconPreview").onclick = () => $("iconFile").click();
+  nameInput.addEventListener("input", () => { if(!validIcon(editingIcon)) renderIconPreview(); });
+
+  function clearSearchHighlight(){
+    searchMatches = [];
+    searchIndex = -1;
+  }
+
+  function runSearch(direction){
+    const q = $("search").value;
+    if(!q){
+      $("searchResult").textContent = "";
+      clearSearchHighlight();
+      return;
+    }
+    const text = source.value;
+    const matches = [];
+    let pos = 0;
+    while(true){
+      const idx = text.indexOf(q, pos);
+      if(idx === -1) break;
+      matches.push(idx);
+      pos = idx + Math.max(q.length, 1);
+    }
+    searchMatches = matches;
+
+    if(!matches.length){
+      $("searchResult").textContent = "0件";
+      searchIndex = -1;
+      return;
+    }
+
+    if(direction === "next"){
+      searchIndex = searchIndex === -1 ? 0 : (searchIndex + 1) % matches.length;
+    }else if(direction === "prev"){
+      searchIndex = searchIndex === -1 ? matches.length - 1 : (searchIndex - 1 + matches.length) % matches.length;
+    }else{
+      $("searchResult").textContent = `${matches.length}件`;
+      searchIndex = -1;
+      return;
+    }
+
+    const start = matches[searchIndex];
+    const end = start + q.length;
+    source.focus({ preventScroll: true });
+    source.setSelectionRange(start, end);
+    scrollTextareaToSelection(start);
+    $("searchResult").textContent = `${searchIndex + 1}/${matches.length}件`;
+  }
+
+  function scrollTextareaToSelection(charIndex){
+    const ta = source;
+    const text = ta.value;
+    const before = text.slice(0, charIndex);
+
+    const mirror = document.createElement("div");
+    const style = getComputedStyle(ta);
+
+    mirror.style.font = style.font;
+    mirror.style.padding = style.padding;
+    mirror.style.letterSpacing = style.letterSpacing;
+    mirror.style.lineHeight = style.lineHeight;
+    mirror.style.whiteSpace = "pre-wrap";
+    mirror.style.wordBreak = "break-all";
+    mirror.style.overflowWrap = "anywhere";
+    mirror.style.boxSizing = "border-box";
+    mirror.style.border = "none";
+    mirror.style.width = ta.clientWidth + "px";
+    mirror.style.position = "absolute";
+    mirror.style.top = "-9999px";
+    mirror.style.left = "-9999px";
+    mirror.style.visibility = "hidden";
+
+    const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    mirror.innerHTML = esc(before) + "<span>&#x200b;</span>" + esc(text.slice(charIndex));
+
+    document.body.appendChild(mirror);
+
+    const span = mirror.querySelector("span");
+    const spanRect = span.getBoundingClientRect();
+    const mirrorRect = mirror.getBoundingClientRect();
+
+    const relTop = spanRect.top - mirrorRect.top;
+    const lineHeight = parseFloat(style.lineHeight) || 18;
+    const paddingTop = parseFloat(style.paddingTop) || 14;
+    const paddingBottom = parseFloat(style.paddingBottom) || 14;
+    const visibleHeight = ta.clientHeight - paddingTop - paddingBottom;
+
+    ta.scrollTop = Math.max(0, relTop - visibleHeight / 2 + lineHeight / 2);
+    document.body.removeChild(mirror);
+  }
+
+  function openFullscreen(){
+    const it = items.find(x => x.id === selectedId);
+    if(!it){ alert("表示するメモを一覧から選んでください"); return; }
+    fullFrame.srcdoc = it.html || "";
+    $("fullscreen").classList.add("show");
+    requestAnimationFrame(resizeFullscreen);
+  }
+
+  function setDevice(d){
+    currentDevice = d;
+    $("phone").hidden = d !== "phone";
+    $("ipad").hidden  = d !== "ipad";
+    document.querySelectorAll(".dev-btn").forEach(b => {
+      b.classList.toggle("on", b.dataset.dev === d);
+    });
+    requestAnimationFrame(() => {
+      fitDevices();
+      resizeAllPreviews();
+    });
+  }
+
+  function setSidebar(open){
+    sidebarOpen = open;
+    $("sidebar").classList.toggle("open", open);
+    requestAnimationFrame(() => {
+      fitDevices();
+      resizeAllPreviews();
+    });
+  }
+
+  function exportAll(){
+    const data = {
+      app: "pwa-previewer",
+      version: 2,
+      exportedAt: Date.now(),
+      folders: folders.map(f => {
+        const o = { id: f.id, name: f.name };
+        if(f.emoji) o.emoji = f.emoji;
+        return o;
+      }),
+      items: items.map(it => {
+        const o = {
+          id: it.id,
+          name: it.name,
+          html: it.html,
+          updated: it.updated,
+          folderId: it.folderId
+        };
+        if(validIcon(it.icon)) o.icon = it.icon;
+        if(typeof it.prevHtml === "string") o.prevHtml = it.prevHtml;
+        if(typeof it.prevUpdated === "number") o.prevUpdated = it.prevUpdated;
+        return o;
+      })
+    };
+    try{
+      const json = JSON.stringify(data);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "MyApp-BackUp.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+      setLastExportAt(Date.now());
+      updateExportBadge();
+
+      showToast(`エクスポート完了（${items.length}件）`);
+    }catch(e){
+      alert("エクスポートに失敗しました");
+    }
+  }
+
+  function normalizeImported(raw){
+    const outF = [];
+    const outI = [];
+    if(!raw || typeof raw !== "object") return { folders: outF, items: outI };
+
+    const srcF = Array.isArray(raw.folders) ? raw.folders : [];
+    const srcI = Array.isArray(raw.items) ? raw.items : [];
+
+    srcF.forEach(f => {
+      if(!f || typeof f !== "object") return;
+      const o = {
+        id: typeof f.id === "string" && f.id ? f.id : uid(),
+        name: typeof f.name === "string" && f.name ? f.name : "無題のフォルダ"
+      };
+      if(typeof f.emoji === "string" && f.emoji) o.emoji = firstGrapheme(f.emoji);
+      outF.push(o);
+    });
+    srcI.forEach(it => {
+      if(!it || typeof it !== "object") return;
+      if(typeof it.html !== "string" && typeof it.name !== "string") return;
+      const o = {
+        id: typeof it.id === "string" && it.id ? it.id : uid(),
+        name: typeof it.name === "string" ? it.name : "無題",
+        html: typeof it.html === "string" ? it.html : "",
+        updated: typeof it.updated === "number" ? it.updated : Date.now(),
+        folderId: typeof it.folderId === "string" ? it.folderId : null
+      };
+      if(validIcon(it.icon)) o.icon = it.icon;
+      if(typeof it.prevHtml === "string") o.prevHtml = it.prevHtml;
+      if(typeof it.prevUpdated === "number") o.prevUpdated = it.prevUpdated;
+      outI.push(o);
+    });
+    return { folders: outF, items: outI };
+  }
+
+  async function importAll(file){
+    try{
+      const text = await file.text();
+      const raw = JSON.parse(text);
+      const parsed = normalizeImported(raw);
+      if(!parsed.folders.length && !parsed.items.length){
+        throw new Error("有効なデータがありません");
+      }
+
+      const replace = confirm(
+        "既存のデータを置き換えますか？\n\nOK：すべて置き換える\nキャンセル：既存に追加（マージ）"
       );
 
-      state.scale = scale;
-      state.panX = (containerW - state.imgWidth * scale) / 2;
-      state.panY = (containerH - state.imgHeight * scale) / 2;
-
-      updateViewportTransform();
-    }
-
-    function updateViewportTransform() {
-      viewport.style.width = state.imgWidth + 'px';
-      viewport.style.height = state.imgHeight + 'px';
-      viewport.style.transform =
-        `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.scale})`;
-      positionPanel();
-    }
-
-    // -------------------------------------------------------------
-    // 座標計算
-    // -------------------------------------------------------------
-    function getCanvasCoords(e) {
-      const rect = annoCanvas.getBoundingClientRect();
-      if (!rect.width || !rect.height) return { x: 0, y: 0 };
-
-      // キャンバスは (画像 + 前後余白) のサイズなので、余白分を差し引く
-      const px = (e.clientX - rect.left) / rect.width * annoCanvas.width;
-      const py = (e.clientY - rect.top) / rect.height * annoCanvas.height;
-
-      return { x: px - ANNO_PADDING, y: py - ANNO_PADDING };
-    }
-
-    function getContainerCoords(e) {
-      const rect = editorContainer.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    }
-
-    function measureTextAnno(a) {
-      measureCtx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
-      const w = measureCtx.measureText(a.text).width;
-      return { w, h: a.size };
-    }
-
-    function getRotCenter(a) {
-      if (a.type === 'rect') {
-        return { x: a.x + a.w / 2, y: a.y + a.h / 2 };
-      }
-      if (a.type === 'text') {
-        return { x: a.x, y: a.y };
-      }
-      return { x: 0, y: 0 };
-    }
-
-    function localToWorld(a, px, py) {
-      const c = getRotCenter(a);
-      const rad = (a.rotation || 0) * Math.PI / 180;
-      const dx = px - c.x;
-      const dy = py - c.y;
-      return {
-        x: c.x + dx * Math.cos(rad) - dy * Math.sin(rad),
-        y: c.y + dx * Math.sin(rad) + dy * Math.cos(rad)
-      };
-    }
-
-    function withRotation(ctx, a, fn) {
-      const c = getRotCenter(a);
-      ctx.save();
-      if (a.rotation) {
-        ctx.translate(c.x, c.y);
-        ctx.rotate((a.rotation * Math.PI) / 180);
-        ctx.translate(-c.x, -c.y);
-      }
-      fn();
-      ctx.restore();
-    }
-
-    // -------------------------------------------------------------
-    // 履歴管理
-    // -------------------------------------------------------------
-    function saveHistory() {
-      state.history = state.history.slice(0, state.historyIndex + 1);
-      state.history.push(JSON.stringify(state.annotations));
-      state.historyIndex++;
-      updateUndoRedoButtons();
-    }
-
-    function undo() {
-      if (state.historyIndex > 0) {
-        state.historyIndex--;
-        state.annotations = JSON.parse(state.history[state.historyIndex]);
-        state.selectedId = null;
-        updateUI();
-        renderAnnotations();
-        updateUndoRedoButtons();
-      }
-    }
-
-    function redo() {
-      if (state.historyIndex < state.history.length - 1) {
-        state.historyIndex++;
-        state.annotations = JSON.parse(state.history[state.historyIndex]);
-        state.selectedId = null;
-        updateUI();
-        renderAnnotations();
-        updateUndoRedoButtons();
-      }
-    }
-
-    function updateUndoRedoButtons() {
-      btnUndo.disabled = state.historyIndex <= 0;
-      btnRedo.disabled = state.historyIndex >= state.history.length - 1;
-    }
-
-    btnUndo.addEventListener('click', undo);
-    btnRedo.addEventListener('click', redo);
-
-    // -------------------------------------------------------------
-    // タッチ＆ポインターイベント処理
-    // -------------------------------------------------------------
-    let activePointers = new Map();
-    let isDrawing = false;
-    let isDraggingObj = false;
-    let isTransformingObj = false;
-    let isPanning = false;
-    let isPinching = false;
-    let wasPinchingGesture = false;
-    let panMoved = false;
-    let pendingSelectId = null;
-
-    let transformHandle = null;
-    let currentAnnotation = null;
-    let startImageCoords = { x: 0, y: 0 };
-    let initialObjState = null;
-
-    let panStart = { x: 0, y: 0 };
-    let panStartPan = { x: 0, y: 0 };
-
-    let initialPinchDist = 1;
-    let initialScale = 1;
-    let initialImgAnchor = { x: 0, y: 0 };
-
-    let initialRotCenter = { x: 0, y: 0 };
-    let initialHandleAngle = 0;
-    let initialRotation = 0;
-
-    function startPinch() {
-      const pts = Array.from(activePointers.values());
-      if (pts.length < 2) return;
-      wasPinchingGesture = true;
-      const cRect = editorContainer.getBoundingClientRect();
-      const mid = {
-        x: (pts[0].x + pts[1].x) / 2 - cRect.left,
-        y: (pts[0].y + pts[1].y) / 2 - cRect.top
-      };
-      initialPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-      initialScale = state.scale;
-      initialImgAnchor = {
-        x: (mid.x - state.panX) / state.scale,
-        y: (mid.y - state.panY) / state.scale
-      };
-      isPinching = true;
-    }
-
-    function cancelActiveGesture() {
-      if (isDrawing && currentAnnotation) {
-        state.annotations = state.annotations.filter(a => a.id !== currentAnnotation.id);
-        currentAnnotation = null;
-      }
-      isDrawing = false;
-      isDraggingObj = false;
-      isTransformingObj = false;
-      isPanning = false;
-      panMoved = false;
-      pendingSelectId = null;
-      transformHandle = null;
-      initialObjState = null;
-    }
-
-    editorContainer.addEventListener('pointerdown', (e) => {
-      if (!state.image) return;
-
-      try {
-        e.target.setPointerCapture(e.pointerId);
-      } catch (err) {}
-
-      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      if (activePointers.size === 2) {
-        cancelActiveGesture();
-        startPinch();
-        return;
-      }
-      if (activePointers.size > 2) return;
-
-      wasPinchingGesture = false;
-      const coords = getCanvasCoords(e);
-      startImageCoords = coords;
-
-      // 変形ハンドルのタップ判定
-      if (state.selectedId) {
-        const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
-        if (selectedAnno) {
-          const handle = getHitHandle(coords, selectedAnno);
-          if (handle) {
-            isTransformingObj = true;
-            transformHandle = handle;
-            initialObjState = JSON.parse(JSON.stringify(selectedAnno));
-            if (handle === 'rot') {
-              initialRotCenter = getRotCenter(selectedAnno);
-              const rotH = getHandles(selectedAnno).find(h => h.id === 'rot');
-              if (rotH) {
-                initialHandleAngle = Math.atan2(
-                  rotH.y - initialRotCenter.y,
-                  rotH.x - initialRotCenter.x
-                );
-              }
-              initialRotation = selectedAnno.rotation || 0;
-            }
-            return;
-          }
-        }
-      }
-
-      // 新規作成
-      if (state.activeTool !== 'select') {
-        const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
-
-        if (state.activeTool === 'text') {
-          const newAnno = {
-            id, type: 'text',
-            x: coords.x, y: coords.y,
-            text: state.defaults.text,
-            color: state.defaults.color,
-            size: state.defaults.textSize,
-            isBold: state.defaults.isBold,
-            hasShadow: state.defaults.hasShadow,
-            outlineWidth: state.defaults.outlineWidth,
-            rotation: 0
+      if(replace){
+        folders = parsed.folders.length
+          ? parsed.folders
+          : [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
+        items = parsed.items;
+      }else{
+        const idMap = {};
+        parsed.folders.forEach(f => {
+          const nid = uid();
+          idMap[f.id] = nid;
+          const nf = { id: nid, name: (f.name || "無題のフォルダ") + " (取込)" };
+          if(f.emoji) nf.emoji = f.emoji;
+          folders.push(nf);
+        });
+        if(folders.length === 0) folders = [{ id: uid(), name: DEFAULT_FOLDER_NAME }];
+        const fallback = folders[0].id;
+        parsed.items.forEach(it => {
+          const fid = idMap[it.folderId] || fallback;
+          const note = {
+            id: uid(),
+            name: it.name,
+            html: it.html,
+            updated: it.updated,
+            folderId: fid
           };
-          state.annotations.push(newAnno);
-          pendingSelectId = id;
-          bringToFront(id);
-          saveHistory();
-          switchTool('select');
-          renderAnnotations();
-          return;
-        }
-
-        if (state.activeTool === 'rect') {
-          isDrawing = true;
-          currentAnnotation = {
-            id, type: 'rect',
-            x: coords.x, y: coords.y,
-            w: 1, h: 1,
-            color: state.defaults.color,
-            strokeWidth: state.defaults.strokeWidth,
-            outlineWidth: state.defaults.outlineWidth,
-            borderRadius: state.defaults.borderRadius,
-            hasShadow: state.defaults.hasShadow,
-            rotation: 0
-          };
-          state.annotations.push(currentAnnotation);
-          pendingSelectId = id;
-          bringToFront(id);
-          renderAnnotations();
-          return;
-        }
-
-        if (state.activeTool === 'arrow') {
-          isDrawing = true;
-          currentAnnotation = {
-            id, type: 'arrow',
-            x1: coords.x, y1: coords.y,
-            x2: coords.x + 1, y2: coords.y + 1,
-            color: state.defaults.color,
-            strokeWidth: state.defaults.strokeWidth,
-            outlineWidth: state.defaults.outlineWidth,
-            arrowSize: state.defaults.arrowSize,
-            hasShadow: state.defaults.hasShadow
-          };
-          state.annotations.push(currentAnnotation);
-          pendingSelectId = id;
-          bringToFront(id);
-          renderAnnotations();
-          return;
-        }
-      }
-
-      // 選択・移動モード
-      const hitAnno = getHitAnnotation(coords);
-      if (hitAnno) {
-        pendingSelectId = hitAnno.id;
-        bringToFront(hitAnno.id);
-        isDraggingObj = true;
-        initialObjState = JSON.parse(JSON.stringify(hitAnno));
-      } else {
-        pendingSelectId = null;
-        isPanning = true;
-        panMoved = false;
-        panStart = getContainerCoords(e);
-        panStartPan = { x: state.panX, y: state.panY };
-      }
-    });
-
-    editorContainer.addEventListener('pointermove', (e) => {
-      if (!activePointers.has(e.pointerId)) return;
-      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      if (activePointers.size === 2) {
-        if (!isPinching) startPinch();
-        const pts = Array.from(activePointers.values());
-        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-        let newScale = initialScale * (dist / initialPinchDist);
-        newScale = Math.max(0.05, Math.min(20, newScale));
-
-        const cRect = editorContainer.getBoundingClientRect();
-        const mid = {
-          x: (pts[0].x + pts[1].x) / 2 - cRect.left,
-          y: (pts[0].y + pts[1].y) / 2 - cRect.top
-        };
-
-        state.scale = newScale;
-        state.panX = mid.x - initialImgAnchor.x * newScale;
-        state.panY = mid.y - initialImgAnchor.y * newScale;
-
-        updateViewportTransform();
-        return;
-      }
-
-      if (activePointers.size > 1) return;
-
-      if (isPanning) {
-        const c = getContainerCoords(e);
-        const dx = c.x - panStart.x;
-        const dy = c.y - panStart.y;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panMoved = true;
-        state.panX = panStartPan.x + dx;
-        state.panY = panStartPan.y + dy;
-        updateViewportTransform();
-        return;
-      }
-
-      const coords = getCanvasCoords(e);
-
-      if (isDrawing && currentAnnotation) {
-        if (currentAnnotation.type === 'rect') {
-          currentAnnotation.w = coords.x - startImageCoords.x;
-          currentAnnotation.h = coords.y - startImageCoords.y;
-        } else if (currentAnnotation.type === 'arrow') {
-          currentAnnotation.x2 = coords.x;
-          currentAnnotation.y2 = coords.y;
-        }
-        renderAnnotations();
-        return;
-      }
-
-      const selectedAnno = state.annotations.find(a => a.id === (state.selectedId || pendingSelectId));
-      if (!selectedAnno) return;
-
-      if (isTransformingObj && initialObjState) {
-        const dx = coords.x - startImageCoords.x;
-        const dy = coords.y - startImageCoords.y;
-
-        if (selectedAnno.type === 'rect') {
-          if (transformHandle === 'rot') {
-            const cur = Math.atan2(
-              coords.y - initialRotCenter.y,
-              coords.x - initialRotCenter.x
-            );
-            selectedAnno.rotation =
-              initialRotation + (cur - initialHandleAngle) * (180 / Math.PI);
-          } else {
-            applyRectResize(selectedAnno, initialObjState, transformHandle, dx, dy);
-          }
-        } else if (selectedAnno.type === 'arrow') {
-          if (transformHandle === 'p1') {
-            selectedAnno.x1 = coords.x;
-            selectedAnno.y1 = coords.y;
-          } else if (transformHandle === 'p2') {
-            selectedAnno.x2 = coords.x;
-            selectedAnno.y2 = coords.y;
-          }
-        } else if (selectedAnno.type === 'text') {
-          if (transformHandle === 'rot') {
-            const cur = Math.atan2(
-              coords.y - initialRotCenter.y,
-              coords.x - initialRotCenter.x
-            );
-            selectedAnno.rotation =
-              initialRotation + (cur - initialHandleAngle) * (180 / Math.PI);
-          }
-        }
-        renderAnnotations();
-        return;
-      }
-
-      if (isDraggingObj && initialObjState) {
-        const dx = coords.x - startImageCoords.x;
-        const dy = coords.y - startImageCoords.y;
-
-        if (selectedAnno.type === 'rect' || selectedAnno.type === 'text') {
-          selectedAnno.x = initialObjState.x + dx;
-          selectedAnno.y = initialObjState.y + dy;
-        } else if (selectedAnno.type === 'arrow') {
-          selectedAnno.x1 = initialObjState.x1 + dx;
-          selectedAnno.y1 = initialObjState.y1 + dy;
-          selectedAnno.x2 = initialObjState.x2 + dx;
-          selectedAnno.y2 = initialObjState.y2 + dy;
-        }
-        renderAnnotations();
-      }
-    });
-
-    function applyRectResize(target, s, handle, dx, dy) {
-      const th = (s.rotation || 0) * Math.PI / 180;
-      const cos = Math.cos(-th), sin = Math.sin(-th);
-      const ldx = dx * cos - dy * sin;
-      const ldy = dx * sin + dy * cos;
-
-      let nw = s.w;
-      let nh = s.h;
-      if (handle === 'se') { nw = s.w + ldx; nh = s.h + ldy; }
-      else if (handle === 'nw') { nw = s.w - ldx; nh = s.h - ldy; }
-      else if (handle === 'ne') { nw = s.w + ldx; nh = s.h - ldy; }
-      else if (handle === 'sw') { nw = s.w - ldx; nh = s.h + ldy; }
-
-      nw = Math.max(10, nw);
-      nh = Math.max(10, nh);
-
-      let anchorLocalX, anchorLocalY;
-      if (handle === 'se') { anchorLocalX = s.x; anchorLocalY = s.y; }
-      else if (handle === 'nw') { anchorLocalX = s.x + s.w; anchorLocalY = s.y + s.h; }
-      else if (handle === 'ne') { anchorLocalX = s.x; anchorLocalY = s.y + s.h; }
-      else { anchorLocalX = s.x + s.w; anchorLocalY = s.y; }
-
-      const A = localToWorld(s, anchorLocalX, anchorLocalY);
-
-      let ax, ay;
-      if (handle === 'se') { ax = -nw / 2; ay = -nh / 2; }
-      else if (handle === 'nw') { ax = nw / 2; ay = nh / 2; }
-      else if (handle === 'ne') { ax = -nw / 2; ay = nh / 2; }
-      else { ax = nw / 2; ay = -nh / 2; }
-
-      const c = Math.cos(th), sn = Math.sin(th);
-      const rx = ax * c - ay * sn;
-      const ry = ax * sn + ay * c;
-
-      target.w = nw;
-      target.h = nh;
-      target.x = (A.x - rx) - nw / 2;
-      target.y = (A.y - ry) - nh / 2;
-    }
-
-    const handlePointerUp = (e) => {
-      try {
-        if (e.target.hasPointerCapture(e.pointerId)) {
-          e.target.releasePointerCapture(e.pointerId);
-        }
-      } catch (err) {}
-
-      const wasPinching = isPinching;
-      activePointers.delete(e.pointerId);
-
-      if (wasPinching) {
-        if (activePointers.size < 2) isPinching = false;
-        return;
-      }
-
-      if (wasPinchingGesture) {
-        wasPinchingGesture = false;
-        return;
-      }
-
-      if (isPanning) {
-        if (!panMoved) {
-          state.selectedId = null;
-        }
-        isPanning = false;
-        panMoved = false;
-        updateUI();
-        renderAnnotations();
-        return;
-      }
-
-      if (pendingSelectId) {
-        state.selectedId = pendingSelectId;
-        pendingSelectId = null;
-      }
-
-      if (isDrawing || isDraggingObj || isTransformingObj) {
-        let discard = false;
-
-        if (currentAnnotation && currentAnnotation.type === 'rect') {
-          if (currentAnnotation.w < 0) {
-            currentAnnotation.x += currentAnnotation.w;
-            currentAnnotation.w = Math.abs(currentAnnotation.w);
-          }
-          if (currentAnnotation.h < 0) {
-            currentAnnotation.y += currentAnnotation.h;
-            currentAnnotation.h = Math.abs(currentAnnotation.h);
-          }
-        }
-
-        if (isDrawing && currentAnnotation) {
-          const a = currentAnnotation;
-          if (a.type === 'rect') {
-            discard = Math.abs(a.w) < 8 || Math.abs(a.h) < 8;
-          } else if (a.type === 'arrow') {
-            discard = Math.hypot(a.x2 - a.x1, a.y2 - a.y1) < 8;
-          }
-          if (discard) {
-            state.annotations = state.annotations.filter(x => x.id !== a.id);
-            state.selectedId = null;
-          }
-        }
-
-        if (!discard) {
-          saveHistory();
-          if (isDrawing) {
-            switchTool('select');
-          }
-        }
-      }
-
-      updateUI();
-      renderAnnotations();
-
-      isDrawing = false;
-      isDraggingObj = false;
-      isTransformingObj = false;
-      transformHandle = null;
-      currentAnnotation = null;
-      initialObjState = null;
-    };
-
-    editorContainer.addEventListener('pointerup', handlePointerUp);
-    editorContainer.addEventListener('pointercancel', handlePointerUp);
-    editorContainer.addEventListener('pointerleave', (e) => {
-      if (activePointers.has(e.pointerId)) handlePointerUp(e);
-    });
-
-    // -------------------------------------------------------------
-    // ヒットテスト
-    // -------------------------------------------------------------
-    function getHitAnnotation(coords) {
-      for (let i = state.annotations.length - 1; i >= 0; i--) {
-        const a = state.annotations[i];
-
-        if (a.type === 'rect') {
-          const c = getRotCenter(a);
-          const rad = -(a.rotation || 0) * Math.PI / 180;
-          const dx = coords.x - c.x;
-          const dy = coords.y - c.y;
-          const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
-          const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
-
-          const minX = Math.min(a.x, a.x + a.w);
-          const maxX = Math.max(a.x, a.x + a.w);
-          const minY = Math.min(a.y, a.y + a.h);
-          const maxY = Math.max(a.y, a.y + a.h);
-          const margin = 12 / state.scale + 8;
-          if (lx >= minX - margin && lx <= maxX + margin &&
-              ly >= minY - margin && ly <= maxY + margin) {
-            return a;
-          }
-        } else if (a.type === 'arrow') {
-          const dist = distToSegment(coords, { x: a.x1, y: a.y1 }, { x: a.x2, y: a.y2 });
-          if (dist < (a.strokeWidth / 2 + 24 / state.scale)) return a;
-        } else if (a.type === 'text') {
-          const m = measureTextAnno(a);
-          const w = m.w;
-          const h = a.size;
-
-          const c = getRotCenter(a);
-          const rad = -(a.rotation || 0) * Math.PI / 180;
-          const dx = coords.x - c.x;
-          const dy = coords.y - c.y;
-          const lx = c.x + dx * Math.cos(rad) - dy * Math.sin(rad);
-          const ly = c.y + dx * Math.sin(rad) + dy * Math.cos(rad);
-
-          if (lx >= a.x - w/2 - 12 && lx <= a.x + w/2 + 12 &&
-              ly >= a.y - h/2 - 12 && ly <= a.y + h/2 + 12) {
-            return a;
-          }
-        }
-      }
-      return null;
-    }
-
-    function getHandles(a) {
-      const handles = [];
-      const off = 34 / state.scale;
-
-      if (a.type === 'rect') {
-        const corners = [
-          { id: 'nw', x: a.x, y: a.y },
-          { id: 'ne', x: a.x + a.w, y: a.y },
-          { id: 'se', x: a.x + a.w, y: a.y + a.h },
-          { id: 'sw', x: a.x, y: a.y + a.h }
-        ];
-        corners.forEach(p => {
-          const w = localToWorld(a, p.x, p.y);
-          handles.push({ id: p.id, x: w.x, y: w.y });
-        });
-        const r = localToWorld(a, a.x + a.w / 2, a.y - off);
-        handles.push({ id: 'rot', x: r.x, y: r.y });
-      } else if (a.type === 'text') {
-        const topY = a.y - a.size / 2;
-        const r = localToWorld(a, a.x, topY - off);
-        handles.push({ id: 'rot', x: r.x, y: r.y });
-      } else if (a.type === 'arrow') {
-        handles.push({ id: 'p1', x: a.x1, y: a.y1 });
-        handles.push({ id: 'p2', x: a.x2, y: a.y2 });
-      }
-      return handles;
-    }
-
-    function getHitHandle(coords, a) {
-      const handleSize = 26 / state.scale;
-      const handles = getHandles(a);
-      for (const h of handles) {
-        if (Math.hypot(coords.x - h.x, coords.y - h.y) < handleSize) {
-          return h.id;
-        }
-      }
-      return null;
-    }
-
-    function distToSegment(p, v, w) {
-      const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
-      if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
-      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
-      t = Math.max(0, Math.min(1, t));
-      return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
-    }
-
-    // -------------------------------------------------------------
-    // 描画処理
-    // -------------------------------------------------------------
-    function renderAnnotations() {
-      // キャンバス全体をクリア（余白含む）
-      annoCtx.setTransform(1, 0, 0, 1, 0, 0);
-      annoCtx.clearRect(0, 0, annoCanvas.width, annoCanvas.height);
-      // 画像座標系に合わせる（余白分だけオフセット）
-      annoCtx.translate(ANNO_PADDING, ANNO_PADDING);
-
-      state.annotations.forEach(a => {
-        if (a.type === 'rect') {
-          annoCtx.save();
-          if (a.hasShadow) {
-            annoCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            annoCtx.shadowBlur = 8;
-            annoCtx.shadowOffsetX = 3;
-            annoCtx.shadowOffsetY = 3;
-          }
-          drawRoundedRect(annoCtx, a);
-          annoCtx.restore();
-        } else if (a.type === 'arrow') {
-          annoCtx.save();
-          if (a.hasShadow) {
-            annoCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            annoCtx.shadowBlur = 8;
-            annoCtx.shadowOffsetX = 3;
-            annoCtx.shadowOffsetY = 3;
-          }
-          drawArrow(annoCtx, a);
-          annoCtx.restore();
-        } else if (a.type === 'text') {
-          drawText(annoCtx, a);
-        }
-
-        if (a.id === state.selectedId) {
-          drawSelectionBounds(a);
-        }
-      });
-
-      positionPanel();
-    }
-
-    function drawRoundedRect(ctx, a) {
-      withRotation(ctx, a, () => {
-        const x = a.x;
-        const y = a.y;
-        const w = a.w;
-        const h = a.h;
-        const absW = Math.abs(w);
-        const absH = Math.abs(h);
-
-        const maxR = Math.min(absW, absH) / 2;
-        const pct = (a.borderRadius != null ? a.borderRadius : 0) / 100;
-        let r = Math.max(0, Math.min(maxR, maxR * pct));
-
-        ctx.beginPath();
-        if (r <= 0) {
-          ctx.rect(x, y, w, h);
-        } else {
-          const x1 = Math.min(x, x + w);
-          const x2 = Math.max(x, x + w);
-          const y1 = Math.min(y, y + h);
-          const y2 = Math.max(y, y + h);
-
-          ctx.moveTo(x1 + r, y1);
-          ctx.arcTo(x2, y1, x2, y2, r);
-          ctx.arcTo(x2, y2, x1, y2, r);
-          ctx.arcTo(x1, y2, x1, y1, r);
-          ctx.arcTo(x1, y1, x2, y1, r);
-          ctx.closePath();
-        }
-
-        ctx.lineJoin = 'round';
-
-        const outline = a.outlineWidth != null ? a.outlineWidth : 2;
-        if (outline > 0) {
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = a.strokeWidth + outline * 2;
-          ctx.stroke();
-        }
-
-        ctx.strokeStyle = a.color;
-        ctx.lineWidth = a.strokeWidth;
-        ctx.stroke();
-      });
-    }
-
-    function drawArrow(ctx, a) {
-      const angle = Math.atan2(a.y2 - a.y1, a.x2 - a.x1);
-      const headLen = a.arrowSize || 20;
-
-      const drawPath = () => {
-        ctx.beginPath();
-        ctx.moveTo(a.x1, a.y1);
-        ctx.lineTo(a.x2, a.y2);
-        ctx.lineTo(
-          a.x2 - headLen * Math.cos(angle - Math.PI / 6),
-          a.y2 - headLen * Math.sin(angle - Math.PI / 6)
-        );
-        ctx.moveTo(a.x2, a.y2);
-        ctx.lineTo(
-          a.x2 - headLen * Math.cos(angle + Math.PI / 6),
-          a.y2 - headLen * Math.sin(angle + Math.PI / 6)
-        );
-      };
-
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      const outline = a.outlineWidth != null ? a.outlineWidth : 2;
-      if (outline > 0) {
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = a.strokeWidth + outline * 2;
-        drawPath();
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = a.color;
-      ctx.lineWidth = a.strokeWidth;
-      drawPath();
-      ctx.stroke();
-    }
-
-    // 文字の描画
-    // 影は「文字の輪郭」を基準に描画し、フチの太さに影響されないようにする
-    function drawText(ctx, a) {
-      withRotation(ctx, a, () => {
-        ctx.font = `${a.isBold ? 'bold' : 'normal'} ${a.size}px -apple-system, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.lineJoin = 'round';
-
-        const outline = (a.outlineWidth != null) ? a.outlineWidth : 2;
-        const hasShadow = a.hasShadow !== false;
-
-        // 1. 影（フチの太さに関係なく一定のぼかし・オフセット）
-        if (hasShadow) {
-          ctx.save();
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetX = 2;
-          ctx.shadowOffsetY = 2;
-          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-          ctx.fillText(a.text, a.x, a.y);
-          ctx.restore();
-        }
-
-        // 2. 白フチ
-        if (outline > 0) {
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = outline * 2;
-          ctx.strokeText(a.text, a.x, a.y);
-        }
-
-        // 3. テキスト本体
-        ctx.fillStyle = a.color;
-        ctx.fillText(a.text, a.x, a.y);
-      });
-    }
-
-    function drawSelectionBounds(a) {
-      annoCtx.save();
-      annoCtx.strokeStyle = '#0a84ff';
-      annoCtx.lineWidth = 2 / state.scale;
-      annoCtx.fillStyle = '#ffffff';
-      annoCtx.setLineDash([]);
-
-      const handleR = 7 / state.scale;
-
-      if (a.type === 'rect') {
-        withRotation(annoCtx, a, () => {
-          annoCtx.strokeRect(a.x, a.y, a.w, a.h);
-        });
-      } else if (a.type === 'text') {
-        const m = measureTextAnno(a);
-        withRotation(annoCtx, a, () => {
-          annoCtx.strokeRect(a.x - m.w / 2 - 4, a.y - a.size / 2 - 4, m.w + 8, a.size + 8);
+          if(it.icon) note.icon = it.icon;
+          if(typeof it.prevHtml === "string") note.prevHtml = it.prevHtml;
+          if(typeof it.prevUpdated === "number") note.prevUpdated = it.prevUpdated;
+          items.push(note);
         });
       }
 
-      const handles = getHandles(a);
-      handles.forEach(h => {
-        if (h.id === 'rot') {
-          let base;
-          if (a.type === 'rect') {
-            base = localToWorld(a, a.x + a.w / 2, a.y);
-          } else {
-            base = localToWorld(a, a.x, a.y - a.size / 2);
-          }
-
-          annoCtx.beginPath();
-          annoCtx.moveTo(base.x, base.y);
-          annoCtx.lineTo(h.x, h.y);
-          annoCtx.strokeStyle = '#0a84ff';
-          annoCtx.lineWidth = 2 / state.scale;
-          annoCtx.stroke();
-
-          annoCtx.beginPath();
-          annoCtx.arc(h.x, h.y, handleR + 2 / state.scale, 0, Math.PI * 2);
-          annoCtx.fillStyle = '#0a84ff';
-          annoCtx.fill();
-          annoCtx.strokeStyle = '#ffffff';
-          annoCtx.lineWidth = 2 / state.scale;
-          annoCtx.stroke();
-
-          annoCtx.beginPath();
-          annoCtx.arc(h.x, h.y, handleR * 0.45, 0.4, Math.PI * 1.6);
-          annoCtx.strokeStyle = '#ffffff';
-          annoCtx.lineWidth = 1.6 / state.scale;
-          annoCtx.stroke();
-        } else {
-          annoCtx.beginPath();
-          annoCtx.arc(h.x, h.y, handleR, 0, Math.PI * 2);
-          annoCtx.fillStyle = '#ffffff';
-          annoCtx.fill();
-          annoCtx.strokeStyle = '#0a84ff';
-          annoCtx.lineWidth = 2 / state.scale;
-          annoCtx.stroke();
-        }
+      const fids = new Set(folders.map(f => f.id));
+      items.forEach(it => {
+        if(!it.id) it.id = uid();
+        if(typeof it.name !== "string") it.name = "無題";
+        if(typeof it.html !== "string") it.html = "";
+        if(typeof it.updated !== "number") it.updated = Date.now();
+        if(!it.folderId || !fids.has(it.folderId)) it.folderId = folders[0].id;
+        if(it.icon !== undefined && !validIcon(it.icon)) delete it.icon;
       });
 
-      annoCtx.restore();
+      persist();
+      selectedId = items.length ? items[0].id : null;
+      currentFolderId = null;
+      render(true, "open");
+      updatePreview();
+      showToast(`インポート完了（${items.length}件）`);
+    }catch(err){
+      console.error(err);
+      alert("インポートに失敗しました：\n" + (err && err.message ? err.message : "不明なエラー"));
     }
+  }
 
-    // -------------------------------------------------------------
-    // パネル位置調整
-    // -------------------------------------------------------------
-    function positionPanel() {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (!a) return;
+  document.querySelectorAll(".dev-btn").forEach(b => {
+    b.onclick = () => setDevice(b.dataset.dev);
+  });
 
-      let objCenterY;
-      if (a.type === 'rect') objCenterY = a.y + a.h / 2;
-      else if (a.type === 'text') objCenterY = a.y;
-      else if (a.type === 'arrow') objCenterY = (a.y1 + a.y2) / 2;
-      else objCenterY = 0;
-
-      const screenY = state.panY + objCenterY * state.scale;
-      const containerH = editorContainer.clientHeight;
-
-      if (screenY > containerH * 0.5) {
-        propertiesPanel.classList.add('at-top');
-      } else {
-        propertiesPanel.classList.remove('at-top');
-      }
+  $("btnNew").onclick = () => {
+    if(currentFolderId === null){
+      openNewFolderSheet();
+    }else{
+      openEditor(null, true);
     }
+  };
 
-    // -------------------------------------------------------------
-    // UI 同期
-    // -------------------------------------------------------------
-    function updateUI() {
-      const a = state.annotations.find(x => x.id === state.selectedId);
+  $("btnSettings").onclick = openSettings;
+  $("settingsOverlay").addEventListener("click", e => {
+    if(e.target === $("settingsOverlay")) closeSettings();
+  });
+  $("setExport").onclick = () => { closeSettings(); exportAll(); };
+  $("setImport").onclick = () => { closeSettings(); $("importFile").click(); };
+  $("importFile").addEventListener("change", async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if(!file) return;
+    await importAll(file);
+  });
 
-      if (!a) {
-        propertiesPanel.classList.add('hidden');
-        return;
-      }
+  $("folderSave").onclick = saveFolderEdit;
+  $("folderCancel").onclick = closeFolderEdit;
+  $("folderOverlay").addEventListener("click", e => {
+    if(e.target === $("folderOverlay")) closeFolderEdit();
+  });
+  $("folderNameInput").addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); saveFolderEdit(); }
+  });
+  $("folderEmojiInput").addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); saveFolderEdit(); }
+  });
 
-      propertiesPanel.classList.remove('hidden');
+  $("btnFullscreen").onclick = openFullscreen;
+  $("exit").onclick = () => {
+    $("fullscreen").classList.remove("show");
+    fullFrame.srcdoc = "";
+  };
 
-      document.querySelectorAll('.color-swatch').forEach(s => {
-        if (s.dataset.color && s.dataset.color.toLowerCase() === (a.color || '').toLowerCase()) {
-          s.classList.add('selected');
-        } else {
-          s.classList.remove('selected');
-        }
-      });
-
-      if (customColorPicker) customColorPicker.value = a.color || '#e63946';
-      if (pickerCurrentEl) pickerCurrentEl.style.background = a.color || '#e63946';
-
-      document.getElementById('text-prop-row').style.display = (a.type === 'text') ? 'flex' : 'none';
-      document.getElementById('radius-prop-row').style.display = (a.type === 'rect') ? 'flex' : 'none';
-      document.getElementById('arrow-prop-row').style.display = (a.type === 'arrow') ? 'flex' : 'none';
-
-      if (a.type === 'text') {
-        textContentInput.value = a.text;
-        btnBold.classList.toggle('active', !!a.isBold);
-        sizeLabel.textContent = 'サイズ';
-        sizeSlider.min = 12;
-        sizeSlider.max = MAX_TEXT_SIZE;
-        sizeSlider.value = a.size;
-      } else {
-        sizeLabel.textContent = '線幅';
-        sizeSlider.min = 1;
-        sizeSlider.max = MAX_STROKE_WIDTH;
-        sizeSlider.value = a.strokeWidth;
-      }
-
-      if (a.type === 'rect') {
-        radiusSlider.value = (a.borderRadius != null) ? a.borderRadius : 0;
-      }
-      if (a.type === 'arrow') {
-        arrowSlider.value = a.arrowSize || 20;
-      }
-
-      outlineSlider.max = MAX_OUTLINE_WIDTH;
-      outlineSlider.value = (a.outlineWidth != null) ? a.outlineWidth : 2;
-
-      btnShadowToggle.classList.toggle('active', !!a.hasShadow);
-
-      positionPanel();
+  $("btnEdit").onclick = () => {
+    if(!selectedId){
+      showToast("編集するメモを選択してください");
+      return;
     }
+    openEditor(selectedId, false);
+  };
 
-    function switchTool(tool) {
-      state.activeTool = tool;
-      document.querySelectorAll('.tool-item[data-tool]').forEach(b => {
-        b.classList.toggle('active', b.dataset.tool === tool);
-      });
+  $("btnSave").onclick = saveCurrent;
+  $("btnCancel").onclick = closeEditor;
+  $("btnRevert").onclick = revertToPrevious;
+
+  $("btnClear").onclick = () => {
+    source.value = "";
+    $("search").value = "";
+    $("searchResult").textContent = "";
+    clearSearchHighlight();
+    source.focus();
+  };
+
+  $("btnCopy").onclick = async () => {
+    try{
+      await navigator.clipboard.writeText(source.value);
+      const btn = $("btnCopy");
+      const old = btn.textContent;
+      btn.textContent = "コピー済";
+      setTimeout(() => btn.textContent = old, 1200);
+    }catch(e){
+      alert("コピーに失敗しました");
     }
+  };
 
-    function selectColor(color) {
-      const selectedAnno = state.annotations.find(a => a.id === state.selectedId);
-      state.defaults.color = color;
+  $("editorOverlay").addEventListener("click", e => {
+    if(e.target === $("editorOverlay")) closeEditor();
+  });
+  $("pickerOverlay").addEventListener("click", e => {
+    if(e.target === $("pickerOverlay")) closePicker();
+  });
 
-      if (selectedAnno) {
-        selectedAnno.color = color;
-        saveHistory();
-      }
+  $("stage").addEventListener("click", handleOutsideTap);
+  $("toolbar").addEventListener("click", e => {
+    if(e.target.closest("button")) return;
+    handleOutsideTap();
+  });
 
-      renderAnnotations();
-      updateUI();
+  $("search").addEventListener("input", () => { searchIndex = -1; runSearch("none"); });
+  $("search").addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); runSearch("next"); }
+  });
+  $("btnSearchNext").onclick = () => runSearch("next");
+  $("btnSearchPrev").onclick = () => runSearch("prev");
+
+  function adjustEditorForKeyboard(){
+    if(!window.visualViewport) return;
+    const vv = window.visualViewport;
+    const sheet = document.querySelector(".editor-sheet");
+    if($("editorOverlay").classList.contains("show")){
+      sheet.style.maxHeight = (vv.height - 16) + "px";
     }
+  }
+  window.visualViewport?.addEventListener("resize", adjustEditorForKeyboard);
 
-    // -------------------------------------------------------------
-    // プロパティ操作イベント
-    // -------------------------------------------------------------
-    textContentInput.addEventListener('input', (e) => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a && a.type === 'text') {
-        a.text = e.target.value;
-        renderAnnotations();
-      }
-    });
-    textContentInput.addEventListener('change', () => saveHistory());
+  load();
+  syncAppHeight();
+  setSidebar(sidebarOpen);
+  render();
+  setDevice("phone");
+  updatePreview();
+  updateExportBadge();
 
-    btnClearText.addEventListener('click', () => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a && a.type === 'text') {
-        a.text = '';
-        textContentInput.value = '';
-        textContentInput.focus();
-        renderAnnotations();
-        saveHistory();
-      }
-    });
-
-    btnBold.addEventListener('click', () => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a && a.type === 'text') {
-        a.isBold = !a.isBold;
-        state.defaults.isBold = a.isBold;
-        updateUI();
-        saveHistory();
-        renderAnnotations();
-      }
-    });
-
-    sizeSlider.addEventListener('input', (e) => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (!a) return;
-      const val = Number(e.target.value);
-      if (a.type === 'text') {
-        a.size = val;
-      } else {
-        a.strokeWidth = val;
-      }
-      renderAnnotations();
-    });
-    sizeSlider.addEventListener('change', (e) => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (!a) return;
-      const val = Number(e.target.value);
-      if (a.type === 'text') state.defaults.textSize = val;
-      else state.defaults.strokeWidth = val;
-      saveHistory();
-    });
-
-    outlineSlider.addEventListener('input', (e) => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (!a) return;
-      a.outlineWidth = Number(e.target.value);
-      state.defaults.outlineWidth = a.outlineWidth;
-      renderAnnotations();
-    });
-    outlineSlider.addEventListener('change', () => saveHistory());
-
-    radiusSlider.addEventListener('input', (e) => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a && a.type === 'rect') {
-        a.borderRadius = Number(e.target.value);
-        state.defaults.borderRadius = a.borderRadius;
-        renderAnnotations();
-      }
-    });
-    radiusSlider.addEventListener('change', () => saveHistory());
-
-    arrowSlider.addEventListener('input', (e) => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a && a.type === 'arrow') {
-        a.arrowSize = Number(e.target.value);
-        state.defaults.arrowSize = a.arrowSize;
-        renderAnnotations();
-      }
-    });
-    arrowSlider.addEventListener('change', () => saveHistory());
-
-    btnAspectSquare.addEventListener('click', () => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a && a.type === 'rect') {
-        const minSide = Math.min(Math.abs(a.w), Math.abs(a.h));
-        const cx = a.x + a.w / 2;
-        const cy = a.y + a.h / 2;
-        const signW = a.w < 0 ? -1 : 1;
-        const signH = a.h < 0 ? -1 : 1;
-        a.w = minSide * signW;
-        a.h = minSide * signH;
-        a.x = cx - a.w / 2;
-        a.y = cy - a.h / 2;
-        saveHistory();
-        renderAnnotations();
-      }
-    });
-
-    btnShadowToggle.addEventListener('click', () => {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (a) {
-        a.hasShadow = !a.hasShadow;
-        state.defaults.hasShadow = a.hasShadow;
-        updateUI();
-        saveHistory();
-        renderAnnotations();
-      }
-    });
-
-    // -------------------------------------------------------------
-    // 微調整ボタン
-    // -------------------------------------------------------------
-    function applyNudge(dx, dy) {
-      const a = state.annotations.find(x => x.id === state.selectedId);
-      if (!a) return;
-      if (a.type === 'rect' || a.type === 'text') {
-        a.x += dx;
-        a.y += dy;
-      } else if (a.type === 'arrow') {
-        a.x1 += dx;
-        a.y1 += dy;
-        a.x2 += dx;
-        a.y2 += dy;
-      }
-      renderAnnotations();
-    }
-
-    function setupNudgeButtons() {
-      const defs = [
-        { id: 'nudge-left', dx: -2, dy: 0 },
-        { id: 'nudge-right', dx: 2, dy: 0 },
-        { id: 'nudge-up', dx: 0, dy: -2 },
-        { id: 'nudge-down', dx: 0, dy: 2 }
-      ];
-
-      defs.forEach(({ id, dx, dy }) => {
-        const btn = document.getElementById(id);
-        let holdTimer = null;
-        let repeatTimer = null;
-        let active = false;
-
-        const stop = () => {
-          if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-          if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
-          if (active) {
-            active = false;
-            saveHistory();
-          }
-        };
-
-        btn.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          if (!state.selectedId) return;
-          active = true;
-          applyNudge(dx, dy);
-          holdTimer = setTimeout(() => {
-            repeatTimer = setInterval(() => applyNudge(dx, dy), 55);
-          }, 380);
-        });
-        btn.addEventListener('pointerup', stop);
-        btn.addEventListener('pointercancel', stop);
-        btn.addEventListener('pointerleave', stop);
-      });
-    }
-
-    // ゴミ箱（削除）ボタン処理
-    btnDelete.addEventListener('click', () => {
-      if (state.selectedId) {
-        state.annotations = state.annotations.filter(a => a.id !== state.selectedId);
-        state.selectedId = null;
-        updateUI();
-        saveHistory();
-        renderAnnotations();
-      }
-    });
-
-    // -------------------------------------------------------------
-    // エクスポート（保存）※ 画像サイズは従来通り
-    // -------------------------------------------------------------
-    btnExport.addEventListener('click', () => {
-      if (!state.image) return;
-
-      const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = state.imgWidth;
-      exportCanvas.height = state.imgHeight;
-      const exportCtx = exportCanvas.getContext('2d');
-
-      exportCtx.drawImage(state.image, 0, 0);
-
-      state.annotations.forEach(a => {
-        if (a.type === 'rect') {
-          exportCtx.save();
-          if (a.hasShadow) {
-            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            exportCtx.shadowBlur = 8;
-            exportCtx.shadowOffsetX = 3;
-            exportCtx.shadowOffsetY = 3;
-          }
-          drawRoundedRect(exportCtx, a);
-          exportCtx.restore();
-        } else if (a.type === 'arrow') {
-          exportCtx.save();
-          if (a.hasShadow) {
-            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            exportCtx.shadowBlur = 8;
-            exportCtx.shadowOffsetX = 3;
-            exportCtx.shadowOffsetY = 3;
-          }
-          drawArrow(exportCtx, a);
-          exportCtx.restore();
-        } else if (a.type === 'text') {
-          drawText(exportCtx, a);
-        }
-      });
-
-      savePreview.src = exportCanvas.toDataURL('image/png');
-      saveModal.classList.add('active');
-    });
-
-    btnCloseModal.addEventListener('click', () => {
-      saveModal.classList.remove('active');
-    });
-
-    // 初期化実行
-    init();
-  </script>
+  requestAnimationFrame(() => {
+    syncAppHeight();
+    fitDevices();
+    resizeAllPreviews();
+  });
+  setTimeout(relayout, 260);
+  window.addEventListener("load", () => setTimeout(relayout, 100));
+})();
+</script>
 </body>
 </html>
