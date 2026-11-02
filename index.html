@@ -3,98 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#2c2c2e" id="theme-color-meta">
-<title>ブラー＆セーフエリア検証</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" id="statusbar-meta" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="セーフエリア検証">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ブラーなし検証">
 <style>
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --header-h: 48px;
-  --controls-h: 100px;
-  --status-bg: #1c1c1e;      /* ステータスエリアの色（実験で変更） */
-  --home-bg: #1c1c1e;        /* ホームインジケータ領域の色（実験で変更） */
+  --footer-h: 52px;
+  --status-color: #1c1c1e; /* ステータスバーの色（不透明） */
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
-body {
-  color: #fff;
-  background: var(--status-bg); /* ステータスエリアの色はbody背景が反映される */
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
   overflow: hidden;
+  background: #0a0a0c;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* ================= ヘッダー ================= */
-#test-header {
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  height: calc(var(--header-h) + var(--safe-top));
-  padding-top: var(--safe-top);
-  font-weight: 600;
-  font-size: 16px;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-  border-bottom: 0.5px solid rgba(255,255,255,0.2);
-}
-#test-header .hbtn {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-/* ================= ステータスバー・ホームバープレビュー ================= */
-.safe-preview {
+/* ============================================================
+   1. ステータスバー領域を不透明ストリップで覆う（ブラー回避の核心）
+   → 上端から4px以内・高さ6px以上・幅80%以上を満たす
+   ============================================================ */
+#status-strip {
   position: fixed;
-  left: 0; right: 0;
-  z-index: 50;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.5);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.safe-preview.top {
   top: 0;
-  height: var(--safe-top);
-  background: rgba(255, 0, 0, 0.15); /* ステータスエリアの範囲を可視化 */
-  border-bottom: 1px dashed rgba(255,255,255,0.3);
-}
-.safe-preview.bottom {
-  bottom: 0;
-  height: var(--safe-bottom);
-  background: rgba(0, 255, 0, 0.12); /* ホームインジケータ領域の範囲を可視化 */
-  border-top: 1px dashed rgba(255,255,255,0.3);
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-top) + 6px); /* セーフエリア + 6px で確実に条件を満たす */
+  background: var(--status-color);      /* 不透明。backdrop-filterは絶対に使わない */
+  z-index: 1000;
+  pointer-events: none;
 }
 
-/* ================= コンテンツ ================= */
-#test-content {
+/* ============================================================
+   2. スクロールコンテナ（全画面）
+   ============================================================ */
+#scroll-root {
   position: absolute;
   inset: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
-.content-inner {
-  padding-top: calc(var(--header-h) + var(--safe-top) + 12px);
-  padding-bottom: calc(var(--controls-h) + var(--safe-bottom) + 12px);
+
+/* コンテンツはステータスバーとフッターの下までスクロール可能 */
+#content {
+  padding-top: calc(var(--safe-top) + 6px + var(--header-h));
+  padding-bottom: calc(var(--safe-bottom) + var(--footer-h) + 8px);
+  min-height: 100%;
 }
+
 .stripe {
   height: 80px;
   display: flex;
@@ -102,395 +67,187 @@ body {
   justify-content: center;
   font-weight: 700;
   font-size: 20px;
-  color: rgba(255,255,255,0.95);
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   border-bottom: 1px solid rgba(0,0,0,0.25);
 }
 
-/* ================= コントロールパネル ================= */
-#controls {
+/* ============================================================
+   3. ヘッダー（通常は表示、下スクロールで隠す）
+   ============================================================ */
+#header {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
-  z-index: 100;
-  background: #1c1c1e;
-  border-top: 1px solid rgba(255,255,255,0.15);
-  padding: 8px 8px calc(8px + var(--safe-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  max-height: 50vh;
-  overflow-y: auto;
-}
-.row-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #8e8e93;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 4px;
-}
-.pattern-row {
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.pattern-row::-webkit-scrollbar { display: none; }
-.pattern-btn {
-  flex: 0 0 auto;
-  background: #2c2c2e;
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 7px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  font-family: inherit;
-}
-.pattern-btn.active { background: #0a84ff; border-color: #0a84ff; }
-.pattern-btn.color-btn { min-width: 44px; }
-
-/* ================= 各パターン ================= */
-body.pattern-a { position: fixed; inset: 0; }
-body.pattern-a #test-header {
-  position: absolute; top: 0; left: 0; right: 0;
-  background: rgba(30, 30, 32, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-body.pattern-a #test-content { position: absolute; inset: 0; }
-
-body.pattern-b { position: static; overflow-y: auto; overscroll-behavior-y: none; }
-body.pattern-b #test-header {
-  position: sticky; top: 0;
-  background: rgba(30, 30, 32, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-body.pattern-b #test-content { position: static; }
-
-body.pattern-c { position: fixed; inset: 0; }
-body.pattern-c #test-header {
-  position: absolute; top: 0; left: 0; right: 0;
-  background: #2c2c2e;
-}
-body.pattern-c #test-content { position: absolute; inset: 0; }
-
-/* ステータスバー専用レイヤー方式 */
-body.pattern-safe { position: fixed; inset: 0; }
-body.pattern-safe #test-header {
-  position: absolute; top: 0; left: 0; right: 0;
-  background: transparent;
+  top: calc(var(--safe-top) + 6px);
+  left: 0;
+  right: 0;
   height: var(--header-h);
-  margin-top: var(--safe-top);
-  border-bottom: 0.5px solid rgba(255,255,255,0.2);
+  background: #1c1c1e; /* 不透明 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 16px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.15);
+  z-index: 900;
+  transform: translateY(0);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
+  will-change: transform;
 }
-body.pattern-safe #test-header::before {
-  content: "";
+
+#header.hidden {
+  transform: translateY(-100%);
+}
+
+/* ============================================================
+   4. フッター（通常は表示、下スクロールで隠す）
+   ============================================================ */
+#footer {
   position: fixed;
-  top: 0; left: 0; right: 0;
-  height: var(--safe-top);
-  background: var(--status-bg);
-  z-index: -1;
-  pointer-events: none;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-bottom) + var(--footer-h));
+  padding-bottom: var(--safe-bottom);
+  background: #1c1c1e;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-top: 0.5px solid rgba(255,255,255,0.15);
+  z-index: 900;
+  transform: translateY(0);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
+  will-change: transform;
 }
-body.pattern-safe #test-content { position: absolute; inset: 0; }
 
-/* ホームバー専用レイヤー方式 */
-body.pattern-home { position: fixed; inset: 0; }
-body.pattern-home::after {
-  content: "";
+#footer.hidden {
+  transform: translateY(100%);
+}
+
+#footer button {
+  background: none;
+  border: none;
+  color: #a0a0a5;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 8px 12px;
+}
+
+/* ============================================================
+   5. トグルボタン（動作確認用）
+   ============================================================ */
+#toggle-ui {
   position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: var(--safe-bottom);
-  background: var(--home-bg);
-  z-index: 200;
-  pointer-events: none;
-}
-body.pattern-home #test-content { position: absolute; inset: 0; }
-
-/* 全セーフエリア可視化 */
-body.pattern-all-safe { position: fixed; inset: 0; }
-body.pattern-all-safe #test-header {
-  position: absolute; top: 0; left: 0; right: 0;
-  background: #2c2c2e;
-  height: calc(var(--header-h) + var(--safe-top));
-  padding-top: var(--safe-top);
-}
-body.pattern-all-safe #test-content { position: absolute; inset: 0; }
-
-/* ================= モーダル ================= */
-#info-modal {
-  position: fixed; inset: 0; z-index: 300;
-  background: rgba(0,0,0,0.72);
-  display: none; align-items: center; justify-content: center; padding: 20px;
-}
-#info-modal.show { display: flex; }
-#info-modal .panel {
-  background: #1c1c1e; border-radius: 16px; padding: 20px;
-  max-width: 420px; width: 100%; max-height: 82vh; overflow-y: auto;
-  font-size: 13px; line-height: 1.7;
-}
-#info-modal h2 { font-size: 16px; margin-bottom: 12px; }
-#info-modal .diag {
-  background: #0a0a0c; border-radius: 8px; padding: 10px;
-  font-family: ui-monospace, "SF Mono", monospace;
-  font-size: 11px; margin: 10px 0; white-space: pre-wrap;
-  word-break: break-all; color: #a0e0a0; line-height: 1.5;
-}
-#info-modal .close-btn {
-  background: #0a84ff; border: none; color: #fff;
-  padding: 10px 20px; border-radius: 10px;
-  font-size: 14px; font-weight: 600; width: 100%; margin-top: 12px; font-family: inherit;
+  right: 12px;
+  bottom: calc(var(--safe-bottom) + var(--footer-h) + 12px);
+  z-index: 950;
+  background: #0a84ff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
 }
 </style>
 </head>
-<body class="pattern-a">
+<body>
 
-<header id="test-header">
-  <button class="hbtn">戻る</button>
-  <h1 style="font-size:16px;font-weight:600;">セーフエリア検証</h1>
-  <button class="hbtn">保存</button>
+<!-- ① ステータスバー領域を不透明に覆う（ブラー回避） -->
+<div id="status-strip"></div>
+
+<!-- ② スクロールコンテナ（全画面） -->
+<div id="scroll-root">
+  <main id="content"></main>
+</div>
+
+<!-- ③ ヘッダー（スクロールで隠れる） -->
+<header id="header">
+  <span>メニュー</span>
+  <span>ブラーなし検証</span>
+  <span>設定</span>
 </header>
 
-<main id="test-content">
-  <div class="content-inner" id="content-inner"></div>
-</main>
+<!-- ④ フッター（スクロールで隠れる） -->
+<footer id="footer">
+  <button>ホーム</button>
+  <button>検索</button>
+  <button>通知</button>
+  <button>マイページ</button>
+</footer>
 
-<!-- ステータスエリア・ホームバー領域の範囲を可視化 -->
-<div class="safe-preview top" id="safe-preview-top">STATUS</div>
-<div class="safe-preview bottom" id="safe-preview-bottom">HOME</div>
-
-<div id="controls">
-  <div class="row-label">レイアウトパターン</div>
-  <div class="pattern-row" id="pattern-row"></div>
-
-  <div class="row-label">ステータスエリアの色</div>
-  <div class="pattern-row" id="status-color-row"></div>
-
-  <div class="row-label">ホームバー領域の色</div>
-  <div class="pattern-row" id="home-color-row"></div>
-
-  <div class="pattern-row" style="justify-content: space-between;">
-    <button class="pattern-btn" id="btn-info">ℹ️ 診断・使い方</button>
-    <button class="pattern-btn" id="btn-toggle-safe" style="background:#0a84ff;border-color:#0a84ff;">SAFE枠 表示/非表示</button>
-  </div>
-</div>
-
-<div id="info-modal">
-  <div class="panel">
-    <h2>セーフエリア検証の使い方</h2>
-    <p><strong>PWAとして起動してください。</strong> SafariタブではステータスバーがSafari管理下になるため再現しません。</p>
-    <p><strong>ステータスエリア（上部）:</strong> 赤い点線枠がステータスバー領域です。色ボタンで<code>--status-bg</code>を変更すると、<code>black-translucent</code>時にその色が反映されます。</p>
-    <p><strong>ホームバー領域（下部）:</strong> 緑の点線枠がホームインジケータ領域です。色ボタンで<code>--home-bg</code>を変更すると、<code>pattern-home</code>時にその色が反映されます。</p>
-    <p><strong>SAFE枠ボタン</strong>で赤/緑の可視化オーバーレイを消せます。実際の見た目を確認する際に使用してください。</p>
-    <div class="diag" id="diag">計測中…</div>
-    <button class="close-btn" id="btn-close-info">閉じる</button>
-  </div>
-</div>
+<!-- ⑤ 手動トグル（自動制御の確認用） -->
+<button id="toggle-ui">UI 表示/非表示</button>
 
 <script>
 (function () {
   'use strict';
 
-  var PATTERNS = {
-    a: { label: 'A: 現在のココマーク（fixed body + header blur）', cls: 'pattern-a' },
-    b: { label: 'B: 絵文字ノート方式（normal body + sticky header blur）', cls: 'pattern-b' },
-    c: { label: 'C: ブラーなし（solid header）', cls: 'pattern-c' },
-    safe: { label: 'S: ステータスバー専用レイヤー', cls: 'pattern-safe' },
-    home: { label: 'H: ホームバー専用レイヤー', cls: 'pattern-home' },
-    allsafe: { label: 'ALL: 全セーフエリア可視化', cls: 'pattern-all-safe' }
-  };
+  var content = document.getElementById('content');
+  var scrollRoot = document.getElementById('scroll-root');
+  var header = document.getElementById('header');
+  var footer = document.getElementById('footer');
+  var toggleBtn = document.getElementById('toggle-ui');
 
-  var PATTERN_ORDER = ['a', 'b', 'c', 'safe', 'home', 'allsafe'];
-
-  var COLORS = [
-    { name: '黒', val: '#000000' },
-    { name: '濃灰', val: '#1c1c1e' },
-    { name: '赤', val: '#e63946' },
-    { name: '青', val: '#0a84ff' },
-    { name: '緑', val: '#34c759' },
-    { name: '白', val: '#ffffff' }
+  // ---------- コンテンツ生成 ----------
+  var colors = [
+    '#ef4444','#f97316','#eab308','#84cc16','#22c55e','#14b8a6',
+    '#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef',
+    '#ec4899','#f43f5e','#fb923c','#facc15','#ef4444','#3b82f6'
   ];
-
-  // ---------- コンテンツ ----------
-  function buildContent() {
-    var colors = ['#ef4444','#f97316','#eab308','#84cc16','#22c55e','#14b8a6','#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef'];
-    var html = '';
-    for (var i = 0; i < colors.length; i++) {
-      html += '<div class="stripe" style="background:' + colors[i] + '">' + (i + 1) + '</div>';
-    }
-    document.getElementById('content-inner').innerHTML = html;
+  var html = '';
+  for (var i = 0; i < colors.length; i++) {
+    html += '<div class="stripe" style="background:' + colors[i] + '">' + (i + 1) + '</div>';
   }
+  content.innerHTML = html;
 
-  // ---------- URL ----------
-  function getParams() {
-    var u = new URLSearchParams(location.search);
-    return {
-      pattern: u.get('p') || 'a',
-      statusbar: u.get('sb') || 'black-translucent',
-      statusColor: u.get('sc') || '#1c1c1e',
-      homeColor: u.get('hc') || '#1c1c1e'
-    };
-  }
+  // ---------- スクロール方向でヘッダー/フッターを自動表示・非表示 ----------
+  var lastY = 0;
+  var ticking = false;
+  var THRESHOLD = 8; // わずかな揺れで反応しないためのしきい値
 
-  function setStatusbarMeta(style) {
-    var meta = document.getElementById('statusbar-meta');
-    if (meta) meta.content = style;
-  }
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
 
-  function applyColors(statusColor, homeColor) {
-    document.documentElement.style.setProperty('--status-bg', statusColor);
-    document.documentElement.style.setProperty('--home-bg', homeColor);
-  }
+    requestAnimationFrame(function () {
+      var y = scrollRoot.scrollTop;
+      var dy = y - lastY;
 
-  // ---------- パターン ----------
-  function applyPattern(key) {
-    if (!PATTERNS[key]) key = 'a';
-    document.body.className = PATTERNS[key].cls;
-    document.querySelectorAll('.pattern-btn[data-pattern]').forEach(function (btn) {
-      btn.classList.toggle('active', btn.dataset.pattern === key);
-    });
-    var content = document.getElementById('test-content');
-    if (content) content.scrollTop = 0;
-  }
+      // 上方向にスクロール（dy < 0）→ UI を表示
+      // 下方向にスクロール（dy > 0）→ UI を隠す
+      if (Math.abs(dy) > THRESHOLD) {
+        if (dy > 0 && y > 60) {
+          header.classList.add('hidden');
+          footer.classList.add('hidden');
+        } else if (dy < 0) {
+          header.classList.remove('hidden');
+          footer.classList.remove('hidden');
+        }
+        lastY = y;
+      }
 
-  function updateUrl(pattern, statusbar, statusColor, homeColor) {
-    var u = new URL(location.href);
-    if (pattern) u.searchParams.set('p', pattern);
-    if (statusbar) u.searchParams.set('sb', statusbar);
-    if (statusColor) u.searchParams.set('sc', statusColor);
-    if (homeColor) u.searchParams.set('hc', homeColor);
-    history.replaceState(null, '', u.toString());
-  }
+      // 最上部では必ず表示
+      if (y <= 0) {
+        header.classList.remove('hidden');
+        footer.classList.remove('hidden');
+        lastY = 0;
+      }
 
-  // ---------- ボタン生成 ----------
-  function buildPatternButtons() {
-    var row = document.getElementById('pattern-row');
-    PATTERN_ORDER.forEach(function (k) {
-      var btn = document.createElement('button');
-      btn.className = 'pattern-btn';
-      btn.dataset.pattern = k;
-      btn.textContent = k.toUpperCase();
-      btn.title = PATTERNS[k].label;
-      btn.addEventListener('click', function () {
-        applyPattern(k);
-        updateUrl(k, null, null, null);
-      });
-      row.appendChild(btn);
+      ticking = false;
     });
   }
 
-  function buildColorButtons() {
-    var statusRow = document.getElementById('status-color-row');
-    var homeRow = document.getElementById('home-color-row');
+  scrollRoot.addEventListener('scroll', onScroll, { passive: true });
 
-    COLORS.forEach(function (c) {
-      // ステータスエリア
-      var sb = document.createElement('button');
-      sb.className = 'pattern-btn color-btn';
-      sb.style.background = c.val;
-      sb.style.color = (c.val === '#ffffff') ? '#000' : '#fff';
-      sb.textContent = c.name;
-      sb.addEventListener('click', function () {
-        applyColors(c.val, getParams().homeColor);
-        updateUrl(null, null, c.val, null);
-        updateColorSelection();
-      });
-      statusRow.appendChild(sb);
+  // ---------- 手動トグル（自動制御が効かない場合のフォールバック） ----------
+  var uiVisible = true;
+  toggleBtn.addEventListener('click', function () {
+    uiVisible = !uiVisible;
+    header.classList.toggle('hidden', !uiVisible);
+    footer.classList.toggle('hidden', !uiVisible);
+  });
 
-      // ホームバー領域
-      var hb = document.createElement('button');
-      hb.className = 'pattern-btn color-btn';
-      hb.style.background = c.val;
-      hb.style.color = (c.val === '#ffffff') ? '#000' : '#fff';
-      hb.textContent = c.name;
-      hb.addEventListener('click', function () {
-        applyColors(getParams().statusColor, c.val);
-        updateUrl(null, null, null, c.val);
-        updateColorSelection();
-      });
-      homeRow.appendChild(hb);
-    });
-  }
-
-  function updateColorSelection() {
-    var p = getParams();
-    document.querySelectorAll('#status-color-row .pattern-btn').forEach(function (btn, i) {
-      btn.style.outline = (COLORS[i].val === p.statusColor) ? '2px solid #0a84ff' : 'none';
-    });
-    document.querySelectorAll('#home-color-row .pattern-btn').forEach(function (btn, i) {
-      btn.style.outline = (COLORS[i].val === p.homeColor) ? '2px solid #0a84ff' : 'none';
-    });
-  }
-
-  // ---------- 診断 ----------
-  function renderDiagnostics() {
-    var isStandalone = (navigator.standalone === true) || matchMedia('(display-mode: standalone)').matches;
-    var probeTop = document.createElement('div');
-    probeTop.style.cssText = 'position:fixed;top:0;left:0;height:env(safe-area-inset-top,0px);width:1px;pointer-events:none;visibility:hidden;';
-    document.body.appendChild(probeTop);
-    var safeTopPx = probeTop.getBoundingClientRect().height;
-    probeTop.remove();
-
-    var probeBottom = document.createElement('div');
-    probeBottom.style.cssText = 'position:fixed;bottom:0;left:0;height:env(safe-area-inset-bottom,0px);width:1px;pointer-events:none;visibility:hidden;';
-    document.body.appendChild(probeBottom);
-    var safeBottomPx = probeBottom.getBoundingClientRect().height;
-    probeBottom.remove();
-
-    document.getElementById('diag').textContent =
-      'PWA (standalone): ' + (isStandalone ? '✓' : '✗') + '\n' +
-      'safe-area-inset-top: ' + safeTopPx.toFixed(1) + 'px\n' +
-      'safe-area-inset-bottom: ' + safeBottomPx.toFixed(1) + 'px\n' +
-      'status-bar-style: ' + document.getElementById('statusbar-meta').content + '\n' +
-      'status-bg: ' + getComputedStyle(document.documentElement).getPropertyValue('--status-bg').trim() + '\n' +
-      'home-bg: ' + getComputedStyle(document.documentElement).getPropertyValue('--home-bg').trim() + '\n' +
-      'viewport: ' + window.innerWidth + '×' + window.innerHeight;
-  }
-
-  // ---------- モーダル ----------
-  function setupModal() {
-    var modal = document.getElementById('info-modal');
-    document.getElementById('btn-info').addEventListener('click', function () {
-      renderDiagnostics();
-      modal.classList.add('show');
-    });
-    document.getElementById('btn-close-info').addEventListener('click', function () {
-      modal.classList.remove('show');
-    });
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) modal.classList.remove('show');
-    });
-  }
-
-  // ---------- SAFE枠トグル ----------
-  function setupSafeToggle() {
-    var visible = true;
-    document.getElementById('btn-toggle-safe').addEventListener('click', function () {
-      visible = !visible;
-      document.getElementById('safe-preview-top').style.display = visible ? 'flex' : 'none';
-      document.getElementById('safe-preview-bottom').style.display = visible ? 'flex' : 'none';
-      this.textContent = visible ? 'SAFE枠 表示/非表示' : 'SAFE枠 表示する';
-    });
-  }
-
-  // ---------- 初期化 ----------
-  function init() {
-    var p = getParams();
-    setStatusbarMeta(p.statusbar);
-    applyColors(p.statusColor, p.homeColor);
-    buildContent();
-    buildPatternButtons();
-    buildColorButtons();
-    setupModal();
-    setupSafeToggle();
-    applyPattern(p.pattern);
-    updateColorSelection();
-  }
-
-  init();
 })();
 </script>
 </body>
