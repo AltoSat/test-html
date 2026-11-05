@@ -1,12 +1,14 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<!-- viewport-fit=cover を削除 -->
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- ブラー防止のため default に変更 -->
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="アプリ＋">
+<!-- 既定のアイコンを静的に設定 -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%235b9bff'/%3E%3Cstop offset='.5' stop-color='%233a7bea'/%3E%3Cstop offset='1' stop-color='%231e56c8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='114' fill='url(%23g)'/%3E%3Cpath d='M256 138v236M138 256h236' stroke='%23fff' stroke-width='68' stroke-linecap='round'/%3E%3C/svg%3E">
 <title>アプリ＋</title>
 <style>
 /* ブラーを完全に無効化 */
@@ -15,9 +17,9 @@
   backdrop-filter: none !important;
 }
 
-:root{color-scheme:dark;--bg:#000000;--panel:#161b23;--line:#2a3140;--text:#e6ebf3;--muted:#8b96a9;--accent:#4d8df7;--app-h:100dvh}
+:root{color-scheme:dark;--bg:#000000;--panel:#161b23;--line:#2a3140;--text:#e6ebf3;--muted:#8b96a9;--accent:#4d8df7}
 *{box-sizing:border-box}
-html{margin:0;padding:0;width:100%;height:var(--app-h,100dvh);overflow:hidden;background:var(--bg);overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
 body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none}
 body.booting #stage{visibility:hidden}
 button,input,textarea{font:inherit;font-size:16px}
@@ -30,8 +32,7 @@ input[type=text],textarea{width:100%;max-width:100%;min-width:0;border:1px solid
 input::placeholder,textarea::placeholder{color:#5a6478}
 textarea{resize:vertical}
 #app{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg)}
-/* トップセーフエリア参照を削除 */
-#stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+#stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:20px 16px 24px}
 .card{max-width:560px;width:100%;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 28px #00000055}
 h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
 .step{margin:0;font-size:14px;font-weight:600;color:var(--text);line-height:1.6}
@@ -40,21 +41,19 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 #iconPreview{flex:none!important;width:76px;height:76px;aspect-ratio:1/1;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#0d1015}
 #htmlSetup{height:40vh;min-height:220px;font-family:ui-monospace,monospace;font-size:16px;line-height:1.45}
 #runtime{position:absolute;inset:0;display:none;background:var(--bg)}
-/* iframe は全画面（ステータスバー下〜画面下端まで）*/
 #runner{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#fff}
 #edge{position:absolute;z-index:20;right:0;top:calc(50% - 60px);width:28px;height:120px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
 #edge::before{content:"";position:absolute;right:0;top:12px;bottom:12px;width:3px;border-radius:3px 0 0 3px;background:#ffffff1f;transition:width .18s,background .18s}
 #edge.pull::before,#edge:active::before{width:5px;background:#4d8df7b3}
 #drawer{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;transform:translateX(102%);transition:transform .23s}
 #drawer.open{transform:translateX(0)}
-/* トップセーフエリア参照を削除 */
 #head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:#11151b;border-bottom:1px solid var(--line)}
 #head strong{font-size:17px}#close{min-height:38px;padding:7px 12px}
 #tabs{flex:none;display:flex;gap:5px;padding:8px;background:#11151b;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
 #tabs::-webkit-scrollbar{display:none}
 .tab{flex:1;min-width:0;white-space:nowrap;font-size:12px;padding:8px 5px;min-height:40px}
 .tab.active{background:#17263f;color:#a9c8ff;border-color:#2f4f86}
-#panels{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(20px + env(safe-area-inset-bottom,0px))}
+#panels{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 12px 20px}
 .panel{display:none;max-width:650px;width:100%;margin:auto;flex-direction:column;gap:12px}
 .panel.active{display:flex}
 .section{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -67,7 +66,7 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 #storageFill{height:100%;width:0;background:var(--accent);transition:width .3s}
 #shade{position:absolute;inset:0;z-index:30;background:#00000066;display:none}
 #shade.show{display:block}
-#toast{position:absolute;z-index:60;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#e6ebf3;color:#10141a;padding:10px 15px;border-radius:30px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center}
+#toast{position:absolute;z-index:60;bottom:16px;left:50%;transform:translateX(-50%);background:#e6ebf3;color:#10141a;padding:10px 15px;border-radius:30px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 [hidden]{display:none!important}</style></head><body class="booting">
 <div id="app">
@@ -132,23 +131,10 @@ document.addEventListener('touchend',function(e){
   lastTapEnd=now;
 },{passive:false});
 
-/* 黒帯対策：default ステータスバーでは env(top)=0 のため、innerHeight をそのまま使用 */
-const root=document.documentElement;
-function syncAppHeight(){
-  if(!standalone){root.style.removeProperty('--app-h');return}
-  const h=window.innerHeight;
-  if(!isFinite(h)||h<=0)return;
-  root.style.setProperty('--app-h',Math.round(h)+'px');
-}
-function relayout(){syncAppHeight()}
-window.addEventListener('resize',relayout);
-window.addEventListener('orientationchange',()=>setTimeout(relayout,120));
-window.addEventListener('pageshow',relayout);
-if(window.visualViewport)window.visualViewport.addEventListener('resize',relayout);
-syncAppHeight();setTimeout(relayout,260);window.addEventListener('load',()=>setTimeout(relayout,100));
+/* 高さ計算は不要になったため削除 */
 setTimeout(()=>document.body.classList.remove('booting'),1500);
 
-/* 既定アイコン生成 */
+/* 動的アイコン生成（プレビュー用） */
 function generateDefaultIcon(){
   const S=512,c=document.createElement('canvas');c.width=c.height=S;
   const ctx=c.getContext('2d');const r=Math.round(S*0.2237);
@@ -164,10 +150,6 @@ function generateDefaultIcon(){
   ctx.strokeStyle='#ffffff';ctx.lineWidth=68;ctx.lineCap='round';
   ctx.beginPath();ctx.moveTo(S/2,S*0.27);ctx.lineTo(S/2,S*0.73);ctx.moveTo(S*0.27,S/2);ctx.lineTo(S*0.73,S/2);
   ctx.stroke();ctx.restore();
-  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(r,2);ctx.lineTo(S-r,2);ctx.arcTo(S-2,2,S-2,r,r-2);
-  ctx.lineTo(S-2,S-r);ctx.arcTo(S-2,S-2,S-r,S-2,r-2);ctx.lineTo(r,S-2);ctx.arcTo(2,S-2,2,S-r,r-2);
-  ctx.lineTo(2,r);ctx.arcTo(2,2,r,2,r-2);ctx.closePath();ctx.stroke();ctx.restore();
   return c.toDataURL('image/png');
 }
 const defaultIcon=generateDefaultIcon();
@@ -177,10 +159,9 @@ function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clea
 function openDB(){return new Promise((ok,no)=>{let r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 function get(){return new Promise((ok,no)=>{let r=db.transaction(STORE).objectStore(STORE).get(KEY);r.onsuccess=()=>ok(r.result||null);r.onerror=()=>no(r.error)})}
 function put(){return new Promise((ok,no)=>{let t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put({html:s.html,previousHtml:s.previousHtml,memo:s.memo},KEY);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
-function meta(){const n=s.name||'アプリ＋';document.title=n;let m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=n;let l=document.querySelector('link[rel="apple-touch-icon"]');if(!l){l=document.createElement('link');l.rel='apple-touch-icon';document.head.append(l)}l.href=s.icon||defaultIcon}
+function meta(){const n=s.name||'アプリ＋';document.title=n;let m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=n;}
 function stage(which){$('setup').hidden=which!=='setup';$('htmlStep').hidden=which!=='html';$('stage').hidden=which==='run';$('runtime').style.display=which==='run'?'block':'none';$('edge').style.display=which==='run'?'block':'none'}
 
-/* iframe内の backdrop-filter を無効化 */
 function injectIframeCSS() {
   try {
     var runner = $('runner');
@@ -215,7 +196,7 @@ function render(){
   $('iconPreview').src=s.icon||defaultIcon;
   $('memo').value=memoBullet(s.memo);
   $('htmlCode').value=s.html;$('htmlSetup').value=s.html;
-  counts();meta();relayout();
+  counts();meta();
   if(standalone){
     if(s.html){setRunner(s.html);stage('run')}else stage('html');
   }else if(isIOS){
