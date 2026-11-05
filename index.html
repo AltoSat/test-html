@@ -4,8 +4,8 @@
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- ステータスバーを透過させてHTMLの背景を透けさせる -->
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- ブラー防止のため black (不透明) に固定 -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="アプリ＋">
 <title>アプリ＋</title>
 <style>
@@ -30,8 +30,8 @@ input[type=text],textarea{width:100%;max-width:100%;min-width:0;border:1px solid
 input::placeholder,textarea::placeholder{color:#5a6478}
 textarea{resize:vertical}
 
-/* アプリ全体 */
-#app{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:var(--bg);z-index:1;transition:background-color .2s}
+/* アプリ全体を Fixed で画面全体に固定（2つ前の状態に戻す） */
+#app{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:var(--bg);z-index:1}
 
 /* セットアップ・管理画面 */
 #stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));z-index:10}
@@ -43,9 +43,9 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 #iconPreview{flex:none!important;width:76px;height:76px;aspect-ratio:1/1;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#0d1015}
 #htmlSetup{height:40vh;min-height:220px;font-family:ui-monospace,monospace;font-size:16px;line-height:1.45}
 
-/* iframe（実行画面）を全画面に戻す */
-#runtime{position:absolute;inset:0;display:none;background:var(--bg);z-index:5;transition:background-color .2s}
-#runner{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent}
+/* iframe（実行画面）は画面全体を覆う */
+#runtime{position:absolute;inset:0;display:none;background:var(--bg);z-index:5}
+#runner{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#fff}
 
 /* 右端のスワイプ用エッジ */
 #edge{position:absolute;z-index:20;right:0;top:calc(50% - 60px);width:28px;height:120px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
@@ -141,7 +141,7 @@ document.addEventListener('touchend',function(e){
 
 setTimeout(()=>document.body.classList.remove('booting'),1500);
 
-/* アイコン生成（PNG形式） */
+/* アイコン生成（PNG形式でiOSに対応） */
 function generateDefaultIcon(){
   const S=512,c=document.createElement('canvas');c.width=c.height=S;
   const ctx=c.getContext('2d');const r=Math.round(S*0.2237);
@@ -182,7 +182,7 @@ function injectIframeCSS() {
       style.textContent = '*, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }';
       doc.head.appendChild(style);
 
-      // iframeの背景色を取得して親アプリに適用
+      // iframeの背景色を取得して親アプリとステータスバー(theme-color)に適用
       var bg = doc.documentElement.style.backgroundColor || doc.body.style.backgroundColor || window.getComputedStyle(doc.body).backgroundColor;
       if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
         bg = window.getComputedStyle(doc.documentElement).backgroundColor;
