@@ -4,15 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- ① 透過をやめてOSにステータスバーを任せる（ぼかし防止の最重要ポイント） -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ブラーなし検証">
 <style>
 :root {
-  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --header-h: 48px;
   --footer-h: 52px;
-  --status-color: #1c1c1e; /* ステータスバーの色（不透明） */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -23,27 +22,10 @@ html, body {
   background: #0a0a0c;
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 /* ============================================================
-   1. ステータスバー領域を不透明ストリップで覆う（ブラー回避の核心）
-   → 上端から4px以内・高さ6px以上・幅80%以上を満たす
-   ============================================================ */
-#status-strip {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: calc(var(--safe-top) + 6px); /* セーフエリア + 6px で確実に条件を満たす */
-  background: var(--status-color);      /* 不透明。backdrop-filterは絶対に使わない */
-  z-index: 1000;
-  pointer-events: none;
-}
-
-/* ============================================================
-   2. スクロールコンテナ（全画面）
+   ② 全画面スクロールコンテナ
    ============================================================ */
 #scroll-root {
   position: absolute;
@@ -53,9 +35,9 @@ html, body {
   overscroll-behavior-y: contain;
 }
 
-/* コンテンツはステータスバーとフッターの下までスクロール可能 */
 #content {
-  padding-top: calc(var(--safe-top) + 6px + var(--header-h));
+  /* ヘッダーとフッターの下までコンテンツを伸ばす */
+  padding-top: var(--header-h);
   padding-bottom: calc(var(--safe-bottom) + var(--footer-h) + 8px);
   min-height: 100%;
 }
@@ -72,15 +54,15 @@ html, body {
 }
 
 /* ============================================================
-   3. ヘッダー（通常は表示、下スクロールで隠す）
+   ③ ヘッダー（初期表示、下スクロールで隠れる）
    ============================================================ */
 #header {
   position: fixed;
-  top: calc(var(--safe-top) + 6px);
+  top: 0;
   left: 0;
   right: 0;
   height: var(--header-h);
-  background: #1c1c1e; /* 不透明 */
+  background: #1c1c1e;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -89,39 +71,32 @@ html, body {
   font-size: 16px;
   border-bottom: 0.5px solid rgba(255,255,255,0.15);
   z-index: 900;
-  transform: translateY(0);
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
   will-change: transform;
 }
-
-#header.hidden {
-  transform: translateY(-100%);
-}
+#header.hidden { transform: translateY(-100%); }
 
 /* ============================================================
-   4. フッター（通常は表示、下スクロールで隠す）
+   ④ フッター（黒帯対策：safe-areaを背景で満たす）
    ============================================================ */
 #footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(var(--safe-bottom) + var(--footer-h));
+  /* 物理画面の底まで要素を伸ばし、内側のパディングでセーフエリアを確保する */
+  height: calc(var(--footer-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
-  background: #1c1c1e;
+  background: #1c1c1e; /* ここが黒帯の代わりに画面下端まで描画される */
   display: flex;
   align-items: center;
   justify-content: space-around;
   border-top: 0.5px solid rgba(255,255,255,0.15);
   z-index: 900;
-  transform: translateY(0);
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
   will-change: transform;
 }
-
-#footer.hidden {
-  transform: translateY(100%);
-}
+#footer.hidden { transform: translateY(100%); }
 
 #footer button {
   background: none;
@@ -131,44 +106,20 @@ html, body {
   font-family: inherit;
   padding: 8px 12px;
 }
-
-/* ============================================================
-   5. トグルボタン（動作確認用）
-   ============================================================ */
-#toggle-ui {
-  position: fixed;
-  right: 12px;
-  bottom: calc(var(--safe-bottom) + var(--footer-h) + 12px);
-  z-index: 950;
-  background: #0a84ff;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-}
 </style>
 </head>
 <body>
 
-<!-- ① ステータスバー領域を不透明に覆う（ブラー回避） -->
-<div id="status-strip"></div>
-
-<!-- ② スクロールコンテナ（全画面） -->
 <div id="scroll-root">
   <main id="content"></main>
 </div>
 
-<!-- ③ ヘッダー（スクロールで隠れる） -->
 <header id="header">
   <span>メニュー</span>
   <span>ブラーなし検証</span>
   <span>設定</span>
 </header>
 
-<!-- ④ フッター（スクロールで隠れる） -->
 <footer id="footer">
   <button>ホーム</button>
   <button>検索</button>
@@ -176,20 +127,11 @@ html, body {
   <button>マイページ</button>
 </footer>
 
-<!-- ⑤ 手動トグル（自動制御の確認用） -->
-<button id="toggle-ui">UI 表示/非表示</button>
-
 <script>
 (function () {
   'use strict';
 
-  var content = document.getElementById('content');
-  var scrollRoot = document.getElementById('scroll-root');
-  var header = document.getElementById('header');
-  var footer = document.getElementById('footer');
-  var toggleBtn = document.getElementById('toggle-ui');
-
-  // ---------- コンテンツ生成 ----------
+  // ---------- コンテンツ生成（確認用のカラーストライプ） ----------
   var colors = [
     '#ef4444','#f97316','#eab308','#84cc16','#22c55e','#14b8a6',
     '#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef',
@@ -199,14 +141,17 @@ html, body {
   for (var i = 0; i < colors.length; i++) {
     html += '<div class="stripe" style="background:' + colors[i] + '">' + (i + 1) + '</div>';
   }
-  content.innerHTML = html;
+  document.getElementById('content').innerHTML = html;
 
-  // ---------- スクロール方向でヘッダー/フッターを自動表示・非表示 ----------
+  // ---------- スクロール連動ヘッダー・フッター制御 ----------
+  var scrollRoot = document.getElementById('scroll-root');
+  var header = document.getElementById('header');
+  var footer = document.getElementById('footer');
   var lastY = 0;
   var ticking = false;
-  var THRESHOLD = 8; // わずかな揺れで反応しないためのしきい値
+  var THRESHOLD = 8; // 誤作動防止のしきい値
 
-  function onScroll() {
+  scrollRoot.addEventListener('scroll', function () {
     if (ticking) return;
     ticking = true;
 
@@ -214,20 +159,20 @@ html, body {
       var y = scrollRoot.scrollTop;
       var dy = y - lastY;
 
-      // 上方向にスクロール（dy < 0）→ UI を表示
-      // 下方向にスクロール（dy > 0）→ UI を隠す
       if (Math.abs(dy) > THRESHOLD) {
         if (dy > 0 && y > 60) {
+          // 下スクロール時：UIを隠す
           header.classList.add('hidden');
           footer.classList.add('hidden');
         } else if (dy < 0) {
+          // 上スクロール時：UIを表示
           header.classList.remove('hidden');
           footer.classList.remove('hidden');
         }
         lastY = y;
       }
 
-      // 最上部では必ず表示
+      // 最上部に戻ったら必ず表示
       if (y <= 0) {
         header.classList.remove('hidden');
         footer.classList.remove('hidden');
@@ -236,17 +181,7 @@ html, body {
 
       ticking = false;
     });
-  }
-
-  scrollRoot.addEventListener('scroll', onScroll, { passive: true });
-
-  // ---------- 手動トグル（自動制御が効かない場合のフォールバック） ----------
-  var uiVisible = true;
-  toggleBtn.addEventListener('click', function () {
-    uiVisible = !uiVisible;
-    header.classList.toggle('hidden', !uiVisible);
-    footer.classList.toggle('hidden', !uiVisible);
-  });
+  }, { passive: true });
 
 })();
 </script>
