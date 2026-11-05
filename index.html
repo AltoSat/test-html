@@ -4,10 +4,17 @@
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- ブラー防止のため default に変更 -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="アプリ＋">
 <title>アプリ＋</title>
 <style>
+/* ブラーを完全に無効化 */
+*, *::before, *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 :root{color-scheme:dark;--bg:#000000;--panel:#161b23;--line:#2a3140;--text:#e6ebf3;--muted:#8b96a9;--accent:#4d8df7;--app-h:100dvh}
 *{box-sizing:border-box}
 html{margin:0;padding:0;width:100%;height:var(--app-h,100dvh);overflow:hidden;background:var(--bg);overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
@@ -23,7 +30,7 @@ input[type=text],textarea{width:100%;max-width:100%;min-width:0;border:1px solid
 input::placeholder,textarea::placeholder{color:#5a6478}
 textarea{resize:vertical}
 #app{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg)}
-/* トップセーフエリア参照は削除（black ステータスバーでは 0 になるため二重パディング防止） */
+/* トップセーフエリア参照を削除 */
 #stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px))}
 .card{max-width:560px;width:100%;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 28px #00000055}
 h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
@@ -40,7 +47,7 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 #edge.pull::before,#edge:active::before{width:5px;background:#4d8df7b3}
 #drawer{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;transform:translateX(102%);transition:transform .23s}
 #drawer.open{transform:translateX(0)}
-/* トップセーフエリア参照は削除 */
+/* トップセーフエリア参照を削除 */
 #head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:#11151b;border-bottom:1px solid var(--line)}
 #head strong{font-size:17px}#close{min-height:38px;padding:7px 12px}
 #tabs{flex:none;display:flex;gap:5px;padding:8px;background:#11151b;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
@@ -113,12 +120,10 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 (()=>{'use strict';
 const DB='html-app-manager-v2',STORE='s',KEY='main',$=id=>document.getElementById(id);
 
-/* スタンドアロン判定 */
 const mq=window.matchMedia;
 const standalone=(mq&&(mq('(display-mode: standalone)').matches||mq('(display-mode: fullscreen)').matches||mq('(display-mode: minimal-ui)').matches||mq('(display-mode: window-controls-overlay)').matches))||navigator.standalone===true;
 const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 
-/* 拡大無効化 */
 ['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){if(e.cancelable)e.preventDefault()},{passive:false})});
 let lastTapEnd=0;
 document.addEventListener('touchend',function(e){
@@ -127,7 +132,7 @@ document.addEventListener('touchend',function(e){
   lastTapEnd=now;
 },{passive:false});
 
-/* 黒帯対策：black ステータスバーでは env(top)=0 のため、innerHeight をそのまま使用 */
+/* 黒帯対策：default ステータスバーでは env(top)=0 のため、innerHeight をそのまま使用 */
 const root=document.documentElement;
 function syncAppHeight(){
   if(!standalone){root.style.removeProperty('--app-h');return}
@@ -143,38 +148,26 @@ if(window.visualViewport)window.visualViewport.addEventListener('resize',relayou
 syncAppHeight();setTimeout(relayout,260);window.addEventListener('load',()=>setTimeout(relayout,100));
 setTimeout(()=>document.body.classList.remove('booting'),1500);
 
-/* 既定アイコン生成（青グラデ＋白い丸付きプラス＋影＋内側ハイライト） */
+/* 既定アイコン生成 */
 function generateDefaultIcon(){
   const S=512,c=document.createElement('canvas');c.width=c.height=S;
   const ctx=c.getContext('2d');const r=Math.round(S*0.2237);
-  ctx.beginPath();
-  ctx.moveTo(r,0);ctx.lineTo(S-r,0);ctx.arcTo(S,0,S,r,r);
-  ctx.lineTo(S,S-r);ctx.arcTo(S,S,S-r,S,r);
-  ctx.lineTo(r,S);ctx.arcTo(0,S,0,S-r,r);
+  ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(S-r,0);ctx.arcTo(S,0,S,r,r);
+  ctx.lineTo(S,S-r);ctx.arcTo(S,S,S-r,S,r);ctx.lineTo(r,S);ctx.arcTo(0,S,0,S-r,r);
   ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);ctx.closePath();
   ctx.save();ctx.clip();
-  const g=ctx.createLinearGradient(0,0,0,S);
-  g.addColorStop(0,'#5b9bff');g.addColorStop(0.5,'#3a7bea');g.addColorStop(1,'#1e56c8');
+  const g=ctx.createLinearGradient(0,0,0,S);g.addColorStop(0,'#5b9bff');g.addColorStop(0.5,'#3a7bea');g.addColorStop(1,'#1e56c8');
   ctx.fillStyle=g;ctx.fillRect(0,0,S,S);
-  const sh=ctx.createLinearGradient(0,0,0,S*0.55);
-  sh.addColorStop(0,'rgba(255,255,255,0.30)');sh.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=sh;ctx.fillRect(0,0,S,S*0.55);
-  ctx.restore();
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.28)';ctx.shadowBlur=24;ctx.shadowOffsetY=10;
+  const sh=ctx.createLinearGradient(0,0,0,S*0.55);sh.addColorStop(0,'rgba(255,255,255,0.30)');sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh;ctx.fillRect(0,0,S,S*0.55);ctx.restore();
+  ctx.save();ctx.shadowColor='rgba(0,0,0,0.28)';ctx.shadowBlur=24;ctx.shadowOffsetY=10;
   ctx.strokeStyle='#ffffff';ctx.lineWidth=68;ctx.lineCap='round';
-  ctx.beginPath();
-  ctx.moveTo(S/2,S*0.27);ctx.lineTo(S/2,S*0.73);
-  ctx.moveTo(S*0.27,S/2);ctx.lineTo(S*0.73,S/2);
+  ctx.beginPath();ctx.moveTo(S/2,S*0.27);ctx.lineTo(S/2,S*0.73);ctx.moveTo(S*0.27,S/2);ctx.lineTo(S*0.73,S/2);
   ctx.stroke();ctx.restore();
-  ctx.save();
-  ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=3;
-  ctx.beginPath();
-  ctx.moveTo(r,2);ctx.lineTo(S-r,2);ctx.arcTo(S-2,2,S-2,r,r-2);
-  ctx.lineTo(S-2,S-r);ctx.arcTo(S-2,S-2,S-r,S-2,r-2);
-  ctx.lineTo(r,S-2);ctx.arcTo(2,S-2,2,S-r,r-2);
-  ctx.lineTo(2,r);ctx.arcTo(2,2,r,2,r-2);ctx.closePath();
-  ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(r,2);ctx.lineTo(S-r,2);ctx.arcTo(S-2,2,S-2,r,r-2);
+  ctx.lineTo(S-2,S-r);ctx.arcTo(S-2,S-2,S-r,S-2,r-2);ctx.lineTo(r,S-2);ctx.arcTo(2,S-2,2,S-r,r-2);
+  ctx.lineTo(2,r);ctx.arcTo(2,2,r,2,r-2);ctx.closePath();ctx.stroke();ctx.restore();
   return c.toDataURL('image/png');
 }
 const defaultIcon=generateDefaultIcon();
@@ -186,6 +179,26 @@ function get(){return new Promise((ok,no)=>{let r=db.transaction(STORE).objectSt
 function put(){return new Promise((ok,no)=>{let t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put({html:s.html,previousHtml:s.previousHtml,memo:s.memo},KEY);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
 function meta(){const n=s.name||'アプリ＋';document.title=n;let m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=n;let l=document.querySelector('link[rel="apple-touch-icon"]');if(!l){l=document.createElement('link');l.rel='apple-touch-icon';document.head.append(l)}l.href=s.icon||defaultIcon}
 function stage(which){$('setup').hidden=which!=='setup';$('htmlStep').hidden=which!=='html';$('stage').hidden=which==='run';$('runtime').style.display=which==='run'?'block':'none';$('edge').style.display=which==='run'?'block':'none'}
+
+/* iframe内の backdrop-filter を無効化 */
+function injectIframeCSS() {
+  try {
+    var runner = $('runner');
+    var doc = runner.contentDocument || runner.contentWindow.document;
+    if (doc) {
+      var old = doc.getElementById('__app_plus_injected');
+      if (old) old.remove();
+      var style = doc.createElement('style');
+      style.id = '__app_plus_injected';
+      style.textContent = '*, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }';
+      doc.head.appendChild(style);
+    }
+  } catch (e) {}
+}
+function setRunner(html) {
+  $('runner').srcdoc = html;
+  $('runner').onload = injectIframeCSS;
+}
 
 function memoBullet(v){
   const text=String(v==null?'':v);
@@ -204,11 +217,11 @@ function render(){
   $('htmlCode').value=s.html;$('htmlSetup').value=s.html;
   counts();meta();relayout();
   if(standalone){
-    if(s.html){$('runner').srcdoc=s.html;stage('run')}else stage('html');
+    if(s.html){setRunner(s.html);stage('run')}else stage('html');
   }else if(isIOS){
     stage('setup');
   }else{
-    if(s.html){$('runner').srcdoc=s.html;stage('run')}else stage('html');
+    if(s.html){setRunner(s.html);stage('run')}else stage('html');
   }
   document.body.classList.remove('booting');
 }
@@ -222,7 +235,7 @@ function bytes(n){let u=['B','KB','MB','GB'],i=0;while(n>=1024&&i<3){n/=1024;i++
 async function storage(){try{let e=await navigator.storage.estimate(),u=e.usage||0,q=e.quota||0,p=q?100*u/q:0;$('storageText').textContent=`推定使用量 ${bytes(u)} ／ 割当量 ${bytes(q)}（${p.toFixed(1)}%）`;$('storageFill').style.width=Math.min(100,p)+'%'}catch{$('storageText').textContent='取得できません'}}
 function download(blob,name){let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
 function localData(){try{return Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)]).filter(([k])=>!k.startsWith('__manager_')))}catch{return null}}
-async function saveHtml(){let v=$('htmlCode').value;if(!v.trim()){toast('HTMLを入力してください');return}if(v!==s.html){s.previousHtml=s.html;s.html=v}await put();$('runner').srcdoc=s.html;drawerClose();stage('run');toast('HTMLを保存しました')}
+async function saveHtml(){let v=$('htmlCode').value;if(!v.trim()){toast('HTMLを入力してください');return}if(v!==s.html){s.previousHtml=s.html;s.html=v}await put();setRunner(s.html);drawerClose();stage('run');toast('HTMLを保存しました')}
 async function share(){let text='次の修正を実施して全コードを提供してください。\n\n'+memoBullet(s.memo);try{await navigator.clipboard.writeText(text)}catch{toast('コピーできませんでした');return}let f=new File([s.html],(s.name||'アプリ＋')+'.html',{type:'text/html'});try{if(navigator.share&&navigator.canShare?.({files:[f]})){await navigator.share({title:'HTML改善依頼',text,files:[f]});toast('共有画面を開きました')}else{download(f,f.name);toast('依頼文をコピーしHTMLを保存しました')}}catch(e){if(e.name!=='AbortError')toast('共有に失敗しました。依頼文はコピー済みです')}}
 
 function extractTitle(html){
