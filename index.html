@@ -4,7 +4,7 @@
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- ステータスバーを透過させ、HTMLの背景を透けさせる -->
+<!-- ステータスバーを透過させ、HTMLの背景色を透けさせる -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="アプリ＋">
 <title>アプリ＋</title>
@@ -45,8 +45,8 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 
 /* iframe（実行画面） */
 #runtime{position:absolute;inset:0;display:none;background:var(--bg);z-index:5;transition:background-color .2s}
-/* ステータスバー領域を避けてiframeを配置 */
-#runner{position:absolute;top:env(safe-area-inset-top,0px);left:0;width:100%;height:calc(100% - env(safe-area-inset-top,0px));border:0;display:block;background:transparent}
+/* ステータスバー領域を避けて画面最下部まで配置（下部の黒帯を防ぐ） */
+#runner{position:absolute;top:env(safe-area-inset-top,0px);bottom:0;left:0;right:0;width:100%;height:auto;border:0;display:block;background:transparent}
 
 /* 右端のスワイプ用エッジ */
 #edge{position:absolute;z-index:20;right:0;top:calc(50% - 60px);width:28px;height:120px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
@@ -142,7 +142,7 @@ document.addEventListener('touchend',function(e){
 
 setTimeout(()=>document.body.classList.remove('booting'),1500);
 
-/* アイコン生成（PNG形式でiOSに対応） */
+/* アイコン生成（PNG形式） */
 function generateDefaultIcon(){
   const S=512,c=document.createElement('canvas');c.width=c.height=S;
   const ctx=c.getContext('2d');const r=Math.round(S*0.2237);
@@ -193,9 +193,6 @@ function injectIframeCSS() {
         $('app').style.backgroundColor = bg;
         var metaTheme = document.querySelector('meta[name="theme-color"]');
         if (metaTheme) metaTheme.content = bg;
-      } else {
-        $('runtime').style.backgroundColor = '#000000';
-        $('app').style.backgroundColor = '#000000';
       }
     }
   } catch (e) {}
