@@ -1,189 +1,302 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- ① 透過をやめてOSにステータスバーを任せる（ぼかし防止の最重要ポイント） -->
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ブラーなし検証">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="アプリ＋">
+<title>アプリ＋</title>
 <style>
-:root {
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --header-h: 48px;
-  --footer-h: 52px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-html, body {
-  height: 100%;
-  overflow: hidden;
-  background: #0a0a0c;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-/* ============================================================
-   ② 全画面スクロールコンテナ
-   ============================================================ */
-#scroll-root {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
-
-#content {
-  /* ヘッダーとフッターの下までコンテンツを伸ばす */
-  padding-top: var(--header-h);
-  padding-bottom: calc(var(--safe-bottom) + var(--footer-h) + 8px);
-  min-height: 100%;
-}
-
-.stripe {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 20px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  border-bottom: 1px solid rgba(0,0,0,0.25);
-}
-
-/* ============================================================
-   ③ ヘッダー（初期表示、下スクロールで隠れる）
-   ============================================================ */
-#header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--header-h);
-  background: #1c1c1e;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  font-weight: 600;
-  font-size: 16px;
-  border-bottom: 0.5px solid rgba(255,255,255,0.15);
-  z-index: 900;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
-  will-change: transform;
-}
-#header.hidden { transform: translateY(-100%); }
-
-/* ============================================================
-   ④ フッター（黒帯対策：safe-areaを背景で満たす）
-   ============================================================ */
-#footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  /* 物理画面の底まで要素を伸ばし、内側のパディングでセーフエリアを確保する */
-  height: calc(var(--footer-h) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: #1c1c1e; /* ここが黒帯の代わりに画面下端まで描画される */
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  border-top: 0.5px solid rgba(255,255,255,0.15);
-  z-index: 900;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
-  will-change: transform;
-}
-#footer.hidden { transform: translateY(100%); }
-
-#footer button {
-  background: none;
-  border: none;
-  color: #a0a0a5;
-  font-size: 11px;
-  font-family: inherit;
-  padding: 8px 12px;
-}
-</style>
-</head>
-<body>
-
-<div id="scroll-root">
-  <main id="content"></main>
+:root{color-scheme:dark;--bg:#000000;--panel:#161b23;--line:#2a3140;--text:#e6ebf3;--muted:#8b96a9;--accent:#4d8df7;--app-h:100dvh}
+*{box-sizing:border-box}
+html{margin:0;padding:0;width:100%;height:var(--app-h,100dvh);overflow:hidden;background:var(--bg);overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none}
+body.booting #stage{visibility:hidden}
+button,input,textarea{font:inherit;font-size:16px}
+button{border:1px solid var(--line);border-radius:12px;padding:11px 13px;min-height:44px;background:#1b212b;color:var(--text);font-weight:650;-webkit-tap-highlight-color:transparent}
+button:active{background:#242c3a}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:active{background:#3f7ce0}
+button.danger{color:#ff9aa8;background:#2a161c;border-color:#4d2530}
+input[type=text],textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--line);border-radius:11px;padding:12px;background:#0d1015;color:var(--text);font-size:16px!important;line-height:1.5;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
+input::placeholder,textarea::placeholder{color:#5a6478}
+textarea{resize:vertical}
+#app{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+/* トップセーフエリア参照は削除（black ステータスバーでは 0 になるため二重パディング防止） */
+#stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.card{max-width:560px;width:100%;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 28px #00000055}
+h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
+.step{margin:0;font-size:14px;font-weight:600;color:var(--text);line-height:1.6}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:13px;font-weight:650;color:#a9b4c6}
+#iconPreview{flex:none!important;width:76px;height:76px;aspect-ratio:1/1;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#0d1015}
+#htmlSetup{height:40vh;min-height:220px;font-family:ui-monospace,monospace;font-size:16px;line-height:1.45}
+#runtime{position:absolute;inset:0;display:none;background:var(--bg)}
+/* iframe は全画面（ステータスバー下〜画面下端まで）*/
+#runner{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#fff}
+#edge{position:absolute;z-index:20;right:0;top:calc(50% - 60px);width:28px;height:120px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+#edge::before{content:"";position:absolute;right:0;top:12px;bottom:12px;width:3px;border-radius:3px 0 0 3px;background:#ffffff1f;transition:width .18s,background .18s}
+#edge.pull::before,#edge:active::before{width:5px;background:#4d8df7b3}
+#drawer{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;transform:translateX(102%);transition:transform .23s}
+#drawer.open{transform:translateX(0)}
+/* トップセーフエリア参照は削除 */
+#head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:#11151b;border-bottom:1px solid var(--line)}
+#head strong{font-size:17px}#close{min-height:38px;padding:7px 12px}
+#tabs{flex:none;display:flex;gap:5px;padding:8px;background:#11151b;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:0;white-space:nowrap;font-size:12px;padding:8px 5px;min-height:40px}
+.tab.active{background:#17263f;color:#a9c8ff;border-color:#2f4f86}
+#panels{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(20px + env(safe-area-inset-bottom,0px))}
+.panel{display:none;max-width:650px;width:100%;margin:auto;flex-direction:column;gap:12px}
+.panel.active{display:flex}
+.section{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1;min-width:0}
+#memo{height:36vh;min-height:230px;max-height:58vh;font-family:-apple-system,sans-serif}
+#htmlCode{height:46vh;min-height:220px;font-family:ui-monospace,monospace;font-size:16px;line-height:1.45}
+.count{text-align:right;font-size:12px;color:var(--muted)}
+#storageBar{height:9px;border-radius:9px;background:#212a38;overflow:hidden}
+#storageFill{height:100%;width:0;background:var(--accent);transition:width .3s}
+#shade{position:absolute;inset:0;z-index:30;background:#00000066;display:none}
+#shade.show{display:block}
+#toast{position:absolute;z-index:60;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#e6ebf3;color:#10141a;padding:10px 15px;border-radius:30px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+[hidden]{display:none!important}</style></head><body class="booting">
+<div id="app">
+<div id="stage">
+<div id="setup">
+<section class="card">
+<h1>アプリ＋</h1>
+<div class="field">
+<label for="setupName">① アプリ名を入力</label>
+<input id="setupName" type="text" maxlength="60" placeholder="例: 店舗アプリ">
 </div>
-
-<header id="header">
-  <span>メニュー</span>
-  <span>ブラーなし検証</span>
-  <span>設定</span>
-</header>
-
-<footer id="footer">
-  <button>ホーム</button>
-  <button>検索</button>
-  <button>通知</button>
-  <button>マイページ</button>
-</footer>
-
+</section>
+<section class="card">
+<div class="field">
+<label>② アプリアイコンを登録</label>
+<div class="row" style="align-items:center">
+<img id="iconPreview" alt="アイコン">
+<input id="iconFile" type="file" accept="image/*" style="flex:2">
+</div>
+</div>
+</section>
+<section class="card"><p class="step">③ Safariの共有ボタン <b>「共有」</b> をタップ</p></section>
+<section class="card"><p class="step">④ メニューから<b>「ホーム画面に追加」</b>を選択</p></section>
+<section class="card"><p class="step">⑤ 追加したアイコンから起動してHTMLを登録</p></section>
+</div>
+<section class="card" id="htmlStep" hidden>
+<h1>HTMLを登録</h1>
+<textarea id="htmlSetup" spellcheck="false" placeholder="&lt;!doctype html&gt; から始まるHTML"></textarea>
+<div id="setupCount" class="count">0文字</div>
+<button class="primary" id="firstSave">HTMLを保存して開始</button>
+</section>
+</div>
+<div id="runtime"><iframe id="runner" title="登録HTML"></iframe></div>
+<div id="shade"></div>
+<aside id="drawer">
+<header id="head"><strong>アプリ＋</strong><button id="close">閉じる ✕</button></header>
+<nav id="tabs"><button class="tab active" data-panel="memoPanel">改善メモ</button><button class="tab" data-panel="htmlPanel">HTML編集</button><button class="tab" data-panel="backupPanel">バックアップ</button></nav>
+<div id="panels">
+<section class="panel active" id="memoPanel"><div class="section"><h2>改善メモ</h2><textarea id="memo" maxlength="10000" placeholder="改善したい点を箇条書きで入力してください。自動保存されます。"></textarea><div id="memoCount" class="count">0 / 10,000文字</div><div class="row"><button class="danger" id="clearMemo">クリア</button><button class="primary" id="improve">AIに改善依頼</button></div></div></section>
+<section class="panel" id="htmlPanel"><div class="section"><h2>HTML編集</h2><textarea id="htmlCode" spellcheck="false" placeholder="HTMLコード"></textarea><div id="htmlCount" class="count">0文字</div><div class="row"><button class="primary" id="saveHtml">保存して開く</button><button id="copyHtml">HTMLコピー</button></div><div class="row"><button id="clearHtml">クリア</button><button id="restoreHtml">1つ前に戻す</button></div></div></section>
+<section class="panel" id="backupPanel">
+<div class="section"><h2>バックアップ・復元</h2><div class="row"><button id="export">JSONを書き出す</button><button id="import">JSONを読み込む</button></div><input id="backupFile" type="file" accept=".json,application/json" hidden><p class="hint">管理データ、HTML、直前のHTML、改善メモ、取得可能なlocalStorageを保存します。HTML側のIndexedDBは汎用的な完全バックアップを保証できません。アプリ名・アイコンはバックアップに含まれません。</p></div>
+<div class="section"><h2>ストレージ使用量（推定）</h2><div id="storageText" class="hint">—</div><div id="storageBar"><div id="storageFill"></div></div></div>
+</section>
+</div></aside>
+<button id="edge" aria-label="管理画面を開く"></button>
+<div id="toast"></div>
+</div>
 <script>
-(function () {
-  'use strict';
+(()=>{'use strict';
+const DB='html-app-manager-v2',STORE='s',KEY='main',$=id=>document.getElementById(id);
 
-  // ---------- コンテンツ生成（確認用のカラーストライプ） ----------
-  var colors = [
-    '#ef4444','#f97316','#eab308','#84cc16','#22c55e','#14b8a6',
-    '#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef',
-    '#ec4899','#f43f5e','#fb923c','#facc15','#ef4444','#3b82f6'
-  ];
-  var html = '';
-  for (var i = 0; i < colors.length; i++) {
-    html += '<div class="stripe" style="background:' + colors[i] + '">' + (i + 1) + '</div>';
+/* スタンドアロン判定 */
+const mq=window.matchMedia;
+const standalone=(mq&&(mq('(display-mode: standalone)').matches||mq('(display-mode: fullscreen)').matches||mq('(display-mode: minimal-ui)').matches||mq('(display-mode: window-controls-overlay)').matches))||navigator.standalone===true;
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
+/* 拡大無効化 */
+['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){if(e.cancelable)e.preventDefault()},{passive:false})});
+let lastTapEnd=0;
+document.addEventListener('touchend',function(e){
+  const now=Date.now();const editing=e.target&&e.target.closest&&e.target.closest('input,textarea');
+  if(now-lastTapEnd<=320&&!editing&&e.cancelable)e.preventDefault();
+  lastTapEnd=now;
+},{passive:false});
+
+/* 黒帯対策：black ステータスバーでは env(top)=0 のため、innerHeight をそのまま使用 */
+const root=document.documentElement;
+function syncAppHeight(){
+  if(!standalone){root.style.removeProperty('--app-h');return}
+  const h=window.innerHeight;
+  if(!isFinite(h)||h<=0)return;
+  root.style.setProperty('--app-h',Math.round(h)+'px');
+}
+function relayout(){syncAppHeight()}
+window.addEventListener('resize',relayout);
+window.addEventListener('orientationchange',()=>setTimeout(relayout,120));
+window.addEventListener('pageshow',relayout);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',relayout);
+syncAppHeight();setTimeout(relayout,260);window.addEventListener('load',()=>setTimeout(relayout,100));
+setTimeout(()=>document.body.classList.remove('booting'),1500);
+
+/* 既定アイコン生成（青グラデ＋白い丸付きプラス＋影＋内側ハイライト） */
+function generateDefaultIcon(){
+  const S=512,c=document.createElement('canvas');c.width=c.height=S;
+  const ctx=c.getContext('2d');const r=Math.round(S*0.2237);
+  ctx.beginPath();
+  ctx.moveTo(r,0);ctx.lineTo(S-r,0);ctx.arcTo(S,0,S,r,r);
+  ctx.lineTo(S,S-r);ctx.arcTo(S,S,S-r,S,r);
+  ctx.lineTo(r,S);ctx.arcTo(0,S,0,S-r,r);
+  ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);ctx.closePath();
+  ctx.save();ctx.clip();
+  const g=ctx.createLinearGradient(0,0,0,S);
+  g.addColorStop(0,'#5b9bff');g.addColorStop(0.5,'#3a7bea');g.addColorStop(1,'#1e56c8');
+  ctx.fillStyle=g;ctx.fillRect(0,0,S,S);
+  const sh=ctx.createLinearGradient(0,0,0,S*0.55);
+  sh.addColorStop(0,'rgba(255,255,255,0.30)');sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh;ctx.fillRect(0,0,S,S*0.55);
+  ctx.restore();
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.28)';ctx.shadowBlur=24;ctx.shadowOffsetY=10;
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=68;ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(S/2,S*0.27);ctx.lineTo(S/2,S*0.73);
+  ctx.moveTo(S*0.27,S/2);ctx.lineTo(S*0.73,S/2);
+  ctx.stroke();ctx.restore();
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(r,2);ctx.lineTo(S-r,2);ctx.arcTo(S-2,2,S-2,r,r-2);
+  ctx.lineTo(S-2,S-r);ctx.arcTo(S-2,S-2,S-r,S-2,r-2);
+  ctx.lineTo(r,S-2);ctx.arcTo(2,S-2,2,S-r,r-2);
+  ctx.lineTo(2,r);ctx.arcTo(2,2,r,2,r-2);ctx.closePath();
+  ctx.stroke();ctx.restore();
+  return c.toDataURL('image/png');
+}
+const defaultIcon=generateDefaultIcon();
+
+let db,s={name:'',icon:'',html:'',previousHtml:'',memo:''},memoTimer,toastTimer,ex=null,ey=null;
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2300)}
+function openDB(){return new Promise((ok,no)=>{let r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+function get(){return new Promise((ok,no)=>{let r=db.transaction(STORE).objectStore(STORE).get(KEY);r.onsuccess=()=>ok(r.result||null);r.onerror=()=>no(r.error)})}
+function put(){return new Promise((ok,no)=>{let t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put({html:s.html,previousHtml:s.previousHtml,memo:s.memo},KEY);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
+function meta(){const n=s.name||'アプリ＋';document.title=n;let m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=n;let l=document.querySelector('link[rel="apple-touch-icon"]');if(!l){l=document.createElement('link');l.rel='apple-touch-icon';document.head.append(l)}l.href=s.icon||defaultIcon}
+function stage(which){$('setup').hidden=which!=='setup';$('htmlStep').hidden=which!=='html';$('stage').hidden=which==='run';$('runtime').style.display=which==='run'?'block':'none';$('edge').style.display=which==='run'?'block':'none'}
+
+function memoBullet(v){
+  const text=String(v==null?'':v);
+  if(!text.trim())return '・';
+  const lines=text.split('\n').map(function(line){
+    const body=line.replace(/^[\s\u3000・•･]+/,'').replace(/[\s\u3000]+$/,'');
+    return body?'・'+body:'';
+  });
+  return lines.join('\n');
+}
+
+function render(){
+  $('setupName').value=s.name;
+  $('iconPreview').src=s.icon||defaultIcon;
+  $('memo').value=memoBullet(s.memo);
+  $('htmlCode').value=s.html;$('htmlSetup').value=s.html;
+  counts();meta();relayout();
+  if(standalone){
+    if(s.html){$('runner').srcdoc=s.html;stage('run')}else stage('html');
+  }else if(isIOS){
+    stage('setup');
+  }else{
+    if(s.html){$('runner').srcdoc=s.html;stage('run')}else stage('html');
   }
-  document.getElementById('content').innerHTML = html;
+  document.body.classList.remove('booting');
+}
+function counts(){$('setupCount').textContent=[...$('htmlSetup').value].length.toLocaleString()+'文字';$('htmlCount').textContent=[...$('htmlCode').value].length.toLocaleString()+'文字';$('memoCount').textContent=[...$('memo').value].length.toLocaleString()+' / 10,000文字'}
+function drawerOpen(){if(!s.html)return;$('drawer').classList.add('open');$('shade').classList.add('show');$('edge').style.display='none'}
+function drawerClose(){$('drawer').classList.remove('open');$('shade').classList.remove('show');$('edge').style.display=s.html?'block':'none'}
+function tab(id){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.panel===id));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));$('panels').scrollTop=0;if(id==='backupPanel')storage()}
+async function png(f){let b=await createImageBitmap(f),z=Math.min(b.width,b.height),c=document.createElement('canvas');c.width=c.height=512;c.getContext('2d').drawImage(b,(b.width-z)/2,(b.height-z)/2,z,z,0,0,512,512);return c.toDataURL('image/png')}
+async function chooseIcon(f){if(!f)return;try{s.icon=await png(f);$('iconPreview').src=s.icon;meta();toast('アイコンを登録しました')}catch{toast('画像を読み込めませんでした')}}
+function bytes(n){let u=['B','KB','MB','GB'],i=0;while(n>=1024&&i<3){n/=1024;i++}return n.toFixed(i?1:0)+' '+u[i]}
+async function storage(){try{let e=await navigator.storage.estimate(),u=e.usage||0,q=e.quota||0,p=q?100*u/q:0;$('storageText').textContent=`推定使用量 ${bytes(u)} ／ 割当量 ${bytes(q)}（${p.toFixed(1)}%）`;$('storageFill').style.width=Math.min(100,p)+'%'}catch{$('storageText').textContent='取得できません'}}
+function download(blob,name){let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+function localData(){try{return Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)]).filter(([k])=>!k.startsWith('__manager_')))}catch{return null}}
+async function saveHtml(){let v=$('htmlCode').value;if(!v.trim()){toast('HTMLを入力してください');return}if(v!==s.html){s.previousHtml=s.html;s.html=v}await put();$('runner').srcdoc=s.html;drawerClose();stage('run');toast('HTMLを保存しました')}
+async function share(){let text='次の修正を実施して全コードを提供してください。\n\n'+memoBullet(s.memo);try{await navigator.clipboard.writeText(text)}catch{toast('コピーできませんでした');return}let f=new File([s.html],(s.name||'アプリ＋')+'.html',{type:'text/html'});try{if(navigator.share&&navigator.canShare?.({files:[f]})){await navigator.share({title:'HTML改善依頼',text,files:[f]});toast('共有画面を開きました')}else{download(f,f.name);toast('依頼文をコピーしHTMLを保存しました')}}catch(e){if(e.name!=='AbortError')toast('共有に失敗しました。依頼文はコピー済みです')}}
 
-  // ---------- スクロール連動ヘッダー・フッター制御 ----------
-  var scrollRoot = document.getElementById('scroll-root');
-  var header = document.getElementById('header');
-  var footer = document.getElementById('footer');
-  var lastY = 0;
-  var ticking = false;
-  var THRESHOLD = 8; // 誤作動防止のしきい値
+function extractTitle(html){
+  const m=String(html||'').match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if(!m)return '';
+  return m[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&').trim();
+}
+function sanitizeName(n){const c=String(n||'').replace(/[\\/:*?"<>|\r\n\t]/g,'_').trim();return c||'アプリ＋'}
 
-  scrollRoot.addEventListener('scroll', function () {
-    if (ticking) return;
-    ticking = true;
+async function exportBackup(){
+  const title=extractTitle(s.html)||(s.name||'アプリ＋');
+  const filename=`バックアップ(${sanitizeName(title)}).json`;
+  const app={html:s.html,previousHtml:s.previousHtml,memo:s.memo};
+  const o={format:'html-app-manager-backup',version:2,exportedAt:new Date().toISOString(),app,localStorage:localData(),limitations:['HTML側IndexedDBは汎用バックアップ対象外','localStorageは同一オリジンで参照できる範囲','アプリ名・アイコンは保存対象外']};
+  download(new Blob([JSON.stringify(o,null,2)],{type:'application/json'}),filename);
+  toast('バックアップを書き出しました');
+}
+async function importBackup(f){try{let o=JSON.parse(await f.text());if(o.format!=='html-app-manager-backup'||!o.app||typeof o.app.html!=='string')throw Error('対応していないファイルです');if(!confirm('現在の内容を上書きして復元しますか？'))return;
+  s.html=o.app.html||'';s.previousHtml=o.app.previousHtml||'';s.memo=o.app.memo||'';
+  await put();
+  if(o.localStorage&&confirm('バックアップ内のlocalStorageも復元しますか？'))for(let[k,v]of Object.entries(o.localStorage))if(typeof v==='string')localStorage.setItem(k,v);
+  render();toast('復元しました。IndexedDBの実行データは対象外です')}catch(e){alert('復元できませんでした：'+e.message)}}
 
-    requestAnimationFrame(function () {
-      var y = scrollRoot.scrollTop;
-      var dy = y - lastY;
+$('setupName').addEventListener('input',()=>{s.name=$('setupName').value.trim();meta()});
+$('iconFile').onchange=e=>chooseIcon(e.target.files?.[0]);
 
-      if (Math.abs(dy) > THRESHOLD) {
-        if (dy > 0 && y > 60) {
-          // 下スクロール時：UIを隠す
-          header.classList.add('hidden');
-          footer.classList.add('hidden');
-        } else if (dy < 0) {
-          // 上スクロール時：UIを表示
-          header.classList.remove('hidden');
-          footer.classList.remove('hidden');
-        }
-        lastY = y;
-      }
+$('firstSave').onclick=async()=>{let v=$('htmlSetup').value;if(!v.trim()){toast('HTMLを入力してください');return}s.html=v;s.previousHtml='';s.memo='';await put();render();toast('HTMLを登録しました')};
 
-      // 最上部に戻ったら必ず表示
-      if (y <= 0) {
-        header.classList.remove('hidden');
-        footer.classList.remove('hidden');
-        lastY = 0;
-      }
+$('htmlSetup').addEventListener('input',counts);$('htmlCode').addEventListener('input',counts);
+$('saveHtml').onclick=()=>saveHtml().catch(e=>toast('保存に失敗しました：'+e.message));
+$('copyHtml').onclick=async()=>{try{await navigator.clipboard.writeText($('htmlCode').value);toast('HTMLをコピーしました')}catch{toast('コピーできませんでした')}};
 
-      ticking = false;
-    });
-  }, { passive: true });
+$('clearHtml').onclick=()=>{$('htmlCode').value='';counts();$('htmlCode').focus();toast('編集欄をクリアしました')};
+$('restoreHtml').onclick=()=>{if(!s.previousHtml){toast('戻せる履歴がありません');return}if(confirm('直前のHTMLを編集欄に戻しますか？')){$('htmlCode').value=s.previousHtml;counts();$('htmlCode').scrollTop=0}};
 
+const memoTa=$('memo');
+function saveMemoSoon(){clearTimeout(memoTimer);memoTimer=setTimeout(()=>{s.memo=$('memo').value;put().catch(()=>toast('メモを保存できませんでした'))},500)}
+memoTa.addEventListener('input',()=>{counts()});
+memoTa.addEventListener('focus',()=>{if(!memoTa.value.trim()){memoTa.value='・';counts();saveMemoSoon();try{memoTa.setSelectionRange(1,1)}catch(e){}}});
+memoTa.addEventListener('keydown',e=>{
+  if(e.isComposing||e.keyCode===229)return;
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const pos=memoTa.selectionStart,end=memoTa.selectionEnd,ins='\n・';
+    memoTa.value=memoTa.value.slice(0,pos)+ins+memoTa.value.slice(end);
+    const np=pos+ins.length;try{memoTa.setSelectionRange(np,np)}catch(err){}
+    counts();saveMemoSoon();
+  }
+});
+memoTa.addEventListener('paste',e=>{
+  const t=(e.clipboardData||window.clipboardData).getData('text')||'';
+  const remain=10000-memoTa.value.length;
+  if(t.length>remain){e.preventDefault();toast('最大10,000文字です。超過分は貼り付けませんでした')}
+  setTimeout(()=>{const v=memoBullet(memoTa.value);if(v!==memoTa.value){memoTa.value=v;counts();saveMemoSoon()}},0);
+});
+memoTa.addEventListener('blur',()=>{const v=memoBullet(memoTa.value);if(v!==memoTa.value){memoTa.value=v;counts()}s.memo=memoTa.value;put().catch(()=>toast('メモを保存できませんでした'))});
+
+$('clearMemo').onclick=async()=>{if(confirm('改善メモをすべて削除しますか？')){memoTa.value='・';s.memo='・';counts();await put();memoTa.focus();try{memoTa.setSelectionRange(1,1)}catch(e){}toast('メモをクリアしました')}};
+
+$('improve').onclick=share;
+$('export').onclick=exportBackup;
+$('import').onclick=()=>$('backupFile').click();
+$('backupFile').onchange=e=>{if(e.target.files[0])importBackup(e.target.files[0]);e.target.value=''};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.panel));
+$('close').onclick=drawerClose;$('shade').onclick=drawerClose;
+
+$('edge').addEventListener('pointerdown',e=>{ex=e.clientX;ey=e.clientY;$('edge').classList.add('pull')});
+$('edge').addEventListener('pointerup',e=>{if(ex!==null){const dx=ex-e.clientX,dy=ey-e.clientY;if(dx>10||(Math.abs(dx)<10&&Math.abs(dy)<10))drawerOpen()}ex=null;ey=null;$('edge').classList.remove('pull')});
+$('edge').addEventListener('pointercancel',()=>{ex=null;ey=null;$('edge').classList.remove('pull')});
+
+let swipe=null;
+$('drawer').addEventListener('touchstart',e=>{if(e.touches.length===1)swipe={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
+$('drawer').addEventListener('touchend',e=>{if(!swipe)return;let dx=e.changedTouches[0].clientX-swipe.x,dy=e.changedTouches[0].clientY-swipe.y;if(dx>75&&Math.abs(dx)>Math.abs(dy))drawerClose();swipe=null},{passive:true});
+
+(async()=>{try{db=await openDB();let old=await get();if(old){s.html=old.html||'';s.previousHtml=old.previousHtml||'';s.memo=old.memo||''}render()}catch(e){document.body.classList.remove('booting');toast('初期化に失敗しました：'+e.message)}})();
 })();
-</script>
-</body>
-</html>
+</script></body></html>
