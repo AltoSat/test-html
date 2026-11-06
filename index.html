@@ -17,7 +17,7 @@
 
 :root{color-scheme:dark;--bg:#000000;--panel:#161b23;--line:#2a3140;--text:#e6ebf3;--muted:#8b96a9;--accent:#4d8df7}
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);overscroll-behavior:none;overscroll-behavior-x:none;-webkit-text-size-adjust:100%;touch-action:pan-y}
 body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 body.booting #stage{visibility:hidden}
 button,input,textarea{font:inherit;font-size:16px}
@@ -26,7 +26,7 @@ button:active{background:#242c3a}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 button.primary:active{background:#3f7ce0}
 button.danger{color:#ff9aa8;background:#2a161c;border-color:#4d2530}
-input[type=text],textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--line);border-radius:11px;padding:12px;background:#0d1015;color:var(--text);font-size:16px!important;line-height:1.5;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
+input[type=text],textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--line);border-radius:11px;padding:12px;background:#0d1015;color:var(--text);font-size:16px!important;line-height:1.5;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;touch-action:pan-y}
 input::placeholder,textarea::placeholder{color:#5a6478}
 textarea{resize:vertical}
 
@@ -34,13 +34,27 @@ textarea{resize:vertical}
 #app{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:var(--bg);z-index:1;transition:background-color .2s}
 
 /* セットアップ・管理画面 */
-#stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));z-index:10}
+#stage{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));z-index:10;touch-action:pan-y}
 .card{max-width:560px;width:100%;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 28px #00000055}
 h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
-.step{margin:0;font-size:14px;font-weight:600;color:var(--text);line-height:1.6}
-.field{display:flex;flex-direction:column;gap:7px}
-.field label{font-size:13px;font-weight:650;color:#a9b4c6}
-#iconPreview{flex:none!important;width:76px;height:76px;aspect-ratio:1/1;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#0d1015}
+.setup-head{max-width:560px;width:100%;margin:0 auto 14px;padding:0 4px}
+.setup-head .subtitle{margin:6px 0 0;font-size:14px;color:var(--muted);line-height:1.5;font-weight:400}
+
+/* ①〜② 統一ステップラベル */
+.step-label{font-size:16px;font-weight:650;color:var(--text);line-height:1.6}
+.step{margin:0;font-size:16px;font-weight:650;color:var(--text);line-height:1.6}
+.share-step{display:flex;align-items:center;gap:.4em}
+.share-icon{width:1.5em;height:1.5em;flex:none;color:var(--text);display:block}
+
+.title-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.title-row h1,.title-row h2{flex:1;min-width:0}
+.title-row .count{flex:none;text-align:right}
+
+/* アプリ設定（アイコン＋アプリ名・中央寄せ・ホーム画面風） */
+.app-setting{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0 4px}
+#iconPreview{width:104px;height:104px;aspect-ratio:1/1;object-fit:cover;border-radius:24px;border:1px solid var(--line);background:#0d1015;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,opacity .15s;box-shadow:0 6px 20px #00000066}
+#iconPreview:active{border-color:var(--accent);opacity:.85}
+#setupName{max-width:280px;text-align:center;padding:10px 14px;border-radius:12px}
 #htmlSetup{height:40vh;min-height:220px;font-family:ui-monospace,monospace;font-size:16px;line-height:1.45}
 
 /* iframe（実行画面）を全画面に配置 */
@@ -57,11 +71,11 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 #drawer.open{transform:translateX(0)}
 #head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:calc(9px + env(safe-area-inset-top,0px)) 14px 9px;background:#11151b;border-bottom:1px solid var(--line)}
 #head strong{font-size:17px}#close{min-height:38px;padding:7px 12px}
-#tabs{flex:none;display:flex;gap:5px;padding:8px;background:#11151b;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+#tabs{flex:none;display:flex;gap:5px;padding:8px;background:#11151b;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
 #tabs::-webkit-scrollbar{display:none}
 .tab{flex:1;min-width:0;white-space:nowrap;font-size:12px;padding:8px 5px;min-height:40px}
 .tab.active{background:#17263f;color:#a9c8ff;border-color:#2f4f86}
-#panels{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(20px + env(safe-area-inset-bottom,0px))}
+#panels{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(20px + env(safe-area-inset-bottom,0px));touch-action:pan-y}
 .panel{display:none;max-width:650px;width:100%;margin:auto;flex-direction:column;gap:12px}
 .panel.active{display:flex}
 .section{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -69,7 +83,7 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 .row>*{flex:1;min-width:0}
 #memo{height:36vh;min-height:230px;max-height:58vh;font-family:-apple-system,sans-serif}
 #htmlCode{height:46vh;min-height:220px;font-family:ui-monospace,monospace;font-size:16px;line-height:1.45}
-.count{text-align:right;font-size:12px;color:var(--muted)}
+.count{text-align:right;font-size:12px;color:var(--muted);white-space:nowrap}
 #storageBar{height:9px;border-radius:9px;background:#212a38;overflow:hidden}
 #storageFill{height:100%;width:0;background:var(--accent);transition:width .3s}
 #shade{position:absolute;inset:0;z-index:30;background:#00000066;display:none}
@@ -80,31 +94,27 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 <div id="app">
 <div id="stage">
 <div id="setup">
-<section class="card">
+<header class="setup-head">
 <h1>アプリ＋</h1>
-<div class="field">
-<label for="setupName">① アプリ名を入力</label>
-<input id="setupName" type="text" maxlength="60" placeholder="例: 店舗アプリ">
-</div>
-</section>
+<p class="subtitle">作成したHTMLをアプリ化できます</p>
+</header>
 <section class="card">
-<div class="field">
-<label>② アプリアイコンを登録</label>
-<div class="row" style="align-items:center">
-<img id="iconPreview" alt="アイコン">
-<input id="iconFile" type="file" accept="image/*" style="flex:2">
-</div>
+<label class="step-label">① アプリ設定</label>
+<div class="app-setting">
+<img id="iconPreview" alt="アイコン" role="button" tabindex="0" aria-label="アイコン画像を選択">
+<input id="iconFile" type="file" accept="image/*" hidden>
+<input id="setupName" type="text" placeholder="アプリ名" autocomplete="off" autocapitalize="off" spellcheck="false">
 </div>
 </section>
-<section class="card"><p class="step">③ Safariの共有ボタン <b>「共有」</b> をタップ</p></section>
-<section class="card"><p class="step">④ メニューから<b>「ホーム画面に追加」</b>を選択</p></section>
-<section class="card"><p class="step">⑤ 追加したアイコンから起動してHTMLを登録</p></section>
+<section class="card"><p class="step share-step"><span>②</span><svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 6l-4-4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2v13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>を選択して「ホーム画面に追加」</span></p></section>
 </div>
 <section class="card" id="htmlStep" hidden>
+<div class="title-row">
 <h1>HTMLを登録</h1>
-<textarea id="htmlSetup" spellcheck="false" placeholder="&lt;!doctype html&gt; から始まるHTML"></textarea>
 <div id="setupCount" class="count">0文字</div>
-<button class="primary" id="firstSave">HTMLを保存して開始</button>
+</div>
+<textarea id="htmlSetup" spellcheck="false" placeholder="&lt;!doctype html&gt; から始まるHTML"></textarea>
+<button class="primary" id="firstSave">登録</button>
 </section>
 </div>
 <div id="runtime"><iframe id="runner" title="登録HTML"></iframe></div>
@@ -113,11 +123,32 @@ h1{font-size:21px;margin:0}h2{font-size:15px;margin:0}p,.hint{font-size:13px;lin
 <header id="head"><strong>アプリ＋</strong><button id="close">閉じる ✕</button></header>
 <nav id="tabs"><button class="tab active" data-panel="memoPanel">改善メモ</button><button class="tab" data-panel="htmlPanel">HTML編集</button><button class="tab" data-panel="backupPanel">バックアップ</button></nav>
 <div id="panels">
-<section class="panel active" id="memoPanel"><div class="section"><h2>改善メモ</h2><textarea id="memo" maxlength="10000" placeholder="改善したい点を箇条書きで入力してください。自動保存されます。"></textarea><div id="memoCount" class="count">0 / 10,000文字</div><div class="row"><button class="danger" id="clearMemo">クリア</button><button class="primary" id="improve">AIに改善依頼</button></div></div></section>
-<section class="panel" id="htmlPanel"><div class="section"><h2>HTML編集</h2><textarea id="htmlCode" spellcheck="false" placeholder="HTMLコード"></textarea><div id="htmlCount" class="count">0文字</div><div class="row"><button class="primary" id="saveHtml">保存して開く</button><button id="copyHtml">HTMLコピー</button></div><div class="row"><button id="clearHtml">クリア</button><button id="restoreHtml">1つ前に戻す</button></div></div></section>
+<section class="panel active" id="memoPanel">
+<div class="section">
+<div class="title-row"><h2>改善メモ</h2><div id="memoCount" class="count">0 / 10,000文字</div></div>
+<textarea id="memo" maxlength="10000" placeholder="改善したい点を箇条書きで入力してください。自動保存されます。"></textarea>
+<div class="row"><button class="danger" id="clearMemo">クリア</button><button class="primary" id="improve">AIに改善依頼</button></div>
+</div>
+</section>
+<section class="panel" id="htmlPanel">
+<div class="section">
+<div class="title-row"><h2>HTML編集</h2><div id="htmlCount" class="count">0文字</div></div>
+<textarea id="htmlCode" spellcheck="false" placeholder="HTMLコード"></textarea>
+<div class="row"><button class="primary" id="saveHtml">保存して開く</button><button id="copyHtml">HTMLコピー</button></div>
+<div class="row"><button id="clearHtml">クリア</button><button id="restoreHtml">1つ前に戻す</button></div>
+</div>
+</section>
 <section class="panel" id="backupPanel">
-<div class="section"><h2>バックアップ・復元</h2><div class="row"><button id="export">JSONを書き出す</button><button id="import">JSONを読み込む</button></div><input id="backupFile" type="file" accept=".json,application/json" hidden><p class="hint">管理データ、HTML、直前のHTML、改善メモ、取得可能なlocalStorageを保存します。HTML側のIndexedDBは汎用的な完全バックアップを保証できません。アプリ名・アイコンはバックアップに含まれません。</p></div>
-<div class="section"><h2>ストレージ使用量（推定）</h2><div id="storageText" class="hint">—</div><div id="storageBar"><div id="storageFill"></div></div></div>
+<div class="section">
+<div class="title-row"><h2>バックアップ・復元</h2></div>
+<div id="storageText" class="hint">—</div>
+<div id="storageBar"><div id="storageFill"></div></div>
+<div class="row">
+<button id="export">バックアップ</button>
+<button id="import">復元</button>
+</div>
+<input id="backupFile" type="file" accept=".json,application/json" hidden>
+</div>
 </section>
 </div></aside>
 <button id="edge" aria-label="管理画面を開く"></button>
@@ -131,35 +162,148 @@ const mq=window.matchMedia;
 const standalone=(mq&&(mq('(display-mode: standalone)').matches||mq('(display-mode: fullscreen)').matches||mq('(display-mode: minimal-ui)').matches||mq('(display-mode: window-controls-overlay)').matches))||navigator.standalone===true;
 const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 
+/* ピンチズーム防止（iOS Safari） */
 ['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){if(e.cancelable)e.preventDefault()},{passive:false})});
+
+/* エッジスワイプ（Safariの戻る/進む）防止用にタッチ開始位置を記録 */
+let edgeStartX=null,edgeStartY=null;
+document.addEventListener('touchstart',function(e){
+  if(e.touches.length===1){edgeStartX=e.touches[0].clientX;edgeStartY=e.touches[0].clientY}
+  else{edgeStartX=null;edgeStartY=null}
+},{passive:true});
+
+/* ピンチズーム防止（マルチタッチ）＋エッジスワイプ防止 */
+document.addEventListener('touchmove',function(e){
+  if(e.touches.length>1){if(e.cancelable)e.preventDefault();return}
+  if(edgeStartX===null)return;
+  const dx=e.touches[0].clientX-edgeStartX;
+  const dy=e.touches[0].clientY-edgeStartY;
+  /* 横方向の移動が縦より大きい場合のみ判定（縦スクロールは許可） */
+  if(Math.abs(dx)<=Math.abs(dy))return;
+  const EDGE=30;
+  const w=window.innerWidth||document.documentElement.clientWidth;
+  /* 左端から右スワイプ（戻る） */
+  if(edgeStartX<EDGE&&dx>0){if(e.cancelable)e.preventDefault();return}
+  /* 右端から左スワイプ（進む） */
+  if(edgeStartX>w-EDGE&&dx<0){if(e.cancelable)e.preventDefault();return}
+},{passive:false});
+
+/* ダブルタップズーム防止 */
 let lastTapEnd=0;
 document.addEventListener('touchend',function(e){
   const now=Date.now();const editing=e.target&&e.target.closest&&e.target.closest('input,textarea');
   if(now-lastTapEnd<=320&&!editing&&e.cancelable)e.preventDefault();
   lastTapEnd=now;
+  edgeStartX=null;edgeStartY=null;
 },{passive:false});
 
 setTimeout(()=>document.body.classList.remove('booting'),1500);
 
-/* アイコン生成（PNG形式） */
+/* アイコン生成（PNG形式）: 黒背景 + グレー/白の3x3角丸タイルで＋を表現 */
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);
+  ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
 function generateDefaultIcon(){
   const S=512,c=document.createElement('canvas');c.width=c.height=S;
-  const ctx=c.getContext('2d');const r=Math.round(S*0.2237);
-  ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(S-r,0);ctx.arcTo(S,0,S,r,r);
-  ctx.lineTo(S,S-r);ctx.arcTo(S,S,S-r,S,r);ctx.lineTo(r,S);ctx.arcTo(0,S,0,S-r,r);
-  ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);ctx.closePath();
-  ctx.save();ctx.clip();
-  const g=ctx.createLinearGradient(0,0,0,S);g.addColorStop(0,'#5b9bff');g.addColorStop(0.5,'#3a7bea');g.addColorStop(1,'#1e56c8');
-  ctx.fillStyle=g;ctx.fillRect(0,0,S,S);
-  const sh=ctx.createLinearGradient(0,0,0,S*0.55);sh.addColorStop(0,'rgba(255,255,255,0.30)');sh.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=sh;ctx.fillRect(0,0,S,S*0.55);ctx.restore();
-  ctx.save();ctx.shadowColor='rgba(0,0,0,0.28)';ctx.shadowBlur=24;ctx.shadowOffsetY=10;
-  ctx.strokeStyle='#ffffff';ctx.lineWidth=68;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(S/2,S*0.27);ctx.lineTo(S/2,S*0.73);ctx.moveTo(S*0.27,S/2);ctx.lineTo(S*0.73,S/2);
-  ctx.stroke();ctx.restore();
+  const ctx=c.getContext('2d');
+
+  const R=Math.round(S*0.2237);
+  roundRectPath(ctx,0,0,S,S,R);
+  ctx.save();
+  ctx.clip();
+
+  const bg=ctx.createLinearGradient(0,0,0,S);
+  bg.addColorStop(0,'#1a1a1c');
+  bg.addColorStop(0.5,'#0c0c0e');
+  bg.addColorStop(1,'#000000');
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,S,S);
+
+  const rad=ctx.createRadialGradient(S*0.3,S*0.25,0,S*0.3,S*0.25,S*0.9);
+  rad.addColorStop(0,'rgba(255,255,255,0.06)');
+  rad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=rad;
+  ctx.fillRect(0,0,S,S);
+
+  const PAD=S*0.105;
+  const GAP=S*0.052;
+  const TILE=(S - PAD*2 - GAP*2)/3;
+  const TR=TILE*0.235;
+
+  const pattern=[
+    [0,1,0],
+    [1,1,1],
+    [0,1,0]
+  ];
+
+  for(let row=0;row<3;row++){
+    for(let col=0;col<3;col++){
+      const x=PAD+col*(TILE+GAP);
+      const y=PAD+row*(TILE+GAP);
+      const isPlus=pattern[row][col]===1;
+
+      ctx.save();
+      ctx.shadowColor=isPlus?'rgba(160,190,255,0.18)':'rgba(0,0,0,0.5)';
+      ctx.shadowBlur=S*0.02;
+      ctx.shadowOffsetY=S*0.008;
+      roundRectPath(ctx,x,y,TILE,TILE,TR);
+      const tg=ctx.createLinearGradient(x,y,x,y+TILE);
+      if(isPlus){
+        tg.addColorStop(0,'#ffffff');
+        tg.addColorStop(0.5,'#f5f6f8');
+        tg.addColorStop(1,'#e0e3e8');
+      }else{
+        tg.addColorStop(0,'#7c8088');
+        tg.addColorStop(0.5,'#5a5f67');
+        tg.addColorStop(1,'#3c4047');
+      }
+      ctx.fillStyle=tg;
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      roundRectPath(ctx,x,y,TILE,TILE,TR);
+      ctx.clip();
+      const hl=ctx.createLinearGradient(x,y,x,y+TILE*0.5);
+      hl.addColorStop(0,isPlus?'rgba(255,255,255,0.55)':'rgba(255,255,255,0.30)');
+      hl.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=hl;
+      ctx.fillRect(x,y,TILE,TILE*0.5);
+
+      const bs=ctx.createLinearGradient(x,y+TILE*0.6,x,y+TILE);
+      bs.addColorStop(0,'rgba(0,0,0,0)');
+      bs.addColorStop(1,isPlus?'rgba(0,0,0,0.14)':'rgba(0,0,0,0.34)');
+      ctx.fillStyle=bs;
+      ctx.fillRect(x,y+TILE*0.6,TILE,TILE*0.4);
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
   return c.toDataURL('image/png');
 }
 const defaultIcon=generateDefaultIcon();
+
+/* アプリ名の文字数制限: 全角文字(日本語含む)は8文字、半角(英語含む)は12文字 */
+function limitAppName(v){
+  const chars=Array.from(String(v==null?'':v));
+  const hasWide=chars.some(c=>{
+    const cp=c.codePointAt(0);
+    return cp>0x7F;
+  });
+  const max=hasWide?8:12;
+  return chars.slice(0,max).join('');
+}
 
 let db,s={name:'',icon:'',html:'',previousHtml:'',memo:''},memoTimer,toastTimer,ex=null,ey=null;
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2300)}
@@ -182,7 +326,6 @@ function injectIframeCSS() {
       style.textContent = '*, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }';
       doc.head.appendChild(style);
 
-      // iframeの背景色を取得して親アプリに適用（境界線を目立たなくする）
       var bg = doc.documentElement.style.backgroundColor || doc.body.style.backgroundColor || window.getComputedStyle(doc.body).backgroundColor;
       if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
         bg = window.getComputedStyle(doc.documentElement).backgroundColor;
@@ -212,7 +355,7 @@ function memoBullet(v){
 }
 
 function render(){
-  $('setupName').value=s.name;
+  $('setupName').value=limitAppName(s.name);
   $('iconPreview').src=s.icon||defaultIcon;
   $('memo').value=memoBullet(s.memo);
   $('htmlCode').value=s.html;$('htmlSetup').value=s.html;
@@ -260,8 +403,27 @@ async function importBackup(f){try{let o=JSON.parse(await f.text());if(o.format!
   if(o.localStorage&&confirm('バックアップ内のlocalStorageも復元しますか？'))for(let[k,v]of Object.entries(o.localStorage))if(typeof v==='string')localStorage.setItem(k,v);
   render();toast('復元しました。IndexedDBの実行データは対象外です')}catch(e){alert('復元できませんでした：'+e.message)}}
 
-$('setupName').addEventListener('input',()=>{s.name=$('setupName').value.trim();meta()});
+/* アプリ名入力（日本語8文字 / 英語12文字の制限） */
+const nameInput=$('setupName');
+function syncName(){
+  const limited=limitAppName(nameInput.value);
+  if(limited!==nameInput.value){
+    const pos=nameInput.selectionStart;
+    nameInput.value=limited;
+    try{const p=Math.min(pos,limited.length);nameInput.setSelectionRange(p,p)}catch(e){}
+  }
+  s.name=limited;
+  meta();
+}
+nameInput.addEventListener('input',syncName);
+nameInput.addEventListener('compositionend',syncName);
+nameInput.addEventListener('blur',syncName);
+
 $('iconFile').onchange=e=>chooseIcon(e.target.files?.[0]);
+
+/* アイコン画像タップでファイル選択を開く */
+$('iconPreview').addEventListener('click',()=>$('iconFile').click());
+$('iconPreview').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('iconFile').click()}});
 
 $('firstSave').onclick=async()=>{let v=$('htmlSetup').value;if(!v.trim()){toast('HTMLを入力してください');return}s.html=v;s.previousHtml='';s.memo='';await put();render();toast('HTMLを登録しました')};
 
