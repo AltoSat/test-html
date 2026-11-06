@@ -1,316 +1,464 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>画面端タッチ限界検証 - 下端完全密着修正版</title>
-  <style>
-    :root {
-      --sat: env(safe-area-inset-top, 0px);
-      --sab: env(safe-area-inset-bottom, 34px);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>iPhone 17 Pro PWA 端タッチ検証</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --ink: #f0f4f8;
+    --muted: #94a3b8;
+    --accent: #2563eb;
+    --accent-active: #60a5fa;
+    --accent-weak: rgba(37, 99, 235, 0.15);
+    --line: rgba(148, 163, 184, 0.2);
+    --danger: #ef4444;
+    --success: #22c55e;
+  }
 
-    /* 画面全体を隙間なく黒背景で満たす */
-    html, body {
-      width: 100%;
-      min-height: 100%;
-      background-color: #0b0f19;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      overflow: hidden;
-      position: relative;
-    }
+  html, body {
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    touch-action: manipulation;
+  }
 
-    #env-measurer {
-      position: absolute;
-      visibility: hidden;
-      pointer-events: none;
-      top: var(--sat);
-      bottom: var(--sab);
-    }
+  /* 中央情報パネル */
+  .info-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(86vw, 380px);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
 
-    /* メインコンテンツ（中央のダッシュボード） */
-    .container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 0 20px;
-      z-index: 1;
-      pointer-events: none;
-    }
+  .info-panel h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
 
-    .dashboard {
-      width: 100%;
-      max-width: 320px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 20px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-      pointer-events: auto;
-    }
+  .log-box {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
 
-    .counter-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-      font-size: 16px;
-      font-weight: 600;
-    }
+  .log-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
 
-    .counter-item {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 10px;
-      border-radius: 8px;
-    }
+  .log-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-active);
+    word-break: break-all;
+  }
 
-    .last-log {
-      font-size: 14px;
-      color: #38bdf8;
-      min-height: 24px;
-      margin-bottom: 16px;
-      word-break: break-all;
-    }
+  .debug-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    text-align: left;
+    margin-bottom: 14px;
+  }
 
-    .btn-reset {
-      background: #dc2626;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
+  .debug-item {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
 
-    .btn-reset:active {
-      opacity: 0.8;
-    }
+  .debug-item.fullwidth {
+    grid-column: 1 / -1;
+  }
 
-    .debug-info {
-      position: absolute;
-      bottom: calc(var(--sab) + 70px);
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      color: #94a3b8;
-      text-align: center;
-      white-space: nowrap;
-      pointer-events: none;
-      z-index: 10;
-    }
+  .debug-key {
+    font-size: 0.7rem;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 2px;
+    letter-spacing: 0.04em;
+  }
 
-    /* 共通検証用ボタン */
-    .test-btn {
-      position: absolute;
-      background-color: rgba(37, 99, 235, 0.85);
-      color: #ffffff;
-      border: 1px solid #60a5fa;
-      font-weight: bold;
-      font-size: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999;
-      touch-action: none;
-      box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
-      transition: background-color 0.05s ease, transform 0.05s ease;
-    }
+  .debug-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
 
-    .test-btn.active {
-      background-color: #22c55e !important;
-      border-color: #86efac !important;
-      transform: scale(0.98);
-    }
+  .reset-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.05s ease;
+  }
 
-    /* 上部ボタン */
-    .btn-top-left {
-      top: 0;
-      left: 0;
-      width: 38%;
-      height: 36px;
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
-    }
+  .reset-btn:active {
+    filter: brightness(1.15);
+    transform: scale(0.98);
+  }
 
-    .btn-top-right {
-      top: 0;
-      right: 0;
-      width: 38%;
-      height: 36px;
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
-    }
+  /* 端ボタン共通 */
+  .edge-btn {
+    position: fixed;
+    width: 44vw;
+    height: 72px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: background 0.08s ease, transform 0.05s ease;
+    z-index: 20;
+    line-height: 1.3;
+  }
 
-    /* 
-      【下部完全密着版】
-      bottom: 0 とし、高さを (セーフエリア下部 + 余白) に指定。
-      iOSのPWA最下端の隙間を完全に埋めるため、マイナスの位置調整やパディングの見直しを実施。
-    */
-    .btn-bottom-left {
-      bottom: -1px; /* わずかなブラウザの隙間を相殺するオーバーレイ */
-      left: 0;
-      width: 38%;
-      height: calc(var(--sab) + 24px);
-      padding-bottom: var(--sab); /* ホームバー領域の下まで完全に覆う */
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-      align-items: flex-start;
-      padding-top: 6px;
-    }
+  .edge-btn:active,
+  .edge-btn.active {
+    background: var(--accent-active);
+    transform: scale(0.98);
+  }
 
-    .btn-bottom-right {
-      bottom: -1px;
-      right: 0;
-      width: 38%;
-      height: calc(var(--sab) + 24px);
-      padding-bottom: var(--sab);
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-      align-items: flex-start;
-      padding-top: 6px;
-    }
+  .edge-btn .label {
+    font-size: 0.8rem;
+    opacity: 0.95;
+    letter-spacing: 0.02em;
+  }
 
-    /* ホームバー領域の視覚的ガイド線 */
-    .home-bar-indicator {
-      position: absolute;
-      bottom: 6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 134px;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 3px;
-      pointer-events: none;
-      z-index: 9999;
-    }
-  </style>
+  .edge-btn .count {
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 上端ボタン */
+  .btn-top-left {
+    top: 0;
+    left: 0;
+    border-bottom-right-radius: 14px;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(72px + env(safe-area-inset-top, 0px));
+  }
+
+  .btn-top-right {
+    top: 0;
+    right: 0;
+    border-bottom-left-radius: 14px;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(72px + env(safe-area-inset-top, 0px));
+  }
+
+  /* 下端ボタン */
+  .btn-bottom-left {
+    bottom: 0;
+    left: 0;
+    border-top-right-radius: 14px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .btn-bottom-right {
+    bottom: 0;
+    right: 0;
+    border-top-left-radius: 14px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 端マーカー（視覚的に端を強調） */
+  .corner-marker {
+    position: fixed;
+    width: 14px;
+    height: 14px;
+    z-index: 25;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .corner-marker::before,
+  .corner-marker::after {
+    content: "";
+    position: absolute;
+    background: var(--success);
+  }
+
+  .marker-tl { top: 0; left: 0; }
+  .marker-tl::before { top: 0; left: 0; width: 100%; height: 2px; }
+  .marker-tl::after { top: 0; left: 0; width: 2px; height: 100%; }
+
+  .marker-tr { top: 0; right: 0; }
+  .marker-tr::before { top: 0; right: 0; width: 100%; height: 2px; }
+  .marker-tr::after { top: 0; right: 0; width: 2px; height: 100%; }
+
+  .marker-bl { bottom: 0; left: 0; }
+  .marker-bl::before { bottom: 0; left: 0; width: 100%; height: 2px; }
+  .marker-bl::after { bottom: 0; left: 0; width: 2px; height: 100%; }
+
+  .marker-br { bottom: 0; right: 0; }
+  .marker-br::before { bottom: 0; right: 0; width: 100%; height: 2px; }
+  .marker-br::after { bottom: 0; right: 0; width: 2px; height: 100%; }
+
+  /* 薄いイドライン */
+  .guide-line {
+    position: fixed;
+    background: var(--line);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .guide-h-top {
+    top: calc(72px + env(safe-area-inset-top, 0px));
+    left: 0; right: 0;
+    height: 1px;
+  }
+
+  .guide-h-bottom {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    left: 0; right: 0;
+    height: 1px;
+  }
+
+  .guide-v-center {
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+  }
+</style>
 </head>
 <body>
 
-  <div id="env-measurer"></div>
-  <div class="home-bar-indicator"></div>
+  <!-- 端マーカー -->
+  <div class="corner-marker marker-tl"></div>
+  <div class="corner-marker marker-tr"></div>
+  <div class="corner-marker marker-bl"></div>
+  <div class="corner-marker marker-br"></div>
 
-  <div class="container">
-    <div class="dashboard">
-      <div class="counter-grid">
-        <div class="counter-item">上左：<span id="count-tl">0</span></div>
-        <div class="counter-item">上右：<span id="count-tr">0</span></div>
-        <div class="counter-item">下左：<span id="count-bl">0</span></div>
-        <div class="counter-item">下右：<span id="count-br">0</span></div>
-      </div>
-      <div class="last-log" id="last-log">最後に反応した場所：なし</div>
-      <button class="btn-reset" id="reset-btn">カウントリセット</button>
+  <!-- ガイドライン -->
+  <div class="guide-line guide-h-top"></div>
+  <div class="guide-line guide-h-bottom"></div>
+  <div class="guide-line guide-v-center"></div>
+
+  <!-- 中央情報パネル -->
+  <div class="info-panel">
+    <h1>端タッチ検証</h1>
+
+    <div class="log-box">
+      <span class="log-label">最後の反応</span>
+      <span class="log-value" id="lastLog">—</span>
     </div>
+
+    <div class="debug-grid">
+      <div class="debug-item fullwidth">
+        <span class="debug-key">Viewport (px)</span>
+        <span class="debug-val" id="vpSize">—</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-key">safe-area-inset-top</span>
+        <span class="debug-val" id="insetTop">—</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-key">safe-area-inset-bottom</span>
+        <span class="debug-val" id="insetBottom">—</span>
+      </div>
+      <div class="debug-item fullwidth">
+        <span class="debug-key">devicePixelRatio</span>
+        <span class="debug-val" id="dpr">—</span>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn" type="button">カウントリセット</button>
   </div>
 
-  <div class="debug-info" id="debug-info">計測中...</div>
+  <!-- 上左 -->
+  <button class="edge-btn btn-top-left" id="btnTL" type="button">
+    <span class="label">上左</span>
+    <span class="count" id="countTL">0</span>
+  </button>
 
-  <!-- 検証ターゲットボタン -->
-  <button id="btn-tl" class="test-btn btn-top-left">上左</button>
-  <button id="btn-tr" class="test-btn btn-top-right">上右</button>
-  <button id="btn-bl" class="test-btn btn-bottom-left">下左</button>
-  <button id="btn-br" class="test-btn btn-bottom-right">下右</button>
+  <!-- 上右 -->
+  <button class="edge-btn btn-top-right" id="btnTR" type="button">
+    <span class="label">上右</span>
+    <span class="count" id="countTR">0</span>
+  </button>
 
-  <script>
-    (function () {
-      const counts = { tl: 0, tr: 0, bl: 0, br: 0 };
-      const labels = { tl: '上左', tr: '上右', bl: '下左', br: '下右' };
+  <!-- 下左 -->
+  <button class="edge-btn btn-bottom-left" id="btnBL" type="button">
+    <span class="label">下左</span>
+    <span class="count" id="countBL">0</span>
+  </button>
 
-      const countElements = {
-        tl: document.getElementById('count-tl'),
-        tr: document.getElementById('count-tr'),
-        bl: document.getElementById('count-bl'),
-        br: document.getElementById('count-br')
-      };
+  <!-- 下右 -->
+  <button class="edge-btn btn-bottom-right" id="btnBR" type="button">
+    <span class="label">下右</span>
+    <span class="count" id="countBR">0</span>
+  </button>
 
-      const buttons = {
-        tl: document.getElementById('btn-tl'),
-        tr: document.getElementById('btn-tr'),
-        bl: document.getElementById('btn-bl'),
-        br: document.getElementById('btn-br')
-      };
+<script>
+(function() {
+  "use strict";
 
-      const lastLog = document.getElementById('last-log');
-      const resetBtn = document.getElementById('reset-btn');
-      const debugInfo = document.getElementById('debug-info');
-      const envMeasurer = document.getElementById('env-measurer');
+  const counts = {
+    TL: 0,
+    TR: 0,
+    BL: 0,
+    BR: 0
+  };
 
-      function handleTouch(key, e) {
-        if (e.cancelable) e.preventDefault();
-        e.stopPropagation();
+  const labels = {
+    TL: "上左",
+    TR: "上右",
+    BL: "下左",
+    BR: "下右"
+  };
 
-        counts[key]++;
-        countElements[key].textContent = counts[key];
+  const els = {
+    TL: document.getElementById("btnTL"),
+    TR: document.getElementById("btnTR"),
+    BL: document.getElementById("btnBL"),
+    BR: document.getElementById("btnBR"),
+    countTL: document.getElementById("countTL"),
+    countTR: document.getElementById("countTR"),
+    countBL: document.getElementById("countBL"),
+    countBR: document.getElementById("countBR"),
+    lastLog: document.getElementById("lastLog"),
+    vpSize: document.getElementById("vpSize"),
+    insetTop: document.getElementById("insetTop"),
+    insetBottom: document.getElementById("insetBottom"),
+    dpr: document.getElementById("dpr"),
+    resetBtn: document.getElementById("resetBtn")
+  };
 
-        const now = new Date();
-        const timeStr = now.toTimeString().split(' ')[0];
-        lastLog.textContent = `最後に反応した場所：${labels[key]}（${timeStr}）`;
+  function vibrate() {
+    if (navigator.vibrate) {
+      navigator.vibrate(12);
+    }
+  }
 
-        const btn = buttons[key];
-        btn.classList.add('active');
-        setTimeout(() => btn.classList.remove('active'), 150);
+  function updateDebug() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    els.vpSize.textContent = w + " x " + h;
+    els.dpr.textContent = window.devicePixelRatio || 1;
 
-        if (navigator.vibrate) {
-          try { navigator.vibrate(40); } catch (err) {}
-        }
-      }
+    const style = getComputedStyle(document.documentElement);
+    const topVal = style.getPropertyValue("--sat") || env("safe-area-inset-top");
+    const botVal = style.getPropertyValue("--sab") || env("safe-area-inset-bottom");
 
-      Object.keys(buttons).forEach(key => {
-        const btn = buttons[key];
-        btn.addEventListener('touchstart', (e) => handleTouch(key, e), { passive: false });
-        btn.addEventListener('click', (e) => { e.stopPropagation(); });
-      });
+    // env() は getPropertyValue では読めないため、要素に当てて測る
+    const probe = document.createElement("div");
+    probe.style.position = "fixed";
+    probe.style.left = "0";
+    probe.style.top = "0";
+    probe.style.paddingTop = "env(safe-area-inset-top)";
+    probe.style.paddingBottom = "env(safe-area-inset-bottom)";
+    probe.style.visibility = "hidden";
+    document.body.appendChild(probe);
+    const computed = getComputedStyle(probe);
+    els.insetTop.textContent = computed.paddingTop;
+    els.insetBottom.textContent = computed.paddingBottom;
+    document.body.removeChild(probe);
+  }
 
-      resetBtn.addEventListener('touchstart', (e) => {
-        if (e.cancelable) e.preventDefault();
-        resetCounts();
+  function log(key) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("ja-JP", { hour12: false }) + "." + String(now.getMilliseconds()).padStart(3, "0");
+    els.lastLog.textContent = labels[key] + " （" + timeStr + "）";
+  }
+
+  function flash(btn) {
+    btn.classList.add("active");
+    setTimeout(() => btn.classList.remove("active"), 120);
+  }
+
+  function handleTap(key) {
+    counts[key]++;
+    document.getElementById("count" + key).textContent = counts[key];
+    log(key);
+    vibrate();
+    flash(els[key]);
+  }
+
+  Object.keys(els).forEach(key => {
+    if (["TL","TR","BL","BR"].includes(key)) {
+      const btn = els[key];
+      // touchstart を優先、click はフォールバック
+      btn.addEventListener("touchstart", function(e) {
+        e.preventDefault();
+        handleTap(key);
       }, { passive: false });
-      resetBtn.addEventListener('click', resetCounts);
+      btn.addEventListener("click", function() {
+        handleTap(key);
+      });
+    }
+  });
 
-      function resetCounts() {
-        Object.keys(counts).forEach(key => {
-          counts[key] = 0;
-          countElements[key].textContent = '0';
-        });
-        lastLog.textContent = '最後に反応した場所：なし';
-      }
+  els.resetBtn.addEventListener("click", function() {
+    Object.keys(counts).forEach(k => counts[k] = 0);
+    els.countTL.textContent = "0";
+    els.countTR.textContent = "0";
+    els.countBL.textContent = "0";
+    els.countBR.textContent = "0";
+    els.lastLog.textContent = "—";
+    vibrate();
+  });
 
-      function updateMetrics() {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const computedStyle = window.getComputedStyle(envMeasurer);
-        const sat = computedStyle.top;
-        const sab = computedStyle.bottom;
-        debugInfo.innerHTML = `Viewport: ${vw} x ${vh}<br>safe-area-top: ${sat} / bottom: ${sab}`;
-      }
-
-      window.addEventListener('resize', updateMetrics);
-      window.addEventListener('orientationchange', updateMetrics);
-      document.addEventListener('DOMContentLoaded', updateMetrics);
-      setTimeout(updateMetrics, 300);
-    })();
-  </script>
+  window.addEventListener("resize", updateDebug);
+  window.addEventListener("orientationchange", updateDebug);
+  updateDebug();
+})();
+</script>
 </body>
 </html>
