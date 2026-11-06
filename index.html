@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>画面端タッチ限界検証</title>
+  <title>画面端タッチ限界検証 - 下部完全密着版</title>
   <style>
     :root {
       --sat: env(safe-area-inset-top, 0px);
@@ -59,7 +59,7 @@
       align-items: center;
       padding: 0 20px;
       z-index: 1;
-      pointer-events: none; /* 中央部分はボタン操作の邪魔にならないようにする */
+      pointer-events: none;
     }
 
     .dashboard {
@@ -115,7 +115,7 @@
 
     .debug-info {
       position: absolute;
-      bottom: calc(var(--sab) + 60px);
+      bottom: calc(var(--sab) + 70px);
       left: 50%;
       transform: translateX(-50%);
       font-size: 11px;
@@ -126,7 +126,7 @@
       z-index: 10;
     }
 
-    /* 共通検証用ボタン：画面極限配置 */
+    /* 共通検証用ボタン */
     .test-btn {
       position: absolute;
       background-color: rgba(37, 99, 235, 0.85);
@@ -149,16 +149,12 @@
       transform: scale(0.98);
     }
 
-    /* 
-      【上部ボタン】画面絶対上端（top: 0）から配置。
-      ダイナミックアイランドの左右の隙間を埋めるように横幅を広くし、上端限界までのタッチ判定を検証。
-    */
+    /* 上部ボタン（検証用として残す） */
     .btn-top-left {
       top: 0;
       left: 0;
-      width: 38%; /* 画面中央のダイナミックアイランドを避けて左右に配置 */
-      height: calc(var(--sat) + 10px); /* ステータスバー・ダイナミックアイランドの高さ包含領域までカバー */
-      padding-top: var(--sat);
+      width: 38%;
+      height: 36px;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
     }
@@ -167,34 +163,38 @@
       top: 0;
       right: 0;
       width: 38%;
-      height: calc(var(--sat) + 10px);
-      padding-top: var(--sat);
+      height: 36px;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
     }
 
     /* 
-      【下部ボタン】画面絶対下端（bottom: 0）に密着。
-      ホームバーの左右を挟み込むように配置し、下端限界のタッチ反応を検証。
+      【下部完全密着ボタン】
+      bottom: 0 とし、下方向の余白（padding-bottom）を一切排すことで、
+      画面の最底辺ギリギリまでボタンを拡張。余白ゼロで最下端のタッチ反応を確認。
     */
     .btn-bottom-left {
       bottom: 0;
       left: 0;
       width: 38%;
-      height: calc(var(--sab) + 24px);
-      padding-bottom: var(--sab);
+      height: calc(var(--sab) + 20px);
+      padding-bottom: 0; /* 余白を完全に排除して最下端に密着 */
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
+      align-items: flex-start; /* 文字を少し上側に寄せて見やすくする */
+      padding-top: 6px;
     }
 
     .btn-bottom-right {
       bottom: 0;
       right: 0;
       width: 38%;
-      height: calc(var(--sab) + 24px);
-      padding-bottom: var(--sab);
+      height: calc(var(--sab) + 20px);
+      padding-bottom: 0; /* 余白を完全に排除して最下端に密着 */
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
+      align-items: flex-start;
+      padding-top: 6px;
     }
 
     /* ホームバー領域の視覚的ガイド線 */
@@ -232,7 +232,7 @@
 
   <div class="debug-info" id="debug-info">計測中...</div>
 
-  <!-- 検証ターゲットボタン（画面端限界配置） -->
+  <!-- 検証ターゲットボタン -->
   <button id="btn-tl" class="test-btn btn-top-left">上左</button>
   <button id="btn-tr" class="test-btn btn-top-right">上右</button>
   <button id="btn-bl" class="test-btn btn-bottom-left">下左</button>
