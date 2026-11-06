@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>画面端タッチ検証</title>
+  <title>画面端タッチ検証 - 修正版</title>
   <style>
     :root {
       --sat: env(safe-area-inset-top, 0px);
@@ -38,18 +38,15 @@
       bottom: 0;
     }
 
-    /* CSS env() 計測用非表示要素 */
     #env-measurer {
       position: absolute;
       visibility: hidden;
       pointer-events: none;
       top: var(--sat);
       bottom: var(--sab);
-      left: var(--sal);
-      right: var(--sar);
     }
 
-    /* メインコンテナ */
+    /* メインコンテンツ（中央のダッシュボード） */
     .container {
       position: absolute;
       top: 0;
@@ -64,7 +61,6 @@
       z-index: 1;
     }
 
-    /* 中央ステータス/ログ表示パネル */
     .dashboard {
       width: 100%;
       max-width: 320px;
@@ -115,10 +111,9 @@
       opacity: 0.8;
     }
 
-    /* セーフエリア情報表示 */
     .debug-info {
       position: absolute;
-      bottom: calc(var(--sab) + 12px);
+      bottom: calc(var(--sab) + 52px);
       left: 50%;
       transform: translateX(-50%);
       font-size: 11px;
@@ -140,7 +135,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 8px;
+      border-radius: 6px;
       z-index: 99999;
       touch-action: none;
       box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
@@ -153,39 +148,47 @@
       transform: scale(0.95);
     }
 
-    /* --- 上部ボタン配置（Dynamic Island 左右） --- */
-    /* iPhone 17 ProのDynamic Island高さ・位置に基づき標準セーフエリア直下にピッタリ配置 */
+    /* 
+      【上部ボタン】ダイナミックアイランドの左右に密着させる配置
+      Dynamic Islandは画面上部中央に位置し、一般的なProモデルでは幅約126px〜130px程度。
+      セーフエリア内（上端）に沿わせつつ、中央からオフセットしてダイナミックアイランドのすぐ脇に配置。
+    */
     .btn-top-left {
       top: calc(var(--sat) + 2px);
-      left: 8px;
-      width: 72px;
-      height: 34px;
+      /* 画面中央から左方向へ：ダイナミックアイランド半幅(約63px) + 隙間数px の位置を起点にする */
+      left: calc(50% - 130px);
+      width: 60px;
+      height: 32px;
     }
 
     .btn-top-right {
       top: calc(var(--sat) + 2px);
-      right: 8px;
-      width: 72px;
-      height: 34px;
+      /* 画面中央から右方向へ配置 */
+      left: calc(50% + 70px);
+      width: 60px;
+      height: 32px;
     }
 
-    /* --- 下部ボタン配置（ホームバー左右・画面下端限界） --- */
-    /* 下端との余白をほぼゼロにし、ホームバー横の画面端最深部に極小化 */
+    /* 
+      【下部ボタン】ホームバーの左右に密着させる配置
+      ホームバーは画面下部中央に位置し、幅約134px程度。
+      下端との余白をゼロにし、ホームバーのすぐ横に配置。
+    */
     .btn-bottom-left {
       bottom: 2px;
-      left: 6px;
-      width: 90px;
+      left: calc(50% - 138px);
+      width: 64px;
       height: 34px;
     }
 
     .btn-bottom-right {
       bottom: 2px;
-      right: 6px;
-      width: 90px;
+      left: calc(50% + 74px);
+      width: 64px;
       height: 34px;
     }
 
-    /* ホームバー領域の視覚的ガイド線（位置確認用） */
+    /* ホームバー領域の視覚的ガイド線 */
     .home-bar-indicator {
       position: absolute;
       bottom: 8px;
@@ -202,13 +205,9 @@
 </head>
 <body>
 
-  <!-- CSS env() 値取得用隠し要素 -->
   <div id="env-measurer"></div>
-
-  <!-- ホームバー横の位置ガイド（タッチ判定に影響しない補助ライン） -->
   <div class="home-bar-indicator"></div>
 
-  <!-- メイン操作画面 -->
   <div class="container">
     <div class="dashboard">
       <div class="counter-grid">
@@ -222,10 +221,7 @@
     </div>
   </div>
 
-  <!-- セーフエリア・画面寸法デバッグ表示 -->
-  <div class="debug-info" id="debug-info">
-    計測中...
-  </div>
+  <div class="debug-info" id="debug-info">計測中...</div>
 
   <!-- 検証ターゲットボタン -->
   <button id="btn-tl" class="test-btn btn-top-left">上左</button>
@@ -235,22 +231,9 @@
 
   <script>
     (function () {
-      // 状態管理
-      const counts = {
-        tl: 0,
-        tr: 0,
-        bl: 0,
-        br: 0
-      };
+      const counts = { tl: 0, tr: 0, bl: 0, br: 0 };
+      const labels = { tl: '上左', tr: '上右', bl: '下左', br: '下右' };
 
-      const labels = {
-        tl: '上左',
-        tr: '上右',
-        bl: '下左',
-        br: '下右'
-      };
-
-      // 要素参照
       const countElements = {
         tl: document.getElementById('count-tl'),
         tr: document.getElementById('count-tr'),
@@ -270,12 +253,8 @@
       const debugInfo = document.getElementById('debug-info');
       const envMeasurer = document.getElementById('env-measurer');
 
-      // タッチ処理のロジック
       function handleTouch(key, e) {
-        // イベント重複防止・ジェスチャー割り込み対策
-        if (e.cancelable) {
-          e.preventDefault();
-        }
+        if (e.cancelable) e.preventDefault();
         e.stopPropagation();
 
         counts[key]++;
@@ -285,38 +264,25 @@
         const timeStr = now.toTimeString().split(' ')[0];
         lastLog.textContent = `最後に反応した場所：${labels[key]}（${timeStr}）`;
 
-        // 視覚的フィードバック
         const btn = buttons[key];
         btn.classList.add('active');
-        setTimeout(() => {
-          btn.classList.remove('active');
-        }, 150);
+        setTimeout(() => btn.classList.remove('active'), 150);
 
-        // 触覚フィードバック（バイブレーション対応の場合）
         if (navigator.vibrate) {
-          try {
-            navigator.vibrate(40);
-          } catch (err) {}
+          try { navigator.vibrate(40); } catch (err) {}
         }
       }
 
-      // イベントリスナーの付加（touchstart と mousedown の双方に対応）
       Object.keys(buttons).forEach(key => {
         const btn = buttons[key];
-        
         btn.addEventListener('touchstart', (e) => handleTouch(key, e), { passive: false });
-        btn.addEventListener('click', (e) => {
-          // pointer events / click フォールバック
-          e.stopPropagation();
-        });
+        btn.addEventListener('click', (e) => { e.stopPropagation(); });
       });
 
-      // リセット処理
       resetBtn.addEventListener('touchstart', (e) => {
         if (e.cancelable) e.preventDefault();
         resetCounts();
       }, { passive: false });
-
       resetBtn.addEventListener('click', resetCounts);
 
       function resetCounts() {
@@ -327,24 +293,19 @@
         lastLog.textContent = '最後に反応した場所：なし';
       }
 
-      // 画面寸法および CSS env() の計測・更新処理
       function updateMetrics() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-
-        // 計算済みスタイルから safe-area-inset の値を取得
         const computedStyle = window.getComputedStyle(envMeasurer);
         const sat = computedStyle.top;
         const sab = computedStyle.bottom;
-
         debugInfo.innerHTML = `Viewport: ${vw} x ${vh}<br>safe-area-top: ${sat} / bottom: ${sab}`;
       }
 
-      // 初期化およびリサイズ時イベント処理
       window.addEventListener('resize', updateMetrics);
       window.addEventListener('orientationchange', updateMetrics);
       document.addEventListener('DOMContentLoaded', updateMetrics);
-      setTimeout(updateMetrics, 300); // PWA起動直後の表示遅延対策
+      setTimeout(updateMetrics, 300);
     })();
   </script>
 </body>
