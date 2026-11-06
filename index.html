@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>画面端タッチ検証 - 修正版</title>
+  <title>画面端タッチ限界検証</title>
   <style>
     :root {
       --sat: env(safe-area-inset-top, 0px);
@@ -59,6 +59,7 @@
       align-items: center;
       padding: 0 20px;
       z-index: 1;
+      pointer-events: none; /* 中央部分はボタン操作の邪魔にならないようにする */
     }
 
     .dashboard {
@@ -70,6 +71,7 @@
       padding: 20px;
       text-align: center;
       backdrop-filter: blur(10px);
+      pointer-events: auto;
     }
 
     .counter-grid {
@@ -113,7 +115,7 @@
 
     .debug-info {
       position: absolute;
-      bottom: calc(var(--sab) + 52px);
+      bottom: calc(var(--sab) + 60px);
       left: 50%;
       transform: translateX(-50%);
       font-size: 11px;
@@ -124,79 +126,86 @@
       z-index: 10;
     }
 
-    /* 共通検証用ボタン */
+    /* 共通検証用ボタン：画面極限配置 */
     .test-btn {
       position: absolute;
-      background-color: #2563eb;
+      background-color: rgba(37, 99, 235, 0.85);
       color: #ffffff;
       border: 1px solid #60a5fa;
       font-weight: bold;
-      font-size: 13px;
+      font-size: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 6px;
       z-index: 99999;
       touch-action: none;
-      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
       transition: background-color 0.05s ease, transform 0.05s ease;
     }
 
     .test-btn.active {
       background-color: #22c55e !important;
       border-color: #86efac !important;
-      transform: scale(0.95);
+      transform: scale(0.98);
     }
 
     /* 
-      【上部ボタン】ダイナミックアイランドの左右に密着させる配置
-      Dynamic Islandは画面上部中央に位置し、一般的なProモデルでは幅約126px〜130px程度。
-      セーフエリア内（上端）に沿わせつつ、中央からオフセットしてダイナミックアイランドのすぐ脇に配置。
+      【上部ボタン】画面絶対上端（top: 0）から配置。
+      ダイナミックアイランドの左右の隙間を埋めるように横幅を広くし、上端限界までのタッチ判定を検証。
     */
     .btn-top-left {
-      top: calc(var(--sat) + 2px);
-      /* 画面中央から左方向へ：ダイナミックアイランド半幅(約63px) + 隙間数px の位置を起点にする */
-      left: calc(50% - 130px);
-      width: 60px;
-      height: 32px;
+      top: 0;
+      left: 0;
+      width: 38%; /* 画面中央のダイナミックアイランドを避けて左右に配置 */
+      height: calc(var(--sat) + 10px); /* ステータスバー・ダイナミックアイランドの高さ包含領域までカバー */
+      padding-top: var(--sat);
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
     }
 
     .btn-top-right {
-      top: calc(var(--sat) + 2px);
-      /* 画面中央から右方向へ配置 */
-      left: calc(50% + 70px);
-      width: 60px;
-      height: 32px;
+      top: 0;
+      right: 0;
+      width: 38%;
+      height: calc(var(--sat) + 10px);
+      padding-top: var(--sat);
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
     }
 
     /* 
-      【下部ボタン】ホームバーの左右に密着させる配置
-      ホームバーは画面下部中央に位置し、幅約134px程度。
-      下端との余白をゼロにし、ホームバーのすぐ横に配置。
+      【下部ボタン】画面絶対下端（bottom: 0）に密着。
+      ホームバーの左右を挟み込むように配置し、下端限界のタッチ反応を検証。
     */
     .btn-bottom-left {
-      bottom: 2px;
-      left: calc(50% - 138px);
-      width: 64px;
-      height: 34px;
+      bottom: 0;
+      left: 0;
+      width: 38%;
+      height: calc(var(--sab) + 24px);
+      padding-bottom: var(--sab);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
     .btn-bottom-right {
-      bottom: 2px;
-      left: calc(50% + 74px);
-      width: 64px;
-      height: 34px;
+      bottom: 0;
+      right: 0;
+      width: 38%;
+      height: calc(var(--sab) + 24px);
+      padding-bottom: var(--sab);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
     /* ホームバー領域の視覚的ガイド線 */
     .home-bar-indicator {
       position: absolute;
-      bottom: 8px;
+      bottom: 6px;
       left: 50%;
       transform: translateX(-50%);
       width: 134px;
       height: 5px;
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.3);
       border-radius: 3px;
       pointer-events: none;
       z-index: 2;
@@ -223,7 +232,7 @@
 
   <div class="debug-info" id="debug-info">計測中...</div>
 
-  <!-- 検証ターゲットボタン -->
+  <!-- 検証ターゲットボタン（画面端限界配置） -->
   <button id="btn-tl" class="test-btn btn-top-left">上左</button>
   <button id="btn-tr" class="test-btn btn-top-right">上右</button>
   <button id="btn-bl" class="test-btn btn-bottom-left">下左</button>
