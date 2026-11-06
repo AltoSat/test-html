@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>画面端タッチ限界検証 - 下部完全密着版</title>
+  <title>画面端タッチ限界検証 - 下端完全密着修正版</title>
   <style>
     :root {
       --sat: env(safe-area-inset-top, 0px);
-      --sab: env(safe-area-inset-bottom, 0px);
-      --sal: env(safe-area-inset-left, 0px);
-      --sar: env(safe-area-inset-right, 0px);
+      --sab: env(safe-area-inset-bottom, 34px);
     }
 
     * {
@@ -24,18 +22,15 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* 画面全体を隙間なく黒背景で満たす */
     html, body {
       width: 100%;
-      height: 100dvh;
-      overflow: hidden;
+      min-height: 100%;
       background-color: #0b0f19;
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      overflow: hidden;
+      position: relative;
     }
 
     #env-measurer {
@@ -149,7 +144,7 @@
       transform: scale(0.98);
     }
 
-    /* 上部ボタン（検証用として残す） */
+    /* 上部ボタン */
     .btn-top-left {
       top: 0;
       left: 0;
@@ -169,28 +164,28 @@
     }
 
     /* 
-      【下部完全密着ボタン】
-      bottom: 0 とし、下方向の余白（padding-bottom）を一切排すことで、
-      画面の最底辺ギリギリまでボタンを拡張。余白ゼロで最下端のタッチ反応を確認。
+      【下部完全密着版】
+      bottom: 0 とし、高さを (セーフエリア下部 + 余白) に指定。
+      iOSのPWA最下端の隙間を完全に埋めるため、マイナスの位置調整やパディングの見直しを実施。
     */
     .btn-bottom-left {
-      bottom: 0;
+      bottom: -1px; /* わずかなブラウザの隙間を相殺するオーバーレイ */
       left: 0;
       width: 38%;
-      height: calc(var(--sab) + 20px);
-      padding-bottom: 0; /* 余白を完全に排除して最下端に密着 */
+      height: calc(var(--sab) + 24px);
+      padding-bottom: var(--sab); /* ホームバー領域の下まで完全に覆う */
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
-      align-items: flex-start; /* 文字を少し上側に寄せて見やすくする */
+      align-items: flex-start;
       padding-top: 6px;
     }
 
     .btn-bottom-right {
-      bottom: 0;
+      bottom: -1px;
       right: 0;
       width: 38%;
-      height: calc(var(--sab) + 20px);
-      padding-bottom: 0; /* 余白を完全に排除して最下端に密着 */
+      height: calc(var(--sab) + 24px);
+      padding-bottom: var(--sab);
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
       align-items: flex-start;
@@ -208,7 +203,7 @@
       background: rgba(255, 255, 255, 0.3);
       border-radius: 3px;
       pointer-events: none;
-      z-index: 2;
+      z-index: 9999;
     }
   </style>
 </head>
