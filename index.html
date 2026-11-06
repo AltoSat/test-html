@@ -1,98 +1,351 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#10141c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>セーフエリア タッチテスト</title>
-<style>
-:root { color-scheme: dark; }
-* { box-sizing: border-box; }
-html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#10141c; color:#f4f6fa;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-body { min-height:100%; }
-#app { position:fixed; inset:0; overflow:hidden; background:
-  radial-gradient(ellipse at 50% 15%,#202b3b 0%,#10141c 55%); }
-.info { position:absolute; left:18px; right:18px; top:calc(env(safe-area-inset-top) + 66px);
-  text-align:center; }
-h1 { font-size:19px; margin:0 0 8px; }
-p { color:#aeb9c9; font-size:13px; line-height:1.6; margin:0; }
-.status { margin:22px auto 0; padding:14px; max-width:340px; border:1px solid #354257;
-  border-radius:14px; background:#182130; text-align:left; }
-.status strong { color:#7dd3fc; }
-#last { min-height:24px; margin-top:8px; color:#facc15; overflow-wrap:anywhere; }
-#counts { font-variant-numeric:tabular-nums; margin-top:8px; }
-.test-btn { position:absolute; z-index:5; width:72px; height:42px; padding:0 4px;
-  border:1px solid #8ba8ce; border-radius:12px; background:#263b57; color:white;
-  font-size:12px; font-weight:700; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
-  display:flex; align-items:center; justify-content:center; user-select:none; }
-.test-btn:active { background:#087eaa; transform:scale(.94); }
-.top-left { top:12px; left:calc(50% - 150px); }
-.top-right { top:12px; left:calc(50% + 78px); }
-.bottom-left { bottom:calc(env(safe-area-inset-bottom) - 28px); left:calc(50% - 150px); }
-.bottom-right { bottom:calc(env(safe-area-inset-bottom) - 28px); left:calc(50% + 78px); }
-.reset { display:block; margin:12px auto 0; padding:9px 18px; border:1px solid #53647b;
-  border-radius:10px; color:#e8eef8; background:#263244; font-size:13px; }
-.measure { position:absolute; left:12px; right:12px; bottom:calc(env(safe-area-inset-bottom) + 52px);
-  color:#7f8da2; font-size:10px; text-align:center; pointer-events:none; }
-@media (max-width:350px) {
-  .test-btn { width:62px; }
-  .top-left,.bottom-left { left:calc(50% - 137px); }
-  .top-right,.bottom-right { left:calc(50% + 75px); }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>画面端タッチ検証</title>
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: #0b0f19;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    /* CSS env() 計測用非表示要素 */
+    #env-measurer {
+      position: absolute;
+      visibility: hidden;
+      pointer-events: none;
+      top: var(--sat);
+      bottom: var(--sab);
+      left: var(--sal);
+      right: var(--sar);
+    }
+
+    /* メインコンテナ */
+    .container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1;
+    }
+
+    /* 中央ステータス/ログ表示パネル */
+    .dashboard {
+      width: 100%;
+      max-width: 320px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .counter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .counter-item {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .last-log {
+      font-size: 14px;
+      color: #38bdf8;
+      min-height: 24px;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+
+    .btn-reset {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .btn-reset:active {
+      opacity: 0.8;
+    }
+
+    /* セーフエリア情報表示 */
+    .debug-info {
+      position: absolute;
+      bottom: calc(var(--sab) + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* 共通検証用ボタン */
+    .test-btn {
+      position: absolute;
+      background-color: #2563eb;
+      color: #ffffff;
+      border: 1px solid #60a5fa;
+      font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      z-index: 99999;
+      touch-action: none;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+      transition: background-color 0.05s ease, transform 0.05s ease;
+    }
+
+    .test-btn.active {
+      background-color: #22c55e !important;
+      border-color: #86efac !important;
+      transform: scale(0.95);
+    }
+
+    /* --- 上部ボタン配置（Dynamic Island 左右） --- */
+    /* iPhone 17 ProのDynamic Island高さ・位置に基づき標準セーフエリア直下にピッタリ配置 */
+    .btn-top-left {
+      top: calc(var(--sat) + 2px);
+      left: 8px;
+      width: 72px;
+      height: 34px;
+    }
+
+    .btn-top-right {
+      top: calc(var(--sat) + 2px);
+      right: 8px;
+      width: 72px;
+      height: 34px;
+    }
+
+    /* --- 下部ボタン配置（ホームバー左右・画面下端限界） --- */
+    /* 下端との余白をほぼゼロにし、ホームバー横の画面端最深部に極小化 */
+    .btn-bottom-left {
+      bottom: 2px;
+      left: 6px;
+      width: 90px;
+      height: 34px;
+    }
+
+    .btn-bottom-right {
+      bottom: 2px;
+      right: 6px;
+      width: 90px;
+      height: 34px;
+    }
+
+    /* ホームバー領域の視覚的ガイド線（位置確認用） */
+    .home-bar-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 2;
+    }
+  </style>
 </head>
 <body>
-<div id="app">
-  <button class="test-btn top-left" data-name="島・左">上 左</button>
-  <button class="test-btn top-right" data-name="島・右">上 右</button>
-  <button class="test-btn bottom-left" data-name="バー・左">下 左</button>
-  <button class="test-btn bottom-right" data-name="バー・右">下 右</button>
 
-  <main class="info">
-    <h1>タッチ反応テスト</h1>
-    <p>上の2個はDynamic Islandの左右、<br>下の2個はホームバーの左右を想定したボタンです。<br>それぞれタップして反応を確認してください。</p>
-    <section class="status" aria-live="polite">
-      <div>最後に反応した場所：<strong id="last">まだタップされていません</strong></div>
-      <div id="counts">上左 0　上右 0　下左 0　下右 0</div>
-      <button class="reset" id="reset">カウントをリセット</button>
-    </section>
-  </main>
-  <div class="measure" id="measure"></div>
-</div>
-<script>
-(() => {
-  const counts = {"島・左":0,"島・右":0,"バー・左":0,"バー・右":0};
-  const labels = {"島・左":"上左","島・右":"上右","バー・左":"下左","バー・右":"下右"};
-  const last = document.getElementById("last");
-  const countView = document.getElementById("counts");
-  function render() {
-    countView.textContent = Object.keys(counts).map(k => `${labels[k]} ${counts[k]}`).join("　");
-  }
-  document.querySelectorAll(".test-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const name = btn.dataset.name;
-      counts[name]++;
-      last.textContent = `${name}：反応しました（${new Date().toLocaleTimeString("ja-JP")}）`;
-      render();
-      if (navigator.vibrate) navigator.vibrate(20);
-    });
-  });
-  document.getElementById("reset").addEventListener("click", () => {
-    Object.keys(counts).forEach(k => counts[k]=0);
-    last.textContent = "リセットしました";
-    render();
-  });
-  const measure = document.getElementById("measure");
-  function updateMeasure() {
-    const s = getComputedStyle(document.documentElement);
-    measure.textContent = `画面 ${innerWidth}×${innerHeight}px ／ safe-area 上:${s.getPropertyValue("--sat") || "env"} 下:${s.getPropertyValue("--sab") || "env"}`;
-  }
-  updateMeasure();
-  addEventListener("resize", updateMeasure);
-})();
-</script>
+  <!-- CSS env() 値取得用隠し要素 -->
+  <div id="env-measurer"></div>
+
+  <!-- ホームバー横の位置ガイド（タッチ判定に影響しない補助ライン） -->
+  <div class="home-bar-indicator"></div>
+
+  <!-- メイン操作画面 -->
+  <div class="container">
+    <div class="dashboard">
+      <div class="counter-grid">
+        <div class="counter-item">上左：<span id="count-tl">0</span></div>
+        <div class="counter-item">上右：<span id="count-tr">0</span></div>
+        <div class="counter-item">下左：<span id="count-bl">0</span></div>
+        <div class="counter-item">下右：<span id="count-br">0</span></div>
+      </div>
+      <div class="last-log" id="last-log">最後に反応した場所：なし</div>
+      <button class="btn-reset" id="reset-btn">カウントリセット</button>
+    </div>
+  </div>
+
+  <!-- セーフエリア・画面寸法デバッグ表示 -->
+  <div class="debug-info" id="debug-info">
+    計測中...
+  </div>
+
+  <!-- 検証ターゲットボタン -->
+  <button id="btn-tl" class="test-btn btn-top-left">上左</button>
+  <button id="btn-tr" class="test-btn btn-top-right">上右</button>
+  <button id="btn-bl" class="test-btn btn-bottom-left">下左</button>
+  <button id="btn-br" class="test-btn btn-bottom-right">下右</button>
+
+  <script>
+    (function () {
+      // 状態管理
+      const counts = {
+        tl: 0,
+        tr: 0,
+        bl: 0,
+        br: 0
+      };
+
+      const labels = {
+        tl: '上左',
+        tr: '上右',
+        bl: '下左',
+        br: '下右'
+      };
+
+      // 要素参照
+      const countElements = {
+        tl: document.getElementById('count-tl'),
+        tr: document.getElementById('count-tr'),
+        bl: document.getElementById('count-bl'),
+        br: document.getElementById('count-br')
+      };
+
+      const buttons = {
+        tl: document.getElementById('btn-tl'),
+        tr: document.getElementById('btn-tr'),
+        bl: document.getElementById('btn-bl'),
+        br: document.getElementById('btn-br')
+      };
+
+      const lastLog = document.getElementById('last-log');
+      const resetBtn = document.getElementById('reset-btn');
+      const debugInfo = document.getElementById('debug-info');
+      const envMeasurer = document.getElementById('env-measurer');
+
+      // タッチ処理のロジック
+      function handleTouch(key, e) {
+        // イベント重複防止・ジェスチャー割り込み対策
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        e.stopPropagation();
+
+        counts[key]++;
+        countElements[key].textContent = counts[key];
+
+        const now = new Date();
+        const timeStr = now.toTimeString().split(' ')[0];
+        lastLog.textContent = `最後に反応した場所：${labels[key]}（${timeStr}）`;
+
+        // 視覚的フィードバック
+        const btn = buttons[key];
+        btn.classList.add('active');
+        setTimeout(() => {
+          btn.classList.remove('active');
+        }, 150);
+
+        // 触覚フィードバック（バイブレーション対応の場合）
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate(40);
+          } catch (err) {}
+        }
+      }
+
+      // イベントリスナーの付加（touchstart と mousedown の双方に対応）
+      Object.keys(buttons).forEach(key => {
+        const btn = buttons[key];
+        
+        btn.addEventListener('touchstart', (e) => handleTouch(key, e), { passive: false });
+        btn.addEventListener('click', (e) => {
+          // pointer events / click フォールバック
+          e.stopPropagation();
+        });
+      });
+
+      // リセット処理
+      resetBtn.addEventListener('touchstart', (e) => {
+        if (e.cancelable) e.preventDefault();
+        resetCounts();
+      }, { passive: false });
+
+      resetBtn.addEventListener('click', resetCounts);
+
+      function resetCounts() {
+        Object.keys(counts).forEach(key => {
+          counts[key] = 0;
+          countElements[key].textContent = '0';
+        });
+        lastLog.textContent = '最後に反応した場所：なし';
+      }
+
+      // 画面寸法および CSS env() の計測・更新処理
+      function updateMetrics() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // 計算済みスタイルから safe-area-inset の値を取得
+        const computedStyle = window.getComputedStyle(envMeasurer);
+        const sat = computedStyle.top;
+        const sab = computedStyle.bottom;
+
+        debugInfo.innerHTML = `Viewport: ${vw} x ${vh}<br>safe-area-top: ${sat} / bottom: ${sab}`;
+      }
+
+      // 初期化およびリサイズ時イベント処理
+      window.addEventListener('resize', updateMetrics);
+      window.addEventListener('orientationchange', updateMetrics);
+      document.addEventListener('DOMContentLoaded', updateMetrics);
+      setTimeout(updateMetrics, 300); // PWA起動直後の表示遅延対策
+    })();
+  </script>
 </body>
 </html>
