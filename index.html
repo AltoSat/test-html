@@ -30,8 +30,8 @@
   }
 
   html, body {
-    height: 100dvh;
-    overflow: hidden;
+    height: 100%;
+    min-height: 100dvh;
     background: var(--bg);
     color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
@@ -148,7 +148,6 @@
   .edge-btn {
     position: fixed;
     width: 44vw;
-    height: 72px;
     border: none;
     background: var(--accent);
     color: #fff;
@@ -200,7 +199,7 @@
     height: calc(72px + env(safe-area-inset-top, 0px));
   }
 
-  /* 下端ボタン */
+  /* 下端ボタン: bottom:0 に完全密着、safe-area は padding で吸収 */
   .btn-bottom-left {
     bottom: 0;
     left: 0;
@@ -217,7 +216,7 @@
     height: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* 端マーカー（視覚的に端を強調） */
+  /* 端マーカー */
   .corner-marker {
     position: fixed;
     width: 14px;
@@ -250,7 +249,7 @@
   .marker-br::before { bottom: 0; right: 0; width: 100%; height: 2px; }
   .marker-br::after { bottom: 0; right: 0; width: 2px; height: 100%; }
 
-  /* 薄いイドライン */
+  /* ガイドライン */
   .guide-line {
     position: fixed;
     background: var(--line);
@@ -297,7 +296,7 @@
 
     <div class="log-box">
       <span class="log-label">最後の反応</span>
-      <span class="log-value" id="lastLog">—</span>
+      <span class="log-value" id="lastLog"></span>
     </div>
 
     <div class="debug-grid">
@@ -387,34 +386,33 @@
     }
   }
 
+  function readEnv(name) {
+    const probe = document.createElement("div");
+    probe.style.position = "fixed";
+    probe.style.left = "0";
+    probe.style.top = "0";
+    probe.style.visibility = "hidden";
+    probe.style.paddingTop = "env(" + name + ", 0px)";
+    document.body.appendChild(probe);
+    const val = getComputedStyle(probe).paddingTop;
+    document.body.removeChild(probe);
+    return val;
+  }
+
   function updateDebug() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     els.vpSize.textContent = w + " x " + h;
     els.dpr.textContent = window.devicePixelRatio || 1;
 
-    const style = getComputedStyle(document.documentElement);
-    const topVal = style.getPropertyValue("--sat") || env("safe-area-inset-top");
-    const botVal = style.getPropertyValue("--sab") || env("safe-area-inset-bottom");
-
-    // env() は getPropertyValue では読めないため、要素に当てて測る
-    const probe = document.createElement("div");
-    probe.style.position = "fixed";
-    probe.style.left = "0";
-    probe.style.top = "0";
-    probe.style.paddingTop = "env(safe-area-inset-top)";
-    probe.style.paddingBottom = "env(safe-area-inset-bottom)";
-    probe.style.visibility = "hidden";
-    document.body.appendChild(probe);
-    const computed = getComputedStyle(probe);
-    els.insetTop.textContent = computed.paddingTop;
-    els.insetBottom.textContent = computed.paddingBottom;
-    document.body.removeChild(probe);
+    els.insetTop.textContent = readEnv("safe-area-inset-top");
+    els.insetBottom.textContent = readEnv("safe-area-inset-bottom");
   }
 
   function log(key) {
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("ja-JP", { hour12: false }) + "." + String(now.getMilliseconds()).padStart(3, "0");
+    const timeStr = now.toLocaleTimeString("ja-JP", { hour12: false }) +
+                    "." + String(now.getMilliseconds()).padStart(3, "0");
     els.lastLog.textContent = labels[key] + " （" + timeStr + "）";
   }
 
@@ -431,22 +429,21 @@
     flash(els[key]);
   }
 
-  Object.keys(els).forEach(key => {
-    if (["TL","TR","BL","BR"].includes(key)) {
-      const btn = els[key];
-      // touchstart を優先、click はフォールバック
-      btn.addEventListener("touchstart", function(e) {
-        e.preventDefault();
-        handleTap(key);
-      }, { passive: false });
-      btn.addEventListener("click", function() {
-        handleTap(key);
-      });
-    }
+  ["TL", "TR", "BL", "BR"].forEach(function(key) {
+    const btn = els[key];
+    btn.addEventListener("touchstart", function(e) {
+      e.preventDefault();
+      handleTap(key);
+    }, { passive: false });
+    btn.addEventListener("click", function() {
+      handleTap(key);
+    });
   });
 
   els.resetBtn.addEventListener("click", function() {
-    Object.keys(counts).forEach(k => counts[k] = 0);
+    ["TL", "TR", "BL", "BR"].forEach(function(k) {
+      counts[k] = 0;
+    });
     els.countTL.textContent = "0";
     els.countTR.textContent = "0";
     els.countBL.textContent = "0";
